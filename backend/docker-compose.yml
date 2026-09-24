@@ -1,0 +1,161 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jdds-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+      - ./php-opcache.ini:/usr/local/etc/php/conf.d/opcache.ini
+      - ./php-fpm-pool.conf:/usr/local/etc/php-fpm.d/zz-custom.conf
+      # Fast volumes: vendor & compiled views OneDrive mount ke upar shadow (huge perf fix)
+      - vendor_data:/var/www/vendor
+      - view_data:/var/www/storage/framework/views
+    networks:
+      - jdds-network
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+
+  db:
+    image: mysql:8.0
+    container_name: jdds-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: demandium_db
+      MYSQL_ROOT_PASSWORD: "1234"
+    ports:
+      - "3307:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./mysql-optimization.cnf:/etc/mysql/conf.d/optimization.cnf
+    networks:
+      - jdds-network
+    command: --max_connections=1000 --performance_schema=OFF
+
+  redis:
+    image: redis:7-alpine
+    container_name: jdds-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - jdds-network
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: jdds-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: demandium
+      RABBITMQ_DEFAULT_PASS: demandium123
+      RABBITMQ_DEFAULT_VHOST: /
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - jdds-network
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:alpine
+    container_name: jdds-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - jdds-network
+    depends_on:
+      - app
+    entrypoint: /bin/sh -c "ln -sfn /var/www/public/assets /var/www/public/public/assets 2>/dev/null; rm -f /var/www/public/storage 2>/dev/null; ln -sfn /var/www/storage/app/public /var/www/public/storage 2>/dev/null; chmod -R 755 /var/www/public/public 2>/dev/null; chown -R www-data:www-data /var/www/public/public 2>/dev/null; nginx -g 'daemon off;'"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: jdds-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: "1234"
+    ports:
+      - "8080:80"
+    networks:
+      - jdds-network
+    depends_on:
+      - db
+
+  queue-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jdds-queue-worker
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+      - vendor_data:/var/www/vendor
+      - view_data:/var/www/storage/framework/views
+    networks:
+      - jdds-network
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+    command: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3", "--timeout=60", "--max-time=3600"]
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jdds-scheduler
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+      - vendor_data:/var/www/vendor
+      - view_data:/var/www/storage/framework/views
+    networks:
+      - jdds-network
+    depends_on:
+      - db
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+    # AUTO-ASSIGN: schedule:work har minute scheduler tick karta hai (jobs everyThirtySeconds handle karta hai)
+    command: ["php", "artisan", "schedule:work"]
+
+volumes:
+  db-data:
+  redis-data:
+  rabbitmq-data:
+  vendor_data:
+  view_data:
+
+networks:
+  jdds-network:
+    driver: bridge
