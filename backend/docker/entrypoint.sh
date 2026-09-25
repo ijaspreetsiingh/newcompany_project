@@ -17,6 +17,18 @@ fi
 
 echo "[entrypoint] APP_URL=$APP_URL PORT=$PORT"
 
+echo "[diag] disk:"
+df -h /var/www/html | tail -1
+echo "[diag] storage ownership:"
+ls -la /var/www/html/storage/framework/ | head -10
+echo "[diag] cache dir:"
+ls -la /var/www/html/storage/framework/cache/
+echo "[diag] www-data write test:"
+su -s /bin/sh www-data -c 'touch /var/www/html/storage/framework/cache/__wt && echo "[diag] WWWDATA_WRITE=OK" || echo "[diag] WWWDATA_WRITE=FAIL"' || true
+rm -f /var/www/html/storage/framework/cache/__wt
+echo "[diag] php-fpm pool user:"
+grep -E "^user|^;" /usr/local/etc/php-fpm.d/www.conf | grep user || true
+
 if [ ! -f storage/oauth-private.key ]; then
     echo "[entrypoint] generating passport keys..."
     php artisan passport:keys || true
