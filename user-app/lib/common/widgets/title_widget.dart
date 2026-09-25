@@ -5,25 +5,31 @@ class TitleWidget extends StatelessWidget {
   final String? title;
   final TextDecoration? textDecoration;
   final Function()? onTap;
-  const TitleWidget({super.key, required this.title, this.onTap, this.textDecoration});
+  final Color? titleColor;
+  const TitleWidget({super.key, required this.title, this.onTap, this.textDecoration, this.titleColor});
 
   @override
   Widget build(BuildContext context) {
+    bool onColoredBg = title == 'recently_view_services';
+
     return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
 
       Flexible(
-        child: Text(title!.tr, style: robotoBold.copyWith(fontSize: Dimensions.fontSizeExtraLarge,color: title=='recently_view_services'
-            ? Colors.white:Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: .8),
+        child: Text(title!.tr, style: robotoBold.copyWith(fontSize: Dimensions.fontSizeExtraLarge,
+          color: onColoredBg
+              ? Colors.white
+              : titleColor ?? Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: .9),
         ),maxLines: 1,overflow: TextOverflow.ellipsis,),
       ),
       const SizedBox(width: Dimensions.paddingSizeSmall,),
       (onTap != null) ? InkWell(
         onTap: onTap,
         child: Text('see_all'.tr,
-          style: robotoRegular.copyWith(
+          style: robotoMedium.copyWith(
             decoration: textDecoration,
-            color:Get.isDarkMode ?Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: .8):
-            title=='recently_view_services'? Colors.white : Theme.of(context).colorScheme.primary,
+            color: onColoredBg
+                ? Colors.white
+                : Theme.of(context).colorScheme.primary,
             fontSize: Dimensions.fontSizeLarge,
           ),
         ),

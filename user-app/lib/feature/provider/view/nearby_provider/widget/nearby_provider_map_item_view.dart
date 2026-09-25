@@ -4,8 +4,7 @@ import 'package:get/get.dart';
 class NearbyProviderMapItemView extends StatelessWidget {
   final ProviderData providerData;
   final int index;
-  final GoogleMapController? googleMapController;
-  const NearbyProviderMapItemView({super.key,  required this.providerData, required this.index, this.googleMapController}) ;
+  const NearbyProviderMapItemView({super.key,  required this.providerData, required this.index}) ;
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +117,7 @@ class NearbyProviderMapItemView extends StatelessWidget {
                 if(index != exploreProviderController.selectedProviderIndex){
                   exploreProviderController.selectedProviderIndex = index;
                   exploreProviderController.update();
-                  _animateCamera(googleMapController,providerData);
+                  _animateCamera(exploreProviderController.mapController,providerData);
 
                   await exploreProviderController.scrollController!.scrollToIndex(index, preferPosition: AutoScrollPosition.middle);
                   await exploreProviderController.scrollController!.highlight(index);
@@ -142,11 +141,8 @@ class NearbyProviderMapItemView extends StatelessWidget {
     });
   }
 
-  void _animateCamera(GoogleMapController? googleMapController, ProviderData providerData){
-    googleMapController?.moveCamera(CameraUpdate.newCameraPosition(
-      CameraPosition(target: LatLng(providerData.coordinates?.latitude ?? 23.00, providerData.coordinates?.longitude ?? 90.00), zoom: 16),
-    ));
-    googleMapController?.showMarkerInfoWindow(MarkerId("$index"));
+  void _animateCamera(MapController? mapController, ProviderData providerData){
+    mapController?.move(LatLng(providerData.coordinates?.latitude ?? 23.00, providerData.coordinates?.longitude ?? 90.00), 16);
   }
 }
 

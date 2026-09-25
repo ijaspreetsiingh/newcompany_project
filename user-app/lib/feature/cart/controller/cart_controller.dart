@@ -23,6 +23,13 @@ class CartController extends GetxController implements GetxService {
   double get amount => _amount;
   bool get isLoading => _isLoading;
   bool get isCartLoading  => _isCartLoading ;
+
+  /// Timeout / error fallback - loader stuck na ho
+  void setLoadingFalse() {
+    _isLoading = false;
+    _isCartLoading = false;
+    update();
+  }
   bool get isOthersInfoValid => _isOthersInfoValid;
 
   bool get isButton => _isButton;
@@ -59,39 +66,51 @@ class CartController extends GetxController implements GetxService {
 
 
   Future<void> getCartListFromServer({bool shouldUpdate = true}) async{
+    _isLoading = true;
+    if(shouldUpdate) update();
 
-    DataSyncHelper.fetchAndSyncData(
-      fetchFromLocal: ()=>  cartRepo.getCartListFromServer<CacheResponseData>( source: DataSourceEnum.local),
-      fetchFromClient: ()=> cartRepo.getCartListFromServer(source: DataSourceEnum.client),
-      onResponse: (data, source) {
-        _cartList = [];
-        data['content']['cart']['data'].forEach((cart){
-          _cartList.add(CartModel.fromJson(cart));
+    try {
+      await DataSyncHelper.fetchAndSyncData(
+        fetchFromLocal: ()=>  cartRepo.getCartListFromServer<CacheResponseData>( source: DataSourceEnum.local),
+        fetchFromClient: ()=> cartRepo.getCartListFromServer(source: DataSourceEnum.client),
+        onResponse: (data, source) {
+          try {
+            _cartList = [];
+            if (data != null && data['content'] != null && data['content']['cart'] != null && data['content']['cart']['data'] != null) {
+              data['content']['cart']['data'].forEach((cart){
+                _cartList.add(CartModel.fromJson(cart));
+              });
+            }
 
-        });
+            if(data['content'] != null && data['content']['wallet_balance'] != null){
+              _walletBalance = double.tryParse(data['content']['wallet_balance'].toString()) ?? 0.0;
+            }
+            if(data['content'] != null && data['content']['total_cost'] != null){
+              _totalPrice = double.tryParse(data['content']['total_cost'].toString()) ?? 0.0;
+            }
+            if(data['content'] != null && data['content']['referral_amount'] != null){
+              _referralAmount = double.tryParse(data['content']['referral_amount'].toString()) ?? 0.0;
+            }
 
-        if( data['content']['wallet_balance']!=null){
-          _walletBalance = double.tryParse( data['content']['wallet_balance'].toString())!;
-        }
-        if( data['content']['total_cost']!=null){
-          _totalPrice = double.tryParse( data['content']['total_cost'].toString())!;
-        }
-        if( data['content']['referral_amount']!=null){
-          _referralAmount = double.tryParse( data['content']['referral_amount'].toString())!;
-        }
-
-        if(_cartList.isNotEmpty){
-          if(_cartList[0].provider!=null){
-            _selectedProvider = _cartList[0].provider;
-          }else {
-            _selectedProvider = null;
+            if(_cartList.isNotEmpty){
+              if(_cartList[0].provider!=null){
+                _selectedProvider = _cartList[0].provider;
+              }else {
+                _selectedProvider = null;
+              }
+              subcategoryId = _cartList[0].subCategoryId;
+            }
+          } catch (e) {
+            debugPrint('CartController onResponse error: $e');
           }
-          subcategoryId = _cartList[0].subCategoryId;
-        }
+        },
+      );
+    } catch (e) {
+      debugPrint('CartController getCartListFromServer error: $e');
+    }
 
-        update();
-      },
-    );
+    _isLoading = false;
+    update();
   }
 
   Future<void> removeCartFromServer(CartModel cart)async{
@@ -129,15 +148,15 @@ class CartController extends GetxController implements GetxService {
       });
 
       if(response.body['content']['wallet_balance']!=null){
-        _walletBalance = double.tryParse(response.body['content']['wallet_balance'].toString())!;
+        _walletBalance = double.tryParse(response.body['content']['wallet_balance'].toString()) ?? 0.0;
       }
 
       if(response.body['content']['total_cost']!=null){
-        _totalPrice = double.tryParse(response.body['content']['total_cost'].toString())!;
+        _totalPrice = double.tryParse(response.body['content']['total_cost'].toString()) ?? 0.0;
       }
 
       if(response.body['content']['referral_amount']!=null){
-        _referralAmount = double.tryParse(response.body['content']['referral_amount'].toString())!;
+        _referralAmount = double.tryParse(response.body['content']['referral_amount'].toString()) ?? 0.0;
       }
 
       if(_cartList.isNotEmpty){
@@ -161,6 +180,7 @@ class CartController extends GetxController implements GetxService {
     Response response = await cartRepo.updateProvider(providerData?.id ?? "");
     if(response.statusCode == 200){
       await getCartListFromServer();
+      Get.find<ScheduleController>().updateScheduleType(scheduleType: ScheduleType.asap);
       Get.find<ScheduleController>().buildSchedule(scheduleType: ScheduleType.asap);
     }else{
 
@@ -237,7 +257,7 @@ class CartController extends GetxController implements GetxService {
     update();
     _replaceCartList();
 
-    if(_initialCartList.first.subCategoryId != _cartList.first.subCategoryId){
+    if(_cartList.isNotEmpty && _initialCartList.isNotEmpty && _initialCartList.first.subCategoryId != _cartList.first.subCategoryId){
       Get.back();
       Get.dialog(ConfirmationDialog(
         icon: Images.warning,
@@ -285,7 +305,7 @@ class CartController extends GetxController implements GetxService {
 
     if( providerId!= ""){
      await cartRepo.addToCartListToServer(CartModelBody(
-        serviceId:cartModel.service!.id,
+        serviceId:cartModel.service?.id,
         categoryId: cartModel.categoryId,
         variantKey: cartModel.variantKey,
         quantity: cartModel.quantity.toString(),
@@ -295,7 +315,7 @@ class CartController extends GetxController implements GetxService {
       ));
     }else{
        await cartRepo.addToCartListToServer(CartModelBody(
-        serviceId:cartModel.service!.id,
+        serviceId:cartModel.service?.id,
         categoryId: cartModel.categoryId,
         variantKey: cartModel.variantKey,
         quantity: cartModel.quantity.toString(),
@@ -317,7 +337,7 @@ class CartController extends GetxController implements GetxService {
     int index = -1;
     for (var cart in _cartList) {
       if(cart.service != null){
-        if(cart.service!.id!.contains(service.id!)) {
+        if(cart.service?.id != null && service.id != null && cart.service!.id!.contains(service.id!)) {
           service.variationsAppFormat?.zoneWiseVariations?.forEach((variation) {
             if(variation.variantKey == cart.variantKey && variation.price == cart.serviceCost) {
 
@@ -338,12 +358,12 @@ class CartController extends GetxController implements GetxService {
     _initialCartList = [];
     service.variationsAppFormat?.zoneWiseVariations?.forEach((variation) {
       CartModel cartModel = CartModel(
-          service.id!,
-          service.id!,
-          service.categoryId!,
-          service.subCategoryId!,
-          variation.variantKey!,
-          variation.price!,
+          service.id ?? '',
+          service.id ?? '',
+          service.categoryId ?? '',
+          service.subCategoryId ?? '',
+          variation.variantKey ?? '',
+          variation.price ?? 0,
           0,
           0, 0, 0,0,
           "",
@@ -505,26 +525,29 @@ class CartController extends GetxController implements GetxService {
 
     Get.closeAllSnackbars();
 
-    if(configModel.content!.minBookingAmount !=0 && configModel.content!.minBookingAmount! > _totalPrice && _cartList.isNotEmpty){
+    num minAmount = configModel.content?.minBookingAmount ?? 0;
+    num maxAmount = configModel.content?.maxBookingAmount ?? 0;
+
+    if(minAmount != 0 && minAmount > _totalPrice && _cartList.isNotEmpty){
       customSnackBar("message",
         customWidget: Row(children: [
           Icon(Icons.circle, color: Colors.white.withValues(alpha: 0.8),size: 16,),
-          Text("  ${'minimum_booking_amount'.tr} ${PriceConverter.convertPrice(Get.find<SplashController>().configModel.content!.minBookingAmount!)}",
+          Text("  ${'minimum_booking_amount'.tr} ${PriceConverter.convertPrice(minAmount.toDouble())}",
             style: robotoRegular.copyWith(color: Colors.white),
           ),
         ],),
       );
     }else{
-      if(configModel.content!.maxBookingAmount !=0 && configModel.content!.maxBookingAmount! < _totalPrice &&  _cartList.isNotEmpty){
+      if(maxAmount != 0 && maxAmount < _totalPrice &&  _cartList.isNotEmpty){
         customSnackBar("message",
           customWidget: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(crossAxisAlignment: CrossAxisAlignment.start,children: [
-                Icon(Icons.warning_outlined, color: Theme.of(Get.context!).cardColor.withValues(alpha: 0.6),size: 16,),
+                Icon(Icons.warning_outlined, color: Theme.of(Get.context ?? Get.context!).cardColor.withValues(alpha: 0.6),size: 16,),
                 const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
                 Flexible(child: Text(" ${'maximum_order_amount_exceed'.tr} ""(${'${'maximum_order_amount'.tr}'
-                    ' ${PriceConverter.convertPrice(Get.find<SplashController>().configModel.content!.maxBookingAmount!)}'}) ${"admin_will_verify_this_order".tr}",
+                    ' ${PriceConverter.convertPrice(maxAmount.toDouble())}'}) ${"admin_will_verify_this_order".tr}",
                   style: robotoRegular.copyWith(color: Colors.white),
                 )),
               ],),

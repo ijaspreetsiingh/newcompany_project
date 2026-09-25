@@ -28,7 +28,10 @@ class LocalizationController extends GetxController implements GetxService {
     }
     AddressModel? addressModel;
     try {
-      addressModel = AddressModel.fromJson(jsonDecode(sharedPreferences.getString(AppConstants.userAddress)!));
+      String? addressJson = sharedPreferences.getString(AppConstants.userAddress);
+      if(addressJson != null) {
+        addressModel = AddressModel.fromJson(jsonDecode(addressJson));
+      }
     }catch(e) {
       if (kDebugMode) {
         print(e);

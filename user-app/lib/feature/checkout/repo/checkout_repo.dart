@@ -64,7 +64,7 @@ class CheckoutRepo extends GetxService {
       "payment_method" : paymentMethod,
       "zone_id" : zoneId,
       "service_schedule" : schedule,
-      "service_address_id" : serviceAddressID,
+      "service_address_id" : (serviceAddressID == null || serviceAddressID.isEmpty) ? null : serviceAddressID,
       "guest_id" : Get.find<SplashController>().getGuestId(),
       "service_address" : address,
       "is_partial" : isPartial,
@@ -73,6 +73,6 @@ class CheckoutRepo extends GetxService {
       "dates": dates,
       "new_user_info": newUserInfo !=null ? jsonEncode(newUserInfo) : null,
       "service_location": serviceLocation
-    });
+    }, timeout: 30);
   }
 }

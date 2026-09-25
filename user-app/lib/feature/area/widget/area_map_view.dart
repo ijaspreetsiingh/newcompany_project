@@ -12,21 +12,14 @@ class AreaMapViewScreen extends StatefulWidget {
 }
 
 class _AreaMapViewScreenState extends State<AreaMapViewScreen> {
-  final Completer<GoogleMapController> _controller = Completer();
-  GoogleMapController? _mapController;
-  LatLng? _initialPosition;
-
+  MapController? _mapController;
 
   Map<String, GlobalKey> globalKeyMap = {};
 
   @override
   void initState() {
     super.initState();
-
-    _initialPosition = LatLng(
-      Get.find<SplashController>().configModel.content?.defaultLocation?.latitude ?? 23.0000,
-      Get.find<SplashController>().configModel.content?.defaultLocation?.longitude ?? 90.0000,
-    );
+    _mapController = MapController();
 
     for(int index = 0; index< widget.zoneList.length ; index++){
       globalKeyMap.addAll({
@@ -73,25 +66,32 @@ class _AreaMapViewScreenState extends State<AreaMapViewScreen> {
                     MouseRegion(
                       onEnter: (event) => _onPanStart(),
                       onExit: (event) => _onPanEnd(),
-                      child: GoogleMap(
-                        initialCameraPosition: CameraPosition(target: _initialPosition!, zoom: 4),
-                        minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
-                        onMapCreated: (GoogleMapController mapController) {
-                          _controller.complete(mapController);
-                          _mapController = mapController;
-                          if (kDebugMode) {
-                           print("Map : $_mapController");
-                          }
-                          Future.delayed(const Duration(milliseconds: 100));
-                          serviceAreaController.setMarker(widget.zoneList, globalKeyMap).then((value) => serviceAreaController.mapBound(mapController));
-                        },
-                        style: Get.isDarkMode ? Get.find<ThemeController>().darkMap : Get.find<ThemeController>().lightMap,
-                        zoomControlsEnabled: ResponsiveHelper.isDesktop(context) ? true : false,
-                        myLocationButtonEnabled: false,
-                        markers: serviceAreaController.markers,
-                        polygons: serviceAreaController.polygone,
-
-
+                      child: FlutterMap(
+                        mapController: _mapController,
+                        options: MapOptions(
+                          initialCenter: LatLng(
+                            Get.find<SplashController>().configModel.content?.defaultLocation?.latitude ?? 23.0000,
+                            Get.find<SplashController>().configModel.content?.defaultLocation?.longitude ?? 90.0000,
+                          ),
+                          initialZoom: 4,
+                          minZoom: 0,
+                          maxZoom: 16,
+                          onMapReady: () {
+                            serviceAreaController.setMarker(widget.zoneList, globalKeyMap).then((value) {
+                              if (_mapController != null) {
+                                serviceAreaController.mapBound(_mapController!);
+                              }
+                            });
+                          },
+                        ),
+                        children: [
+                          TileLayer(
+                            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'com.sixamtech.demandium.user',
+                          ),
+                          MarkerLayer(markers: serviceAreaController.markers),
+                          PolygonLayer(polygons: serviceAreaController.polygone),
+                        ],
                       ),
                     )
                   ],

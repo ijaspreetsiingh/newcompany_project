@@ -181,7 +181,13 @@ class AuthController extends GetxController implements GetxService {
 
       final routeData = RouteHelper.parseRedirectRouteToNavigate(redirectRoute);
 
-      Get.offAllNamed(routeData.path, parameters: (routeData.parameters?.isEmpty ?? true) ? null : routeData.parameters);
+      // After login / OTP verification always land user on home screen instead of
+      // bouncing them back to the bookings list they came from.
+      if (routeData.path == RouteHelper.bookingListScreen || routeData.path == RouteHelper.notLoggedScreen) {
+        Get.offAllNamed(RouteHelper.getMainRoute('home'));
+      } else {
+        Get.offAllNamed(routeData.path, parameters: (routeData.parameters?.isEmpty ?? true) ? null : routeData.parameters);
+      }
 
     } else {
       Get.offAllNamed(RouteHelper.getMainRoute('home'));
@@ -819,7 +825,7 @@ class AuthController extends GetxController implements GetxService {
   }
 
   Future<void> updateToken() async {
-    await authRepo.updateToken();
+    try { await authRepo.updateToken(); } catch(e) {}
   }
 
   Future<void> saveUserToken({required String token}) async {

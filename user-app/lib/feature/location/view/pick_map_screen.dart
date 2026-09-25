@@ -1,10 +1,7 @@
 import 'package:jdds/common/widgets/custom_pop_widget.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
-import 'package:jdds/common/widgets/address_selection_drawer.dart';
 import 'package:jdds/common/widgets/map_view_widget.dart';
-
-
 
 class PickMapScreen extends StatefulWidget {
   final bool? fromSignUp;
@@ -12,12 +9,12 @@ class PickMapScreen extends StatefulWidget {
   final bool? canRoute;
   final String? route;
   final bool formCheckout;
-  final GoogleMapController? googleMapController;
+  final MapController? mapController;
   final ZoneModel? zone;
   final AddressModel? previousAddress;
   const PickMapScreen({super.key,
     required this.fromSignUp, required this.fromAddAddress, required this.canRoute,
-    required this.route, this.googleMapController,
+    required this.route, this.mapController,
     required this.formCheckout, required this.zone,
     this.previousAddress
   });
@@ -26,13 +23,14 @@ class PickMapScreen extends StatefulWidget {
   State<PickMapScreen> createState() => _PickMapScreenState();
 }
 
-class _PickMapScreenState extends State<PickMapScreen> {
-  GoogleMapController? _mapController;
-  CameraPosition? _cameraPosition;
+class _PickMapScreenState extends State<PickMapScreen> with TickerProviderStateMixin {
+  MapController? _mapController;
+  LatLng? _currentLatLng;
   LatLng? _initialPosition;
   LatLng? _centerLatLng;
+  late AnimationController _blobController;
 
-  Set<Polygon> _polygone = {};
+  List<Polygon> _polygone = [];
   List<LatLng> zoneLatLongList = [];
 
   String? pageTitle;
@@ -41,9 +39,11 @@ class _PickMapScreenState extends State<PickMapScreen> {
   @override
   void initState() {
     super.initState();
+    _blobController = AnimationController(vsync: this, duration: const Duration(seconds: 18))..repeat();
+    _mapController = MapController();
+
     if(widget.fromAddAddress!) {
       Get.find<LocationController>().setPickData();
-
     }
 
     if(widget.zone !=null){
@@ -54,19 +54,14 @@ class _PickMapScreenState extends State<PickMapScreen> {
         zoneLatLongList.add(LatLng(element.latitude!, element.longitude!));
       });
 
-      List<Polygon> polygonList = [];
-
-      polygonList.add(
+      _polygone = [
         Polygon(
-          polygonId: const PolygonId('1'),
           points: zoneLatLongList,
-          strokeWidth: 2,
-          strokeColor: Get.theme.colorScheme.primary,
-          fillColor: Get.theme.colorScheme.primary.withValues(alpha: .2),
+          borderStrokeWidth: 2,
+          color: const Color(0xffFF6B2C).withValues(alpha: .2),
+          borderColor: const Color(0xffFF6B2C),
         ),
-      );
-
-      _polygone = HashSet<Polygon>.of(polygonList);
+      ];
 
     }else{
       _initialPosition = LatLng(
@@ -85,12 +80,16 @@ class _PickMapScreenState extends State<PickMapScreen> {
     else if(widget.route == RouteHelper.home){
       pageTitle = "home".tr;
       pageSubTitle = "${'you_must_select_location_first_to_view'.tr} ${'home_content'.tr.toLowerCase()}";
-    }else if(widget.route == RouteHelper.categories || widget.route ==  RouteHelper.cart || widget.route ==  RouteHelper.offers || widget.route ==  RouteHelper.notification || widget.route == RouteHelper.voucherScreen){
+    }else if(widget.route == RouteHelper.categories || widget.route ==  RouteHelper.cart || widget.route ==  RouteHelper.offers || widget.route == RouteHelper.notification || widget.route == RouteHelper.voucherScreen){
       pageTitle = widget.route?.replaceAll("/", "").tr;
       pageSubTitle = "${'you_must_select_location_first_to_view'.tr} ${widget.route?.replaceAll("/", "").tr.toLowerCase()}";
     }
+  }
 
-
+  @override
+  void dispose() {
+    _blobController.dispose();
+    super.dispose();
   }
 
   @override
@@ -98,9 +97,7 @@ class _PickMapScreenState extends State<PickMapScreen> {
     return CustomPopWidget(
       isExit: true,
       child: Scaffold(
-        appBar: ResponsiveHelper.isDesktop(context) ? const WebMenuBar() : CustomAppBar(title: 'set_location'.tr),
-        drawer: ResponsiveHelper.isDesktop(context) ? const AddressSelectionDrawer() : null,
-        endDrawer: ResponsiveHelper.isDesktop(context) ? const MenuDrawer():null,
+        backgroundColor: const Color(0xffFFF5EE),
         body: SafeArea(
           child: ResponsiveHelper.isDesktop(context) ? CustomScrollView(
             slivers: [
@@ -111,10 +108,7 @@ class _PickMapScreenState extends State<PickMapScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _PageHeaderWidget(
-                          title: pageTitle,
-                          subtitle: pageSubTitle,
-                        ),
+                        _buildHeader(),
                         SizedBox(
                           height: Dimensions.webMaxWidth * 0.5,
                           child: MapViewWidget(
@@ -122,8 +116,7 @@ class _PickMapScreenState extends State<PickMapScreen> {
                             initialPosition: _initialPosition,
                             polygons: _polygone,
                             onMapCreated: _onMapCreated,
-                            onCameraMove: _onCameraMove,
-                            onCameraMoveStarted: _onCameraMoveStarted,
+                            onPositionChanged: _onPositionChanged,
                             onCameraIdle: _onCameraIdle,
                             onLocationTap: _onLocationTap,
                             onPickLocationTap: _onPickLocationTap,
@@ -137,49 +130,72 @@ class _PickMapScreenState extends State<PickMapScreen> {
               ),
               if(ResponsiveHelper.isDesktop(context)) SliverToBoxAdapter(child: FooterView()),
             ],
-          ) : Center(
-            child: WebShadowWrap(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _PageHeaderWidget(
-                    title: pageTitle,
-                    subtitle: pageSubTitle,
+          ) : Column(
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
                   ),
-                  Expanded(
-                    child: MapViewWidget(
-                      fromAddAddress: widget.fromAddAddress!,
-                      initialPosition: _initialPosition,
-                      polygons: _polygone,
-                      onMapCreated: _onMapCreated,
-                      onCameraMove: _onCameraMove,
-                      onCameraMoveStarted: _onCameraMoveStarted,
-                      onCameraIdle: _onCameraIdle,
-                      onLocationTap: _onLocationTap,
-                      onPickLocationTap: _onPickLocationTap,
-                      getMapController: () => _mapController,
-                    ),
+                  child: MapViewWidget(
+                    fromAddAddress: widget.fromAddAddress!,
+                    initialPosition: _initialPosition,
+                    polygons: _polygone,
+                    onMapCreated: _onMapCreated,
+                    onPositionChanged: _onPositionChanged,
+                    onCameraIdle: _onCameraIdle,
+                    onLocationTap: _onLocationTap,
+                    onPickLocationTap: _onPickLocationTap,
+                    getMapController: () => _mapController,
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  // Callback methods for _MapViewWidget
-  void _onMapCreated(GoogleMapController mapController) {
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xff101828), size: 20),
+          ),
+          const Spacer(),
+          Text(
+            'Set Location',
+            style: robotoBold.copyWith(fontSize: 17, color: const Color(0xff101828)),
+          ),
+          const Spacer(),
+          const SizedBox(width: 48),
+        ],
+      ),
+    );
+  }
+
+  void _onMapCreated(MapController mapController) {
     _mapController = mapController;
     if (!widget.fromAddAddress!) {
       if (widget.zone != null) {
         Future.delayed(const Duration(milliseconds: 500), () {
-          mapController.animateCamera(CameraUpdate.newLatLngBounds(
-            MapHelper.boundsFromLatLngList(zoneLatLongList),
-            100.5,
+          mapController.fitCamera(CameraFit.bounds(
+            bounds: MapHelper.boundsFromLatLngList(zoneLatLongList),
+            padding: const EdgeInsets.all(100.5),
           ));
         });
+        Get.find<LocationController>().getCurrentLocation(
+          false,
+          mapController: mapController,
+          defaultLatLng: _centerLatLng,
+          isFromCheckout: widget.formCheckout,
+        );
       } else {
         Get.find<LocationController>().getCurrentLocation(
           false,
@@ -190,23 +206,20 @@ class _PickMapScreenState extends State<PickMapScreen> {
     }
   }
 
-  void _onCameraMove(CameraPosition cameraPosition) {
-    _cameraPosition = cameraPosition;
-  }
-
-  void _onCameraMoveStarted() {
-    Get.find<LocationController>().updateCameraMovingStatus(true);
-    Get.find<LocationController>().disableButton();
+  void _onPositionChanged(LatLng target, double zoom) {
+    _currentLatLng = target;
   }
 
   void _onCameraIdle() {
     Get.find<LocationController>().updateCameraMovingStatus(false);
     try {
-      Get.find<LocationController>().updatePosition(
-        _cameraPosition!,
-        false,
-        formCheckout: widget.formCheckout,
-      );
+      if (_currentLatLng != null) {
+        Get.find<LocationController>().updatePosition(
+          _currentLatLng!,
+          false,
+          formCheckout: widget.formCheckout,
+        );
+      }
     } catch (e) {
       if (kDebugMode) {
         print('');
@@ -230,17 +243,13 @@ class _PickMapScreenState extends State<PickMapScreen> {
     if (locationController.pickPosition.latitude != 0 &&
         locationController.pickAddress.address!.isNotEmpty) {
       if (widget.fromAddAddress!) {
-        if (widget.googleMapController != null) {
-          widget.googleMapController!.moveCamera(
-            CameraUpdate.newCameraPosition(
-              CameraPosition(
-                target: LatLng(
-                  locationController.pickPosition.latitude,
-                  locationController.pickPosition.longitude,
-                ),
-                zoom: 16,
-              ),
+        if (widget.mapController != null) {
+          widget.mapController!.move(
+            LatLng(
+              locationController.pickPosition.latitude,
+              locationController.pickPosition.longitude,
             ),
+            16,
           );
           locationController.setAddAddressData();
         }
@@ -304,37 +313,3 @@ class _PickMapScreenState extends State<PickMapScreen> {
   }
 }
 
-
-/// Reusable widget for page header with title and subtitle
-class _PageHeaderWidget extends StatelessWidget {
-  final String? title;
-  final String? subtitle;
-
-  const _PageHeaderWidget({
-    this.title,
-    this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (title == null) return const SizedBox();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title ?? "",
-          style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge),
-        ),
-        const SizedBox(height: Dimensions.paddingSizeEight),
-        Text(
-          subtitle ?? "",
-          style: robotoRegular.copyWith(
-            color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
-          ),
-        ),
-        const SizedBox(height: Dimensions.paddingSizeDefault),
-      ],
-    );
-  }
-}

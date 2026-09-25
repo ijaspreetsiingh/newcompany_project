@@ -17,9 +17,10 @@ class CustomButton extends StatelessWidget {
   final bool showBorder;
   final bool isLoading;
   final Color? textColor;
+  final Color? borderColor;
   final TextStyle? textStyle;
   const CustomButton({super.key, this.onPressed, required this.buttonText, this.transparent = false, this.margin, this.width, this.height,
-    this.fontSize, this.radius = 5, this.icon, this.assetIcon, this.backgroundColor, this.isLoading = false, this.textColor, this.showBorder = false, this.textStyle, this.iconColor});
+    this.fontSize, this.radius = 5, this.icon, this.assetIcon, this.backgroundColor, this.isLoading = false, this.textColor, this.showBorder = false, this.textStyle, this.iconColor, this.borderColor});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +29,7 @@ class CustomButton extends StatelessWidget {
       Colors.transparent:  Theme.of(context).disabledColor),
       minimumSize: Size(width != null ? width! : Dimensions.webMaxWidth, height != null ? height! : ResponsiveHelper.isDesktop(context) ? 50 : 45),
       padding: EdgeInsets.zero,
-      side: showBorder ? BorderSide(color:Theme.of(context).colorScheme.primary) : null,
+      side: showBorder ? BorderSide(color: borderColor ?? Theme.of(context).colorScheme.primary) : null,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(radius!),
       ),

@@ -81,7 +81,9 @@ class CartServiceWidget extends StatelessWidget {
                         Expanded(
                           child: InkWell(
                             onTap: (){
-                              Get.toNamed(RouteHelper.getServiceRoute(cart.service!.slug!));
+                              if(cart.service?.slug != null) {
+                                Get.toNamed(RouteHelper.getServiceRoute(cart.service!.slug!));
+                              }
                             },
                             child: SizedBox(
                               width:ResponsiveHelper.isMobile(context)? Get.width / 1.8 : Get.width / 4,
@@ -91,7 +93,7 @@ class CartServiceWidget extends StatelessWidget {
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
                                     child: CustomImage(
-                                      image: '${cart.service!.thumbnailFullPath}',
+                                       image: cart.service?.thumbnailFullPath ?? '',
                                       height: 65,
                                       width: 70,
                                       fit: BoxFit.cover,
@@ -104,7 +106,7 @@ class CartServiceWidget extends StatelessWidget {
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           Text(
-                                            cart.service!.name!,
+                                            cart.service?.name ?? '',
                                             style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
@@ -114,7 +116,7 @@ class CartServiceWidget extends StatelessWidget {
                                             width: Get.width * 0.4,
                                             child: Text(
                                               cart.variantKey,
-                                              style: robotoMedium.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: .6), fontSize: Dimensions.fontSizeDefault),
+                                              style: robotoMedium.copyWith(color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: .6), fontSize: Dimensions.fontSizeDefault),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -124,7 +126,7 @@ class CartServiceWidget extends StatelessWidget {
                                             textDirection: TextDirection.ltr,
                                             child: Text(
                                               PriceConverter.convertPrice(cart.totalCost.toDouble()),
-                                              style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: .6)),
+                                              style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: .6)),
                                             ),
                                           ),
                                           const SizedBox(height: 5),

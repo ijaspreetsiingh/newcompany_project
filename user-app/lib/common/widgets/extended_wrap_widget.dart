@@ -30,7 +30,7 @@ class ExtendedWrap extends MultiChildRenderObjectWidget {
         assert(minLines >= 1 && minLines <= maxLines),
         super(children: [
         ...children,
-        if (overflowWidget != null) overflowWidget
+        ?overflowWidget
       ]);
 
   /// The direction to use as the main axis.

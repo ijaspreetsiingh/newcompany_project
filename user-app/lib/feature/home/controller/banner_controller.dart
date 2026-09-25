@@ -56,7 +56,17 @@ class BannerController extends GetxController implements GetxService {
       case 'service':
         Get.toNamed(RouteHelper.getServiceRoute(resourceID));
         break;
+      case 'slider':
+        /// Admin ne banner-settings se redirect link diya hai to kholo
+        if (link.isNotEmpty && await canLaunchUrl(Uri.parse(link))) {
+          await launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
+        }
+        break;
       default:
+        /// Fallback: koi resource type na pehchana ho par link ho to kholo
+        if (link.isNotEmpty && await canLaunchUrl(Uri.parse(link))) {
+          await launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
+        }
     }
   }
 }

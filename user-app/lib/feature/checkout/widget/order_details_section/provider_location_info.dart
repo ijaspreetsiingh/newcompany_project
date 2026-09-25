@@ -178,12 +178,23 @@ class _ProviderMapWidgetState extends State<_ProviderMapWidget> {
       widget.provider?.coordinates?.longitude ?? 90.0,
     );
     marker = Marker(
-      markerId: const MarkerId("provider location"),
-      position: LatLng(_initialPosition.latitude , _initialPosition.longitude),
-      infoWindow: InfoWindow(
-        title: widget.provider?.companyName,
-        snippet: widget.provider?.companyAddress,
+      point: LatLng(_initialPosition.latitude , _initialPosition.longitude),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(widget.provider?.companyName ?? "", style: robotoMedium.copyWith(fontSize: 10)),
+          ),
+          Icon(Icons.location_on, color: Colors.red, size: 30),
+        ],
       ),
+      width: 100,
+      height: 60,
     );
   }
 
@@ -216,20 +227,20 @@ class _ProviderMapWidgetState extends State<_ProviderMapWidget> {
                     child:  Stack(children: [
                       ClipRRect(
                         borderRadius:BorderRadius.circular(Dimensions.radiusDefault),
-                        child: GoogleMap(
-                          initialCameraPosition: CameraPosition(
-                            target: _initialPosition,
-                            zoom: 16,
+                        child: FlutterMap(
+                          options: MapOptions(
+                            initialCenter: _initialPosition,
+                            initialZoom: 16,
+                            minZoom: 0,
+                            maxZoom: 16,
                           ),
-                          minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
-                          myLocationButtonEnabled: false,
-                          onMapCreated: (GoogleMapController mapController) {
-                          },
-                          scrollGesturesEnabled: !Get.isDialogOpen!,
-                          zoomControlsEnabled: true,
-                          markers: {
-                            marker
-                          },
+                          children: [
+                            TileLayer(
+                              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                              userAgentPackageName: 'com.sixamtech.demandium.user',
+                            ),
+                            MarkerLayer(markers: [marker]),
+                          ],
                         ),
                       ),
                     ]),
@@ -259,4 +270,3 @@ class _ProviderMapWidgetState extends State<_ProviderMapWidget> {
     );
   }
 }
-

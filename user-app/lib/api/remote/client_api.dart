@@ -11,7 +11,7 @@ class ApiClient extends GetxService {
   final String? appBaseUrl;
   final SharedPreferences sharedPreferences;
   static final String noInternetMessage = 'connection_to_api_server_failed'.tr;
-  final int timeoutInSeconds = 30;
+  final int timeoutInSeconds = 15;
 
   String? token;
   late Map<String, String> _mainHeaders;
@@ -21,8 +21,11 @@ class ApiClient extends GetxService {
     printLog('Token: $token');
     AddressModel? addressModel;
     try {
-      addressModel = AddressModel.fromJson(jsonDecode(sharedPreferences.getString(AppConstants.userAddress)!));
-      printLog( addressModel.toJson());
+      String? addressJson = sharedPreferences.getString(AppConstants.userAddress);
+      if(addressJson != null) {
+        addressModel = AddressModel.fromJson(jsonDecode(addressJson));
+        printLog(addressModel.toJson());
+      }
     }catch(e) {
       if (kDebugMode) {
         print('');
@@ -61,16 +64,15 @@ class ApiClient extends GetxService {
     }
   }
 
-  Future<Response> postData(String? uri, dynamic body, {Map<String, String>? headers}) async {
+  Future<Response> postData(String? uri, dynamic body, {Map<String, String>? headers, int? timeout}) async {
     printLog('====> API Call: $uri\nHeader: $_mainHeaders');
     printLog('====> body : ${body.toString()}');
-
 
     http.Response response = await http.post(
       Uri.parse(appBaseUrl! + uri!),
       body: jsonEncode(body),
       headers: headers ?? _mainHeaders,
-    ).timeout(Duration(seconds: timeoutInSeconds));
+    ).timeout(Duration(seconds: timeout ?? timeoutInSeconds));
     try {
       return handleResponse(response, uri);
     } catch (e) {

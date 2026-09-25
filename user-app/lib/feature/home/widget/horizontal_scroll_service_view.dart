@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 
@@ -51,7 +52,7 @@ class HorizontalScrollServiceView extends GetView<ServiceController> {
                     Dimensions.paddingSizeExtraSmall,
                   ),
                   child: TitleWidget(
-                    textDecoration: TextDecoration.underline,
+                    
                     title: fromPage!,
                     onTap: () => fromPage == "popular_services" ? Get.toNamed(RouteHelper.getSearchResultRoute(fromPage: "popular")) : Get.toNamed(RouteHelper.allServiceScreenRoute(fromPage!)),
 
@@ -89,10 +90,10 @@ class HorizontalScrollServiceView extends GetView<ServiceController> {
 }
 
 
-class TsClip2 extends CustomClipper<Path> {
+class TsClip2 extends CustomClipper<ui.Path> {
   @override
-  Path getClip(Size size) {
-    var path = Path();
+  ui.Path getClip(Size size) {
+    var path = ui.Path();
     path.lineTo(0, size.height/2);
     path.quadraticBezierTo(
         size.width / 1.3, size.height+70, size.width, size.height/1.3);
@@ -101,7 +102,7 @@ class TsClip2 extends CustomClipper<Path> {
     return path;
   }
   @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+  bool shouldReclip(covariant CustomClipper<ui.Path> oldClipper) => false;
 }
 
 class PopularServiceShimmer extends StatelessWidget {

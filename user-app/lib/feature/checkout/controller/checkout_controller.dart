@@ -177,36 +177,44 @@ class CheckOutController extends GetxController implements GetxService{
    _isLoading = true;
    update();
 
-   if(Get.find<CartController>().cartList.isNotEmpty){
-     Response response = await checkoutRepo.placeBookingRequest(
-       paymentMethod : paymentMethod,
-       zoneId : zoneId,
-       schedule : schedule,
-       serviceAddressID : address.id == "null" ? "" : address.id,
-       serviceAddress: address,
-       isPartial: isPartial,
-       serviceType: serviceType.name,
-       bookingType: repeatBookingType.name,
-       dates: repeatBookingDates,
-       newUserInfo: newUserInfo,
-       serviceLocation: Get.find<LocationController>().selectedServiceLocationType.name
-     );
-     if(response.statusCode == 200 && response.body["response_code"] == "booking_place_success_200"){
-       _isPlacedOrderSuccessfully = true;
-       _bookingReadableId = response.body['content']['readable_id'].toString();
-       String? token = response.body['content']['token'];
-       Get.find<CartController>().getCartListFromServer();
+    if(Get.find<CartController>().cartList.isNotEmpty){
+      try{
+      Response response = await checkoutRepo.placeBookingRequest(
+        paymentMethod : paymentMethod,
+        zoneId : zoneId,
+        schedule : schedule,
+        serviceAddressID : address.id == "null" ? null : address.id,
+        serviceAddress: address,
+        isPartial: isPartial,
+        serviceType: serviceType.name,
+        bookingType: repeatBookingType.name,
+        dates: repeatBookingDates,
+        newUserInfo: newUserInfo,
+        serviceLocation: Get.find<LocationController>().selectedServiceLocationType.name
+      );
+      if(response.statusCode == 200 && response.body["response_code"] == "booking_place_success_200"){
+        _isPlacedOrderSuccessfully = true;
+        _bookingReadableId = response.body['content']['readable_id'].toString();
+        String? token = response.body['content']['token'];
+        Get.find<CartController>().getCartListFromServer();
 
-      if(paymentMethod != "offline_payment"){
+       if(paymentMethod != "offline_payment"){
         updateState(PageState.complete);
         if(ResponsiveHelper.isWeb()) {
           String token = base64Encode(utf8.encode("&&attribute_id=$_bookingReadableId"));
           Get.toNamed(RouteHelper.getCheckoutRoute('cart',Get.find<CheckOutController>().currentPageState.name,"null", token: token));
+        }else{
+          // AUTO-ASSIGN: success screen par provider-finding card dikhao
+          String? placedBookingId;
+          try {
+            placedBookingId = response.body['content']['booking_id'][0].toString();
+          } catch (_) {}
+          Get.offNamed(RouteHelper.getOrderSuccessRoute('success', bookingId: placedBookingId));
         }
 
         customSnackBar('${response.body['message']}'.tr,type : ToasterMessageType.success,margin: 55);
 
-      }else{
+       }else{
         String? bookingId = response.body['content']['booking_id'][0];
         customSnackBar('now_pay_you_bill_using_the_payment_method'.tr,toasterTitle: 'your_booking_has_been_placed_successfully'.tr, type: ToasterMessageType.success, duration: 4);
         Get.offAllNamed(RouteHelper.getOfflinePaymentRoute(
@@ -215,16 +223,19 @@ class CheckOutController extends GetxController implements GetxService{
           newUserInfo: newUserInfo,
           readableId: _bookingReadableId
         ));
-      }
-
-       if(token !=null){
-        _saveTokenAndHandelPhoneVerification(token: token, userInfo: newUserInfo, paymentMethod: paymentMethod);
        }
 
-     } else {
-       ApiChecker.checkApi(response);
-     }
-   }
+        if(token !=null){
+        _saveTokenAndHandelPhoneVerification(token: token, userInfo: newUserInfo, paymentMethod: paymentMethod);
+        }
+
+      } else {
+        ApiChecker.checkApi(response);
+      }
+      }catch(e){
+        customSnackBar('Booking request failed. Please try again.', type: ToasterMessageType.error);
+      }
+    }
    else{
      Get.offNamed(RouteHelper.getOrderSuccessRoute('fail'));
    }
@@ -368,7 +379,7 @@ class CheckOutController extends GetxController implements GetxService{
        Get.toNamed(RouteHelper.getCheckoutRoute('cart',"complete","null", token: token ));
 
      } else if(fromPage == "custom-post"){
-       Get.offNamed(RouteHelper.getOrderSuccessRoute('success'));
+       Get.offNamed(RouteHelper.getOrderSuccessRoute('success', bookingId: bookingId));
      } else{
        await Get.find<BookingDetailsController>().getBookingDetails(bookingId: bookingId);
       if(Navigator.canPop(Get.context!)){

@@ -1,29 +1,49 @@
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 
-class AddressMapSection extends StatelessWidget {
+class AddressMapSection extends StatefulWidget {
   final LatLng initialPosition;
-  final Completer<GoogleMapController> controller;
-  final Function(CameraPosition) onCameraMove;
+  final MapController? Function() getMapController;
+  final Function(LatLng target, double zoom) onPositionChanged;
   final Function() onCameraIdle;
-  final Function(GoogleMapController) onMapCreated;
+  final Function(MapController) onMapCreated;
   final bool fromCheckout;
   final bool isDesktop;
   final bool isUpdate;
-  final TextEditingController serviceAddressController ;
+  final TextEditingController serviceAddressController;
 
   const AddressMapSection({
     super.key,
     required this.initialPosition,
-    required this.controller,
-    required this.onCameraMove,
+    required this.getMapController,
+    required this.onPositionChanged,
     required this.onCameraIdle,
     required this.onMapCreated,
     required this.fromCheckout,
     this.isDesktop = false,
     this.isUpdate = false,
-    required this.serviceAddressController
+    required this.serviceAddressController,
   });
+
+  @override
+  State<AddressMapSection> createState() => _AddressMapSectionState();
+}
+
+class _AddressMapSectionState extends State<AddressMapSection> {
+  late MapController _mapController;
+  Timer? _idleTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _mapController = MapController();
+  }
+
+  @override
+  void dispose() {
+    _idleTimer?.cancel();
+    super.dispose();
+  }
 
   void _checkPermission(Function onTap) async {
     LocationPermission permission = await Geolocator.checkPermission();
@@ -47,7 +67,7 @@ class AddressMapSection extends StatelessWidget {
           onHorizontalDragStart: (_){},
           onVerticalDragStart: (_){},
           child: Container(
-            height: isDesktop
+            height: widget.isDesktop
                 ? (ResponsiveHelper.isDesktop(context) ? 570 : 150)
                 : 150,
             width: MediaQuery.of(context).size.width,
@@ -60,22 +80,34 @@ class AddressMapSection extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  GoogleMap(
-                    minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
-                    initialCameraPosition: CameraPosition(
-                      target: initialPosition,
-                      zoom: isDesktop ? 14.4746 : 16,
+                  FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                      initialCenter: widget.initialPosition,
+                      initialZoom: widget.isDesktop ? 14.4746 : 16,
+                      minZoom: 0,
+                      maxZoom: 16,
+                    onPositionChanged: (camera, hasGesture) {
+                      if (hasGesture) {
+                        _idleTimer?.cancel();
+                        Get.find<LocationController>().updateCameraMovingStatus(true);
+                        widget.onPositionChanged(camera.center, camera.zoom);
+                        _idleTimer = Timer(const Duration(milliseconds: 500), () {
+                          Get.find<LocationController>().updateCameraMovingStatus(false);
+                          widget.onCameraIdle();
+                        });
+                      }
+                    },
+                      onMapReady: () {
+                        widget.onMapCreated(_mapController);
+                      },
                     ),
-                    zoomControlsEnabled: ResponsiveHelper.isDesktop(context) ? true : false,
-                    onCameraIdle: onCameraIdle,
-                    onCameraMove: onCameraMove,
-                    onMapCreated: onMapCreated,
-                    style: Get.isDarkMode
-                        ? Get.find<ThemeController>().darkMap
-                        : Get.find<ThemeController>().lightMap,
-                    myLocationButtonEnabled: false,
-                    mapToolbarEnabled: false,
-                    webCameraControlEnabled: false,
+                    children: [
+                      TileLayer(
+                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.sixamtech.demandium.user',
+                      ),
+                    ],
                   ),
                   if(ResponsiveHelper.isDesktop(context))
                     Positioned(
@@ -83,8 +115,8 @@ class AddressMapSection extends StatelessWidget {
                       left: Dimensions.paddingSizeSmall,
                       right: Dimensions.paddingSizeSmall,
                       child: LocationSearchDialog(
-                        getMapController: ()=> Get.find<LocationController>().mapController,
-                        pickedLocation: serviceAddressController.text.isEmpty ? 'search_location'.tr : serviceAddressController.text,
+                        getMapController: widget.getMapController,
+                        pickedLocation: widget.serviceAddressController.text.isEmpty ? 'search_location'.tr : widget.serviceAddressController.text,
                         child: Container(
                           height: 35,
                           padding: const EdgeInsets.symmetric(
@@ -100,7 +132,7 @@ class AddressMapSection extends StatelessWidget {
                               const SizedBox(width: Dimensions.paddingSizeExtraSmall),
                               Expanded(
                                 child: Text(
-                                  serviceAddressController.text.isEmpty ? 'search_location'.tr : serviceAddressController.text, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,color: Theme.of(context).disabledColor),
+                                  widget.serviceAddressController.text.isEmpty ? 'search_location'.tr : widget.serviceAddressController.text, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,color: Theme.of(context).disabledColor),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -123,7 +155,6 @@ class AddressMapSection extends StatelessWidget {
                       child: Image.asset(Images.marker, height: 40, width: 40),
                     ),
 
-                  // My Location Button
                   Positioned(
                     bottom: 115,
                     left: Get.find<LocalizationController>().isLtr
@@ -137,8 +168,8 @@ class AddressMapSection extends StatelessWidget {
                         locationController.getCurrentLocation(
                           true,
                           deviceCurrentLocation: true,
-                          isFromCheckout: fromCheckout,
-                          mapController: locationController.mapController,
+                          isFromCheckout: widget.fromCheckout,
+                          mapController: _mapController,
                         );
                       }),
                       child: Container(

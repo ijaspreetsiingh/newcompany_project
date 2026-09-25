@@ -58,7 +58,7 @@ class ServiceTabController extends GetxController with GetTickerProviderStateMix
   Rating? _rating;
   String? _serviceID;
   int? _offset = 1;
-  Rating get rating => _rating!;
+  Rating get rating => _rating ?? Rating(averageRating: 0.0, ratingCount: 0);
   int? get offset => _offset;
   String? get serviceID => _serviceID;
 

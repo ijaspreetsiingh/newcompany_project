@@ -54,6 +54,7 @@ class ConfigContent {
   List<SocialMedia>? socialMedia;
   AdminDetails? adminDetails;
   MinimumVersion? minimumVersion;
+  int? bannerAutoSlideDuration;
   String? footerText;
   int? phoneNumberVisibility;
   int? walletStatus;
@@ -210,6 +211,7 @@ class ConfigContent {
 
     adminDetails = json['admin_details'] != null ? AdminDetails.fromJson(json['admin_details']) : null;
     minimumVersion = json['min_versions'] != null ? MinimumVersion.fromJson(json['min_versions']) : null;
+    bannerAutoSlideDuration = int.tryParse(json['banner_auto_slide_duration'].toString()) ?? 5;
     footerText = json['footer_text'];
     phoneNumberVisibility = json['phone_number_visibility_for_chatting'];
     walletStatus = json['wallet_status'];
@@ -314,6 +316,7 @@ class ConfigContent {
     if (minimumVersion != null) {
       data['min_versions'] = minimumVersion!.toJson();
     }
+    data['banner_auto_slide_duration'] = bannerAutoSlideDuration;
     data['footer_text'] = footerText;
     data['phone_number_visibility_for_chatting'] = phoneNumberVisibility;
     data['wallet_status'] = walletStatus;

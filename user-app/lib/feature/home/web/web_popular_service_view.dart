@@ -34,7 +34,7 @@ class WebPopularServiceView extends StatelessWidget {
                 children: [
                   const SizedBox(height: Dimensions.paddingSizeLarge),
                   TitleWidget(
-                    textDecoration: TextDecoration.underline,
+                    
                     title: 'popular_services'.tr,
                     onTap: () => Get.toNamed(RouteHelper.getSearchResultRoute(fromPage: "popular")),
                   ),

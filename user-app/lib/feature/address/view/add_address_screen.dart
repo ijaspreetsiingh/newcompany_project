@@ -40,9 +40,8 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
 
   LatLng? _initialPosition;
   final GlobalKey<FormState> addressFormKey = GlobalKey<FormState>();
-  final Completer<GoogleMapController> _controller = Completer();
 
-  CameraPosition? _cameraPosition;
+  LatLng? _currentLatLng;
 
   // ValueNotifier to communicate bottom sheet extent without rebuilding
   final ValueNotifier<double> _bottomSheetExtent = ValueNotifier<double>(0.25);
@@ -62,17 +61,12 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
           double.tryParse(Get.find<LocationController>().getUserAddress()?.latitude ?? "") ?? (Get.find<SplashController>().configModel.content?.defaultLocation?.latitude ?? 23.0000),
           double.tryParse(Get.find<LocationController>().getUserAddress()?.longitude ?? "") ?? (Get.find<SplashController>().configModel.content?.defaultLocation?.longitude ?? 90.0000),
         );
-
-
-
     }
   }
 
   Future<void> setControllerData() async {
-
-
     _serviceAddressController.text = widget.address?.address??"";
-    _contactPersonNameController.text = widget.address?.contactPersonName??'';
+    _contactPersonNameController.text = widget.address?.contactPersonNumber??'';
 
     String numberAfterValidation = PhoneVerificationHelper.isPhoneValid(
         widget.address?.contactPersonNumber ?? Get.find<UserController>().userInfoModel?.phone ?? "", fromAuthPage: false);
@@ -102,7 +96,6 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
   @override
   void dispose(){
     _bottomSheetExtent.dispose();
-
     super.dispose();
   }
 
@@ -121,7 +114,6 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
         body: !ResponsiveHelper.isDesktop(context)
             ? _MobileAddressLayout(
                 initialPosition: _initialPosition!,
-                controller: _controller,
                 fromCheckout: widget.fromCheckout,
                 formKey: addressFormKey,
                 contactPersonNameController: _contactPersonNameController,
@@ -144,27 +136,26 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                 streetNode: _streetNode,
                 onSave: () => _saveAddress(Get.find<LocationController>()),
                 isUpdate: widget.address != null,
-                onCameraMove: (position) => _cameraPosition = position,
+                onPositionChanged: (target, zoom) => _currentLatLng = target,
                 onCameraIdle: () {
                   try {
-                    Get.find<LocationController>().updatePosition(_cameraPosition!, true, formCheckout: widget.fromCheckout);
+                    if (_currentLatLng != null) {
+                      Get.find<LocationController>().updatePosition(_currentLatLng!, true, formCheckout: widget.fromCheckout);
+                    }
                   } catch (error) {
                     if (kDebugMode) {
                       print('error : $error');
                     }
                   }
                 },
-                onMapCreated: (GoogleMapController controller) {
+                onMapCreated: (MapController controller) {
                   Get.find<LocationController>().setMapController(controller);
-                  _controller.complete(controller);
-
                 },
                 checkPermission: _checkPermission,
                 bottomSheetExtent: _bottomSheetExtent,
               )
             : _DesktopAddressLayout(
                 initialPosition: _initialPosition!,
-                controller: _controller,
                 fromCheckout: widget.fromCheckout,
                 formKey: addressFormKey,
                 contactPersonNameController: _contactPersonNameController,
@@ -188,20 +179,20 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                 onSave: () => _saveAddress(Get.find<LocationController>()),
                 isUpdate: widget.address != null,
                 bottomPadding: bottomPadding,
-                onCameraMove: (position) => _cameraPosition = position,
+                onPositionChanged: (target, zoom) => _currentLatLng = target,
                 onCameraIdle: () {
                   try {
-                    Get.find<LocationController>().updatePosition(_cameraPosition!, true, formCheckout: widget.fromCheckout);
+                    if (_currentLatLng != null) {
+                      Get.find<LocationController>().updatePosition(_currentLatLng!, true, formCheckout: widget.fromCheckout);
+                    }
                   } catch (error) {
                     if (kDebugMode) {
                       print('error : $error');
                     }
                   }
                 },
-                onMapCreated: (GoogleMapController controller) {
+                onMapCreated: (MapController controller) {
                   Get.find<LocationController>().setMapController(controller);
-                  _controller.complete(controller);
-
                 },
                 checkPermission: _checkPermission,
               ),
@@ -277,7 +268,6 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
 // Mobile Layout Widget
 class _MobileAddressLayout extends StatelessWidget {
   final LatLng initialPosition;
-  final Completer<GoogleMapController> controller;
   final bool fromCheckout;
   final GlobalKey<FormState> formKey;
   final TextEditingController contactPersonNameController;
@@ -301,14 +291,13 @@ class _MobileAddressLayout extends StatelessWidget {
   final VoidCallback onSave;
   final bool isUpdate;
   final ValueNotifier<double> bottomSheetExtent;
-  final Function(CameraPosition) onCameraMove;
+  final Function(LatLng, double) onPositionChanged;
   final Function() onCameraIdle;
-  final Function(GoogleMapController) onMapCreated;
+  final Function(MapController) onMapCreated;
   final Function(Function) checkPermission;
 
   const _MobileAddressLayout({
     required this.initialPosition,
-    required this.controller,
     required this.fromCheckout,
     required this.formKey,
     required this.contactPersonNameController,
@@ -332,7 +321,7 @@ class _MobileAddressLayout extends StatelessWidget {
     required this.onSave,
     required this.isUpdate,
     required this.bottomSheetExtent,
-    required this.onCameraMove,
+    required this.onPositionChanged,
     required this.onCameraIdle,
     required this.onMapCreated,
     required this.checkPermission,
@@ -344,14 +333,11 @@ class _MobileAddressLayout extends StatelessWidget {
       builder: (locationController) {
         return Stack(
           children: [
-            // Animated Map Container
             ValueListenableBuilder<double>(
               valueListenable: bottomSheetExtent,
               builder: (context, extent, child) {
-
                 final double minExtent = locationController.minBottomSheetExtent;
                 final double maxExtent = locationController.maxBottomSheetExtent;
-
                 final progress = ((extent - minExtent) / (maxExtent - minExtent)).clamp(0.0, 1.0);
                 final double translation = progress * (Get.height * ((maxExtent - minExtent)/2));
 
@@ -381,21 +367,14 @@ class _MobileAddressLayout extends StatelessWidget {
                 height: Get.height - (Get.height * locationController.minBottomSheetExtent),
                 child: Stack(
                   children: [
-                    GoogleMap(
-                      minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
-                      initialCameraPosition: CameraPosition(
-                        target: initialPosition,
-                        zoom: 16,
-                      ),
-                      zoomControlsEnabled: false,
+                    AddressMapSection(
+                      initialPosition: initialPosition,
+                      getMapController: () => locationController.mapController,
+                      onPositionChanged: onPositionChanged,
                       onCameraIdle: onCameraIdle,
-                      onCameraMove: onCameraMove,
                       onMapCreated: onMapCreated,
-                      style: Get.isDarkMode
-                          ? Get.find<ThemeController>().darkMap
-                          : Get.find<ThemeController>().lightMap,
-                      myLocationButtonEnabled: false,
-                      webCameraControlEnabled: false,
+                      fromCheckout: fromCheckout,
+                      serviceAddressController: serviceAddressController,
                     ),
 
                     Positioned.fill(
@@ -407,7 +386,6 @@ class _MobileAddressLayout extends StatelessWidget {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Fullscreen button
                               InkWell(
                                 onTap: () {
                                   Get.toNamed(
@@ -421,7 +399,7 @@ class _MobileAddressLayout extends StatelessWidget {
                                     arguments: PickMapScreen(
                                       fromAddAddress: true,
                                       fromSignUp: false,
-                                      googleMapController: Get.find<LocationController>().mapController,
+                                      mapController: Get.find<LocationController>().mapController,
                                       route: null,
                                       canRoute: false,
                                       formCheckout: fromCheckout,
@@ -452,7 +430,6 @@ class _MobileAddressLayout extends StatelessWidget {
                               ),
                               const SizedBox(height: Dimensions.paddingSizeSmall),
 
-                              // My location button
                               InkWell(
                                 onTap: () => checkPermission(() {
                                   Get.find<LocationController>().getCurrentLocation(
@@ -493,8 +470,6 @@ class _MobileAddressLayout extends StatelessWidget {
               ),
             ),
 
-
-            // Draggable Bottom Sheet
             AddressFormBottomSheet(
               formKey: formKey,
               contactPersonNameController: contactPersonNameController,
@@ -525,10 +500,10 @@ class _MobileAddressLayout extends StatelessWidget {
     );
   }
 }
+
 // Desktop Layout Widget
 class _DesktopAddressLayout extends StatelessWidget {
   final LatLng initialPosition;
-  final Completer<GoogleMapController> controller;
   final bool fromCheckout;
   final GlobalKey<FormState> formKey;
   final TextEditingController contactPersonNameController;
@@ -552,14 +527,13 @@ class _DesktopAddressLayout extends StatelessWidget {
   final VoidCallback onSave;
   final bool isUpdate;
   final double bottomPadding;
-  final Function(CameraPosition) onCameraMove;
+  final Function(LatLng, double) onPositionChanged;
   final Function() onCameraIdle;
-  final Function(GoogleMapController) onMapCreated;
+  final Function(MapController) onMapCreated;
   final Function(Function) checkPermission;
 
   const _DesktopAddressLayout({
     required this.initialPosition,
-    required this.controller,
     required this.fromCheckout,
     required this.formKey,
     required this.contactPersonNameController,
@@ -583,7 +557,7 @@ class _DesktopAddressLayout extends StatelessWidget {
     required this.onSave,
     required this.isUpdate,
     required this.bottomPadding,
-    required this.onCameraMove,
+    required this.onPositionChanged,
     required this.onCameraIdle,
     required this.onMapCreated,
     required this.checkPermission,
@@ -623,8 +597,8 @@ class _DesktopAddressLayout extends StatelessWidget {
                             const SizedBox(height: Dimensions.paddingSizeDefault),
                             AddressMapSection(
                               initialPosition: initialPosition,
-                              controller: controller,
-                              onCameraMove: onCameraMove,
+                              getMapController: () => locationController.mapController,
+                              onPositionChanged: onPositionChanged,
                               onCameraIdle: onCameraIdle,
                               onMapCreated: onMapCreated,
                               fromCheckout: fromCheckout,
@@ -666,7 +640,6 @@ class _DesktopAddressLayout extends StatelessWidget {
 
                             const SizedBox(height: Dimensions.paddingSizeTextFieldGap),
 
-                            // Contact Info Section
                             ContactInfoSection(
                               nameController: contactPersonNameController,
                               numberController: contactPersonNumberController,

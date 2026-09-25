@@ -107,7 +107,7 @@ class WebHomeScreen extends StatelessWidget {
 
                     const SizedBox(height: Dimensions.paddingSizeTextFieldGap,),
                     (serviceController.allService != null && serviceController.allService!.isNotEmpty) ?   TitleWidget(
-                      textDecoration: TextDecoration.underline,
+                      
                       title: 'all_service'.tr,
                       // onTap: () => Get.toNamed(RouteHelper.getSearchResultRoute()),
                     ) : const SizedBox.shrink(),

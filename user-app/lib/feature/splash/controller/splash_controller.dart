@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:jdds/api/local/cache_response.dart';
 import 'package:jdds/helper/data_sync_helper.dart';
 import 'package:get/get.dart';
@@ -25,47 +26,26 @@ class SplashController extends GetxController implements GetxService {
 
   Future<bool> getConfigData() async {
 
-    DataSyncHelper.fetchAndSyncData(
-      fetchFromLocal: ()=>  splashRepo.getConfigData<CacheResponseData>( source: DataSourceEnum.local),
-      fetchFromClient: ()=>  splashRepo.getConfigData(source: DataSourceEnum.client),
-      onResponse: (data, source) {
-        // Update current data source
-        _currentDataSource = source;
-        
-        _configModel = ConfigModel.fromJson(data);
-
-        bool isWebMaintenanceDisabled = (_configModel?.content?.maintenanceMode?.maintenanceStatus == 0 || _configModel?.content?.maintenanceMode?.selectedMaintenanceSystem?.webApp == 0) && kIsWeb;
-        bool isAppMaintenanceDisabled = (_configModel?.content?.maintenanceMode?.maintenanceStatus == 0 || _configModel?.content?.maintenanceMode?.selectedMaintenanceSystem?.mobileApp == 0) && !kIsWeb;
-
-        if(_configModel?.content?.maintenanceMode?.maintenanceStatus == 1
-            && _configModel?.content?.maintenanceMode?.selectedMaintenanceSystem?.mobileApp == 1 && source == DataSourceEnum.client  && !AppConstants.avoidMaintenanceMode && !kIsWeb ){
-          Get.offAllNamed(RouteHelper.getMaintenanceRoute());
-        } else if(_configModel?.content?.maintenanceMode?.maintenanceStatus == 1
-            && _configModel?.content?.maintenanceMode?.selectedMaintenanceSystem?.webApp == 1 && source == DataSourceEnum.client  && !AppConstants.avoidMaintenanceMode && kIsWeb ){
-          Get.offAllNamed(RouteHelper.getMaintenanceRoute());
-        }
-        else if((Get.currentRoute.contains(RouteHelper.maintenance) &&  (isAppMaintenanceDisabled || isWebMaintenanceDisabled))) {
-          Get.offAllNamed(RouteHelper.getInitialRoute());
-        }
-        else if(_configModel?.content?.maintenanceMode?.maintenanceStatus == 0){
-          if((_configModel?.content?.maintenanceMode?.selectedMaintenanceSystem?.mobileApp == 1 && !kIsWeb) ||( _configModel?.content?.maintenanceMode?.selectedMaintenanceSystem?.webApp == 1 && kIsWeb)){
-            if(_configModel?.content?.maintenanceMode?.maintenanceTypeAndDuration?.maintenanceDuration == 'customize'){
-
-              DateTime now = DateTime.now();
-              DateTime specifiedDateTime = DateTime.parse(_configModel!.content!.maintenanceMode!.maintenanceTypeAndDuration!.startDate!);
-
-              Duration difference = specifiedDateTime.difference(now);
-
-              if(difference.inMinutes > 0 && (difference.inMinutes < 60 || difference.inMinutes == 60)){
-                _startTimer(specifiedDateTime);
-              }
-            }
-          }
-        }
-
+    try {
+      final localResponse = await splashRepo.getConfigData<CacheResponseData>(source: DataSourceEnum.local);
+      if(localResponse.isSuccess) {
+        _configModel = ConfigModel.fromJson(jsonDecode(localResponse.response!.response));
+        _currentDataSource = DataSourceEnum.local;
         update();
-      },
-    );
+      }
+    } catch(e) {
+      // local cache empty
+    }
+
+    splashRepo.getConfigData(source: DataSourceEnum.client).then((clientResponse) {
+      try {
+        if(clientResponse.isSuccess && clientResponse.response?.statusCode == 200) {
+          _configModel = ConfigModel.fromJson(clientResponse.response!.body);
+          _currentDataSource = DataSourceEnum.client;
+          update();
+        }
+      } catch(e) {}
+    }).catchError((e) {});
 
     return true;
   }
@@ -142,17 +122,19 @@ class SplashController extends GetxController implements GetxService {
   }
 
 
-  Future<void> updateLanguage(bool isInitial) async {
-    Response response = await splashRepo.updateLanguage(getGuestId());
+  void updateLanguage(bool isInitial) async {
+    try {
+      Response response = await splashRepo.updateLanguage(getGuestId());
+      if(!isInitial){
+        if(response.statusCode == 200 && response.body['response_code'] == "default_200"){
 
-    if(!isInitial){
-      if(response.statusCode == 200 && response.body['response_code'] == "default_200"){
-
-      }else{
-        customSnackBar("${response.body['message']}");
+        }else{
+          customSnackBar("${response.body['message']}");
+        }
       }
+    } catch(e) {
+      // timeout or network error, don't block
     }
-
   }
 
   Future<void> addError404UrlToServer(String url) async {

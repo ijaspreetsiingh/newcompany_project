@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 ThemeData dark = ThemeData(
   useMaterial3: false,
   fontFamily: 'Roboto',
-  primaryColor: const Color(0xFF7a87ca),
+  primaryColor: const Color(0xFFFF8C42),
   primaryColorLight: const Color(0xFFECEDF7),
   primaryColorDark: const Color(0xff34428F),
   secondaryHeaderColor: const Color(0xFF9BB8DA),
@@ -20,8 +20,8 @@ ThemeData dark = ThemeData(
     CustomThemeColors.dark(),
   ],
 
-  textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: const Color(0xFFFFFFFF))), colorScheme: const ColorScheme.dark(
-  primary: Color(0xff7a87ca),
+  textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: const Color(0xFFFFFFFF))),  colorScheme: const ColorScheme.dark(
+  primary: Color(0xFFFF8C42),
   secondary: Color(0xFFf57d00),
   onSecondary: Color(0xffac8c34),
   onSecondaryContainer: Color(0xFF02AA05),

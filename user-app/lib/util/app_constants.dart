@@ -3,7 +3,8 @@ import 'package:jdds/util/core_export.dart';
 class AppConstants {
 
 
-  static const String appName = 'Demandium';
+  static const String appName = 'Jass Booking';
+  static const String shortAppName = 'JS';
   static const String appVersion = '3.7'; /// Flutter SDK : 3.38.9
   static const String baseUrl = 'http://10.0.2.2:8000'; // For Android emulator, 10.0.2.2 = host machine localhost
   static const String websiteUrl =  'http://localhost:5000'; // Local web development

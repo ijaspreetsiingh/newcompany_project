@@ -22,7 +22,8 @@ dependencies:
   url_strategy: ^0.3.0
   image_picker: ^1.2.1
   cached_network_image: ^3.4.1
-  google_maps_flutter: ^2.14.0
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
   geolocator: ^14.0.2
   url_launcher: ^6.3.2
   country_code_picker: ^3.4.1
@@ -98,6 +99,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/img/
     - assets/language/
     - assets/json/
     - assets/map/

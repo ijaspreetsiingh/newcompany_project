@@ -25,7 +25,7 @@ class LocationController extends GetxController implements GetxService {
   bool _buttonDisabled = true;
   bool _changeAddress = true;
   bool _isCameraMoving = false;
-  GoogleMapController? _mapController;
+  MapController? _mapController;
   List<PredictionModel> _predictionList = [];
   PredictionModel? _firstPredictionModel;
   bool _updateAddAddressData = true;
@@ -57,7 +57,7 @@ class LocationController extends GetxController implements GetxService {
   String get zoneID => _zoneID;
   bool get buttonDisabled => _buttonDisabled;
   bool get isCameraMoving => _isCameraMoving;
-  GoogleMapController get mapController => _mapController!;
+  MapController get mapController => _mapController!;
 
   ///address type like home , office , others
   Address get selectedAddressType => _selectedAddressType;
@@ -80,7 +80,7 @@ class LocationController extends GetxController implements GetxService {
 
 
 
-  Future<AddressModel> getCurrentLocation(bool fromAddress, {bool deviceCurrentLocation = false, GoogleMapController? mapController, LatLng? defaultLatLng, bool notify = true, bool isFromCheckout = false}) async {
+  Future<AddressModel> getCurrentLocation(bool fromAddress, {bool deviceCurrentLocation = false, MapController? mapController, LatLng? defaultLatLng, bool notify = true, bool isFromCheckout = false}) async {
     _loading = true;
     if(notify) {
       update();
@@ -131,27 +131,19 @@ class LocationController extends GetxController implements GetxService {
     }
     if (mapController != null) {
 
-      mapController.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(target: LatLng(myPosition.latitude, myPosition.longitude), zoom: 16),
-      ));
+      mapController.move(LatLng(myPosition.latitude, myPosition.longitude), 16);
     }
     AddressModel address = await getAddressFromGeocode(LatLng(myPosition.latitude, myPosition.longitude));
 
 
     ZoneResponseModel responseModel = await getZone(myPosition.latitude.toString(), myPosition.longitude.toString(), true, isLoading: fromAddress);
 
-    print('--------------res-----> ${responseModel.zoneIds} || ${getUserAddress()?.zoneId}');
-
-    print('--------address----> $fromAddress');
-
 
     if(isFromCheckout){
       if(responseModel.zoneIds == getUserAddress()?.zoneId){
         _buttonDisabled = false;
-        print('--------------false-----');
 
       }else{
-        print('--------------ture-----');
         _buttonDisabled = true;
       }
     }else{
@@ -194,7 +186,7 @@ class LocationController extends GetxController implements GetxService {
     Response response = await locationRepo.getZone(lat, long);
 
     int totalServiceCountInZone = 0;
-    if(response.statusCode == 200 && response.body['content'] != null) {
+    if(response.statusCode == 200 && response.body != null && response.body['content'] != null) {
       _inZone = true;
       _zoneID = response.body['content']['zone']['id'];
 
@@ -204,7 +196,7 @@ class LocationController extends GetxController implements GetxService {
       responseModel = ZoneResponseModel(true, '',_zoneID, totalServiceCountInZone);
     }else {
       _inZone = false;
-      responseModel = ZoneResponseModel(false, response.body['message'], '',totalServiceCountInZone);
+      responseModel = ZoneResponseModel(false, response.body?['message'] ?? 'Zone not found', '',totalServiceCountInZone);
     }
     if(!isLoading){
       _isLoading = false;
@@ -214,7 +206,7 @@ class LocationController extends GetxController implements GetxService {
     return responseModel;
   }
 
-  void updatePosition(CameraPosition position, bool fromAddress, {bool formCheckout = false}) async {
+  void updatePosition(LatLng target, bool fromAddress, {bool formCheckout = false}) async {
     if(_updateAddAddressData) {
       _loading = true;
       update();
@@ -222,18 +214,18 @@ class LocationController extends GetxController implements GetxService {
     try {
       if (fromAddress) {
         _position = Position(
-          latitude: position.target.latitude, longitude: position.target.longitude, timestamp: DateTime.now(),
+          latitude: target.latitude, longitude: target.longitude, timestamp: DateTime.now(),
           heading: 1, accuracy: 1, altitude: 1, speedAccuracy: 1, speed: 1,
             altitudeAccuracy: 1, headingAccuracy: 1
         );
       } else {
         _pickPosition = Position(
-          latitude: position.target.latitude, longitude: position.target.longitude, timestamp: DateTime.now(),
+          latitude: target.latitude, longitude: target.longitude, timestamp: DateTime.now(),
           heading: 1, accuracy: 1, altitude: 1, speedAccuracy: 1, speed: 1,
             altitudeAccuracy: 1, headingAccuracy: 1
         );
       }
-      ZoneResponseModel responseModel = await getZone(position.target.latitude.toString(), position.target.longitude.toString(), true, isLoading: formCheckout);
+      ZoneResponseModel responseModel = await getZone(target.latitude.toString(), target.longitude.toString(), true, isLoading: formCheckout);
       if( formCheckout && !responseModel.zoneIds.contains(getUserAddress()?.zoneId??'')){
         Get.dialog(
           ConfirmationDialog(
@@ -247,12 +239,11 @@ class LocationController extends GetxController implements GetxService {
 
       }else{
         if(responseModel.isSuccess) {
-          print('------------here00000');
           _buttonDisabled = false;
         }
       }
       if (_changeAddress) {
-        AddressModel address = await getAddressFromGeocode(LatLng(position.target.latitude, position.target.longitude));
+        AddressModel address = await getAddressFromGeocode(LatLng(target.latitude, target.longitude));
 
         fromAddress ? _address= address : _pickAddress = address;
 
@@ -260,9 +251,7 @@ class LocationController extends GetxController implements GetxService {
         _changeAddress = true;
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('');
-      }
+      // silent
     }
     if(_updateAddAddressData) {
       _loading = false;
@@ -289,7 +278,11 @@ class LocationController extends GetxController implements GetxService {
     return responseModel;
   }
 
-  Future<void> getAddressList({bool fromCheckout = false}) async {
+  Future<void> getAddressList({bool fromCheckout = false, bool forceRefresh = false}) async {
+    if(!forceRefresh && _addressList != null && _addressList!.isNotEmpty) {
+      update();
+      return;
+    }
     Response response = await locationRepo.getAllAddress();
     if (response.statusCode == 200) {
       _addressList = <AddressModel>[];
@@ -442,7 +435,7 @@ class LocationController extends GetxController implements GetxService {
     }
   }
 
-  Future<AddressModel> setLocation(String placeID, String address, GoogleMapController? mapController) async {
+  Future<AddressModel> setLocation(String placeID, String address, MapController? mapController) async {
     _loading = true;
     update();
 
@@ -491,7 +484,7 @@ class LocationController extends GetxController implements GetxService {
     _pickAddress = addressModel;
     _changeAddress = false;
     if(mapController != null){
-      mapController.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: latLng, zoom: 17)));
+      mapController.move(latLng, 17);
     }
 
     if(latLng.latitude != 0 && latLng.longitude != 0) {
@@ -585,7 +578,7 @@ class LocationController extends GetxController implements GetxService {
     _pickAddress = _address;
   }
 
-  void setMapController(GoogleMapController mapController) {
+  void setMapController(MapController mapController) {
     _mapController = mapController;
   }
 
@@ -696,7 +689,7 @@ class LocationController extends GetxController implements GetxService {
     return locationRepo.getZoneContinue();
   }
 
-  void mapBound(GoogleMapController controller, List<Coordinates>? coordinates) async {
+  void mapBound(MapController controller, List<Coordinates>? coordinates) async {
     List<LatLng> latLongList = [];
 
     if (coordinates != null) {
@@ -705,13 +698,12 @@ class LocationController extends GetxController implements GetxService {
       }
     }
 
-    await controller.getVisibleRegion();
-    Future.delayed(const Duration(milliseconds: 100), () {
-      controller.animateCamera(CameraUpdate.newLatLngBounds(
-        MapHelper.boundsFromLatLngList(latLongList),
-        100.5,
+    if (latLongList.isNotEmpty) {
+      controller.fitCamera(CameraFit.bounds(
+        bounds: MapHelper.boundsFromLatLngList(latLongList),
+        padding: const EdgeInsets.all(100.5),
       ));
-    });
+    }
 
     update();
   }

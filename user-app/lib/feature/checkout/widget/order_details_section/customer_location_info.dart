@@ -91,8 +91,6 @@ class CustomerLocationInfo extends StatelessWidget {
                     selectedAddress: Get.find<LocationController>().selectedAddress,
                     pickedAddress: Get.find<LocationController>().getUserAddress(),
                   );
-                  print('-----------add---> ${addressModel?.toJson()}');
-
                   Get.toNamed(RouteHelper.getEditAddressRoute( addressModel ?? AddressModel(), true));
                   return;
                 }

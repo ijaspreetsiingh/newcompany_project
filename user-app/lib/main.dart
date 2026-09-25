@@ -120,9 +120,10 @@ class _MyAppState extends State<MyApp> {
 
       if(Get.find<LocationController>().getUserAddress() != null){
         AddressModel addressModel = Get.find<LocationController>().getUserAddress()!;
-        ZoneResponseModel responseModel = await Get.find<LocationController>().getZone(addressModel.latitude.toString(), addressModel.longitude.toString(), false);
-        addressModel.availableServiceCountInZone = responseModel.totalServiceCount;
-        Get.find<LocationController>().saveUserAddress(addressModel);
+        Get.find<LocationController>().getZone(addressModel.latitude.toString(), addressModel.longitude.toString(), false).then((responseModel) {
+          addressModel.availableServiceCountInZone = responseModel.totalServiceCount;
+          Get.find<LocationController>().saveUserAddress(addressModel);
+        });
       }
       Get.find<AuthController>().updateToken();
 
@@ -160,7 +161,10 @@ class _MyAppState extends State<MyApp> {
             return const SizedBox();
           } else if((!GetPlatform.isWeb && !Get.currentRoute.contains('/splash') &&  Get.currentRoute.isNotEmpty) && splashController.configModel.content == null) {
             return Material(
-              child: SplashLogoWidget(),
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: SplashLogoWidget(),
+              ),
             );
 
           }

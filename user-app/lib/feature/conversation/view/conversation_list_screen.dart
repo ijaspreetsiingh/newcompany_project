@@ -34,10 +34,12 @@ class _ConversationListScreenState extends State<ConversationListScreen> with Si
   }
 
   @override
-  Widget build(BuildContext context) {
-    return CustomPopWidget(
-      onPopInvoked: (){
-        Get.offNamed(RouteHelper.getMainRoute(RouteHelper.chatInbox));
+  Widget build(BuildContext context) {    return CustomPopWidget(
+      onPopInvoked:(){
+        /// Navigator locked state me crash na ho isliye deferred navigation
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Get.offNamed(RouteHelper.getMainRoute(RouteHelper.chatInbox));
+        });
       },
       child: Scaffold(
         drawer: ResponsiveHelper.isDesktop(context) ? const AddressSelectionDrawer() : null,
@@ -47,7 +49,10 @@ class _ConversationListScreenState extends State<ConversationListScreen> with Si
           isBackButtonExist: true,
           onBackPressed: (){
             if(widget.fromNotification == "fromNotification" || !Navigator.canPop(context)){
-              Get.offNamed(RouteHelper.getMainRoute(RouteHelper.chatInbox));
+              /// Deferred navigation - navigator locked crash fix
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Get.offNamed(RouteHelper.getMainRoute(RouteHelper.chatInbox));
+              });
             }else{
               ConversationController conversationController = Get.find();
               if(conversationController.isActiveSuffixIcon && conversationController.isSearchComplete){

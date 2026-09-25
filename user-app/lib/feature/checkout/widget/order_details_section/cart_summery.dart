@@ -30,10 +30,7 @@ class CartSummery extends StatelessWidget {
               double grandTotal = CheckoutHelper.calculateGrandTotal(cartList: cartList, referralDiscount: referDisCount, daysCount: scheduleDaysCount);
               double dueAmount = CheckoutHelper.calculateDueAmount(cartList: cartList, walletPaymentStatus: walletPaymentStatus, walletBalance:cartController.walletBalance, bookingAmount: cartController.totalPrice, referralDiscount: referDisCount, daysCount: scheduleDaysCount);
 
-              Future.delayed(const Duration(milliseconds: 200), (){
-                cartController.updateTotalPrice = grandTotal;
-                cartController.update();
-              });
+              cartController.updateTotalPrice = grandTotal;
 
               return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 

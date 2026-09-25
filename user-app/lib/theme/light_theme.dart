@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 ThemeData light = ThemeData(
   useMaterial3: false,
   fontFamily: 'Roboto',
-  primaryColor: const Color(0xFF4153B3),
-  primaryColorLight: const Color(0xFFECEDF7),
-  primaryColorDark: const Color(0xff34428F),
+  primaryColor: const Color(0xFFF26B22),
+  primaryColorLight: const Color(0xFFFEEFE6),
+  primaryColorDark: const Color(0xFFD85813),
   secondaryHeaderColor: const Color(0xFF758493),
 
   disabledColor: const Color(0xFF8797AB),
@@ -17,14 +17,13 @@ ThemeData light = ThemeData(
   hoverColor: const Color(0xFFF8FAFC),
   shadowColor:  const Color(0xFFE6E5E5),
   cardColor: Colors.white,
-  textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: const Color(
-      0xFF036FBE))),
+  textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: const Color(0xFFF26B22))),
   extensions: <ThemeExtension<CustomThemeColors>>[
     CustomThemeColors.light(),
   ],
 
   colorScheme: const ColorScheme.light(
-    primary: Color(0xFF4153B3),
+    primary: Color(0xFFF26B22),
     secondary: Color(0xFFFF9900),
     onSecondary: Color(0xFFffda6d),
     tertiary: Color(0xFFd35221),

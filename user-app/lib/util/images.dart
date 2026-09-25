@@ -198,6 +198,18 @@ class Images {
   static String get appStoreIcon => 'app_store'.png;
   static String get apple => 'apple'.png;
 
+  // Qixer reference assets
+  static String get loginSlider => 'login-slider'.png;
+  static String get intro1 => 'intro1'.png;
+  static String get intro2 => 'intro2'.png;
+  static String get intro3 => 'intro3'.png;
+  static String get qixerGoogle => 'qixer_google'.png;
+  static String get qixerApple => 'qixer_apple'.png;
+  static String get qixerUser => 'qixer_user'.png;
+  static String get qixerLock => 'qixer_lock'.png;
+  static String get qixerEmail => 'qixer_email'.png;
+  static String get emailCircle => 'email_circle'.png;
+
 }
 
 extension on String {

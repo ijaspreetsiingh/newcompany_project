@@ -12,19 +12,16 @@ class ServiceAreaController extends GetxController implements GetxService{
 
   List<ZoneModel>? _zoneList;
 
-  Set<Marker> _markers = {};
-  Set<Polygon> _polygone = {};
+  List<Marker> _markers = [];
+  List<Polygon> _polygone = [];
 
 
   List<ZoneModel>? get zoneList => _zoneList;
-  Set<Marker> get markers => _markers;
-  Set<Polygon> get polygone => _polygone;
+  List<Marker> get markers => _markers;
+  List<Polygon> get polygone => _polygone;
 
 
   Future<void> getZoneList({Map<String, GlobalKey>? globalKeyMap, bool reload = true}) async {
-
-    LatLng currentLocation = const LatLng(0, 0);
-
 
     DataSyncHelper.fetchAndSyncData(
       fetchFromLocal: ()=> serviceAreaRepo.getZoneList<CacheResponseData>(source: DataSourceEnum.local),
@@ -44,23 +41,20 @@ class ServiceAreaController extends GetxController implements GetxService{
           }
 
           LatLng position =  computeCentroid(points: zoneLatLongList);
-          currentLocation = LatLng(position.latitude, position.longitude);
+          currentLocationList.add(position);
 
           polygonList.add(
             Polygon(
-              polygonId: PolygonId('zone$index'),
               points: zoneLatLongList,
-              strokeWidth: 2,
-              strokeColor: Get.theme.colorScheme.primary,
-              fillColor: Get.theme.colorScheme.primary.withValues(alpha: .2),
+              borderStrokeWidth: 2,
+              color: Get.theme.colorScheme.primary.withValues(alpha: .2),
+              borderColor: Get.theme.colorScheme.primary,
             ),
           );
 
-          currentLocationList.add(currentLocation);
-
         }
 
-        _polygone = HashSet<Polygon>.of(polygonList);
+        _polygone = polygonList;
         update();
       },
     );
@@ -75,16 +69,34 @@ class ServiceAreaController extends GetxController implements GetxService{
       for (int subIndex = 0; subIndex < zoneList[index].formattedCoordinates!.length; subIndex++) {
         zoneLatLongList.add(LatLng(zoneList[index].formattedCoordinates![subIndex].latitude!, zoneList[index].formattedCoordinates![subIndex].longitude!));
       }
+
+      LatLng centroid = computeCentroid(coordinates: zoneList[index].formattedCoordinates!);
+
+      Widget markerWidget = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeExtraSmall),
+            child: Text(zoneList[index].name ?? "", style: robotoMedium.copyWith(
+                fontSize: Dimensions.fontSizeSmall, color: Colors.black
+            ),),
+          ),
+          Icon(Icons.location_on, color: Get.theme.colorScheme.primary, size: 30),
+        ],
+      );
+
       markerList.add(Marker(
-        infoWindow: GetPlatform.isWeb || GetPlatform.isIOS ? InfoWindow(
-            title: zoneList[index].name
-        ) : InfoWindow.noText,
-        markerId: MarkerId('provider$index'),
-        icon: GetPlatform.isWeb || GetPlatform.isIOS ? BitmapDescriptor.defaultMarker : await MarkerIcon.widgetToIcon(globalKeymap[index.toString()]!) ,
-        position: computeCentroid(coordinates : zoneList[index].formattedCoordinates!),
+        point: centroid,
+        child: markerWidget,
+        width: 120,
+        height: 70,
       ));
     }
-    _markers = HashSet<Marker>.of(markerList);
+    _markers = markerList;
   }
 
 
@@ -125,7 +137,7 @@ class ServiceAreaController extends GetxController implements GetxService{
   }
 
 
-  void mapBound(GoogleMapController controller) async {
+  void mapBound(MapController controller) async {
     List<LatLng> latLongList = [];
     for (int index = 0; index < _zoneList!.length; index++) {
       if (_zoneList![index].formattedCoordinates != null) {
@@ -134,17 +146,14 @@ class ServiceAreaController extends GetxController implements GetxService{
         }
       }
     }
-    await controller.getVisibleRegion();
-    Future.delayed(const Duration(milliseconds: 100), () {
-      controller.animateCamera(CameraUpdate.newLatLngBounds(
-        MapHelper.boundsFromLatLngList(latLongList),
-        100.5,
+    if (latLongList.isNotEmpty) {
+      controller.fitCamera(CameraFit.bounds(
+        bounds: MapHelper.boundsFromLatLngList(latLongList),
+        padding: const EdgeInsets.all(100.5),
       ));
-    });
+    }
 
     update();
   }
-
-
 
 }

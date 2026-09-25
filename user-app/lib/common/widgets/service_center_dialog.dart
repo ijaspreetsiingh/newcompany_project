@@ -56,7 +56,7 @@ class _ProductBottomSheetState extends State<ServiceCenterDialog> {
           ),
           child:  GetBuilder<CartController>(builder: (cartControllerInit) {
               return GetBuilder<ServiceController>(builder: (serviceController) {
-                if(widget.service!.variationsAppFormat!.zoneWiseVariations != null) {
+                if(widget.service!.variationsAppFormat?.zoneWiseVariations != null) {
                   return Column(mainAxisSize: MainAxisSize.min,
                     children: [
                       Row(
@@ -93,19 +93,21 @@ class _ProductBottomSheetState extends State<ServiceCenterDialog> {
                       ),
                       const SizedBox(height: Dimensions.paddingSizeEight,),
                       Text(
-                        widget.service!.name!,
+                        widget.service?.name ?? '',
                         style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault),
                         textAlign: TextAlign.center,
                         maxLines: 2,
                       ),
                       const SizedBox(height: Dimensions.paddingSizeMini,),
                       Text(
-                        widget.service!.variationsAppFormat!.zoneWiseVariations!.length > 1 ?
+                        (() {
+                          int count = widget.service?.variationsAppFormat?.zoneWiseVariations?.length ?? 0;
+                          return count > 1
+                            ? "$count ${'variations_available'.tr}"
+                            : "$count ${'variation_available'.tr}";
+                        })(),
 
-                        "${widget.service!.variationsAppFormat!.zoneWiseVariations!.length} ${'variations_available'.tr}" :
-                        "${widget.service!.variationsAppFormat!.zoneWiseVariations!.length} ${'variation_available'.tr}",
-
-                        style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: .5)),
+                        style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: .5)),
                       ),
                       Column(
                           mainAxisAlignment: MainAxisAlignment.start,
@@ -317,15 +319,17 @@ class _ProductBottomSheetState extends State<ServiceCenterDialog> {
       for (CartModel item in cartController.initialCartList) {
         if (item.quantity > 0) {
           AnalyticsHelper.logAddToCart(
-            itemId: widget.service!.id!,
-            itemName: widget.service!.name!,
+            itemId: widget.service?.id ?? '',
+            itemName: widget.service?.name ?? '',
             price: item.price.toDouble(),
             quantity: item.quantity,
             currency: Get.find<SplashController>().configModel.content?.currencyCode ?? '\$'
           );
         }
       }
-      print("====================== Analytics Success =========================");
+      if (kDebugMode) {
+        print("====================== Analytics Success =========================");
+      }
     } catch (e) {
       if (kDebugMode) {
         print("Analytics Error: $e");

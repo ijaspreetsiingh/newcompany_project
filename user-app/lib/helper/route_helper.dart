@@ -1,6 +1,9 @@
 import'dart:convert';
 import 'package:jdds/feature/auth/view/update_profile_screen.dart';
+import 'package:jdds/feature/auth/view/social_login_screen.dart';
 import 'package:jdds/feature/booking/view/repeat_booking_details_screen.dart';
+import 'package:jdds/feature/booking/view/new_booking_details_screen.dart';
+import 'package:jdds/feature/booking/view/booking_location_screen.dart';
 import 'package:jdds/feature/checkout/view/offline_payment_screen.dart';
 import 'package:jdds/feature/home/all_category_screen.dart';
 import 'package:jdds/feature/provider/view/nearby_provider/near_by_provider_screen.dart';
@@ -81,6 +84,9 @@ class RouteHelper {
   static const String updateProfile = '/update-profile';
   static const String offlinePayment = '/offline-payment';
   static const String allCategoriesScreen = '/all-categories';
+  static const String socialLoginScreen = '/social-login';
+  static const String newBookingDetails = '/new-booking-details';
+  static const String bookingLocation = '/booking-location';
 
 
 
@@ -106,6 +112,7 @@ class RouteHelper {
     return '$signIn?redirect_to=$finalRedirect';
   }
   static String getSignUpRoute({String? redirectUrl}) => '$signUp?redirect_to=$redirectUrl';
+  static String getSocialLoginRoute() => socialLoginScreen;
   static String getSendOtpScreen({String? redirectUrl}) => '$sendOtpScreen?redirect_to=$redirectUrl';
 
   static String getVerificationRoute({
@@ -168,7 +175,7 @@ class RouteHelper {
   static String getEditProfileRoute() => profileEdit;
   static String getNotificationRoute() => notification;
   static String getAddressRoute(String fromPage) => '$address?fromProfileScreen=$fromPage';
-  static String getOrderSuccessRoute( String status) => '$orderSuccess?flag=$status';
+  static String getOrderSuccessRoute( String status, {String? bookingId}) => '$orderSuccess?flag=$status${bookingId != null ? '&booking_id=$bookingId' : ''}';
   static String getCheckoutRoute(String page,String currentPage,String addressId, {bool? reload, String? token} ) =>
       '$checkout?currentPage=$currentPage&addressID=$addressId&reload=$reload&token=$token';
 
@@ -198,6 +205,8 @@ class RouteHelper {
   static String getSupportRoute() => support;
   static String getUpdateRoute(String fromPage) => '$update?update=$fromPage';
   static String getCartRoute() => cart;
+  static String getNewBookingDetailsRoute() => newBookingDetails;
+  static String getNewBookingLocationRoute() => bookingLocation;
   static String getAddAddressRoute(bool fromCheckout) => '$addAddress?page=${fromCheckout ? 'checkout' : 'address'}';
   static String getEditAddressRoute(AddressModel address,bool fromCheckout) {
     String data = base64Url.encode(utf8.encode(jsonEncode(address.toJson())));
@@ -317,6 +326,7 @@ class RouteHelper {
     ), middlewares: [
       RedirectToHomeMiddleware(),
     ]),
+    GetPage(name: socialLoginScreen, page: () => const SocialLoginScreen()),
 
 
     GetPage(name: accessLocation, page: () => AccessLocationScreen(
@@ -374,7 +384,7 @@ class RouteHelper {
           }
         }
       }
-      return getRoute( BottomNavScreen(
+      return BottomNavScreen(
         pageIndex: Get.parameters['page'] == 'home' ? 0 :
         Get.parameters['page'] == 'booking' ? 1 :
         Get.parameters['page'] == 'cart' ? 2 :
@@ -382,7 +392,7 @@ class RouteHelper {
         Get.parameters['page'] == 'menu' ? 4 : 0,
         previousAddress: addressData,
         showServiceNotAvailableDialog: Get.parameters['showDialog'] == 'false' ? false : true,
-      ));
+      );
     },
     ),
 
@@ -455,7 +465,10 @@ class RouteHelper {
 
     GetPage(
       name: orderSuccess,
-      page: () => getRoute(OrderSuccessfulScreen(status: Get.parameters['flag'].toString().contains('success') ? 1 : 0,)),
+      page: () => getRoute(OrderSuccessfulScreen(
+        status: Get.parameters['flag'].toString().contains('success') ? 1 : 0,
+        bookingId: Get.parameters['booking_id'],
+      )),
     ),
 
     GetPage(
@@ -531,6 +544,8 @@ class RouteHelper {
     GetPage(name: support, page: () => SupportScreen()),
     GetPage(name: update, page: () => UpdateScreen(fromPage: Get.parameters['update'])),
     GetPage(name: cart, page: () => getRoute(const CartScreen(fromNav: false))),
+    GetPage(name: newBookingDetails, page: () => const NewBookingDetailsScreen()),
+    GetPage(name: bookingLocation, page: () => const BookingLocationScreen()),
     GetPage(name: addAddress, page: () => AddAddressScreen(fromCheckout: Get.parameters['page'] == 'checkout')),
     GetPage(name: editAddress, page: () {
 
@@ -774,8 +789,8 @@ class RouteHelper {
 
     var config = Get.find<SplashController>().configModel.content?.maintenanceMode;
     bool maintenance = config?.maintenanceStatus == 1 && config?.selectedMaintenanceSystem?.webApp == 1 && kIsWeb && !AppConstants.avoidMaintenanceMode;
-    return !isRouteExist ?  const NotFoundScreen() : maintenance ? const MaintenanceScreen() : Get.find<LocationController>().getUserAddress() != null ? navigateTo
-        : AccessLocationScreen(fromSignUp: false, route: Get.currentRoute);
+    // Always go to requested route — if location is missing, HomeScreen shows EnableLocationPopup
+    return !isRouteExist ? const NotFoundScreen() : maintenance ? const MaintenanceScreen() : navigateTo;
   }
 
   static ({String path, Map<String, String>? parameters}) parseRedirectRouteToNavigate(String redirectRoute) {

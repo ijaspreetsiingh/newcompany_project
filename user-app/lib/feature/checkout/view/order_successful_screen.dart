@@ -5,7 +5,8 @@ import 'package:jdds/common/widgets/address_selection_drawer.dart';
 
 class OrderSuccessfulScreen extends StatelessWidget {
   final int? status;
-  const OrderSuccessfulScreen({super.key, this.status}) ;
+  final String? bookingId;
+  const OrderSuccessfulScreen({super.key, this.status, this.bookingId}) ;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +35,13 @@ class OrderSuccessfulScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 30),
+
+              // AUTO-ASSIGN: provider find hone tak polling card dikhao
+              if (status == 1 && bookingId != null && bookingId!.isNotEmpty) ...[
+                BookingFindingProviderWidget(bookingId: bookingId!),
+                const SizedBox(height: Dimensions.paddingSizeLarge),
+              ],
+
               Padding(
                 padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
                 child: CustomButton(buttonText: 'back_to_home'.tr, width: Dimensions.webMaxWidth/5, onPressed: () {

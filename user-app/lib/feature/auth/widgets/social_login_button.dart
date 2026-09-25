@@ -25,9 +25,9 @@ class SocialLoginButton extends StatelessWidget {
               height: title !=null ? 47 : 40,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: hovered ? 0.5 : 0.2),
+                color: Colors.white,
                 borderRadius: const BorderRadius.all(Radius.circular(Dimensions.radiusSmall)),
-                border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15), width: 1),
+                border: Border.all(color: const Color(0xffD0D5DD), width: 1),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -36,15 +36,17 @@ class SocialLoginButton extends StatelessWidget {
                   Padding(padding: EdgeInsets.symmetric(
                       horizontal: title?.trim() == "" ? Dimensions.paddingSizeDefault : Dimensions.paddingSizeEight ,
                   ),
-                    child: Image.asset(
-                      socialLoginType == SocialLoginType.google ? Images.google :
-                      socialLoginType == SocialLoginType.facebook ? Images.facebook : Images.apple,
-                      height: ResponsiveHelper.isDesktop(context) ? 25 :ResponsiveHelper.isTab(context) ? 25 :20,
-                      width: ResponsiveHelper.isDesktop(context) ?  25 :ResponsiveHelper.isTab(context) ? 25 : 20,
+                    child: ClipOval(
+                      child: Image.asset(
+                        socialLoginType == SocialLoginType.google ? Images.google :
+                        socialLoginType == SocialLoginType.facebook ? Images.facebook : Images.apple,
+                        height: ResponsiveHelper.isDesktop(context) ? 25 :ResponsiveHelper.isTab(context) ? 25 :20,
+                        width: ResponsiveHelper.isDesktop(context) ?  25 :ResponsiveHelper.isTab(context) ? 25 : 20,
+                      ),
                     ),
                   ),
                   title !=null && title!.trim() != "" ? Text( title!.tr,style: robotoBold.copyWith(
-                    fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7)
+                    fontSize: Dimensions.fontSizeDefault, color: const Color(0xff344054)
                   ),) : const SizedBox.shrink(),
                 ],
               ),

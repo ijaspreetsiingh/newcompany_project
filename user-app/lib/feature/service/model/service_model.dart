@@ -97,6 +97,9 @@ class Service {
   List<ServiceDiscount>? campaignDiscount;
   List<Review>? review;
 
+  /// Gallery images - backend se (admin panel: Gallery Image block)
+  List<String>? gallery;
+
   Service(
       {this.id,
         this.slug,
@@ -124,6 +127,7 @@ class Service {
         this.serviceDiscount,
         this.campaignDiscount,
         this.review,
+        this.gallery,
       });
 
   Service.fromJson(Map<String, dynamic> json) {
@@ -143,7 +147,7 @@ class Service {
     isActive = json['is_active'];
     isFavorite = json['is_favorite'];
     ratingCount = json['rating_count'];
-    avgRating = json['avg_rating'].toDouble();
+    avgRating = json['avg_rating'] != null ? double.tryParse(json['avg_rating'].toString()) ?? 0.0 : 0.0;
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
     variationsAppFormat = json['variations_app_format'] != null
@@ -184,6 +188,33 @@ class Service {
       json['campaign_discount'].forEach((v) {
         campaignDiscount!.add(ServiceDiscount.fromJson(v));
       });
+    }
+
+    /// Gallery images parse - array ya comma separated string dono support
+    /// Backend key: gallery_full_paths (appended array)
+    gallery = <String>[];
+    dynamic galleryData = json['gallery_full_paths'] ?? json['gallery_full_path'] ?? json['gallery'];
+    if (galleryData != null) {
+      if (galleryData is List) {
+        for (var g in galleryData) {
+          if (g == null) continue;
+          String path = g.toString();
+          if (path.isEmpty) continue;
+          if (!path.startsWith('http')) {
+            path = '${AppConstants.baseUrl}/$path';
+          }
+          gallery!.add(path);
+        }
+      } else if (galleryData is String && galleryData.isNotEmpty) {
+        for (String path in galleryData.split(',')) {
+          if (path.trim().isEmpty) continue;
+          String cleanPath = path.trim();
+          if (!cleanPath.startsWith('http')) {
+            cleanPath = '${AppConstants.baseUrl}/$cleanPath';
+          }
+          gallery!.add(cleanPath);
+        }
+      }
     }
   }
 

@@ -186,7 +186,7 @@ class CustomTextFieldState extends State<CustomTextField> {
             child: CodePickerWidget(
               onChanged: widget.onCountryChanged,
               initialSelection: widget.countryDialCode,
-              favorite: [widget.countryDialCode ?? ""],
+              favorite: ['IN', widget.countryDialCode ?? ""],
               showDropDownButton: true,
               padding: EdgeInsets.zero,
               showFlagMain: true,

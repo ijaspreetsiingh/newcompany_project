@@ -19,7 +19,7 @@ class WebTrendingServiceView extends StatelessWidget {
 
                   const SizedBox(height: Dimensions.paddingSizeTextFieldGap),
                   TitleWidget(
-                    textDecoration: TextDecoration.underline,
+                    
                     title: 'trending_services'.tr,
                     onTap: () => Get.toNamed(RouteHelper.getSearchResultRoute(fromPage: "trending")),
                   ),

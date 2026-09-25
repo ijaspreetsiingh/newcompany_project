@@ -36,7 +36,6 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
   @override
   Widget build(BuildContext context) {
 
-    final padding = MediaQuery.of(context).padding;
     bool isUserLoggedIn = Get.find<AuthController>().isLoggedIn();
 
     return CustomPopWidget(
@@ -60,80 +59,91 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
       },
 
       child: Scaffold(
-        floatingActionButton: (ResponsiveHelper.isDesktop(context) || MediaQuery.of(context).viewInsets.bottom != 0) ? null : InkWell(
-          onTap: () => Get.toNamed(RouteHelper.getCartRoute()),
-          child: Container(
-            height: 70, width: 70,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: _pageIndex == 2 ? null : Get.isDarkMode ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.secondary,
-              shape: BoxShape.circle,
-              gradient: _pageIndex == 2 ? const LinearGradient(
-                colors: [Color(0xFFFBBB00), Color(0xFFFF833D)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ) : null,
-            ),
-            child: CartWidget(color: Get.isDarkMode ? Theme.of(context).primaryColorLight : Colors.white, size: 35),
-          ),
-        ),
-
-        floatingActionButtonLocation: FloatingActionButtonLocation.miniCenterDocked,
-
         bottomNavigationBar: ResponsiveHelper.isDesktop(context) ? const SizedBox() : Container(
-          padding: EdgeInsets.only(
-            top: Dimensions.paddingSizeDefault,
-            bottom: padding.bottom > 15 ? 0 : Dimensions.paddingSizeDefault,
-          ),
-          color:Get.isDarkMode ? Theme.of(context).cardColor.withValues(alpha: .5) : Theme.of(context).primaryColor,
+          color: Colors.transparent,
           child: SafeArea(
-            child: Padding( padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
-              child: Row(children: [
+            top: false,
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
 
-                _bnbItem(
-                  icon: Images.home, bnbItem: BnbItem.homePage, context: context,
-                  onTap: () => Get.find<BottomNavController>().changePage(BnbItem.homePage),
+              /// Floating rounded pill bar - SS layout
+              Container(
+                margin: const EdgeInsets.fromLTRB(
+                  Dimensions.paddingSizeDefault, 0, Dimensions.paddingSizeDefault, Dimensions.paddingSizeSmall,
                 ),
-
-                _bnbItem(
-                  icon: Images.bookings, bnbItem: BnbItem.bookings, context: context,
-                  onTap: () {
-                    if (!isUserLoggedIn && Get.find<SplashController>().configModel.content?.guestCheckout == 1) {
-                      Get.toNamed(RouteHelper.getTrackBookingRoute());
-                    } else  if(!isUserLoggedIn){
-
-                      Get.toNamed(RouteHelper.getBookingScreenRoute(true));
-                    } else {
-                      Get.find<BottomNavController>().changePage(BnbItem.bookings);
-                    }
-                  },
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Dimensions.paddingSizeExtraSmall,
+                  vertical: Dimensions.paddingSizeExtraSmall,
                 ),
-
-                _bnbItem(
-                  icon: '', bnbItem: BnbItem.cart, context: context,
-                  onTap: () {
-                    if (!isUserLoggedIn) {
-                      Get.toNamed(RouteHelper.getSignInRoute(redirectUrl: RouteHelper.home));
-                    } else {
-                      Get.find<BottomNavController>().changePage(BnbItem.cart);
-                    }
-                  },
+                decoration: BoxDecoration(
+                  color: Get.isDarkMode ? Theme.of(context).cardColor : Colors.white,
+                  borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge + 6),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: Get.isDarkMode ? 0.3 : 0.08),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
+                child: SizedBox(
+                  height: 56,
+                  child: Row(children: [
 
-                _bnbItem(
-                  icon: Images.offerMenu, bnbItem: BnbItem.offers, context: context,
-                  onTap: () => Get.find<BottomNavController>().changePage(BnbItem.offers),
+                    _bnbItem(
+                      icon: Images.home, bnbItem: BnbItem.homePage, context: context,
+                      label: 'home'.tr,
+                      onTap: () => Get.find<BottomNavController>().changePage(BnbItem.homePage),
+                    ),
+
+                    _bnbItem(
+                      icon: Images.bookings, bnbItem: BnbItem.bookings, context: context,
+                      label: 'bookings'.tr,
+                      onTap: () {
+                        if (!isUserLoggedIn && Get.find<SplashController>().configModel.content?.guestCheckout == 1) {
+                          Get.toNamed(RouteHelper.getTrackBookingRoute());
+                        } else  if(!isUserLoggedIn){
+                          Get.toNamed(RouteHelper.getBookingScreenRoute(true));
+                        } else {
+                          Get.find<BottomNavController>().changePage(BnbItem.bookings);
+                        }
+                      },
+                    ),
+
+                    /// Cart - normal option like others (SS layout)
+                    _bnbItem(
+                      icon: Images.cart, bnbItem: BnbItem.cart, context: context,
+                      label: 'cart'.tr,
+                      iconData: Icons.shopping_cart_outlined,
+                      onTap: () => Get.toNamed(RouteHelper.getCartRoute()),
+                    ),
+
+                    _bnbItem(
+                      icon: Images.offerMenu, bnbItem: BnbItem.offers, context: context,
+                      label: 'offers'.tr,
+                      onTap: () => Get.find<BottomNavController>().changePage(BnbItem.offers),
+                    ),
+
+                    _bnbItem(
+                      icon: Images.menu, bnbItem: BnbItem.more, context: context,
+                      label: 'more'.tr,
+                      onTap: () => Get.bottomSheet(const MenuScreen(),
+                        backgroundColor: Colors.transparent, isScrollControlled: true,
+                      ),
+                    ),
+                  ]),
                 ),
+              ),
 
-                _bnbItem(
-                  icon: Images.menu, bnbItem: BnbItem.more,context: context,
-                  onTap: () => Get.bottomSheet(const MenuScreen(),
-                    backgroundColor: Colors.transparent, isScrollControlled: true,
-                  ),
-
+              /// Home indicator line - SS layout
+              Container(
+                height: 4, width: 110,
+                margin: const EdgeInsets.only(bottom: Dimensions.paddingSizeExtraSmall + 2),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).hintColor.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              ]),
-            ),
+              ),
+            ]),
           ),
         ),
 
@@ -145,25 +155,69 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     );
   }
 
-  Widget _bnbItem({required String icon, required BnbItem bnbItem, required GestureTapCallback onTap, context}) {
+  /// Bottom nav item - SS layout : active = gradient rounded chip with white icon+label
+  Widget _bnbItem({required String icon, required BnbItem bnbItem, required GestureTapCallback onTap, required String label, required BuildContext context, IconData? iconData}) {
     return GetBuilder<BottomNavController>(builder: (bottomNavController){
+      final bool isSelected = bottomNavController.currentPage == bnbItem;
+      final Color activeColor = Theme.of(context).colorScheme.primary;
+      final Color inactiveColor = Get.isDarkMode
+          ? Theme.of(context).disabledColor
+          : const Color(0xFFA6A6A6);
+
       return Expanded(
         child: InkWell(
-          onTap: bnbItem != BnbItem.cart ? onTap : null,
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
-
-            icon.isEmpty ? const SizedBox(width: 20, height: 20) : Image.asset(icon, width: 18, height: 18,
-              color: Get.find<BottomNavController>().currentPage == bnbItem ? Colors.white : Colors.white60,
-            ),
-            const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-
-            Text(bnbItem != BnbItem.cart ? bnbItem.name.tr : '',
-              style: robotoRegular.copyWith( fontSize: Dimensions.fontSizeSmall,
-                color: Get.find<BottomNavController>().currentPage == bnbItem ? Colors.white : Colors.white60,
-              ),
-            ),
-
-          ]),
+          onTap: onTap,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+          child: Center(
+            child: isSelected
+                ? /// Active gradient chip - SS exact
+                Container(
+                    height: 52,
+                    width: 66,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [activeColor, Color.lerp(activeColor, const Color(0xFFE65100), 0.35)!],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+                      boxShadow: [
+                        BoxShadow(
+                          color: activeColor.withValues(alpha: 0.35),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      iconData != null
+                          ? Icon(iconData, size: 20, color: Colors.white)
+                          : Image.asset(icon, width: 20, height: 20, color: Colors.white),
+                      const SizedBox(height: 2),
+                      Text(label,
+                        style: robotoBold.copyWith(
+                          fontSize: 9,
+                          color: Colors.white,
+                        ),
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                      ),
+                    ]),
+                  )
+                : /// Inactive item - SS exact
+                Column(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
+                    iconData != null
+                        ? Icon(iconData, size: 22, color: inactiveColor)
+                        : Image.asset(icon, width: 22, height: 22, color: inactiveColor),
+                    const SizedBox(height: 4),
+                    Text(label,
+                      style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeExtraSmall, color: inactiveColor),
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                    ),
+                  ]),
+          ),
         ),
       );
     });
@@ -193,4 +247,3 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     }
   }
 }
-

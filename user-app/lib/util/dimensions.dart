@@ -1,13 +1,18 @@
 import 'package:get/get.dart';
 
 class Dimensions {
-  static double fontSizeExtraSmall = Get.context!.width >= 1300 ? 14 : 10;
-  static double fontSizeSmall = Get.context!.width >= 1300 ? 13 : 12;
-  static double fontSizeDefault = Get.context!.width >= 1300 ? 16 : 14;
-  static double fontSizeLarge = Get.context!.width >= 1300 ? 18 : 16;
-  static double fontSizeExtraLarge = Get.context!.width >= 1300 ? 20 : 18;
-  static double fontSizeOverLarge = Get.context!.width >= 1300 ? 26 : 24;
-  static double fontSizeForReview = Get.context!.width >= 1300 ? 36 : 36;
+  static double _responsive(double mobile, double desktop) {
+    final width = Get.context?.width ?? 600;
+    return width >= 1300 ? desktop : mobile;
+  }
+
+  static double get fontSizeExtraSmall => _responsive(10, 14);
+  static double get fontSizeSmall => _responsive(12, 13);
+  static double get fontSizeDefault => _responsive(14, 16);
+  static double get fontSizeLarge => _responsive(16, 18);
+  static double get fontSizeExtraLarge => _responsive(18, 20);
+  static double get fontSizeOverLarge => _responsive(24, 26);
+  static double get fontSizeForReview => 36;
 
   static const double paddingSizeMini = 2.0;
   static const double paddingSizeTine = 3.0;
@@ -23,8 +28,6 @@ class Dimensions {
   static const double pagesBottomPadding = 100.0;
   static const double pickMapIconSize = 100.0;
 
-  
-  
   static const double logoSize = 180.0;
   static const double cartWidgetSize = 30.0;
   static const double customAppbarSize = 70.0;
@@ -65,7 +68,6 @@ class Dimensions {
   static const double supportLogoHeight = 242;
   static const double supportLogoWidth = 200;
 
-  /// web landing
   static const double webLandingTestimonialHeight = 320;
   static const double webLandingDownloadImageHeight = 500;
   static const double webLandingContactUsHeight = 190;
@@ -75,8 +77,6 @@ class Dimensions {
   static const double webArrowSize = 20;
   static const double pushNotificationDialogWidth = 500;
 
-  ///wallet
   static const double walletTopCardHeight = 140;
   static const double currencyConvertButtonHeight = 220;
-
 }

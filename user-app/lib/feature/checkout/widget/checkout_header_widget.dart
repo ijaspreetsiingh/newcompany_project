@@ -3,90 +3,131 @@ import 'package:get/get.dart';
 
 class CheckoutHeaderWidget extends StatelessWidget {
   final String pageState;
-  const CheckoutHeaderWidget({super.key, required this.pageState}) ;
+  const CheckoutHeaderWidget({super.key, required this.pageState});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox( width: 426, child: GetBuilder<CheckOutController>(builder: (controller){
-      return Column( children: [
-        Padding(padding:  const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraLarge, vertical: Dimensions.paddingSizeSmall),
-          child:  Stack( children: [
+    return GetBuilder<CheckOutController>(builder: (controller) {
+      final int currentStep = controller.currentPageState == PageState.orderDetails
+          ? 0
+          : controller.currentPageState == PageState.payment
+              ? 1
+              : 2;
 
-            SizedBox( height: 55, child: Row( mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+      final Color activeColor = Theme.of(context).colorScheme.primary;
+      final Color completedColor = const Color(0xFF4CAF50);
+      final Color inactiveColor = Theme.of(context).hintColor.withValues(alpha: 0.3);
 
-              CustomHeaderIcon( assetIconSelected: Images.orderDetailsSelected, assetIconUnSelected: Images.orderDetailsUnselected,
-                isActiveColor: controller.currentPageState == PageState.orderDetails ? true : false,
-              ),
+      final List<String> steps = [
+        "booking_details".tr,
+        "payment".tr,
+        "complete".tr,
+      ];
 
-              controller.currentPageState == PageState.orderDetails ?
-              const CustomHeaderLine(color: Color(0xffFF833D), gradientColor1: Color(0xffFDA21A), gradientColor2: Colors.orangeAccent,) :
-              const CustomHeaderLine(gradientColor1: Colors.deepOrange, gradientColor2: Colors.orangeAccent),
+      Widget _buildCircle(int index) {
+        bool isCompleted = index < currentStep;
+        bool isActive = index == currentStep;
 
-              CustomHeaderIcon(assetIconSelected: Images.paymentSelected, assetIconUnSelected: Images.paymentUnSelected,
-                isActiveColor: controller.currentPageState == PageState.payment ? true : false,
-              ),
-
-              controller.cancelPayment ?
-              const CustomHeaderLine(cancelOrder: true, gradientColor1: Colors.grey, gradientColor2: Colors.grey,) : controller.currentPageState == PageState.payment ?
-              const CustomHeaderLine(color: Colors.green, gradientColor1: Colors.orangeAccent, gradientColor2: Colors.green,) :
-              const CustomHeaderLine(gradientColor1: Colors.orangeAccent, gradientColor2: Colors.greenAccent,),
-
-              CustomHeaderIcon(assetIconSelected: controller.cancelPayment? Images.completeSelected : Images.completeSelected,
-                assetIconUnSelected: Images.completeUnSelected,
-                isActiveColor: controller.currentPageState == PageState.complete ? true : false
-              ),
-
-            ],),),
-
-
-            controller.currentPageState == PageState.orderDetails  && PageState.orderDetails.name == pageState ?
-            Positioned( top: 0, bottom: 0,
-              left: Get.find<LocalizationController>().isLtr ? 0: null,
-              right:Get.find<LocalizationController>().isLtr ? null: 0,
-              child: Container( height: 55, width: 55,
-                decoration: BoxDecoration( borderRadius: BorderRadius.circular(50),
-                  image: DecorationImage(fit: BoxFit.fill, image: AssetImage( Images.orderDetailsSelected,),),
-                ),
-              ),) : const SizedBox(),
-
-
-            controller.currentPageState == PageState.payment  || PageState.payment.name == pageState ?
-            Positioned( child: Align( alignment: Alignment.center,
-              child: Container( height: 55, width: 55,
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(50),
-                  image: DecorationImage( fit: BoxFit.fill, image: AssetImage( Images.paymentSelected)),
-                ),
-              ),
-            )) :  const SizedBox(),
-
-
-            controller.currentPageState == PageState.complete || pageState == 'complete' ?
-            Positioned( top: 0, bottom: 0,
-              right: Get.find<LocalizationController>().isLtr ? 0:null,
-              left: Get.find<LocalizationController>().isLtr ? null: 0,
-              child: Container( height: 55, width: 55,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(50),
-                    image: DecorationImage(fit: BoxFit.fill, image: AssetImage( Images.completeSelected,),),
-                ),
-              ),
-            ) : const SizedBox(),
-
-
-          ]),
-        ),
-
-        Padding( padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeDefault,left: Dimensions.paddingSizeDefault,right: Dimensions.paddingSizeDefault),
-          child: Row( mainAxisAlignment: MainAxisAlignment.spaceBetween,  crossAxisAlignment: CrossAxisAlignment.center, children:  [
-            CustomText( text: "booking_details".tr, isActive :controller.currentPageState == PageState.orderDetails && PageState.orderDetails.name == pageState),
-            Padding(padding: const EdgeInsets.only(right: 25.0),
-              child: CustomText(text: "payment".tr,isActive :controller.currentPageState == PageState.payment || PageState.payment.name == pageState),
+        return Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isCompleted
+                ? completedColor
+                : isActive
+                    ? activeColor
+                    : Colors.transparent,
+            border: Border.all(
+              color: isCompleted
+                  ? completedColor
+                  : isActive
+                      ? activeColor
+                      : inactiveColor,
+              width: 2,
             ),
-            CustomText(text: "complete".tr,isActive : controller.currentPageState == PageState.complete  || pageState == 'complete'),
-          ]),
-        ),
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: activeColor.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Center(
+            child: isCompleted
+                ? const Icon(Icons.check_rounded, size: 18, color: Colors.white)
+                : Text(
+                    "${index + 1}",
+                    style: robotoBold.copyWith(
+                      fontSize: Dimensions.fontSizeSmall,
+                      color: isActive ? Colors.white : inactiveColor,
+                    ),
+                  ),
+          ),
+        );
+      }
 
-      ]);},
-    ));
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeLarge, vertical: Dimensions.paddingSizeSmall),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 40,
+              child: Row(
+                children: List.generate(steps.length * 2 - 1, (index) {
+                  if (index.isOdd) {
+                    int lineIndex = index ~/ 2;
+                    return Expanded(
+                      child: Container(
+                        height: 2,
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: lineIndex < currentStep ? completedColor : inactiveColor,
+                        ),
+                      ),
+                    );
+                  } else {
+                    return _buildCircle(index ~/ 2);
+                  }
+                }),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: List.generate(steps.length * 2 - 1, (index) {
+                if (index.isOdd) {
+                  return const Expanded(child: SizedBox.shrink());
+                } else {
+                  int stepIndex = index ~/ 2;
+                  bool isCompleted = stepIndex < currentStep;
+                  bool isActive = stepIndex == currentStep;
+                  return Expanded(
+                    child: Center(
+                      child: Text(
+                        steps[stepIndex],
+                        textAlign: TextAlign.center,
+                        style: robotoMedium.copyWith(
+                          fontSize: Dimensions.fontSizeExtraSmall,
+                          color: isCompleted
+                              ? completedColor
+                              : isActive
+                                  ? activeColor
+                                  : Theme.of(context).hintColor,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+              }),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }

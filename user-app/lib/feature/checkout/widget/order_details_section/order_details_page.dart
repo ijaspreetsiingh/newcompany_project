@@ -3,6 +3,7 @@ import 'package:jdds/feature/checkout/widget/order_details_section/choose_servic
 import 'package:jdds/feature/checkout/widget/order_details_section/create_account_widget.dart';
 import 'package:jdds/feature/checkout/widget/order_details_section/provider_location_info.dart';
 import 'package:jdds/feature/checkout/widget/order_details_section/repeat_booking_schedule_widget.dart';
+import 'package:jdds/feature/checkout/widget/new_checkout_summary.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 
@@ -74,7 +75,7 @@ class OrderDetailsPage extends StatelessWidget {
 
           Get.find<AuthController>().isLoggedIn() ? const ShowVoucher() : const SizedBox(),
 
-          const CartSummery()
+          const NewCheckoutSummary()
 
         ]));
       });

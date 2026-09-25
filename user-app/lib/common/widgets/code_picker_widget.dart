@@ -156,68 +156,49 @@ class _CodePickerWidgetState extends State<CodePickerWidget> {
         context: context,
         builder: (context) => Center(
           child: Container(
-            constraints: const BoxConstraints(maxHeight: 500, maxWidth: 400),
+            constraints: const BoxConstraints(maxHeight: 520, maxWidth: 420),
             child: Dialog(
-              child: SelectionDialog(
-                elements!,
-                favoriteElements!,
-                showCountryOnly: widget.showCountryOnly,
-                emptySearchBuilder: widget.emptySearchBuilder,
-                searchDecoration: widget.searchDecoration!,
-                searchStyle: widget.searchStyle,
-                textStyle: widget.dialogTextStyle,
-                boxDecoration: widget.boxDecoration,
-                showFlag: widget.showFlagDialog ?? widget.showFlag,
+              backgroundColor: Colors.white,
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              child: CountryCodeSelectionView(
+                elements: elements!,
+                favoriteElements: favoriteElements!,
+                selectedItem: selectedItem,
+                showFlag: widget.showFlagDialog ?? widget.showFlag ?? true,
                 flagWidth: widget.flagWidth!,
-                size: widget.dialogSize,
-                backgroundColor: widget.dialogBackgroundColor,
-                barrierColor: widget.barrierColor,
-                hideSearch: widget.hideSearch!,
-                closeIcon: widget.closeIcon,
-                flagDecoration: widget.flagDecoration,
-                hideHeaderText: true,
-                hideCloseIcon: false,
-                headerAlignment: MainAxisAlignment.end,
-                headerTextStyle: robotoRegular,
-                topBarPadding: EdgeInsets.zero,
+                showHandle: false,
+                onSelected: (e) {
+                  setState(() {
+                    selectedItem = e;
+                  });
+                  _publishSelection(e);
+                },
               ),
             ),
           ),
         ),
-      ).then((e) {
-        if (e != null) {
-          setState(() {
-            selectedItem = e;
-          });
-          _publishSelection(e);
-        }
-      });
+      );
     } else {
       Get.bottomSheet(
-        ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: MediaQuery.of(Get.context!).size.height * 0.45),
-          child: SelectionDialog(
-            elements!,
-            favoriteElements!,
-            showCountryOnly: widget.showCountryOnly,
-            emptySearchBuilder: widget.emptySearchBuilder,
-            searchDecoration: widget.searchDecoration!,
-            searchStyle: widget.searchStyle,
-            textStyle: widget.dialogTextStyle,
-            boxDecoration: widget.boxDecoration,
-            showFlag: widget.showFlagDialog ?? widget.showFlag,
-            flagWidth: widget.flagWidth!,
-            flagDecoration: widget.flagDecoration,
-            size: widget.dialogSize,
-            backgroundColor: widget.dialogBackgroundColor,
-            barrierColor: widget.barrierColor,
-            hideSearch: widget.hideSearch!,
-            closeIcon: widget.closeIcon,
-            hideHeaderText: true,
-            hideCloseIcon: false,
-            headerAlignment: MainAxisAlignment.end,
-            headerTextStyle: robotoRegular,
-            topBarPadding: EdgeInsets.zero,
+        SafeArea(
+          top: false,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(Get.context!).size.height * 0.65),
+            child: CountryCodeSelectionView(
+              elements: elements!,
+              favoriteElements: favoriteElements!,
+              selectedItem: selectedItem,
+              showFlag: widget.showFlagDialog ?? widget.showFlag ?? true,
+              flagWidth: widget.flagWidth!,
+              showHandle: true,
+              onSelected: (e) {
+                setState(() {
+                  selectedItem = e;
+                });
+                _publishSelection(e);
+              },
+            ),
           ),
         ),
         useRootNavigator: true,
@@ -229,14 +210,7 @@ class _CodePickerWidgetState extends State<CodePickerWidget> {
             topRight: Radius.circular(Dimensions.radiusExtraLarge),
           ),
         ),
-      ).then((e) {
-        if (e != null) {
-          setState(() {
-            selectedItem = e;
-          });
-          _publishSelection(e);
-        }
-      });
+      );
     }
   }
   void _publishSelection(CountryCode e) {
@@ -306,5 +280,267 @@ class _CodePickerWidgetState extends State<CodePickerWidget> {
       );
     }
     return child;
+  }
+}
+
+class CountryCodeSelectionView extends StatefulWidget {
+  final List<CountryCode> elements;
+  final List<CountryCode> favoriteElements;
+  final CountryCode? selectedItem;
+  final bool showFlag;
+  final double flagWidth;
+  final bool showHandle;
+  final Function(CountryCode) onSelected;
+
+  const CountryCodeSelectionView({
+    super.key,
+    required this.elements,
+    required this.favoriteElements,
+    this.selectedItem,
+    this.showFlag = true,
+    this.flagWidth = 25,
+    this.showHandle = true,
+    required this.onSelected,
+  });
+
+  @override
+  State<CountryCodeSelectionView> createState() => _CountryCodeSelectionViewState();
+}
+
+class _CountryCodeSelectionViewState extends State<CountryCodeSelectionView> {
+  late final TextEditingController _searchController;
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<CountryCode> get _filtered {
+    final String query = _query.trim().toLowerCase();
+    if (query.isEmpty) return widget.elements;
+    return widget.elements
+        .where((e) =>
+            (e.name ?? '').toLowerCase().contains(query) ||
+            (e.dialCode ?? '').toLowerCase().contains(query) ||
+            (e.code ?? '').toLowerCase().contains(query))
+        .toList();
+  }
+
+  List<CountryCode> get _favorites {
+    if (_query.trim().isNotEmpty || widget.favoriteElements.isEmpty) return [];
+    final mapped = widget.favoriteElements
+        .map((f) => widget.elements.firstWhere(
+              (e) => e.dialCode == f.dialCode && e.code == f.code,
+              orElse: () => f,
+            ))
+        .toList();
+    final result = <CountryCode>[];
+    final CountryCode? india =
+        mapped.where((e) => e.code?.toUpperCase() == 'IN').firstOrNull;
+    if (india != null) result.add(india);
+    result.addAll(mapped.where((e) => e.code?.toUpperCase() != 'IN'));
+    return result;
+  }
+
+  bool _isSelected(CountryCode e) {
+    return widget.selectedItem != null &&
+        e.dialCode == widget.selectedItem!.dialCode &&
+        e.code == widget.selectedItem!.code;
+  }
+
+  void _select(CountryCode e) {
+    Navigator.of(context).pop();
+    widget.onSelected(e);
+  }
+
+  Widget _flag(CountryCode e) {
+    return Container(
+      width: 34,
+      height: 24,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xffEAECF0)),
+      ),
+      child: Image.asset(
+        e.flagUri!,
+        package: 'country_code_picker',
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
+  Widget _item(CountryCode e) {
+    final bool selected = _isSelected(e);
+    return InkWell(
+      onTap: () => _select(e),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xffFFF1EB) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            if (widget.showFlag) ...[
+              _flag(e),
+              const SizedBox(width: 12),
+            ],
+            Expanded(
+              child: Text(
+                e.toCountryStringOnly(),
+                style: robotoMedium.copyWith(
+                  fontSize: 15,
+                  color: const Color(0xff101828),
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '+${e.dialCode ?? ''}',
+              style: robotoSemiBold.copyWith(
+                fontSize: 15,
+                color: selected ? const Color(0xffFF6B2C) : const Color(0xff667085),
+              ),
+            ),
+            if (selected) ...[
+              const SizedBox(width: 8),
+              const Icon(Icons.check_circle, size: 20, color: Color(0xffFF6B2C)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionHeader(String text) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 6),
+      child: Text(
+        text,
+        style: robotoSemiBold.copyWith(
+          fontSize: 12,
+          letterSpacing: 0.5,
+          color: const Color(0xff98A2B3),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<CountryCode> favorites = _favorites;
+    final List<CountryCode> filtered = _filtered;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (widget.showHandle) ...[
+          Container(
+            margin: const EdgeInsets.only(top: 10),
+            height: 4,
+            width: 44,
+            decoration: BoxDecoration(
+              color: const Color(0xffD0D5DD),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
+        Padding(
+          padding: EdgeInsets.fromLTRB(20, widget.showHandle ? 14 : 20, 12, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Select Country',
+                  style: robotoBold.copyWith(fontSize: 17, color: const Color(0xff101828)),
+                ),
+              ),
+              InkWell(
+                onTap: () => Navigator.of(context).pop(),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xffF2F4F7)),
+                  child: const Icon(Icons.close, size: 18, color: Color(0xff667085)),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: TextField(
+            controller: _searchController,
+            onChanged: (value) => setState(() => _query = value),
+            style: robotoRegular.copyWith(fontSize: 15, color: const Color(0xff101828)),
+            decoration: InputDecoration(
+              hintText: 'Search country or code',
+              hintStyle: robotoRegular.copyWith(fontSize: 15, color: const Color(0xff98A2B3)),
+              prefixIcon: const Icon(Icons.search, size: 22, color: Color(0xff98A2B3)),
+              suffixIcon: _query.isNotEmpty
+                  ? IconButton(
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() => _query = '');
+                      },
+                      icon: const Icon(Icons.cancel, size: 20, color: Color(0xff98A2B3)),
+                    )
+                  : null,
+              filled: true,
+              fillColor: const Color(0xffF9FAFB),
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xffEAECF0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xffFF6B2C)),
+              ),
+            ),
+          ),
+        ),
+        Flexible(
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 16),
+            shrinkWrap: true,
+            children: [
+              if (favorites.isNotEmpty) ...[
+                _sectionHeader('POPULAR'),
+                ...favorites.map(_item),
+                _sectionHeader('ALL COUNTRIES'),
+                ...widget.elements.map(_item),
+              ] else if (filtered.isEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: Text(
+                      'No country found',
+                      style: robotoRegular.copyWith(fontSize: 15, color: const Color(0xff98A2B3)),
+                    ),
+                  ),
+                ),
+              ] else
+                ...filtered.map(_item),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }

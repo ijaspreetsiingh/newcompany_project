@@ -345,7 +345,7 @@ class NotificationHelper {
     }
     else {
       AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        "demandium", 'demandium with sound', channelDescription:"description",
+        "jassbooking", 'jassbooking with sound', channelDescription:"description",
         playSound: true,
         sound: const RawResourceAndroidNotificationSound('notification'),
         importance: Importance.max,
@@ -378,7 +378,7 @@ class NotificationHelper {
 
     }else{
       AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        "demandium", 'demandium with sound', channelDescription:"description",
+        "jassbooking", 'jassbooking with sound', channelDescription:"description",
         playSound: true,
         sound: const RawResourceAndroidNotificationSound('notification'),
         largeIcon: FilePathAndroidBitmap(largeIconPath), priority: Priority.max,

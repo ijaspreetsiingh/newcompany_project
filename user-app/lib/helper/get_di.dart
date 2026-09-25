@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:jdds/api/local/cache_response.dart';
 import 'package:jdds/common/repo/data_sync_repo.dart';
 import 'package:jdds/feature/auth/controller/facebook_login_controller.dart';
+import 'package:jdds/feature/booking/controller/new_booking_controller.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 
@@ -66,6 +67,7 @@ Future<Map<String, Map<String, String>>> init() async {
   Get.lazyPut(() => ServiceBookingController(serviceBookingRepo: Get.find()));
   Get.lazyPut(() => BookingDetailsController(bookingDetailsRepo: Get.find()));
   Get.lazyPut(() => FacebookLoginController());
+  Get.lazyPut(() => NewBookingController());
 
 
   Get.lazyPut(() => ApiClient(appBaseUrl: AppConstants.baseUrl, sharedPreferences: Get.find()));

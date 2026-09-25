@@ -22,7 +22,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     if(widget.pageState == 'complete') {
       Get.find<CheckOutController>().updateState(PageState.complete,shouldUpdate: false);
     }
-    Get.find<CheckOutController>().getOfflinePaymentMethod(true);
 
     Get.find<CheckOutController>().changePaymentMethod(shouldUpdate: false);
 

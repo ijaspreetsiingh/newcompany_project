@@ -24,7 +24,7 @@ class HomeRecommendProvider extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(Dimensions.paddingSizeDefault, 15, Dimensions.paddingSizeDefault,  Dimensions.paddingSizeSmall,),
                   child: TitleWidget(
-                    textDecoration: TextDecoration.underline,
+                    
                     title:'recommended_experts_for_you'.tr,
                     onTap: () => Get.toNamed(RouteHelper.getAllProviderRoute()),
                   ),

@@ -29,7 +29,7 @@ class ProviderBookingController extends GetxController implements GetxService {
   List<Review>? _reviewList;
   List<Review>? get reviewList => _reviewList;
 
-  Set<Marker> markers = HashSet<Marker>();
+  List<Marker> markers = [];
   int selectedProviderIndex = 0;
   AutoScrollController? scrollController;
 
@@ -407,84 +407,134 @@ class ProviderBookingController extends GetxController implements GetxService {
     }
   }
 
-  Future<void> setMarker(GoogleMapController mapController, LatLng initialPosition) async {
+  Future<void> setMarker(MapController mapController, LatLng initialPosition) async {
 
-    final Uint8List selectedProvider = await convertAssetToUnit8List(Images.selectedProvider,width:  70);
-    final Uint8List unselectedProvider = await  convertAssetToUnit8List(Images.unselectedProvider, width:  60);
-    final Uint8List currentLocationIcon = await  convertAssetToUnit8List(Images.currentLocation, width:  50);
-
-    // Marker
-    markers = HashSet<Marker>();
+    markers = [];
     for(int index = 0; index < _providerList!.length; index++) {
 
       if(_providerList![index].coordinates !=null){
+        int providerIndex = index;
         markers.add(Marker(
-            onTap: () async {
-              _resetMarker(index, mapController, initialPosition, selectedProvider, unselectedProvider, currentLocationIcon);
-              await scrollController!.scrollToIndex(index, preferPosition: AutoScrollPosition.middle);
-              await scrollController!.highlight(index);
-            },
-            markerId: MarkerId('branch_$index'),
-            position: LatLng(_providerList![index].coordinates!.latitude!, _providerList![index].coordinates!.longitude!),
-            infoWindow: InfoWindow(title: _providerList![index].companyName),
-            icon:  BitmapDescriptor.bytes(
-              selectedProviderIndex == index ?  selectedProvider : unselectedProvider,
-            )
+            point: LatLng(_providerList![providerIndex].coordinates!.latitude!, _providerList![providerIndex].coordinates!.longitude!),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () async {
+                _resetMarker(providerIndex, mapController, initialPosition);
+                await scrollController!.scrollToIndex(providerIndex, preferPosition: AutoScrollPosition.middle);
+                await scrollController!.highlight(providerIndex);
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(_providerList![providerIndex].companyName ?? "", style: robotoMedium.copyWith(fontSize: 8), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ),
+                  Icon(Icons.location_on, color: selectedProviderIndex == providerIndex ? Colors.blue : Colors.red, size: selectedProviderIndex == providerIndex ? 30 : 25),
+                ],
+              ),
+            ),
+            width: 80,
+            height: 50,
         ));
       }
     }
 
     markers.add(Marker(
-      onTap: (){
-        mapController.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
-          target:  initialPosition,
-          zoom: 16,
-        )));
-      },
-      markerId: const MarkerId('current_location'),
-      position: initialPosition,
-      infoWindow: InfoWindow(title: "my_location".tr, snippet: ''),
-      icon: BitmapDescriptor.bytes(currentLocationIcon),
+      point: initialPosition,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: (){
+          mapController.move(initialPosition, 16);
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text("my_location".tr, style: robotoMedium.copyWith(fontSize: 8)),
+            ),
+            Icon(Icons.my_location, color: Colors.green, size: 25),
+          ],
+        ),
+      ),
+      width: 80,
+      height: 50,
     ));
 
     mapBound(mapController);
 
   }
 
-  void _resetMarker(int index, GoogleMapController mapController, LatLng initialPosition, Uint8List selectedProvider,Uint8List unselectedProvider, Uint8List currentLocationIcon){
+  void _resetMarker(int index, MapController mapController, LatLng initialPosition){
     selectedProviderIndex = index;
 
-    markers = HashSet<Marker>();
-    for(int index = 0; index < _providerList!.length; index++) {
+    markers = [];
+    for(int i = 0; i < _providerList!.length; i++) {
 
-      if(_providerList![index].coordinates !=null){
+      if(_providerList![i].coordinates !=null){
         markers.add(Marker(
-          onTap: () async {
-            _resetMarker(index, mapController, initialPosition, selectedProvider, unselectedProvider, currentLocationIcon);
-            await scrollController!.scrollToIndex(index, preferPosition: AutoScrollPosition.middle);
-            await scrollController!.highlight(index);
+          point: LatLng(_providerList![i].coordinates!.latitude!, _providerList![i].coordinates!.longitude!),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () async {
+              _resetMarker(i, mapController, initialPosition);
+              await scrollController!.scrollToIndex(i, preferPosition: AutoScrollPosition.middle);
+              await scrollController!.highlight(i);
             },
-          markerId: MarkerId('branch_$index'),
-          position: LatLng(_providerList![index].coordinates!.latitude!, _providerList![index].coordinates!.longitude!),
-          infoWindow: InfoWindow(title: _providerList![index].companyName),
-          icon:  BitmapDescriptor.bytes(
-            selectedProviderIndex == index ?  selectedProvider : unselectedProvider,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(_providerList![i].companyName ?? "", style: robotoMedium.copyWith(fontSize: 8), maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
+                Icon(Icons.location_on, color: selectedProviderIndex == i ? Colors.blue : Colors.red, size: selectedProviderIndex == i ? 30 : 25),
+              ],
+            ),
           ),
+          width: 80,
+          height: 50,
         ));
       }
     }
 
     markers.add(Marker(
-      onTap: (){
-        mapController.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
-          target:  initialPosition,
-          zoom: 16,
-        )));
-      },
-      markerId: const MarkerId('current_location'),
-      position: initialPosition,
-      infoWindow: InfoWindow(title: "my_location".tr, snippet: ''),
-      icon: BitmapDescriptor.bytes(currentLocationIcon),
+      point: initialPosition,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: (){
+          mapController.move(initialPosition, 16);
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text("my_location".tr, style: robotoMedium.copyWith(fontSize: 8)),
+            ),
+            Icon(Icons.my_location, color: Colors.green, size: 25),
+          ],
+        ),
+      ),
+      width: 80,
+      height: 50,
     ));
 
     update();
@@ -500,20 +550,19 @@ class ProviderBookingController extends GetxController implements GetxService {
   }
 
 
-  void mapBound(GoogleMapController controller) async {
+  void mapBound(MapController controller) async {
     List<LatLng> latLongList = [];
     for (int index = 0; index < _providerList!.length; index++) {
       if(_providerList![index].coordinates !=null){
         latLongList.add(LatLng(_providerList![index].coordinates!.latitude!, _providerList![index].coordinates!.longitude!));
       }
     }
-    await controller.getVisibleRegion();
-    Future.delayed(const Duration(milliseconds: 100), () {
-      controller.animateCamera(CameraUpdate.newLatLngBounds(
-        MapHelper.boundsFromLatLngList(latLongList),
-        100.5,
+    if (latLongList.isNotEmpty) {
+      controller.fitCamera(CameraFit.bounds(
+        bounds: MapHelper.boundsFromLatLngList(latLongList),
+        padding: const EdgeInsets.all(100.5),
       ));
-    });
+    }
 
     update();
   }

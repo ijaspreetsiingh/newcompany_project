@@ -14,19 +14,14 @@ class MapHelper {
         if (latLng.longitude < y0!) y0 = latLng.longitude;
       }
     }
-    return LatLngBounds(northeast: LatLng(x1 ?? 0, y1 ?? 0), southwest: LatLng(x0 ?? 0, y0 ?? 0));
+    return LatLngBounds(LatLng(x0 ?? 0, y0 ?? 0), LatLng(x1 ?? 0, y1 ?? 0));
   }
 
-  static double getDistanceBetweenUserCurrentLocationAndProvider(AddressModel userCurrentAddress, ProviderData providerModel){
-
-    double userLat = double.tryParse(userCurrentAddress.latitude ?? "0.00") ?? 0.0 ;
-    double userLon = double.tryParse(userCurrentAddress.longitude ?? "0.00") ?? 0.0 ;
-
-    double providerLat = providerModel.coordinates?.latitude ?? 0.0 ;
-    double providerLon = providerModel.coordinates?.longitude ?? 0.0 ;
-
-    return  Geolocator.distanceBetween(userLat, userLon, providerLat, providerLon)/1000;
+  static double getDistanceBetweenUserCurrentLocationAndProvider(AddressModel userCurrentAddress, ProviderData providerModel) {
+    double userLat = double.tryParse(userCurrentAddress.latitude ?? "0.00") ?? 0.0;
+    double userLon = double.tryParse(userCurrentAddress.longitude ?? "0.00") ?? 0.0;
+    double providerLat = providerModel.coordinates?.latitude ?? 0.0;
+    double providerLon = providerModel.coordinates?.longitude ?? 0.0;
+    return Geolocator.distanceBetween(userLat, userLon, providerLat, providerLon) / 1000;
   }
-
-
 }

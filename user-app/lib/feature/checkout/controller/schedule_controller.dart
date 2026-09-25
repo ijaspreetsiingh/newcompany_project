@@ -86,8 +86,9 @@ class ScheduleController extends GetxController implements GetxService{
     if(schedule != null){
       _selectedScheduleType = ScheduleType.schedule;
       scheduleTime = schedule;
-    }else if(_initialSelectedScheduleType == ScheduleType.asap){
+    }else if(scheduleType == ScheduleType.asap || _initialSelectedScheduleType == ScheduleType.asap){
       _selectedScheduleType = ScheduleType.asap;
+      _initialSelectedScheduleType = ScheduleType.asap;
      scheduleTime = "${DateFormat('yyyy-MM-dd').format(DateTime.now())} ${DateFormat('HH:mm:ss').format(DateTime.now().add(const Duration(minutes: 2)))}";
    }else{
       _selectedScheduleType = ScheduleType.schedule;
@@ -129,6 +130,10 @@ class ScheduleController extends GetxController implements GetxService{
   }
 
   void resetSchedule(){
+    if(_selectedScheduleType == ScheduleType.schedule && scheduleTime != null){
+      _initialSelectedScheduleType = ScheduleType.schedule;
+      return;
+    }
     if(Get.find<SplashController>().configModel.content?.instantBooking == 1){
       _selectedScheduleType = ScheduleType.asap;
       _initialSelectedScheduleType = ScheduleType.asap;

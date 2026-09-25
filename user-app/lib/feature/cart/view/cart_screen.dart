@@ -21,21 +21,28 @@ class _CartScreenState extends State<CartScreen> {
   @override
   void initState() {
     super.initState();
-    Get.find<CartController>().getCartListFromServer().then((value) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.find<CartController>().getCartListFromServer().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          Get.find<CartController>().setLoadingFalse();
+        },
+      ).then((value) {
 
-      Future.delayed(const Duration(milliseconds: 500)).then((value) {
-        Get.find<CartController>().showMinimumAndMaximumOrderValueToaster();
-        if(Get.find<CartController>().checkProviderUnavailability() && Get.currentRoute.contains(RouteHelper.cart)){
-          showModalBottomSheet(
-            useRootNavigator: true,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            context: Get.context!, builder: (context) =>  AvailableProviderWidget(
-            subcategoryId:Get.find<CartController>().cartList.first.subCategoryId,
-            showUnavailableError: true,
-          ),);
-        }
+        Future.delayed(const Duration(milliseconds: 500)).then((value) {
+          Get.find<CartController>().showMinimumAndMaximumOrderValueToaster();
+          if(Get.find<CartController>().checkProviderUnavailability() && Get.currentRoute.contains(RouteHelper.cart)){
+            showModalBottomSheet(
+              useRootNavigator: true,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              context: Get.context!, builder: (context) =>  AvailableProviderWidget(
+              subcategoryId:Get.find<CartController>().cartList.first.subCategoryId,
+              showUnavailableError: true,
+            ),);
+          }
 
+        });
       });
     });
   }
@@ -187,7 +194,7 @@ class _PriceButtonWidget extends StatelessWidget {
                 style: robotoRegular.copyWith(
                   fontSize: Dimensions.fontSizeLarge,
                   fontWeight: FontWeight.w400,
-                  color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: .6),
+                  color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: .6),
                 ),
               ),
               Directionality(
@@ -216,8 +223,7 @@ class _PriceButtonWidget extends StatelessWidget {
             cartController.showMinimumAndMaximumOrderValueToaster();
           } : () {
             Get.find<CheckOutController>().updateState(PageState.orderDetails);
-            Get.toNamed(RouteHelper.getCheckoutRoute('cart','orderDetails','null'));
-
+            Get.toNamed(RouteHelper.getNewBookingDetailsRoute());
           },
         ),
       ),
@@ -283,12 +289,12 @@ class _ProviderInfoWidget extends StatelessWidget {
                   RichText(
                     text: TextSpan(
                       text: timeSlotAvailable && cartController.cartList[0].provider?.serviceAvailability == 1 ? 'available_from'.tr : "provider_is_currently_on_a_break".tr,
-                      style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,  color: Theme.of(context).textTheme.bodySmall!.color),
+                      style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,  color: Theme.of(context).textTheme.bodySmall?.color),
                       children: <TextSpan>[
                         if(timeSlotAvailable && cartController.cartList[0].provider?.serviceAvailability == 1)
                           TextSpan(
                             text: " : ${DateConverter.convertStringDateTimeToTime(cartController.cartList[0].provider!.timeSchedule!.startTime!)} ${'to'.tr} ${DateConverter.convertStringDateTimeToTime(cartController.cartList[0].provider!.timeSchedule!.endTime!)}",
-                            style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,  color: Theme.of(context).textTheme.bodyLarge!.color),
+                            style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,  color: Theme.of(context).textTheme.bodyLarge?.color),
                           )
                       ],
                     ),

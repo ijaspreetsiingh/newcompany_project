@@ -13,9 +13,6 @@ class NearByProviderMapView extends StatefulWidget {
 
 class _NearByProviderMapViewState extends State<NearByProviderMapView> {
 
-
-
-
   @override
   void initState() {
     super.initState();
@@ -65,7 +62,6 @@ class _NearByProviderMapViewState extends State<NearByProviderMapView> {
                   child: NearbyProviderMapItemView(
                     providerData: nearbyProviderController.providerList![index],
                     index: index,
-                    googleMapController: nearbyProviderController.mapController,
                   ),
                 ),
               );
@@ -82,25 +78,27 @@ class _NearByProviderMapViewState extends State<NearByProviderMapView> {
                 child: MouseRegion(
                   onEnter: (event) => _onPanStart(),
                   onExit: (event) => _onPanEnd(),
-                  child: GoogleMap(
-                    initialCameraPosition: CameraPosition(target: widget.initialPosition!, zoom: 16),
-                    minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
-                    onMapCreated: (GoogleMapController mapController) async  {
-                      nearbyProviderController.setMapController(controller: mapController);
-                      Future.delayed( const Duration(milliseconds: 100), (){
-                        nearbyProviderController.setMarker(mapController, widget.initialPosition!);
-                      });
-                    },
-                    zoomControlsEnabled: false,
-                    myLocationButtonEnabled: false,
-                    myLocationEnabled: true,
-                    markers: nearbyProviderController.markers,
-                    style: Get.isDarkMode ? Get.find<ThemeController>().darkMap : Get.find<ThemeController>().lightMap,
-                    zoomGesturesEnabled: nearbyProviderController.isPopupMenuOpened == false,
-                    scrollGesturesEnabled: nearbyProviderController.isPopupMenuOpened == false,
-                    rotateGesturesEnabled: nearbyProviderController.isPopupMenuOpened == false,
-                    tiltGesturesEnabled: nearbyProviderController.isPopupMenuOpened == false,
-
+                  child: FlutterMap(
+                    mapController: nearbyProviderController.mapController,
+                    options: MapOptions(
+                      initialCenter: widget.initialPosition!,
+                      initialZoom: 16,
+                      minZoom: 0,
+                      maxZoom: 16,
+                      onMapReady: () {
+                        nearbyProviderController.setMapController(controller: nearbyProviderController.mapController);
+                        Future.delayed( const Duration(milliseconds: 100), (){
+                          nearbyProviderController.setMarker(widget.initialPosition!);
+                        });
+                      },
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.sixamtech.demandium.user',
+                      ),
+                      MarkerLayer(markers: nearbyProviderController.markers),
+                    ],
                   ),
                 ),
               ),
@@ -161,7 +159,6 @@ class _NearByProviderMapViewState extends State<NearByProviderMapView> {
                           child: NearbyProviderMapItemView(
                             providerData: provider,
                             index: nearbyProviderController.providerList!.indexOf(provider),
-                            googleMapController: nearbyProviderController.mapController,
                           ),
                         ),
                       ),
@@ -394,4 +391,3 @@ class ExploreProviderMapShimmer extends StatelessWidget {
     );
   }
 }
-

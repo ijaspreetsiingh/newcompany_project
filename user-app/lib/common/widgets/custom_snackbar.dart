@@ -9,7 +9,7 @@ void customSnackBar(String? message,
       bool showDefaultSnackBar = true,
       String? icon, String? toasterTitle,
     }) {
-  if(message != null && message.isNotEmpty) {
+  if(message != null && message.isNotEmpty && Get.context != null) {
     final width = MediaQuery.of(Get.context!).size.width;
 
     if(showDefaultSnackBar){

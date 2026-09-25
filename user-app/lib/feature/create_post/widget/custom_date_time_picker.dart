@@ -128,7 +128,7 @@ class CustomDateTimePicker extends StatelessWidget {
               Get.back();
             }
           }else{
-            scheduleController.buildSchedule(scheduleType: scheduleController.selectedScheduleType);
+            scheduleController.buildSchedule(scheduleType: scheduleController.initialSelectedScheduleType ?? ScheduleType.asap);
             Get.back();
           }},
 

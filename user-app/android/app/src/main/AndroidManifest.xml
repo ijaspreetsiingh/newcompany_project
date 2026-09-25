@@ -25,15 +25,13 @@
     </queries>
 
     <application
-        android:label="Demandium"
+        android:label="JS"
         android:requestLegacyExternalStorage="true"
         android:usesCleartextTraffic="true"
         android:extractNativeLibs="true"
         android:icon="@mipmap/ic_launcher">
         android:requestLegacyExternalStorage="true"
 
-
-        <meta-data android:name="com.google.android.geo.API_KEY" android:value="YOUR_MAP_KEY"/>
 
         <provider
             android:name="com.pichillilorenzo.flutter_inappwebview_android.InAppWebViewFileProvider"
@@ -75,7 +73,7 @@
                 />
             <meta-data
                 android:name="com.google.firebase.messaging.default_notification_channel_id"
-                android:value="demandiumWithoutsound" />
+                android:value="jassbooking" />
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

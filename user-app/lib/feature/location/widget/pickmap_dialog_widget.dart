@@ -15,17 +15,17 @@ class PickMapDialogWidget extends StatefulWidget {
 }
 
 class _PickMapDialogWidgetState extends State<PickMapDialogWidget> {
-  GoogleMapController? _mapController;
-  CameraPosition? _cameraPosition;
+  MapController? _mapController;
+  LatLng? _currentLatLng;
   LatLng? _initialPosition;
 
   @override
   void initState() {
     super.initState();
-    
-    // Initialize map position
-    if (widget.previousAddress != null && 
-        widget.previousAddress!.latitude != null && 
+    _mapController = MapController();
+
+    if (widget.previousAddress != null &&
+        widget.previousAddress!.latitude != null &&
         widget.previousAddress!.longitude != null) {
       _initialPosition = LatLng(
         double.tryParse(widget.previousAddress!.latitude!) ?? 0,
@@ -37,15 +37,8 @@ class _PickMapDialogWidgetState extends State<PickMapDialogWidget> {
         Get.find<SplashController>().configModel.content?.defaultLocation?.longitude ?? 90.00000,
       );
     }
-    
-    // Set pick data for location controller
-    Get.find<LocationController>().setPickData();
-  }
 
-  @override
-  void dispose() {
-    _mapController?.dispose();
-    super.dispose();
+    Get.find<LocationController>().setPickData();
   }
 
   @override
@@ -62,10 +55,8 @@ class _PickMapDialogWidgetState extends State<PickMapDialogWidget> {
         height: Get.height * 0.85,
         child: Column(
           children: [
-            // Dialog Header
             const _DialogHeader(),
-            
-            // Map View
+
             Expanded(child: Padding(
               padding: const EdgeInsets.all(Dimensions.paddingSizeLarge),
               child: ClipRRect(
@@ -73,10 +64,9 @@ class _PickMapDialogWidgetState extends State<PickMapDialogWidget> {
                 child: MapViewWidget(
                     fromAddAddress: true,
                     initialPosition: _initialPosition,
-                    polygons: {},
+                    polygons: const [],
                     onMapCreated: _onMapCreated,
-                    onCameraMove: _onCameraMove,
-                    onCameraMoveStarted: _onCameraMoveStarted,
+                    onPositionChanged: _onPositionChanged,
                     onCameraIdle: _onCameraIdle,
                     onLocationTap: _onLocationTap,
                     onPickLocationTap: _onPickLocationTap,
@@ -90,32 +80,30 @@ class _PickMapDialogWidgetState extends State<PickMapDialogWidget> {
     );
   }
 
-  // Map callback methods
-  void _onMapCreated(GoogleMapController mapController) {
+  void _onMapCreated(MapController mapController) {
     _mapController = mapController;
+    // Set initial pick position so the button can work
     Get.find<LocationController>().getCurrentLocation(
       false,
       mapController: mapController,
+      defaultLatLng: _initialPosition,
     );
   }
 
-  void _onCameraMove(CameraPosition cameraPosition) {
-    _cameraPosition = cameraPosition;
-  }
-
-  void _onCameraMoveStarted() {
-    Get.find<LocationController>().updateCameraMovingStatus(true);
-    Get.find<LocationController>().disableButton();
+  void _onPositionChanged(LatLng target, double zoom) {
+    _currentLatLng = target;
   }
 
   void _onCameraIdle() {
     Get.find<LocationController>().updateCameraMovingStatus(false);
     try {
-      Get.find<LocationController>().updatePosition(
-        _cameraPosition!,
-        false,
-        formCheckout: false,
-      );
+      if (_currentLatLng != null) {
+        Get.find<LocationController>().updatePosition(
+          _currentLatLng!,
+          false,
+          formCheckout: false,
+        );
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Error updating position: $e');
@@ -172,7 +160,7 @@ class _PickMapDialogWidgetState extends State<PickMapDialogWidget> {
         true,
       );
 
-      Get.back(); // Close dialog
+      Get.back();
     } else {
       customSnackBar('pick_an_address'.tr, type: ToasterMessageType.info);
     }
@@ -193,9 +181,7 @@ class _PickMapDialogWidgetState extends State<PickMapDialogWidget> {
   }
 }
 
-/// Dialog header with title and close button
 class _DialogHeader extends StatelessWidget {
-  
   const _DialogHeader();
 
   @override
@@ -241,5 +227,3 @@ class _DialogHeader extends StatelessWidget {
     );
   }
 }
-
-

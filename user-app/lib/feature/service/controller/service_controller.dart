@@ -68,7 +68,7 @@ class ServiceController extends GetxController implements GetxService {
   int get cartIndex => _cartIndex;
 
   String? _fromPage;
-  String? get fromPage => _fromPage!;
+  String? get fromPage => _fromPage;
 
   final List<double> _lowestPriceList = [];
   List<double> get lowestPriceList => _lowestPriceList;
@@ -77,9 +77,8 @@ class ServiceController extends GetxController implements GetxService {
   Future<void> onInit() async {
     super.onInit();
     if(Get.find<AuthController>().isLoggedIn()) {
-     await Get.find<UserController>().getUserInfo();
-
-     await Get.find<CartController>().getCartListFromServer();
+     Get.find<UserController>().getUserInfo();
+     Get.find<CartController>().getCartListFromServer();
     }
   }
 
@@ -93,26 +92,34 @@ class ServiceController extends GetxController implements GetxService {
           fetchFromLocal: ()=>  serviceRepo.getAllServiceList<CacheResponseData>( source: DataSourceEnum.local),
           fetchFromClient: ()=>  serviceRepo.getAllServiceList(source: DataSourceEnum.client),
           onResponse: (data, source) {
-            _serviceContent = ServiceModel.fromJson(data).content;
-            _allService = [];
-            _allService!.addAll(_serviceContent?.serviceList ?? []);
-            update();
+            try {
+              _serviceContent = ServiceModel.fromJson(data).content;
+              _allService = [];
+              _allService!.addAll(_serviceContent?.serviceList ?? []);
+              update();
+            } catch (e) {
+              debugPrint('getAllServiceList onResponse error: $e');
+              _allService = [];
+              update();
+            }
           },
         );
       }else{
-
-        ApiResponseModel response = await serviceRepo.getAllServiceList(offset : offset, source: DataSourceEnum.client);
-        if (response.response.statusCode == 200) {
-          if(reload){
-            _allService = [];
+        try {
+          ApiResponseModel response = await serviceRepo.getAllServiceList(offset : offset, source: DataSourceEnum.client);
+          if (response.response.statusCode == 200) {
+            if(reload){
+              _allService = [];
+            }
+            _serviceContent = ServiceModel.fromJson(response.response.body).content;
+            if(_allService != null && offset != 1 ){
+              _allService!.addAll(_serviceContent?.serviceList ?? []);
+            }
+          } else {
+            ApiChecker.checkApi(response.response);
           }
-          _serviceContent = ServiceModel.fromJson(response.response.body).content;
-          if(_allService != null && offset != 1 ){
-            _allService!.addAll(_serviceContent?.serviceList ?? []);
-          }
-
-        } else {
-          ApiChecker.checkApi(response.response);
+        } catch (e) {
+          debugPrint('getAllServiceList pagination error: $e');
         }
         update();
       }
@@ -130,25 +137,33 @@ class ServiceController extends GetxController implements GetxService {
           fetchFromLocal: ()=> serviceRepo.getPopularServiceList<CacheResponseData>( source: DataSourceEnum.local),
           fetchFromClient: ()=> serviceRepo.getPopularServiceList(source: DataSourceEnum.client),
           onResponse: (data, source) {
-            _popularBasedServiceContent = ServiceModel.fromJson(data).content;
-            _popularServiceList = [];
-            _popularServiceList!.addAll(_popularBasedServiceContent!.serviceList!);
-
-            update();
+            try {
+              _popularBasedServiceContent = ServiceModel.fromJson(data).content;
+              _popularServiceList = [];
+              _popularServiceList!.addAll(_popularBasedServiceContent?.serviceList ?? []);
+              update();
+            } catch (e) {
+              debugPrint('getPopularServiceList onResponse error: $e');
+              _popularServiceList = [];
+              update();
+            }
           },
         );
 
       }else{
+        try {
+          ApiResponseModel response = await serviceRepo.getPopularServiceList(offset: offset, source: DataSourceEnum.client);
+          if (response.response.statusCode == 200) {
+            _popularBasedServiceContent = ServiceModel.fromJson(response.response?.body).content;
 
-        ApiResponseModel response = await serviceRepo.getPopularServiceList(offset: offset, source: DataSourceEnum.client);
-        if (response.response.statusCode == 200) {
-          _popularBasedServiceContent = ServiceModel.fromJson(response.response?.body).content;
-
-          if(_popularServiceList != null && offset != 1){
-            _popularServiceList!.addAll(_popularBasedServiceContent?.serviceList ?? []);
+            if(_popularServiceList != null && offset != 1){
+              _popularServiceList!.addAll(_popularBasedServiceContent?.serviceList ?? []);
+            }
+          } else {
+            ApiChecker.checkApi(response.response);
           }
-        } else {
-          ApiChecker.checkApi(response.response);
+        } catch (e) {
+          debugPrint('getPopularServiceList pagination error: $e');
         }
         update();
       }
@@ -166,26 +181,35 @@ class ServiceController extends GetxController implements GetxService {
           fetchFromLocal: ()=> serviceRepo.getTrendingServiceList<CacheResponseData>( source: DataSourceEnum.local),
           fetchFromClient: ()=> serviceRepo.getTrendingServiceList(source: DataSourceEnum.client),
           onResponse: (data, source) {
-            _trendingServiceContent = ServiceModel.fromJson(data).content;
-            _trendingServiceList = [];
-            _trendingServiceList!.addAll(_trendingServiceContent!.serviceList!);
-
-            update();
+            try {
+              _trendingServiceContent = ServiceModel.fromJson(data).content;
+              _trendingServiceList = [];
+              _trendingServiceList!.addAll(_trendingServiceContent?.serviceList ?? []);
+              update();
+            } catch (e) {
+              debugPrint('getTrendingServiceList onResponse error: $e');
+              _trendingServiceList = [];
+              update();
+            }
           },
         );
 
       }else{
-        ApiResponseModel response = await serviceRepo.getTrendingServiceList(offset: offset, source: DataSourceEnum.client);
-        if (response.response.statusCode == 200) {
-          if(reload){
-            _trendingServiceList = [];
+        try {
+          ApiResponseModel response = await serviceRepo.getTrendingServiceList(offset: offset, source: DataSourceEnum.client);
+          if (response.response.statusCode == 200) {
+            if(reload){
+              _trendingServiceList = [];
+            }
+            _trendingServiceContent = ServiceModel.fromJson(response.response.body).content;
+            if(_trendingServiceList != null && offset != 1){
+              _trendingServiceList!.addAll(_trendingServiceContent?.serviceList ?? []);
+            }
+          } else {
+            ApiChecker.checkApi(response.response);
           }
-          _trendingServiceContent = ServiceModel.fromJson(response.response.body).content;
-          if(_trendingServiceList != null && offset != 1){
-            _trendingServiceList!.addAll(_trendingServiceContent!.serviceList!);
-          }
-        } else {
-          ApiChecker.checkApi(response.response);
+        } catch (e) {
+          debugPrint('getTrendingServiceList pagination error: $e');
         }
         update();
       }
@@ -200,30 +224,40 @@ class ServiceController extends GetxController implements GetxService {
 
      if(offset == 1){
        DataSyncHelper.fetchAndSyncData(
-         fetchFromLocal: ()=> serviceRepo.getRecommendedServiceList<CacheResponseData>( source: DataSourceEnum.local),
-         fetchFromClient: ()=> serviceRepo.getRecommendedServiceList(source: DataSourceEnum.client),
-         onResponse: (data, source) {
-           _recommendedServiceContent = ServiceModel.fromJson(data).content;
-           _recommendedServiceList = [];
-           _recommendedServiceList!.addAll( _recommendedServiceContent!.serviceList!);
-           update();
-         },
-       );
-     }else{
-       ApiResponseModel response =  await serviceRepo.getRecommendedServiceList(offset: offset, source: DataSourceEnum.client);
-       if (response.response.statusCode == 200) {
-         if(reload){
-           _recommendedServiceList = [];
-         }
-         _recommendedServiceContent = ServiceModel.fromJson(response.response.body).content;
-         if(_recommendedServiceList != null && offset != 1){
-           _recommendedServiceList!.addAll( _recommendedServiceContent!.serviceList!);
-         }
-       } else {
-         ApiChecker.checkApi(response.response);
-       }
-       update();
-     }
+          fetchFromLocal: ()=> serviceRepo.getRecommendedServiceList<CacheResponseData>( source: DataSourceEnum.local),
+          fetchFromClient: ()=> serviceRepo.getRecommendedServiceList(source: DataSourceEnum.client),
+          onResponse: (data, source) {
+            try {
+              _recommendedServiceContent = ServiceModel.fromJson(data).content;
+              _recommendedServiceList = [];
+              _recommendedServiceList!.addAll(_recommendedServiceContent?.serviceList ?? []);
+              update();
+            } catch (e) {
+              debugPrint('getRecommendedServiceList onResponse error: $e');
+              _recommendedServiceList = [];
+              update();
+            }
+          },
+        );
+      }else{
+        try {
+          ApiResponseModel response =  await serviceRepo.getRecommendedServiceList(offset: offset, source: DataSourceEnum.client);
+          if (response.response.statusCode == 200) {
+            if(reload){
+              _recommendedServiceList = [];
+            }
+            _recommendedServiceContent = ServiceModel.fromJson(response.response.body).content;
+            if(_recommendedServiceList != null && offset != 1){
+              _recommendedServiceList!.addAll(_recommendedServiceContent?.serviceList ?? []);
+            }
+          } else {
+            ApiChecker.checkApi(response.response);
+          }
+        } catch (e) {
+          debugPrint('getRecommendedServiceList pagination error: $e');
+        }
+        update();
+      }
    }
   }
 
@@ -236,22 +270,32 @@ class ServiceController extends GetxController implements GetxService {
           fetchFromLocal: ()=> serviceRepo.getRecentlyViewedServiceList<CacheResponseData>( source: DataSourceEnum.local),
           fetchFromClient: ()=> serviceRepo.getRecentlyViewedServiceList(source: DataSourceEnum.client),
           onResponse: (data, source) {
-            _recentlyViewServiceContent = ServiceModel.fromJson(data).content;
-            _recentlyViewServiceList = [];
-            _recentlyViewServiceList!.addAll(_recentlyViewServiceContent!.serviceList!);
-            update();
+            try {
+              _recentlyViewServiceContent = ServiceModel.fromJson(data).content;
+              _recentlyViewServiceList = [];
+              _recentlyViewServiceList!.addAll(_recentlyViewServiceContent?.serviceList ?? []);
+              update();
+            } catch (e) {
+              debugPrint('getRecentlyViewedServiceList onResponse error: $e');
+              _recentlyViewServiceList = [];
+              update();
+            }
           },
         );
       }else{
-        ApiResponseModel response = await serviceRepo.getRecentlyViewedServiceList(offset: offset, source: DataSourceEnum.client);
-        if (response.response.statusCode == 200) {
-          if(reload){
-            _recentlyViewServiceList = [];
+        try {
+          ApiResponseModel response = await serviceRepo.getRecentlyViewedServiceList(offset: offset, source: DataSourceEnum.client);
+          if (response.response.statusCode == 200) {
+            if(reload){
+              _recentlyViewServiceList = [];
+            }
+            _recentlyViewServiceContent = ServiceModel.fromJson(response.response.body).content;
+            if(_recentlyViewServiceList != null && offset != 1){
+              _recentlyViewServiceList!.addAll(_recentlyViewServiceContent?.serviceList ?? []);
+            }
           }
-          _recentlyViewServiceContent = ServiceModel.fromJson(response.response.body).content;
-          if(_recentlyViewServiceList != null && offset != 1){
-            _recentlyViewServiceList!.addAll(_recentlyViewServiceContent!.serviceList!);
-          }
+        } catch (e) {
+          debugPrint('getRecentlyViewedServiceList pagination error: $e');
         }
         update();
       }
@@ -274,17 +318,23 @@ class ServiceController extends GetxController implements GetxService {
         fetchFromLocal: ()=> serviceRepo.getFeatheredCategoryServiceList<CacheResponseData>( source: DataSourceEnum.local),
         fetchFromClient: ()=> serviceRepo.getFeatheredCategoryServiceList(source: DataSourceEnum.client),
         onResponse: (data, source) {
-          _featheredCategoryContent = FeatheredCategoryModel.fromJson(data).content;
+          try {
+            _featheredCategoryContent = FeatheredCategoryModel.fromJson(data).content;
 
-          if(_featheredCategoryContent!.categoryList!=null || _featheredCategoryContent!.categoryList!.isNotEmpty){
-            _categoryList =[];
-            _featheredCategoryContent?.categoryList?.forEach((element) {
-              if(element.servicesByCategory!=null && element.servicesByCategory!.isNotEmpty){
-                _categoryList!.add(element);
-              }
-            });
+            if(_featheredCategoryContent!.categoryList!=null && _featheredCategoryContent!.categoryList!.isNotEmpty){
+              _categoryList =[];
+              _featheredCategoryContent?.categoryList?.forEach((element) {
+                if(element.servicesByCategory!=null && element.servicesByCategory!.isNotEmpty){
+                  _categoryList!.add(element);
+                }
+              });
+            }
+            update();
+          } catch (e) {
+            debugPrint('getFeatherCategoryList onResponse error: $e');
+            _categoryList = [];
+            update();
           }
-          update();
         },
       );
     }
@@ -502,10 +552,10 @@ class ServiceController extends GetxController implements GetxService {
       }
       _offerBasedServiceContent = ServiceModel.fromJson(response.body).content;
       if(_offerBasedServiceList != null && offset != 1){
-        _offerBasedServiceList!.addAll(_offerBasedServiceContent!.serviceList!);
+        _offerBasedServiceList!.addAll(_offerBasedServiceContent?.serviceList ?? []);
       }else{
         _offerBasedServiceList = [];
-        _offerBasedServiceList!.addAll(_offerBasedServiceContent!.serviceList!);
+        _offerBasedServiceList!.addAll(_offerBasedServiceContent?.serviceList ?? []);
       }
     } else {
       ApiChecker.checkApi(response);

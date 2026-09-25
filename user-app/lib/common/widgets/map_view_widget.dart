@@ -2,19 +2,16 @@ import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:lottie/lottie.dart';
 
-/// Reusable map view widget with complete map functionality
-/// Used in both PickMapScreen and PickmapDialogWidget
-class MapViewWidget extends StatelessWidget {
+class MapViewWidget extends StatefulWidget {
   final bool fromAddAddress;
   final LatLng? initialPosition;
-  final Set<Polygon> polygons;
-  final Function(GoogleMapController) onMapCreated;
-  final Function(CameraPosition) onCameraMove;
-  final Function() onCameraMoveStarted;
+  final List<Polygon> polygons;
+  final Function(MapController) onMapCreated;
+  final Function(LatLng target, double zoom) onPositionChanged;
   final Function() onCameraIdle;
   final Function() onLocationTap;
   final Function() onPickLocationTap;
-  final GoogleMapController? Function() getMapController;
+  final MapController? Function() getMapController;
 
   const MapViewWidget({
     super.key,
@@ -22,8 +19,7 @@ class MapViewWidget extends StatelessWidget {
     required this.initialPosition,
     required this.polygons,
     required this.onMapCreated,
-    required this.onCameraMove,
-    required this.onCameraMoveStarted,
+    required this.onPositionChanged,
     required this.onCameraIdle,
     required this.onLocationTap,
     required this.onPickLocationTap,
@@ -31,48 +27,74 @@ class MapViewWidget extends StatelessWidget {
   });
 
   @override
+  State<MapViewWidget> createState() => _MapViewWidgetState();
+}
+
+class _MapViewWidgetState extends State<MapViewWidget> {
+  late MapController _mapController;
+  Timer? _idleTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _mapController = MapController();
+  }
+
+  @override
+  void dispose() {
+    _idleTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GetBuilder<LocationController>(
       builder: (locationController) {
         return Stack(
           children: [
-            // Wrap GoogleMap with AbsorbPointer to prevent scroll propagation on web
             AbsorbPointer(
               absorbing: false,
               child: GestureDetector(
-                // This prevents scroll events from propagating to parent widgets
                 onVerticalDragStart: (_) {},
                 onHorizontalDragStart: (_) {},
-                child: GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: fromAddAddress
+                child: FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter: widget.fromAddAddress
                         ? LatLng(
-                      locationController.position.latitude,
-                      locationController.position.longitude,
-                    )
-                        : initialPosition!,
-                    zoom: 16,
+                            locationController.position.latitude,
+                            locationController.position.longitude,
+                          )
+                        : widget.initialPosition!,
+                    initialZoom: 16,
+                    minZoom: 0,
+                    maxZoom: 16,
+                    onPositionChanged: (camera, hasGesture) {
+                      if (hasGesture) {
+                        _idleTimer?.cancel();
+                        Get.find<LocationController>().updateCameraMovingStatus(true);
+                        Get.find<LocationController>().disableButton();
+                        widget.onPositionChanged(camera.center, camera.zoom);
+                        _idleTimer = Timer(const Duration(milliseconds: 500), () {
+                          widget.onCameraIdle();
+                        });
+                      }
+                    },
+                    onMapReady: () {
+                      widget.onMapCreated(_mapController);
+                    },
                   ),
-                  minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
-                  onMapCreated: onMapCreated,
-                  onCameraMove: onCameraMove,
-                  onCameraMoveStarted: onCameraMoveStarted,
-                  onCameraIdle: onCameraIdle,
-                  style: Get.isDarkMode
-                      ? Get.find<ThemeController>().darkMap
-                      : Get.find<ThemeController>().lightMap,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
-                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                    // This allows the map to capture all gestures
-                    Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer()),
-                  },
-                  polygons: polygons,
+                  children: [
+                    TileLayer(
+                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.sixamtech.demandium.user',
+                    ),
+                    PolygonLayer(polygons: widget.polygons),
+                  ],
                 ),
               ),
             ),
 
-            // Center map icon
             Center(
               child: Padding(
                 padding: const EdgeInsets.only(
@@ -84,13 +106,12 @@ class MapViewWidget extends StatelessWidget {
               ),
             ),
 
-            // Search bar - using LocationSearchDialog directly for in-place search
             Positioned(
               top: Dimensions.paddingSizeLarge,
               left: Dimensions.paddingSizeSmall,
               right: Dimensions.paddingSizeSmall,
               child: LocationSearchDialog(
-                getMapController: getMapController,
+                getMapController: widget.getMapController,
                 pickedLocation: locationController.pickAddress.address ?? 'search_location'.tr,
                 child: Container(
                   height: 50,
@@ -98,19 +119,22 @@ class MapViewWidget extends StatelessWidget {
                     horizontal: Dimensions.paddingSizeSmall,
                   ),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+                    color: Colors.white.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.location_on,
-                        size: 25,
-                        color: Theme.of(context)
-                            .textTheme
-                            .bodyLarge!
-                            .color!
-                            .withValues(alpha: .6),
+                        size: 22,
+                        color: Color(0xffFF6B2C),
                       ),
                       const SizedBox(width: Dimensions.paddingSizeExtraSmall),
                       Expanded(
@@ -124,10 +148,10 @@ class MapViewWidget extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: Dimensions.paddingSizeSmall),
-                      Icon(
+                      const Icon(
                         Icons.search,
-                        size: 25,
-                        color: Theme.of(context).textTheme.bodyLarge!.color,
+                        size: 22,
+                        color: Color(0xff98A2B3),
                       ),
                     ],
                   ),
@@ -135,38 +159,38 @@ class MapViewWidget extends StatelessWidget {
               ),
             ),
 
-            // Location button
             Positioned(
               bottom: 80,
               right: Dimensions.paddingSizeSmall,
               child: FloatingActionButton(
                 hoverColor: Colors.transparent,
                 mini: true,
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                onPressed: onLocationTap,
-                child: Icon(
+                backgroundColor: const Color(0xffFF6B2C),
+                onPressed: widget.onLocationTap,
+                child: const Icon(
                   Icons.my_location,
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: Colors.white,
                 ),
               ),
             ),
 
-            // Pick location button
             Positioned(
               bottom: 30.0,
               left: Dimensions.paddingSizeSmall,
               right: Dimensions.paddingSizeSmall,
               child: CustomButton(
+                backgroundColor: const Color(0xffFF6B2C),
+                textColor: Colors.white,
                 fontSize: Dimensions.fontSizeDefault,
                 buttonText: locationController.inZone
-                    ? fromAddAddress
-                    ? 'pick_address'.tr
-                    : 'pick_location'.tr
+                    ? widget.fromAddAddress
+                        ? 'pick_address'.tr
+                        : 'pick_location'.tr
                     : 'service_not_available_in_this_area'.tr,
                 onPressed: (locationController.buttonDisabled ||
                     locationController.loading)
                     ? null
-                    : onPickLocationTap,
+                    : widget.onPickLocationTap,
               ),
             ),
           ],
@@ -176,7 +200,6 @@ class MapViewWidget extends StatelessWidget {
   }
 }
 
-/// Animated map icon - extended version (when camera is moving)
 class AnimatedMapIconExtended extends StatefulWidget {
   const AnimatedMapIconExtended({super.key});
 
@@ -210,12 +233,10 @@ class _AnimatedMapIconExtendedState extends State<AnimatedMapIconExtended> {
                     const ['Layer 4', 'Group 1', 'Stroke 1', '**'],
                     value: Theme.of(context).colorScheme.primary,
                   ),
-                  // Change color of Stroke 1 in Group 2
                   ValueDelegate.color(
                     const ['Layer 4', 'Group 2', 'Stroke 1', '**'],
                     value: Theme.of(context).colorScheme.primary,
                   ),
-                  // Change color of Stroke 1 in Group 3
                   ValueDelegate.color(
                     const ['Layer 4', 'Group 3', 'Stroke 1', '**'],
                     value: Theme.of(context).colorScheme.primary,
@@ -251,7 +272,6 @@ class _AnimatedMapIconExtendedState extends State<AnimatedMapIconExtended> {
   }
 }
 
-/// Animated map icon - minimised version (when camera is idle)
 class AnimatedMapIconMinimised extends StatefulWidget {
   const AnimatedMapIconMinimised({super.key});
 
@@ -259,7 +279,7 @@ class AnimatedMapIconMinimised extends StatefulWidget {
   State<AnimatedMapIconMinimised> createState() => _AnimatedMapIconMinimisedState();
 }
 
-class _AnimatedMapIconMinimisedState extends State<AnimatedMapIconMinimised> with TickerProviderStateMixin {
+class _AnimatedMapIconMinimisedState extends State<AnimatedMapIconMinimised> {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<LocationController>(builder: (locationController) {

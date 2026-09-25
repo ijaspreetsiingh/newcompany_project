@@ -23,7 +23,7 @@ class NearbyProviderListview extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(Dimensions.paddingSizeDefault, 15, Dimensions.paddingSizeDefault,  Dimensions.paddingSizeSmall,),
                     child: TitleWidget(
-                      textDecoration: TextDecoration.underline,
+                      
                       title:'providers_near_you'.tr,
                       onTap: () => Get.toNamed(RouteHelper.getNearByProviderScreen(tabIndex: 0)),
                     ),

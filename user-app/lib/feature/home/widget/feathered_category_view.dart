@@ -41,7 +41,7 @@ class _FeatheredCategoryViewState extends State<FeatheredCategoryView> {
                     Dimensions.paddingSizeExtraSmall,
                   ),
                   child: TitleWidget(
-                    textDecoration: TextDecoration.underline,
+                    
                     title: serviceController.categoryList?[categoryIndex].name??"",
                     onTap: () =>  Get.toNamed(RouteHelper.getFeatheredCategoryService(
                         serviceController.categoryList?[categoryIndex].name??"", serviceController.categoryList?[categoryIndex].slug ?? ""),
