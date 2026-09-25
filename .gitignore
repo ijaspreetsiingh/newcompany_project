@@ -70,3 +70,6 @@ yarn-error.log*
 
 # ---- Firebase local overrides (keep google-services.json tracked) ----
 .firebase/
+
+# Stale landing HTML cache (Render pe fresh chahiye)
+backend/public/landing-cache-*.html

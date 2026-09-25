@@ -40,6 +40,9 @@ use Modules\UserManagement\Http\Middleware\DetectUser;
 
 $app = Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
+        // Render/Cloudflare ke peeche TLS terminate hoti hai -> forwarded proto trust karo,
+        // warna asset()/url() http:// banate hain aur browser mixed-content block karta hai.
+        $middleware->trustProxies(at: '*');
         $middleware->use([
 //            TrustHosts::class,
             TrustProxies::class,

@@ -4,61 +4,74 @@
 
 @section('content')
 
-    {{-- ==================== HERO SECTION ==================== --}}
-    <section class="banner-section" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%); min-height: 100vh; display: flex; align-items: center; position: relative; overflow: hidden;">
-        <div style="position: absolute; top: -50%; right: -20%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%); border-radius: 50%;"></div>
-        <div style="position: absolute; bottom: -30%; left: -10%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%); border-radius: 50%;"></div>
-        <div class="container" style="position: relative; z-index: 2;">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-6 wow animate__fadeInUp">
-                    <div style="display: inline-block; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); border-radius: 50px; padding: 8px 20px; margin-bottom: 24px;">
-                        <span style="color: #60a5fa; font-size: 14px; font-weight: 600; letter-spacing: 1px;">🏠 #1 HOME SERVICES PLATFORM</span>
-                    </div>
-                    <h1 style="color: #fff; font-size: 56px; font-weight: 800; line-height: 1.15; margin-bottom: 20px;">
-                        Your Home, <br>
-                        <span style="background: linear-gradient(135deg, #3b82f6, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Our Priority</span>
+    {{-- ==================== HERO ==================== --}}
+    <section class="banner-section lv-hero">
+        <div class="container">
+            <div class="lv-hero-grid">
+                <div class="lv-reveal">
+                    <span class="lv-hero-badge">
+                        <span class="lv-dot"></span>
+                        #1 Home Services Platform
+                    </span>
+                    <h1>
+                        Your home deserves<br>
+                        the <span class="grad-text">best care</span>.
                     </h1>
-                    <p style="color: #94a3b8; font-size: 18px; line-height: 1.7; margin-bottom: 32px; max-width: 480px;">
-                        Book trusted professionals for cleaning, repairs, plumbing, electrical work and 50+ home services. Fast, reliable, and affordable.
+                    <p class="lv-lead">
+                        Book trusted, background-verified professionals for cleaning, repairs,
+                        plumbing, electrical work and 50+ home services — fast, reliable and
+                        at honest prices.
                     </p>
-                    <div class="d-flex flex-wrap gap-3 mb-4">
-                        <a href="#service" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; padding: 16px 36px; border-radius: 12px; font-weight: 700; font-size: 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 8px 25px rgba(59,130,246,0.4); transition: all 0.3s;">
-                            Book Now <i class="las la-arrow-right"></i>
+                    <div class="lv-hero-cta">
+                        <a href="#service" class="lv-btn lv-btn-primary">
+                            Book a Service <i class="las la-arrow-right"></i>
                         </a>
-                        <a href="#how-it-works" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 16px 36px; border-radius: 12px; font-weight: 700; font-size: 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; transition: all 0.3s;">
-                            <i class="las la-play-circle" style="font-size: 20px;"></i> How It Works
+                        <a href="#how-it-works" class="lv-btn lv-btn-ghost">
+                            <i class="las la-play-circle"></i> How It Works
                         </a>
                     </div>
-                    <div class="d-flex align-items-center gap-4 mt-4">
-                        <div class="d-flex">
-                            @for($i = 0; $i < 4; $i++)
-                                <div style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid #1e3a5f; margin-left: -10px; background: linear-gradient(135deg, #3b82f6, #10b981); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px;">{{ chr(65 + $i) }}</div>
-                            @endfor
+                    <div class="lv-trust">
+                        <div class="lv-avatars">
+                            <span class="lv-av">AK</span>
+                            <span class="lv-av lv-av--2">RS</span>
+                            <span class="lv-av lv-av--3">PM</span>
+                            <span class="lv-av lv-av--4">VD</span>
                         </div>
                         <div>
-                            <div style="color: #fbbf24; font-size: 14px;">★★★★★</div>
-                            <span style="color: #94a3b8; font-size: 13px;">50,000+ Happy Customers</span>
+                            <div class="stars">★★★★★</div>
+                            <b>4.9 average rating</b>
+                            <small>Trusted by 50,000+ happy customers</small>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-6 wow animate__fadeInUp" style="animation-delay: 0.2s;">
-                    <div style="position: relative;">
-                        <div style="width: 100%; height: 400px; border-radius: 24px; box-shadow: 0 25px 60px rgba(0,0,0,0.4); background: linear-gradient(135deg, #1e3a5f, #3b82f6); display: flex; align-items: center; justify-content: center;"><i class="las la-home" style="color: rgba(255,255,255,0.3); font-size: 120px;"></i></div>
-                        <div style="position: absolute; bottom: -20px; left: -20px; background: #fff; border-radius: 16px; padding: 16px 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px;">
-                            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                <i class="las la-check" style="color: #fff; font-size: 24px;"></i>
-                            </div>
-                            <div>
-                                <div style="font-weight: 700; color: #1e293b; font-size: 16px;">100% Verified</div>
-                                <div style="color: #64748b; font-size: 13px;">Professional Workers</div>
-                            </div>
+
+                <div class="lv-reveal" style="--d: .15s">
+                    <div class="lv-collage">
+                        <div class="lv-tile"><img src="{{ $topImageData['top_image_1'] }}" alt="Home service professional"></div>
+                        <div class="lv-tile"><img src="{{ $topImageData['top_image_2'] }}" alt="Home cleaning service"></div>
+                        <div class="lv-tile"><img src="{{ $topImageData['top_image_3'] }}" alt="Repair service"></div>
+                        <div class="lv-tile"><img src="{{ $topImageData['top_image_4'] }}" alt="Trusted experts"></div>
+
+                        <div class="lv-float lv-float--verified">
+                            <span class="ico"><i class="las la-shield-alt"></i></span>
+                            <span>
+                                <b>100% Verified</b>
+                                <small>Background-checked pros</small>
+                            </span>
                         </div>
-                        <div style="position: absolute; top: 20px; right: -10px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 16px; padding: 14px 20px; box-shadow: 0 10px 30px rgba(245,158,11,0.3); display: flex; align-items: center; gap: 10px;">
-                            <i class="las la-bolt" style="color: #fff; font-size: 22px;"></i>
-                            <div>
-                                <div style="font-weight: 800; color: #fff; font-size: 18px;">30 Min</div>
-                                <div style="color: rgba(255,255,255,0.8); font-size: 12px;">Average Arrival</div>
-                            </div>
+                        <div class="lv-float lv-float--time">
+                            <span class="ico"><i class="las la-bolt"></i></span>
+                            <span>
+                                <b>30 Min</b>
+                                <small>Average arrival</small>
+                            </span>
+                        </div>
+                        <div class="lv-float lv-float--rating">
+                            <span class="ico"><i class="las la-star"></i></span>
+                            <span>
+                                <b>4.9 Rated</b>
+                                <small>Top rated app</small>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -66,196 +79,248 @@
         </div>
     </section>
 
-    {{-- ==================== SERVICES SECTION ==================== --}}
-    <section id="service" class="py-5" style="background: #f8fafc;">
+    {{-- ==================== CATEGORIES ==================== --}}
+    <section id="service" class="lv-section lv-section--alt service-section">
         <div class="container">
-            <div class="text-center mb-5 wow animate__fadeInUp">
-                <span style="background: rgba(59,130,246,0.1); color: #3b82f6; padding: 8px 20px; border-radius: 50px; font-weight: 600; font-size: 14px; display: inline-block; margin-bottom: 16px;">OUR SERVICES</span>
-                <h2 style="font-size: 40px; font-weight: 800; color: #1e293b; margin-bottom: 16px;">Explore Popular Services</h2>
-                <p style="color: #64748b; font-size: 17px; max-width: 600px; margin: 0 auto;">Find the right service for your home from our wide range of professional categories</p>
+            <div class="lv-head lv-reveal">
+                <span class="lv-eyebrow">Our Services</span>
+                <h2 class="lv-title">Popular services, <span class="grad-text">on demand</span></h2>
+                <p class="lv-sub">From everyday cleaning to emergency repairs — explore professional categories trusted by thousands of homes.</p>
             </div>
-            <div class="row g-4">
-                @foreach ($categories->take(6) as $index => $category)
-                    <div class="col-md-6 col-lg-4 wow animate__fadeInUp" style="animation-delay: {{ $index * 0.1 }}s;">
-                        <div style="background: #fff; border-radius: 20px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #f1f5f9; transition: all 0.3s; cursor: pointer; height: 100%;" onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 20px 40px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.06)'">
-                            <div style="width: 64px; height: 64px; background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(16,185,129,0.1)); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
-                                <img src="{{ $category->image_full_path }}" alt="{{ $category['name'] }}" style="width: 36px; height: 36px; object-fit: contain;">
-                            </div>
-                            <h5 style="font-weight: 700; color: #1e293b; margin-bottom: 8px; font-size: 18px;">{{ $category['name'] }}</h5>
-                            <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
-                                Available in {{ $category->zones_count }} zones • {{ $category->children->count() }}+ subcategories
-                            </p>
-                            <a href="javascript:void(0)" style="color: #3b82f6; font-weight: 600; font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                                Explore <i class="las la-arrow-right" style="font-size: 14px;"></i>
-                            </a>
-                        </div>
-                    </div>
-                @endforeach
+
+            <div class="lv-cat-grid">
+                @forelse ($categories->take(6) as $category)
+                    <a href="javascript:void(0)" class="lv-cat lv-reveal" style="--d: {{ $loop->index * 0.07 }}s">
+                        <span class="lv-cat-ico">
+                            <img src="{{ $category->image_full_path }}" alt="{{ $category['name'] }}">
+                        </span>
+                        <h3>{{ $category['name'] }}</h3>
+                        <p>Available in {{ $category->zones_count }} zones &middot; {{ $category->children->count() }}+ subcategories</p>
+                        <span class="more">
+                            Explore
+                            <span class="arr"><i class="las la-arrow-right"></i></span>
+                        </span>
+                    </a>
+                @empty
+                    <div class="lv-empty">Services are being updated — please check back soon.</div>
+                @endforelse
             </div>
         </div>
     </section>
 
     {{-- ==================== HOW IT WORKS ==================== --}}
-    <section id="how-it-works" class="py-5" style="background: #fff;">
+    <section id="how-it-works" class="lv-section">
         <div class="container">
-            <div class="text-center mb-5 wow animate__fadeInUp">
-                <span style="background: rgba(16,185,129,0.1); color: #10b981; padding: 8px 20px; border-radius: 50px; font-weight: 600; font-size: 14px; display: inline-block; margin-bottom: 16px;">HOW IT WORKS</span>
-                <h2 style="font-size: 40px; font-weight: 800; color: #1e293b; margin-bottom: 16px;">Book in 3 Easy Steps</h2>
-                <p style="color: #64748b; font-size: 17px; max-width: 500px; margin: 0 auto;">Getting your home services has never been easier</p>
+            <div class="lv-head lv-reveal">
+                <span class="lv-eyebrow lv-eyebrow--mint">How It Works</span>
+                <h2 class="lv-title">Book in <span class="grad-text">3 easy steps</span></h2>
+                <p class="lv-sub">Getting your home services done has never been this simple.</p>
             </div>
-            <div class="row g-4 align-items-center">
-                <div class="col-md-4 text-center wow animate__fadeInUp">
-                    <div style="position: relative; display: inline-block; margin-bottom: 24px;">
-                        <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 15px 35px rgba(59,130,246,0.3);">
-                            <i class="las la-search" style="color: #fff; font-size: 40px;"></i>
-                        </div>
-                        <div style="position: absolute; top: -10px; right: -10px; width: 32px; height: 32px; background: #fbbf24; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #1e293b; font-size: 14px;">1</div>
+
+            <div class="lv-steps">
+                <div class="lv-step lv-reveal">
+                    <div class="lv-step-num">
+                        <i class="las la-search"></i>
+                        <span class="step-no">1</span>
                     </div>
-                    <h5 style="font-weight: 700; color: #1e293b; margin-bottom: 8px;">Choose Service</h5>
-                    <p style="color: #64748b; font-size: 15px;">Browse through 50+ categories and select the service you need</p>
+                    <h3>Choose a Service</h3>
+                    <p>Browse 50+ professional categories and pick exactly what your home needs.</p>
                 </div>
-                <div class="col-md-4 text-center wow animate__fadeInUp" style="animation-delay: 0.15s;">
-                    <div style="position: relative; display: inline-block; margin-bottom: 24px;">
-                        <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 15px 35px rgba(16,185,129,0.3);">
-                            <i class="las la-calendar-check" style="color: #fff; font-size: 40px;"></i>
-                        </div>
-                        <div style="position: absolute; top: -10px; right: -10px; width: 32px; height: 32px; background: #fbbf24; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #1e293b; font-size: 14px;">2</div>
+                <div class="lv-step lv-reveal" style="--d: .12s">
+                    <div class="lv-step-num lv-step-num--mint">
+                        <i class="las la-calendar-check"></i>
+                        <span class="step-no">2</span>
                     </div>
-                    <h5 style="font-weight: 700; color: #1e293b; margin-bottom: 8px;">Book Appointment</h5>
-                    <p style="color: #64748b; font-size: 15px;">Pick a date and time that works best for your schedule</p>
+                    <h3>Book &amp; Schedule</h3>
+                    <p>Pick a date and time that fits your routine — slots available 7 days a week.</p>
                 </div>
-                <div class="col-md-4 text-center wow animate__fadeInUp" style="animation-delay: 0.3s;">
-                    <div style="position: relative; display: inline-block; margin-bottom: 24px;">
-                        <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 15px 35px rgba(245,158,11,0.3);">
-                            <i class="las la-tools" style="color: #fff; font-size: 40px;"></i>
-                        </div>
-                        <div style="position: absolute; top: -10px; right: -10px; width: 32px; height: 32px; background: #fbbf24; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #1e293b; font-size: 14px;">3</div>
+                <div class="lv-step lv-reveal" style="--d: .24s">
+                    <div class="lv-step-num lv-step-num--amber">
+                        <i class="las la-tools"></i>
+                        <span class="step-no">3</span>
                     </div>
-                    <h5 style="font-weight: 700; color: #1e293b; margin-bottom: 8px;">Get It Done</h5>
-                    <p style="color: #64748b; font-size: 15px;">Sit back and relax while our verified pro handles everything</p>
+                    <h3>Get It Done</h3>
+                    <p>Sit back and relax while a verified pro arrives and gets the job done.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    {{-- ==================== ABOUT SECTION ==================== --}}
-    <section class="py-5" style="background: linear-gradient(135deg, #0f172a, #1e3a5f); position: relative; overflow: hidden;">
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(16,185,129,0.05)); opacity: 0.5;"></div>
-        <div class="container" style="position: relative; z-index: 2;">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-6 wow animate__fadeInUp">
-                    <span style="background: rgba(59,130,246,0.2); color: #60a5fa; padding: 8px 20px; border-radius: 50px; font-weight: 600; font-size: 14px; display: inline-block; margin-bottom: 16px;">ABOUT US</span>
-                    <h2 style="font-size: 40px; font-weight: 800; color: #fff; margin-bottom: 20px; line-height: 1.2;">We Are The Best Home Service Provider</h2>
-                    <p style="color: #94a3b8; font-size: 17px; line-height: 1.8; margin-bottom: 32px;">
-                        With over 10,000+ verified professionals, we deliver exceptional home services right to your doorstep. Our platform connects you with trusted experts who are Background verified, skilled, and ready to serve.
+    {{-- ==================== WHY CHOOSE US ==================== --}}
+    <section class="lv-why">
+        <div class="container">
+            <div class="lv-why-grid">
+                <div class="lv-why-media lv-reveal">
+                    <div class="frame"></div>
+                    <div class="shot">
+                        <img src="{{ $topImageData['top_image_1'] }}" alt="Why choose us">
+                    </div>
+                    <div class="lv-float lv-float--trophy">
+                        <span class="ico"><i class="las la-trophy"></i></span>
+                        <span>
+                            <b>#1 Rated</b>
+                            <small>Home service app</small>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="lv-reveal" style="--d: .15s">
+                    <span class="lv-eyebrow lv-eyebrow--dark">Why Choose Us</span>
+                    <h2 class="lv-title">The best home service<br>provider you can <span class="grad-text">trust</span></h2>
+                    <p class="lv-lead">
+                        With 10,000+ verified professionals across the city, we deliver
+                        exceptional services right to your doorstep — skilled, background
+                        verified and ready to serve.
                     </p>
-                    <div class="row g-3 mb-4">
-                        <div class="col-6">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div style="width: 44px; height: 44px; background: rgba(16,185,129,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                    <i class="las la-shield-alt" style="color: #10b981; font-size: 20px;"></i>
-                                </div>
-                                <span style="color: #e2e8f0; font-weight: 600; font-size: 15px;">Verified Pros</span>
-                            </div>
+
+                    <div class="lv-check-grid">
+                        <div class="lv-check">
+                            <span class="ico ico--mint"><i class="las la-shield-alt"></i></span>
+                            <span>
+                                <b>Verified Pros</b>
+                                <small>Background checked</small>
+                            </span>
                         </div>
-                        <div class="col-6">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div style="width: 44px; height: 44px; background: rgba(59,130,246,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                    <i class="las la-headset" style="color: #3b82f6; font-size: 20px;"></i>
-                                </div>
-                                <span style="color: #e2e8f0; font-weight: 600; font-size: 15px;">24/7 Support</span>
-                            </div>
+                        <div class="lv-check">
+                            <span class="ico ico--blue"><i class="las la-headset"></i></span>
+                            <span>
+                                <b>24/7 Support</b>
+                                <small>We're always here</small>
+                            </span>
                         </div>
-                        <div class="col-6">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div style="width: 44px; height: 44px; background: rgba(245,158,11,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                    <i class="las la-bolt" style="color: #f59e0b; font-size: 20px;"></i>
-                                </div>
-                                <span style="color: #e2e8f0; font-weight: 600; font-size: 15px;">Quick Response</span>
-                            </div>
+                        <div class="lv-check">
+                            <span class="ico ico--amber"><i class="las la-bolt"></i></span>
+                            <span>
+                                <b>Quick Response</b>
+                                <small>30 min average arrival</small>
+                            </span>
                         </div>
-                        <div class="col-6">
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <div style="width: 44px; height: 44px; background: rgba(239,68,68,0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                    <i class="las la-hand-holding-usd" style="color: #ef4444; font-size: 20px;"></i>
-                                </div>
-                                <span style="color: #e2e8f0; font-weight: 600; font-size: 15px;">Best Prices</span>
-                            </div>
+                        <div class="lv-check">
+                            <span class="ico ico--rose"><i class="las la-hand-holding-usd"></i></span>
+                            <span>
+                                <b>Best Prices</b>
+                                <small>No hidden charges</small>
+                            </span>
                         </div>
                     </div>
-                    <a href="{{ route('business.page.dynamic', ['slug' => 'about-us']) }}" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; padding: 14px 32px; border-radius: 12px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 8px 25px rgba(59,130,246,0.3);">
+
+                    <a href="{{ route('business.page.dynamic', ['slug' => 'about-us']) }}" class="lv-btn lv-btn-primary">
                         Learn More <i class="las la-arrow-right"></i>
                     </a>
                 </div>
-                <div class="col-lg-6 wow animate__fadeInUp" style="animation-delay: 0.2s;">
-                    <div style="position: relative;">
-                        <div style="width: 100%; height: 400px; border-radius: 24px; box-shadow: 0 25px 60px rgba(0,0,0,0.3); background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center;"><i class="las la-trophy" style="color: rgba(255,255,255,0.3); font-size: 100px;"></i></div>
-                        <div style="position: absolute; bottom: 30px; left: -30px; background: #fff; border-radius: 16px; padding: 20px 28px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 14px;">
-                            <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #fbbf24, #f59e0b); border-radius: 14px; display: flex; align-items: center; justify-content: center;">
-                                <i class="las la-trophy" style="color: #fff; font-size: 28px;"></i>
+            </div>
+        </div>
+    </section>
+
+    {{-- ==================== FEATURES (dynamic) ==================== --}}
+    @if ($features->isNotEmpty())
+        <section class="lv-section lv-section--alt">
+            <div class="container">
+                <div class="lv-head lv-reveal">
+                    <span class="lv-eyebrow">Platform Highlights</span>
+                    <h2 class="lv-title">Built for a <span class="grad-text">better experience</span></h2>
+                </div>
+                <div class="lv-feat-grid">
+                    @foreach ($features as $feature)
+                        <div class="lv-feat lv-reveal" style="--d: {{ $loop->index * 0.1 }}s">
+                            <div class="thumb">
+                                <img src="{{ $feature->image_1_full_path }}" alt="{{ $feature->title }}">
                             </div>
-                            <div>
-                                <div style="font-weight: 800; color: #1e293b; font-size: 24px;">#1 Rated</div>
-                                <div style="color: #64748b; font-size: 13px;">Home Service App</div>
+                            <div class="body">
+                                <h3>{{ $feature->title }}</h3>
+                                <p>{{ $feature->sub_title }}</p>
                             </div>
                         </div>
-                    </div>
+                    @endforeach
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    @endif
 
-    {{-- ==================== STATS SECTION ==================== --}}
-    <section class="py-5" style="background: #fff;">
+    {{-- ==================== SPECIALITIES (dynamic) ==================== --}}
+    @if ($specialities->isNotEmpty())
+        <section class="lv-section">
+            <div class="container">
+                <div class="lv-head lv-reveal">
+                    <span class="lv-eyebrow lv-eyebrow--amber">Our Specialities</span>
+                    <h2 class="lv-title">What makes us <span class="grad-text">different</span></h2>
+                </div>
+                <div class="lv-spec-grid">
+                    @foreach ($specialities as $speciality)
+                        <div class="lv-spec lv-reveal" style="--d: {{ $loop->index * 0.08 }}s">
+                            <span class="pic">
+                                <img src="{{ $speciality->image_full_path }}" alt="{{ $speciality->title }}">
+                            </span>
+                            <span>
+                                <h3>{{ $speciality->title }}</h3>
+                                <p>{{ $speciality->description }}</p>
+                            </span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
+    {{-- ==================== STATS ==================== --}}
+    <section class="lv-stats">
         <div class="container">
-            <div class="row g-4 text-center">
-                <div class="col-6 col-lg-3 wow animate__fadeInUp">
-                    <div style="padding: 30px 20px;">
-                        <div style="font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #3b82f6, #2563eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">10K+</div>
-                        <div style="color: #64748b; font-size: 16px; font-weight: 500; margin-top: 4px;">Verified Professionals</div>
-                    </div>
+            <div class="lv-stats-grid">
+                <div class="lv-stat lv-reveal">
+                    <div class="num" data-target="10000" data-suffix="+">0</div>
+                    <div class="lbl">Verified Professionals</div>
                 </div>
-                <div class="col-6 col-lg-3 wow animate__fadeInUp" style="animation-delay: 0.1s;">
-                    <div style="padding: 30px 20px;">
-                        <div style="font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">50K+</div>
-                        <div style="color: #64748b; font-size: 16px; font-weight: 500; margin-top: 4px;">Happy Customers</div>
-                    </div>
+                <div class="lv-stat lv-reveal" style="--d: .08s">
+                    <div class="num" data-target="50000" data-suffix="+">0</div>
+                    <div class="lbl">Happy Customers</div>
                 </div>
-                <div class="col-6 col-lg-3 wow animate__fadeInUp" style="animation-delay: 0.2s;">
-                    <div style="padding: 30px 20px;">
-                        <div style="font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #f59e0b, #d97706); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">50+</div>
-                        <div style="color: #64748b; font-size: 16px; font-weight: 500; margin-top: 4px;">Service Categories</div>
-                    </div>
+                <div class="lv-stat lv-reveal" style="--d: .16s">
+                    <div class="num" data-target="50" data-suffix="+">0</div>
+                    <div class="lbl">Service Categories</div>
                 </div>
-                <div class="col-6 col-lg-3 wow animate__fadeInUp" style="animation-delay: 0.3s;">
-                    <div style="padding: 30px 20px;">
-                        <div style="font-size: 48px; font-weight: 800; background: linear-gradient(135deg, #ef4444, #dc2626); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">4.9</div>
-                        <div style="color: #64748b; font-size: 16px; font-weight: 500; margin-top: 4px;">App Store Rating ★</div>
-                    </div>
+                <div class="lv-stat lv-reveal" style="--d: .24s">
+                    <div class="num" data-target="4.9" data-decimals="1" data-suffix="★">0</div>
+                    <div class="lbl">App Store Rating</div>
                 </div>
             </div>
         </div>
     </section>
 
-    {{-- ==================== CTA / PROVIDER SECTION ==================== --}}
-    <section class="py-5" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%); position: relative; overflow: hidden;">
-        <div style="position: absolute; top: -50%; right: -10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%); border-radius: 50%;"></div>
-        <div class="container" style="position: relative; z-index: 2;">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-6 wow animate__fadeInUp">
-                    <div style="width: 100%; height: 350px; border-radius: 24px; box-shadow: 0 25px 60px rgba(0,0,0,0.3); background: linear-gradient(135deg, #10b981, #059669); display: flex; align-items: center; justify-content: center;"><i class="las la-user-tie" style="color: rgba(255,255,255,0.3); font-size: 100px;"></i></div>
+    {{-- ==================== PROVIDER CTA ==================== --}}
+    <section class="lv-cta">
+        <div class="container">
+            <div class="lv-cta-grid">
+                <div class="lv-cta-visual lv-reveal">
+                    <div class="lv-cta-card">
+                        <i class="las la-user-tie"></i>
+                    </div>
+                    <div class="lv-float lv-float--earn">
+                        <span class="ico"><i class="las la-users"></i></span>
+                        <span>
+                            <b>10K+ Partners</b>
+                            <small>Already growing with us</small>
+                        </span>
+                    </div>
                 </div>
-                <div class="col-lg-6 wow animate__fadeInUp" style="animation-delay: 0.15s;">
-                    <span style="background: rgba(16,185,129,0.2); color: #34d399; padding: 8px 20px; border-radius: 50px; font-weight: 600; font-size: 14px; display: inline-block; margin-bottom: 16px;">BECOME A PROVIDER</span>
-                    <h2 style="font-size: 40px; font-weight: 800; color: #fff; margin-bottom: 20px; line-height: 1.2;">Grow Your Business With Us</h2>
-                    <p style="color: #94a3b8; font-size: 17px; line-height: 1.8; margin-bottom: 24px;">
-                        Join thousands of service providers who are earning more by listing their services on our platform. Get access to thousands of customers in your area.
+
+                <div class="lv-reveal" style="--d: .15s">
+                    <span class="lv-eyebrow lv-eyebrow--mint">Become a Provider</span>
+                    <h2 class="lv-title">Grow your business <span class="grad-text">with us</span></h2>
+                    <p class="lv-lead">
+                        Join thousands of service providers earning more by listing their
+                        services on our platform — and get access to thousands of customers
+                        in your area.
                     </p>
-                    <div class="d-flex flex-wrap gap-3">
-                        <a href="{{ route('provider.auth.sign-up') }}" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; padding: 16px 32px; border-radius: 12px; font-weight: 700; font-size: 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 8px 25px rgba(16,185,129,0.4);">
+                    <div class="lv-ticks">
+                        <span class="lv-tick"><i class="las la-check"></i> Free registration</span>
+                        <span class="lv-tick"><i class="las la-check"></i> Weekly payouts</span>
+                        <span class="lv-tick"><i class="las la-check"></i> Marketing support</span>
+                    </div>
+                    <div class="lv-cta-btns">
+                        <a href="{{ route('provider.auth.sign-up') }}" class="lv-btn lv-btn-mint">
                             Register Now <i class="las la-arrow-right"></i>
                         </a>
-                        <a href="tel:{{ bs_data($settings, 'business_phone', 1) }}" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 16px 32px; border-radius: 12px; font-weight: 700; font-size: 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                        <a href="tel:{{ bs_data($settings, 'business_phone', 1) }}" class="lv-btn lv-btn-ghost">
                             <i class="las la-phone"></i> Call Us
                         </a>
                     </div>
@@ -264,76 +329,220 @@
         </div>
     </section>
 
-    {{-- ==================== APP DOWNLOAD SECTION ==================== --}}
-    <section class="py-5" style="background: #f8fafc;">
+    {{-- ==================== APP DOWNLOAD ==================== --}}
+    <section class="lv-section lv-section--alt">
         <div class="container">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-6 wow animate__fadeInUp">
-                    <span style="background: rgba(59,130,246,0.1); color: #3b82f6; padding: 8px 20px; border-radius: 50px; font-weight: 600; font-size: 14px; display: inline-block; margin-bottom: 16px;">DOWNLOAD APP</span>
-                    <h2 style="font-size: 40px; font-weight: 800; color: #1e293b; margin-bottom: 16px;">Get The App & Book Services Instantly</h2>
-                    <p style="color: #64748b; font-size: 17px; line-height: 1.7; margin-bottom: 32px;">
-                        Download our mobile app and enjoy seamless booking, real-time tracking, secure payments, and instant notifications - all from your phone.
+            <div class="lv-app-grid">
+                <div class="lv-app-copy lv-reveal">
+                    <span class="lv-eyebrow">Download App</span>
+                    <h2 class="lv-title">Book services <span class="grad-text">instantly</span> from your phone</h2>
+                    <p class="lv-sub" style="margin: 0">
+                        Enjoy seamless booking, real-time tracking, secure payments and
+                        instant notifications — all from the app.
                     </p>
-                    <div class="d-flex flex-wrap gap-3 mb-4">
+
+                    <div class="lv-store-btns">
                         @if ($settings->where('key_name', 'app_url_appstore')->first()->is_active ?? 0)
-                            <a href="{{ bs_data($settings, 'app_url_appstore', 1) }}" style="background: #000; color: #fff; padding: 14px 28px; border-radius: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 12px; transition: all 0.3s;">
-                                <i class="lab la-apple" style="font-size: 32px;"></i>
-                                <div>
-                                    <div style="font-size: 11px; opacity: 0.8;">Download on the</div>
-                                    <div style="font-size: 17px; font-weight: 700;">App Store</div>
-                                </div>
+                            <a href="{{ bs_data($settings, 'app_url_appstore', 1) }}" class="lv-store">
+                                <i class="lab la-apple"></i>
+                                <span>
+                                    <small>Download on the</small>
+                                    <b>App Store</b>
+                                </span>
                             </a>
                         @endif
                         @if ($settings->where('key_name', 'app_url_playstore')->first()->is_active ?? 0)
-                            <a href="{{ bs_data($settings, 'app_url_playstore', 1) }}" style="background: #000; color: #fff; padding: 14px 28px; border-radius: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 12px; transition: all 0.3s;">
-                                <i class="lab la-google-play" style="font-size: 28px;"></i>
-                                <div>
-                                    <div style="font-size: 11px; opacity: 0.8;">GET IT ON</div>
-                                    <div style="font-size: 17px; font-weight: 700;">Google Play</div>
-                                </div>
+                            <a href="{{ bs_data($settings, 'app_url_playstore', 1) }}" class="lv-store">
+                                <i class="lab la-google-play"></i>
+                                <span>
+                                    <small>GET IT ON</small>
+                                    <b>Google Play</b>
+                                </span>
                             </a>
                         @endif
                     </div>
-                    <div class="d-flex align-items-center gap-3">
-                        <div style="color: #fbbf24; font-size: 20px;">★★★★★</div>
-                        <span style="color: #64748b; font-size: 14px;">4.9/5 Rating • 10K+ Downloads</span>
+
+                    <div class="lv-rating-row">
+                        <span class="stars">★★★★★</span>
+                        4.9/5 rating &middot; 10K+ downloads
                     </div>
                 </div>
-                <div class="col-lg-6 text-center wow animate__fadeInUp" style="animation-delay: 0.2s;">
-                    <div style="max-width: 350px; width: 100%; height: 400px; border-radius: 30px; box-shadow: 0 30px 60px rgba(0,0,0,0.2); background: linear-gradient(135deg, #8b5cf6, #6366f1); display: flex; align-items: center; justify-content: center; margin: 0 auto;"><i class="las la-mobile-alt" style="color: rgba(255,255,255,0.3); font-size: 120px;"></i></div>
+
+                <div class="lv-reveal" style="--d: .15s">
+                    <div class="lv-phone-wrap">
+                        <div class="lv-phone">
+                            <span class="lv-phone-notch"></span>
+                            <div class="lv-phone-screen">
+                                <div class="lv-ph-head">
+                                    <div class="hi">Welcome back</div>
+                                    <div class="find">Find services near you</div>
+                                    <div class="lv-ph-search">
+                                        <i class="las la-search"></i>
+                                        Search cleaning, repair...
+                                    </div>
+                                </div>
+                                <div class="lv-ph-body">
+                                    <div class="lv-ph-label">Top Categories</div>
+                                    <div class="lv-ph-grid">
+                                        <div class="lv-ph-tile">
+                                            <span class="ic"><i class="las la-spray-can"></i></span>
+                                            <span>Cleaning</span>
+                                        </div>
+                                        <div class="lv-ph-tile">
+                                            <span class="ic"><i class="las la-faucet"></i></span>
+                                            <span>Plumbing</span>
+                                        </div>
+                                        <div class="lv-ph-tile">
+                                            <span class="ic"><i class="las la-bolt"></i></span>
+                                            <span>Electric</span>
+                                        </div>
+                                        <div class="lv-ph-tile">
+                                            <span class="ic"><i class="las la-paint-roller"></i></span>
+                                            <span>Painter</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="lv-ph-promo">
+                                    <i class="las la-tags"></i>
+                                    <span>
+                                        <b>FLAT 20% OFF</b>
+                                        <small>On your first booking</small>
+                                    </span>
+                                </div>
+                                <div class="lv-ph-nav">
+                                    <i class="las la-home on"></i>
+                                    <i class="las la-search"></i>
+                                    <i class="las la-receipt"></i>
+                                    <i class="las la-user"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lv-float lv-phone-float">
+                            <span class="ico"><i class="las la-bolt"></i></span>
+                            <span>
+                                <b>Live Tracking</b>
+                                <small>Follow your pro in real time</small>
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
     {{-- ==================== TESTIMONIALS ==================== --}}
-    <section class="py-5" style="background: #fff;">
-        <div class="container">
-            <div class="text-center mb-5 wow animate__fadeInUp">
-                <span style="background: rgba(245,158,11,0.1); color: #f59e0b; padding: 8px 20px; border-radius: 50px; font-weight: 600; font-size: 14px; display: inline-block; margin-bottom: 16px;">TESTIMONIALS</span>
-                <h2 style="font-size: 40px; font-weight: 800; color: #1e293b; margin-bottom: 16px;">What Our Customers Say</h2>
-                <p style="color: #64748b; font-size: 17px; max-width: 500px; margin: 0 auto;">Real reviews from real customers who love our services</p>
-            </div>
-            <div class="row g-4">
-                @foreach ($testimonials->take(3) as $index => $testimonial)
-                    <div class="col-md-6 col-lg-4 wow animate__fadeInUp" style="animation-delay: {{ $index * 0.1 }}s;">
-                        <div style="background: #f8fafc; border-radius: 20px; padding: 32px; border: 1px solid #f1f5f9; height: 100%;">
-                            <div style="color: #fbbf24; font-size: 18px; margin-bottom: 16px;">★★★★★</div>
-                            <p style="color: #475569; font-size: 15px; line-height: 1.7; margin-bottom: 24px; font-style: italic;">
-                                "{{ $testimonial['review'] }}"
-                            </p>
-                            <div style="display: flex; align-items: center; gap: 14px;">
-                                <img src="{{ $testimonial['image_full_path'] }}" alt="{{ $testimonial['name'] }}" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">
-                                <div>
-                                    <div style="font-weight: 700; color: #1e293b; font-size: 15px;">{{ $testimonial['name'] }}</div>
-                                    <div style="color: #64748b; font-size: 13px;">{{ $testimonial['designation'] }}</div>
+    @if ($testimonials->isNotEmpty())
+        <section class="lv-section">
+            <div class="container">
+                <div class="lv-quotes-head lv-reveal">
+                    <div class="lv-head">
+                        <span class="lv-eyebrow lv-eyebrow--amber">Testimonials</span>
+                        <h2 class="lv-title">What our <span class="grad-text">customers say</span></h2>
+                        <p class="lv-sub">Real reviews from real customers who love our services.</p>
+                    </div>
+                    <div class="lv-qnav">
+                        <span class="slider-counter">1 / {{ $testimonials->count() }}</span>
+                        <button type="button" class="testimonial-owl-prev" aria-label="Previous">
+                            <i class="las la-angle-left"></i>
+                        </button>
+                        <button type="button" class="testimonial-owl-next" aria-label="Next">
+                            <i class="las la-angle-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="testimonial-slider swiper lv-reveal" style="--d: .1s">
+                    <div class="swiper-wrapper">
+                        @foreach ($testimonials->take(6) as $testimonial)
+                            <div class="swiper-slide">
+                                <div class="testimonial__item lv-quote">
+                                    <span class="qmark">&ldquo;</span>
+                                    <span class="stars">★★★★★</span>
+                                    <p>{{ $testimonial['review'] }}</p>
+                                    <div class="who">
+                                        <img src="{{ $testimonial['image_full_path'] }}" alt="{{ $testimonial['name'] }}">
+                                        <span>
+                                            <b>{{ $testimonial['name'] }}</b>
+                                            <small>{{ $testimonial['designation'] }}</small>
+                                        </span>
+                                        <span class="verified"><i class="las la-check"></i></span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        @endforeach
                     </div>
-                @endforeach
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
+    @endif
+
+    <button type="button" class="lv-top" id="lvTop" aria-label="Back to top">
+        <i class="las la-arrow-up"></i>
+    </button>
+
+    <script>
+        (function () {
+            var revealEls = document.querySelectorAll('.lv-reveal');
+            if ('IntersectionObserver' in window) {
+                var io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-in');
+                            io.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.12 });
+                revealEls.forEach(function (el) { io.observe(el); });
+            } else {
+                revealEls.forEach(function (el) { el.classList.add('is-in'); });
+            }
+
+            function animateCount(el) {
+                var target = parseFloat(el.getAttribute('data-target')) || 0;
+                var decimals = parseInt(el.getAttribute('data-decimals') || '0', 10);
+                var suffix = el.getAttribute('data-suffix') || '';
+                var duration = 1500;
+                var start = null;
+
+                function frame(now) {
+                    if (!start) start = now;
+                    var p = Math.min((now - start) / duration, 1);
+                    var ease = 1 - Math.pow(1 - p, 3);
+                    var value = target * ease;
+                    el.textContent = (decimals
+                        ? value.toFixed(decimals)
+                        : Math.round(value).toLocaleString('en-US')) + suffix;
+                    if (p < 1) requestAnimationFrame(frame);
+                }
+                requestAnimationFrame(frame);
+            }
+
+            var nums = document.querySelectorAll('.lv-stat .num[data-target]');
+            if ('IntersectionObserver' in window) {
+                var cio = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            animateCount(entry.target);
+                            cio.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.5 });
+                nums.forEach(function (el) { cio.observe(el); });
+            } else {
+                nums.forEach(animateCount);
+            }
+
+            var topBtn = document.getElementById('lvTop');
+            if (topBtn) {
+                window.addEventListener('scroll', function () {
+                    topBtn.classList.toggle('show', window.scrollY > 550);
+                }, { passive: true });
+                topBtn.addEventListener('click', function () {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+        })();
+    </script>
 
 @endsection

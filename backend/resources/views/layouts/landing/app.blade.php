@@ -17,11 +17,15 @@
     <meta property="og:description" content="{{bs_data($settings,'meta_description', 1,true)}}">
 
     <link href="{{asset('public/assets/provider-module')}}/css/material-icons.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{asset('public/assets/landing')}}/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="{{asset('public/assets/landing')}}/css/line-awesome.min.css"/>
     <link rel="stylesheet" href="{{asset('public/assets/landing')}}/css/owl.min.css"/>
     <link rel="stylesheet" href="{{asset('public/assets/landing')}}/css/swiper-bundle.min.css"/>
     <link rel="stylesheet" href="{{asset('public/assets/landing')}}/css/main.css"/>
+    <link rel="stylesheet" href="{{asset('public/assets/landing')}}/css/landing-v2.css"/>
     <link rel="stylesheet" href="{{asset('public/assets/admin-module')}}/css/toastr.css">
 
     <link rel="shortcut icon"
@@ -374,96 +378,96 @@
             let siteDirection = "{{$siteDirection}}";
             siteDirection = siteDirection === 'rtl';
 
-            // ---- testimonial swiper slider
+            // ---- testimonial swiper slider (tabhi init jab markup ho — warna poora ready() mar jata tha)
             var originalSlides = document.querySelectorAll('.testimonial__item').length;
-            var swiper = new Swiper(".testimonial-slider", {
-                effect: "coverflow",
-                grabCursor: true,
-                centeredSlides: true,
-                coverflowEffect: {
-                    rotate: 0,
-                    stretch: 0,
-                    depth: 100,
-                    modifier: 2.5,
-                    slideShadows: false
-                },
-                autoplay: {
-                    delay: 1500,
-                    disableOnInteraction: false
-                },
-                keyboard: {
-                    enabled: true
-                },
-                mousewheel: {
-                    thresholdDelta: 70
-                },
-                spaceBetween: 30,
-                loop: true,
-                breakpoints: {
-                    640: {
-                        slidesPerView: 2
-                    },
-                    1024: {
-                        slidesPerView: 3
-                    }
-                },
-                on: {
-                    init: function () {
-                        setEqualHeight();
-                        this.autoplay.start();
-                        updateCounter(this);
-                    },
-                    slideChange: function () {
-                        updateCounter(this);
-                    },
-                    resize: function () {
-                        setEqualHeight();
-                    }
-                }
-            });
+            var sliderElement = document.querySelector('.testimonial-slider');
+            var swiper = null;
 
             function setEqualHeight() {
                 let maxHeight = 0;
                 let slides = document.querySelectorAll('.testimonial__item');
-
-                slides.forEach(function(slide) {
-                    slide.style.height = 'auto';
+                slides.forEach(function (slide) { slide.style.height = 'auto'; });
+                slides.forEach(function (slide) {
+                    if (slide.offsetHeight > maxHeight) { maxHeight = slide.offsetHeight; }
                 });
+                slides.forEach(function (slide) { slide.style.height = maxHeight + 'px'; });
+            }
 
-                slides.forEach(function(slide) {
-                    if (slide.offsetHeight > maxHeight) {
-                        maxHeight = slide.offsetHeight;
+            function updateCounter(instance) {
+                var counterEl = document.querySelector('.slider-counter');
+                if (counterEl) {
+                    counterEl.textContent = (instance.realIndex + 1) + ' / ' + originalSlides;
+                }
+            }
+
+            if (sliderElement && originalSlides > 0) {
+                swiper = new Swiper(".testimonial-slider", {
+                    effect: "coverflow",
+                    grabCursor: true,
+                    centeredSlides: true,
+                    coverflowEffect: {
+                        rotate: 0,
+                        stretch: 0,
+                        depth: 100,
+                        modifier: 2.5,
+                        slideShadows: false
+                    },
+                    autoplay: {
+                        delay: 2800,
+                        disableOnInteraction: false
+                    },
+                    keyboard: {
+                        enabled: true
+                    },
+                    mousewheel: {
+                        thresholdDelta: 70
+                    },
+                    spaceBetween: 30,
+                    loop: originalSlides >= 3,
+                    breakpoints: {
+                        640: {
+                            slidesPerView: 2
+                        },
+                        1024: {
+                            slidesPerView: 3
+                        }
+                    },
+                    on: {
+                        init: function () {
+                            setEqualHeight();
+                            this.autoplay.start();
+                            updateCounter(this);
+                        },
+                        slideChange: function () {
+                            updateCounter(this);
+                        },
+                        resize: function () {
+                            setEqualHeight();
+                        }
                     }
                 });
 
-                slides.forEach(function(slide) {
-                    slide.style.height = maxHeight + 'px';
+                sliderElement.addEventListener('mouseenter', function () {
+                    swiper.autoplay.stop();
                 });
+
+                sliderElement.addEventListener('mouseleave', function () {
+                    swiper.autoplay.start();
+                });
+
+                var tPrev = document.querySelector('.testimonial-owl-prev');
+                var tNext = document.querySelector('.testimonial-owl-next');
+                if (tPrev) {
+                    tPrev.addEventListener('click', function () { swiper.slidePrev(); });
+                }
+                if (tNext) {
+                    tNext.addEventListener('click', function () { swiper.slideNext(); });
+                }
+
+                if (originalSlides >= 2) {
+                    swiper.slideTo(1, 0, false);
+                }
             }
-
-            function updateCounter(swiper) {
-                var currentIndex = swiper.realIndex + 1;
-                var totalSlides = originalSlides;
-                document.querySelector('.slider-counter').textContent = currentIndex + ' / ' + totalSlides;
-            }
-
-            var sliderElement = document.querySelector('.testimonial-slider');
-
-            sliderElement.addEventListener('mouseenter', function () {
-                swiper.autoplay.stop();
-            });
-
-            sliderElement.addEventListener('mouseleave', function () {
-                swiper.autoplay.start();
-            });
-            // Navigation buttons
-            document.querySelector('.testimonial-owl-prev').addEventListener('click', function () {
-                swiper.slidePrev();
-            });
-            document.querySelector('.testimonial-owl-next').addEventListener('click', function () {
-                swiper.slideNext();
-            });
-            swiper.slideTo(1, false, false);
             // ---- testimonial swiper slider ends
 
 
@@ -620,6 +624,9 @@
         var $bannerSection = $('.banner-section');
 
         function checkSections() {
+            if (!$serviceSection.length || !$bannerSection.length) {
+                return;
+            }
             var bannerHeight = $bannerSection.outerHeight();
             var serviceTop = $serviceSection.offset().top - 100;
             var serviceBottom = serviceTop + $serviceSection.outerHeight();
