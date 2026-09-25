@@ -43,7 +43,8 @@ class LandingController extends Controller
     public function home()
     {
         $locale = session()->get('landing_local', 'en');
-        $staticFile = public_path('landing-cache-' . $locale . '.html');
+        // Render pe public/ writable nahi hai -> cache /tmp me rakho (hamesha writable)
+        $staticFile = rtrim(sys_get_temp_dir(), '/\\') . DIRECTORY_SEPARATOR . 'landing-cache-' . $locale . '.html';
 
         if (file_exists($staticFile) && (time() - filemtime($staticFile)) < 3600) {
             return response()->file($staticFile, [
@@ -68,7 +69,8 @@ class LandingController extends Controller
 
         $html = view('welcome', compact('settings', 'categories', 'testimonials', 'features', 'specialities', 'settingss', 'topImageData'))->render();
 
-        file_put_contents($staticFile, $html);
+        // Cache write optional hai — fail ho to page 500 na ho
+        @file_put_contents($staticFile, $html);
 
         return response($html, 200, [
             'Cache-Control' => 'public, max-age=3600',
