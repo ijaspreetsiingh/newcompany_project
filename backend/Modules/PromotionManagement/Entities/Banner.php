@@ -70,7 +70,8 @@ class Banner extends Model
                     $query->where('zone_id', Config::get('zone_id'));
                 })->orWhereHas('service.category.zones', function ($query) {
                     $query->where('zone_id', Config::get('zone_id'));
-                })->orWhere('resource_type', 'link');
+                })->orWhere('resource_type', 'link')
+                  ->orWhere('resource_type', 'slider'); // slider banners — zone filter nahi chahiye, sabko dikhao
             }
         });
 

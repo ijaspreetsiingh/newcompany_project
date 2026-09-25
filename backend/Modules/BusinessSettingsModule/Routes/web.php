@@ -180,6 +180,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Web\Admin',
 
         Route::get('get-banner-settings', [ConfigurationController::class, 'bannerSettingsConfigGet'])->name('get-banner-settings');
         Route::put('set-banner-settings', [ConfigurationController::class, 'bannerSettingsConfigSet'])->name('set-banner-settings');
+        Route::post('slider-banner/add', [ConfigurationController::class, 'sliderBannerAdd'])->name('slider-banner.add');
+        Route::delete('slider-banner/delete/{id}', [ConfigurationController::class, 'sliderBannerDelete'])->name('slider-banner.delete');
+        Route::patch('slider-banner/toggle/{id}', [ConfigurationController::class, 'sliderBannerToggle'])->name('slider-banner.toggle');
 
         Route::get('language-setup', [ConfigurationController::class, 'languageSetup'])->name('language_setup');
 

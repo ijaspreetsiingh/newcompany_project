@@ -44,6 +44,10 @@ class BannerController extends Controller
             ->paginate($request['limit'], ['*'], 'offset', $request['offset'])->withPath('');
 
         foreach ($banners as $key=>$item) {
+            // slider type ke banners ke liye service/category check nahi karte
+            if ($item->resource_type === 'slider') {
+                continue;
+            }
             if ($item->resource_type == 'service' && is_null($item->service)) {
                 unset($banners[$key]);
             }

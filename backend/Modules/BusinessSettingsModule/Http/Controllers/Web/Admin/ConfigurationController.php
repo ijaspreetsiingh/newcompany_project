@@ -632,7 +632,13 @@ class ConfigurationController extends Controller
         $config = business_config('banner_slider_settings', 'app_settings');
         $bannerSettings = isset($config) && isset($config->live_values) ? (array)$config->live_values : [];
 
-        return view('businesssettingsmodule::admin.banner-settings', compact('bannerSettings'));
+        // Slider banners — admin ne banner-settings page se upload kiye hue
+        $sliderBanners = \Modules\PromotionManagement\Entities\Banner::withoutGlobalScope('zone_wise_data')
+            ->where('resource_type', 'slider')
+            ->latest()
+            ->get();
+
+        return view('businesssettingsmodule::admin.banner-settings', compact('bannerSettings', 'sliderBanners'));
     }
 
     /**
@@ -663,6 +669,81 @@ class ConfigurationController extends Controller
 
         Toastr::success(translate(DEFAULT_UPDATE_200['message']));
         return back();
+    }
+
+    /**
+     * Upload a new slider banner image from banner-settings page
+     * @param Request $request
+     * @return RedirectResponse
+     * @throws AuthorizationException
+     */
+    public function sliderBannerAdd(Request $request): RedirectResponse
+    {
+        $this->authorize('configuration_update');
+
+        $request->validate([
+            'slider_image' => 'required|image|max:' . uploadMaxFileSizeInKB('image') . '|mimes:' . implode(',', array_column(IMAGEEXTENSION, 'key')),
+        ]);
+
+        $banner = new \Modules\PromotionManagement\Entities\Banner();
+        $banner->banner_title   = $request->input('slider_title', 'Slider Banner');
+        $banner->resource_type  = 'slider';   // special type — zone filter bypass hota hai
+        $banner->resource_id    = null;
+        $banner->redirect_link  = $request->input('redirect_link', null);
+        $banner->banner_image   = file_uploader('banner/', 'png', $request->file('slider_image'));
+        $banner->is_active      = 1;
+        $banner->save();
+
+        Toastr::success(translate('Slider banner added successfully'));
+        return back();
+    }
+
+    /**
+     * Delete a slider banner from banner-settings page
+     * @param string $id
+     * @return RedirectResponse
+     * @throws AuthorizationException
+     */
+    public function sliderBannerDelete(string $id): RedirectResponse
+    {
+        $this->authorize('configuration_update');
+
+        $banner = \Modules\PromotionManagement\Entities\Banner::withoutGlobalScope('zone_wise_data')
+            ->where('id', $id)
+            ->where('resource_type', 'slider')
+            ->first();
+
+        if ($banner) {
+            file_remover('banner/', $banner->banner_image);
+            $banner->delete();
+            Toastr::success(translate('Slider banner deleted successfully'));
+        } else {
+            Toastr::error(translate('Banner not found'));
+        }
+
+        return back();
+    }
+
+    /**
+     * Toggle active status of a slider banner
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function sliderBannerToggle(string $id): \Illuminate\Http\JsonResponse
+    {
+        $banner = \Modules\PromotionManagement\Entities\Banner::withoutGlobalScope('zone_wise_data')
+            ->where('id', $id)
+            ->where('resource_type', 'slider')
+            ->first();
+
+        if (!$banner) {
+            return response()->json(['success' => false, 'message' => 'Not found'], 404);
+        }
+
+        $banner->is_active = !$banner->is_active;
+        $banner->save();
+
+        return response()->json(response_formatter(DEFAULT_STATUS_UPDATE_200), 200);
     }
 
     public function changeStorageConnectionType(Request $request)

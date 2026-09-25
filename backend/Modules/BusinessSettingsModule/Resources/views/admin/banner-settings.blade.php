@@ -11,7 +11,10 @@
                         <h2 class="page-title">{{translate('App_banner_settings')}}</h2>
                     </div>
 
-                    @include('businesssettingsmodule::admin.configurations.third-party.banner-settings', ['bannerSettings' => $bannerSettings])
+                    @include('businesssettingsmodule::admin.configurations.third-party.banner-settings', [
+                        'bannerSettings' => $bannerSettings,
+                        'sliderBanners'  => $sliderBanners ?? collect(),
+                    ])
                 </div>
             </div>
         </div>
