@@ -1,0 +1,28 @@
+FROM php:8.4-fpm
+
+COPY --from=mlocati/php-extension-installer:latest /usr/bin/install-php-extensions /usr/bin/install-php-extensions
+RUN install-php-extensions pdo_mysql mbstring exif pcntl bcmath gd zip intl opcache redis xml curl fileinfo dom tokenizer sodium
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        nginx supervisor gettext-base git unzip cron \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+ENV COMPOSER_MEMORY_LIMIT=-1
+
+WORKDIR /var/www/html
+
+COPY . .
+
+RUN composer install --no-dev --no-interaction --optimize-autoloader --prefer-dist \
+    && chown -R www-data:www-data storage bootstrap/cache
+
+COPY docker/nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY docker/supervisord.conf /etc/supervisord.conf
+COPY docker/entrypoint.sh /entrypoint.sh
+COPY docker/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 10000
+
+ENTRYPOINT ["/entrypoint.sh"]
