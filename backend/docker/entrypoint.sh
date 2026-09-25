@@ -8,6 +8,8 @@ envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/con
 cd /var/www/html
 
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
+chown -R www-data:www-data storage bootstrap/cache
+chmod -R u+rwX storage bootstrap/cache
 
 if [ -z "$APP_URL" ] && [ -n "$RENDER_EXTERNAL_URL" ]; then
     export APP_URL="$RENDER_EXTERNAL_URL"
