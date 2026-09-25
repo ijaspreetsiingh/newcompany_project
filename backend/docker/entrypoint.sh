@@ -11,6 +11,13 @@ mkdir -p storage/framework/cache storage/framework/sessions storage/framework/vi
 chown -R www-data:www-data storage bootstrap/cache
 chmod -R u+rwX storage bootstrap/cache
 
+# storage unreliable on Render -> cache/session/views ko /tmp pe rakho (hamesha writable)
+export CACHE_FILE_PATH="/tmp/jdds-cache"
+export SESSION_FILE_PATH="/tmp/jdds-sessions"
+export VIEW_COMPILED_PATH="/tmp/jdds-views"
+mkdir -p "$CACHE_FILE_PATH" "$SESSION_FILE_PATH" "$VIEW_COMPILED_PATH"
+chmod 777 "$CACHE_FILE_PATH" "$SESSION_FILE_PATH" "$VIEW_COMPILED_PATH"
+
 if [ -z "$APP_URL" ] && [ -n "$RENDER_EXTERNAL_URL" ]; then
     export APP_URL="$RENDER_EXTERNAL_URL"
 fi
@@ -49,6 +56,13 @@ php artisan db:seed --class=AdminUserSeeder --force || true
 echo "[entrypoint] caching config..."
 php artisan config:cache || true
 php artisan view:cache || true
+
+# artisan (root) ke baad storage wapas theek karo + final write test
+chown -R www-data:www-data storage bootstrap/cache
+chmod -R u+rwX storage bootstrap/cache
+echo "[diag] final write test:"
+su -s /bin/sh www-data -c 'touch /tmp/jdds-cache/__wt && rm -f /tmp/jdds-cache/__wt && echo "[diag] TMP_CACHE_WRITE=OK" || echo "[diag] TMP_CACHE_WRITE=FAIL"' || true
+su -s /bin/sh www-data -c 'touch /var/www/html/storage/framework/sessions/__wt && rm -f /var/www/html/storage/framework/sessions/__wt && echo "[diag] STORAGE_SESSION_WRITE=OK" || echo "[diag] STORAGE_SESSION_WRITE=FAIL"' || true
 
 echo "[entrypoint] starting supervisord..."
 exec supervisord -c /etc/supervisord.conf
