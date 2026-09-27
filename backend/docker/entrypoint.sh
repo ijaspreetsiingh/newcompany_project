@@ -22,6 +22,11 @@ if [ -z "$APP_URL" ] && [ -n "$RENDER_EXTERNAL_URL" ]; then
     export APP_URL="$RENDER_EXTERNAL_URL"
 fi
 
+# Railway: public domain env var se APP_URL set karo (https prefix chahiye)
+if [ -z "$APP_URL" ] && [ -n "$RAILWAY_PUBLIC_DOMAIN" ]; then
+    export APP_URL="https://$RAILWAY_PUBLIC_DOMAIN"
+fi
+
 echo "[entrypoint] APP_URL=$APP_URL PORT=$PORT"
 
 echo "[diag] disk:"
