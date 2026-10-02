@@ -3,7 +3,37 @@ set -e
 
 export PORT="${PORT:-10000}"
 
-envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf
+# nginx ko sirf $PORT pe nahi, balki 10000 (Dockerfile EXPOSE) aur 80 pe bhi sunao,
+# taaki Railway ka target port chahe bhi ho, edge proxy connect kar paaye.
+PORTS="$PORT"
+for p in 10000 80; do
+    case " $PORTS " in
+        *" $p "*) ;;
+        *) PORTS="$PORTS $p" ;;
+    esac
+done
+
+NGINX_LISTEN=""
+for p in $PORTS; do
+    if [ -n "$NGINX_LISTEN" ]; then
+        NGINX_LISTEN="$NGINX_LISTEN
+    "
+    fi
+    NGINX_LISTEN="${NGINX_LISTEN}listen $p;"
+    # Railway edge IPv6 se bhi connect kar sakta hai -> dual-stack listen
+    if [ -f /proc/net/if_inet6 ]; then
+        NGINX_LISTEN="$NGINX_LISTEN
+    listen [::]:$p;"
+    fi
+done
+export NGINX_LISTEN
+
+envsubst '${PORT} ${NGINX_LISTEN}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf
+# Debian ka default site (port 80, galat root) hata do warna conflict ho sakta hai
+rm -f /etc/nginx/sites-enabled/default
+echo "[entrypoint] nginx listen config:"
+grep listen /etc/nginx/conf.d/default.conf || true
+nginx -t || true
 
 cd /var/www/html
 
