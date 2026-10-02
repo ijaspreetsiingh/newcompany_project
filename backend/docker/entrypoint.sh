@@ -3,10 +3,13 @@ set -e
 
 export PORT="${PORT:-10000}"
 
-# nginx ko sirf $PORT pe nahi, balki 10000 (Dockerfile EXPOSE) aur 80 pe bhi sunao,
-# taaki Railway ka target port chahe bhi ho, edge proxy connect kar paaye.
+# Railway domain ka target port 9000 hai -> wo HTTP ka hona chahiye, lekin 9000 pe
+# php-fpm (FastCGI) baitha hota hai. Isliye php-fpm ko 9001 pe shift karo aur
+# nginx ko 9000 (+$PORT/10000/80) pe sunao taaki edge proxy HTTP le sake.
+sed -i 's/listen = 9000/listen = 127.0.0.1:9001/g' /usr/local/etc/php-fpm.d/*.conf
+
 PORTS="$PORT"
-for p in 10000 80; do
+for p in 9000 10000 80; do
     case " $PORTS " in
         *" $p "*) ;;
         *) PORTS="$PORTS $p" ;;

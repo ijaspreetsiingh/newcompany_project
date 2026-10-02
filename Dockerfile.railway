@@ -23,6 +23,7 @@ COPY backend/docker/entrypoint.sh /entrypoint.sh
 COPY backend/docker/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 RUN chmod +x /entrypoint.sh
 
+EXPOSE 9000
 EXPOSE 10000
 
 ENTRYPOINT ["/entrypoint.sh"]
