@@ -20,20 +20,20 @@ Route::group(['prefix' => 'admin', 'as'=>'admin.', 'namespace' => 'Api\V1\Admin'
 });
 
 
-Route::group(['prefix' => 'provider', 'as'=>'provider.', 'namespace' => 'Api\V1\Provider', 'middleware' => ['auth:api', 'actch:provider_app']], function () {
-    Route::get('sub-categories', [ProviderCategoryController::class, 'subCategory']);
-    Route::group(['prefix' => 'category', 'as'=>'category.'], function () {
+Route::group(['prefix' => 'partner', 'as'=>'provider.', 'namespace' => 'Api\V1\Provider', 'middleware' => ['auth:api', 'actch:provider_app']], function () {
+    Route::get('child-groups', [ProviderCategoryController::class, 'subCategory']);
+    Route::group(['prefix' => 'group', 'as'=>'category.'], function () {
         Route::get('/', [ProviderCategoryController::class, 'index']); // index
-        Route::get('childes', [ProviderCategoryController::class, 'childes']);
+        Route::get('subgroups', [ProviderCategoryController::class, 'childes']);
     });
 });
 
 
-Route::group(['prefix' => 'customer', 'as'=>'customer.', 'namespace' => 'Api\V1\Customer'], function () {
-    Route::group(['prefix' => 'category', 'as'=>'category.'], function () {
+Route::group(['prefix' => 'client', 'as'=>'customer.', 'namespace' => 'Api\V1\Customer'], function () {
+    Route::group(['prefix' => 'group', 'as'=>'category.'], function () {
         Route::get('/', [CategoryController::class, 'index']);
-        Route::get('childes', [CategoryController::class, 'childes']);
+        Route::get('subgroups', [CategoryController::class, 'childes']);
     });
     Route::get('sub-categories', [SubCategoryController::class, 'index']);
-    Route::get('featured-categories', [CategoryController::class, 'featured']);
+    Route::get('spotlight-groups', [CategoryController::class, 'featured']);
 });

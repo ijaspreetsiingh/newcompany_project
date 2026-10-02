@@ -45,43 +45,43 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admi
     });
 });
 
-Route::group(['prefix' => 'customer', 'as' => 'customer.', 'namespace' => 'Api\V1\Customer'], function () {
-    Route::group(['prefix' => 'banner', 'as' => 'banner.',], function () {
+Route::group(['prefix' => 'client', 'as' => 'customer.', 'namespace' => 'Api\V1\Customer'], function () {
+    Route::group(['prefix' => 'carousel', 'as' => 'banner.',], function () {
         Route::get('/', [BannerController::class, 'index']);
     });
 
-    Route::group(['prefix' => 'notification', 'as' => 'notification.',], function () {
+    Route::group(['prefix' => 'alerts', 'as' => 'notification.',], function () {
         Route::get('/', 'NotificationController@index');
     });
 
-//    Route::resource('coupon', 'CouponController', ['only' => ['index']]);
-    Route::prefix('coupon')->as('coupon.')->group(function () {
+//    Route::resource('promo', 'CouponController', ['only' => ['index']]);
+    Route::prefix('promo')->as('coupon.')->group(function () {
         Route::get('/', [CouponController::class, 'index']);
-        Route::get('remove', [CouponController::class, 'removeCoupon']);
-        Route::post('apply', [CouponController::class, 'applyCoupon']);
+        Route::get('delete', [CouponController::class, 'removeCoupon']);
+        Route::post('redeem', [CouponController::class, 'applyCoupon']);
         Route::get('applicable', [CouponController::class, 'applicable']);
     });
 
-//    Route::resource('campaign', 'CampaignController', ['only' => ['index']]);
-    Route::group(['prefix' => 'campaign', 'as' => 'campaign.', 'middleware' => ['auth:api']], function () {
+//    Route::resource('drive', 'CampaignController', ['only' => ['index']]);
+    Route::group(['prefix' => 'drive', 'as' => 'campaign.', 'middleware' => ['auth:api']], function () {
         Route::get('/', [CampaignController::class, 'index'])->withoutMiddleware('auth:api');
-        Route::get('data/items', [CampaignController::class, 'campaignItems'])->withoutMiddleware('auth:api');
+        Route::get('records/entries', [CampaignController::class, 'campaignItems'])->withoutMiddleware('auth:api');
     });
 
-    Route::group(['prefix' => 'advertisements', 'as' => 'advertisements.'], function () {
-        Route::get('ads-list', [AdvertisementsController::class, 'AdsList']);
+    Route::group(['prefix' => 'showcases', 'as' => 'advertisements.'], function () {
+        Route::get('showcase-feed', [AdvertisementsController::class, 'AdsList']);
     });
 });
 
-Route::group(['prefix' => 'provider', 'as' => 'provider.', 'namespace' => 'Api\V1\Provider', 'middleware' => ['auth:api', 'actch:provider_app']], function () {
-    Route::group(['prefix' => 'advertisements', 'as' => 'advertisements.'], function () {
-        Route::get('ads-list', [ProviderAdvertisementsController::class, 'AdsList']);
-        Route::post('ads-store', [ProviderAdvertisementsController::class, 'AdsStore']);
-        Route::get('details/{id}', [ProviderAdvertisementsController::class, 'details']);
-        Route::get('edit/{id}', [ProviderAdvertisementsController::class, 'edit']);
-        Route::put('update/{id}', [ProviderAdvertisementsController::class, 'update']);
-        Route::any('status-update/{id}/{type}', [ProviderAdvertisementsController::class, 'statusUpdate']);
-        Route::delete('delete/{id}', [ProviderAdvertisementsController::class, 'destroy']);
-        Route::post('store-re-submit/{id}', [ProviderAdvertisementsController::class, 'storeReSubmit']);
+Route::group(['prefix' => 'partner', 'as' => 'provider.', 'namespace' => 'Api\V1\Provider', 'middleware' => ['auth:api', 'actch:provider_app']], function () {
+    Route::group(['prefix' => 'showcases', 'as' => 'advertisements.'], function () {
+        Route::get('showcase-feed', [ProviderAdvertisementsController::class, 'AdsList']);
+        Route::post('showcase-save', [ProviderAdvertisementsController::class, 'AdsStore']);
+        Route::get('breakdown/{id}', [ProviderAdvertisementsController::class, 'details']);
+        Route::get('revise/{id}', [ProviderAdvertisementsController::class, 'edit']);
+        Route::put('modify/{id}', [ProviderAdvertisementsController::class, 'update']);
+        Route::any('state-change/{id}/{type}', [ProviderAdvertisementsController::class, 'statusUpdate']);
+        Route::delete('erase/{id}', [ProviderAdvertisementsController::class, 'destroy']);
+        Route::post('save-resubmit/{id}', [ProviderAdvertisementsController::class, 'storeReSubmit']);
     });
 });

@@ -30,27 +30,27 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admi
     });
 });
 
-Route::group(['prefix' => 'provider', 'as' => 'provider.', 'middleware' => ['auth:api']], function () {
-    Route::group(['prefix' => 'business-settings'], function () {
-        Route::get('get-business-settings', [ProviderBusinessInformationController::class, 'businessSettingsGet']);
-        Route::put('set-business-settings', [ProviderBusinessInformationController::class, 'businessSettingsSet']);
+Route::group(['prefix' => 'partner', 'as' => 'provider.', 'middleware' => ['auth:api']], function () {
+    Route::group(['prefix' => 'company-preferences'], function () {
+        Route::get('fetch-company-preferences', [ProviderBusinessInformationController::class, 'businessSettingsGet']);
+        Route::put('set-company-preferences', [ProviderBusinessInformationController::class, 'businessSettingsSet']);
     });
-    Route::group(['prefix' => 'subscription', 'as' => 'subscription.'], function () {
-        Route::get('transactions',  [SubscriptionPackageController::class, 'transactions']);
+    Route::group(['prefix' => 'membership', 'as' => 'subscription.'], function () {
+        Route::get('ledger',  [SubscriptionPackageController::class, 'transactions']);
 
-        Route::group(['prefix' => 'package', 'as' => 'package.'], function () {
-            Route::get('list',  [SubscriptionPackageController::class, 'index'])->withoutMiddleware('auth:api');
-            Route::get('subscriber-details',  [SubscriptionPackageController::class, 'subscriber']);
-            Route::post('renew',  [SubscriptionPackageController::class, 'renew']);
-            Route::post('shift',  [SubscriptionPackageController::class, 'shift']);
-            Route::post('purchase',  [SubscriptionPackageController::class, 'purchase']);
-            Route::post('commission',  [SubscriptionPackageController::class, 'commission']);
-            Route::post('cancel',  [SubscriptionPackageController::class, 'cancel']);
+        Route::group(['prefix' => 'plan', 'as' => 'package.'], function () {
+            Route::get('index',  [SubscriptionPackageController::class, 'index'])->withoutMiddleware('auth:api');
+            Route::get('subscriber-facts',  [SubscriptionPackageController::class, 'subscriber']);
+            Route::post('extend',  [SubscriptionPackageController::class, 'renew']);
+            Route::post('roster',  [SubscriptionPackageController::class, 'shift']);
+            Route::post('procure',  [SubscriptionPackageController::class, 'purchase']);
+            Route::post('payout-share',  [SubscriptionPackageController::class, 'commission']);
+            Route::post('abort',  [SubscriptionPackageController::class, 'cancel']);
         });
     });
 
-    Route::group(['prefix' => 'configuration', 'as' => 'configuration.'], function () {
-        Route::get('get-notification-setting',  [ConfigurationController::class, 'notificationSettingsGet']);
-        Route::post('update-notification-status',  [ConfigurationController::class, 'updateStatus']);
+    Route::group(['prefix' => 'preferences', 'as' => 'configuration.'], function () {
+        Route::get('fetch-alert-settings',  [ConfigurationController::class, 'notificationSettingsGet']);
+        Route::post('modify-alert-state',  [ConfigurationController::class, 'updateStatus']);
     });
 });

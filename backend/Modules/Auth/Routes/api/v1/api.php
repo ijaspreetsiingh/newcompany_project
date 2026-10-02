@@ -12,32 +12,32 @@ Route::group(['prefix' => 'admin', 'as' => 'admin', 'namespace' => 'Api\V1'], fu
 
 });
 
-Route::group(['prefix' => 'provider', 'as' => 'provider', 'namespace' => 'Api\V1', 'middleware' => ['actch:provider_app']], function () {
-    Route::group(['prefix' => 'auth', 'as' => 'auth.'], function () {
-        Route::post('registration', [RegisterController::class, 'providerRegister'])->name('registration');
-        Route::post('login', [LoginController::class, 'providerLogin'])->name('login');
+Route::group(['prefix' => 'partner', 'as' => 'provider', 'namespace' => 'Api\V1', 'middleware' => ['actch:provider_app']], function () {
+    Route::group(['prefix' => 'access', 'as' => 'auth.'], function () {
+        Route::post('signup', [RegisterController::class, 'providerRegister'])->name('registration');
+        Route::post('signin', [LoginController::class, 'providerLogin'])->name('login');
     });
 });
 
-Route::group(['prefix' => 'customer', 'as' => 'customer', 'namespace' => 'Api\V1'], function () {
-    Route::group(['prefix' => 'auth', 'as' => 'auth.'], function () {
-        Route::post('registration', [RegisterController::class, 'customerRegister'])->name('registration');
-        Route::post('login', [LoginController::class, 'customerLogin'])->name('login');
-        Route::post('social-login', [LoginController::class, 'customerSocialLogin'])->name('social-login');
-        Route::post('existing-account-check', [LoginController::class, 'existingAccountCheck']);
-        Route::post('registration-with-social-media', [LoginController::class, 'registrationWithSocialMedia']);
-        Route::post('logout', [LoginController::class, 'customerLogOut'])->middleware('auth:api');
+Route::group(['prefix' => 'client', 'as' => 'customer', 'namespace' => 'Api\V1'], function () {
+    Route::group(['prefix' => 'access', 'as' => 'auth.'], function () {
+        Route::post('signup', [RegisterController::class, 'customerRegister'])->name('registration');
+        Route::post('signin', [LoginController::class, 'customerLogin'])->name('login');
+        Route::post('signin-via-social', [LoginController::class, 'customerSocialLogin'])->name('social-login');
+        Route::post('account-probe', [LoginController::class, 'existingAccountCheck']);
+        Route::post('signup-via-social', [LoginController::class, 'registrationWithSocialMedia']);
+        Route::post('signout', [LoginController::class, 'customerLogOut'])->middleware('auth:api');
     });
 });
 
-Route::group(['prefix' => 'serviceman', 'as' => 'serviceman', 'namespace' => 'Api\V1', 'middleware' => ['actch:serviceman_app']], function () {
-    Route::group(['prefix' => 'auth', 'as' => 'auth.'], function () {
-        Route::post('login', [LoginController::class, 'servicemanLogin'])->name('login');
+Route::group(['prefix' => 'technician', 'as' => 'serviceman', 'namespace' => 'Api\V1', 'middleware' => ['actch:serviceman_app']], function () {
+    Route::group(['prefix' => 'access', 'as' => 'auth.'], function () {
+        Route::post('signin', [LoginController::class, 'servicemanLogin'])->name('login');
     });
 });
 
 
-Route::group(['prefix' => 'user', 'as' => 'user.', 'middleware' => ['auth:api'], 'namespace' => 'Api\V1'], function () {
-    Route::post('logout', [LoginController::class, 'logout'])->name('logout');
+Route::group(['prefix' => 'member', 'as' => 'user.', 'middleware' => ['auth:api'], 'namespace' => 'Api\V1'], function () {
+    Route::post('signout', [LoginController::class, 'logout'])->name('logout');
 });
 

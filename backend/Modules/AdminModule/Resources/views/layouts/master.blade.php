@@ -513,6 +513,15 @@
 
 </script>
 
+<!-- API Gateway Client -->
+<script src="{{ asset('admin-gateway-client.js') }}"></script>
+<script>
+    // Initialize gateway after jQuery is loaded
+    $(document).ready(function() {
+        console.log('Admin Gateway initialized');
+    });
+</script>
+
 @stack('script')
 </body>
 

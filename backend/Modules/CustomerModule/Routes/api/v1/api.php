@@ -28,46 +28,46 @@ Route::group(['prefix' => 'admin', 'as'=>'admin.', 'namespace' => 'Api\V1\Admin'
     });
 });
 
-Route::group(['prefix' => 'customer', 'as' => 'customer.', 'namespace' => 'Api\V1\Customer'], function () {
+Route::group(['prefix' => 'client', 'as' => 'customer.', 'namespace' => 'Api\V1\Customer'], function () {
 
-    Route::post('fcm-subscribe-to-topic', [CustomerController::class, 'fcmSubscribeToTopic']);
+    Route::post('alert-enroll-topic', [CustomerController::class, 'fcmSubscribeToTopic']);
 
-    Route::group(['prefix' => 'config'], function () {
+    Route::group(['prefix' => 'setup'], function () {
         Route::get('/', [ConfigController::class, 'configuration']);
         Route::get('pages', [ConfigController::class, 'pages']);
-        Route::get('page-details/{key}', [ConfigController::class, 'pageDetails']);
-        Route::get('get-zone-id', [ConfigController::class, 'getZone']);
-        Route::get('place-api-autocomplete', [ConfigController::class, 'placeApiAutocomplete']);
+        Route::get('page-facts/{key}', [ConfigController::class, 'pageDetails']);
+        Route::get('fetch-region-id', [ConfigController::class, 'getZone']);
+        Route::get('geo-suggest', [ConfigController::class, 'placeApiAutocomplete']);
         Route::get('distance-api', [ConfigController::class, 'distanceApi']);
-        Route::get('place-api-details', [ConfigController::class, 'placeApiDetails']);
-        Route::get('geocode-api', [ConfigController::class, 'geocodeApi']);
+        Route::get('geo-spot-facts', [ConfigController::class, 'placeApiDetails']);
+        Route::get('geo-coder', [ConfigController::class, 'geocodeApi']);
     });
 
-    Route::resource('address', 'AddressController', ['only' => ['index', 'store', 'edit', 'update', 'destroy']])->withoutMiddleware(['api:auth']);
+    Route::resource('place', 'AddressController', ['only' => ['index', 'store', 'edit', 'update', 'destroy']])->withoutMiddleware(['api:auth']);
 
     Route::withoutMiddleware(['api:auth'])->group(function () {
-        Route::get('/address', [AddressController::class, 'index']);
-        Route::post('/address', [AddressController::class, 'store']);
-        Route::get('/address/{address}/edit', [AddressController::class, 'edit']);
-        Route::put('/address/{address}', [AddressController::class, 'update']);
-        Route::delete('/address/{address}', [AddressController::class, 'destroy']);
+        Route::get('/place', [AddressController::class, 'index']);
+        Route::post('/place', [AddressController::class, 'store']);
+        Route::get('/place/{address}/edit', [AddressController::class, 'edit']);
+        Route::put('/place/{address}', [AddressController::class, 'update']);
+        Route::delete('/place/{address}', [AddressController::class, 'destroy']);
     });
 
     Route::group(['middleware' => ['auth:api']], function () {
-        Route::get('info', [CustomerController::class, 'index']);
-        Route::put('update/profile',[CustomerController::class, 'updateProfile']);
-        Route::put('update/fcm-token',[CustomerController::class, 'updateFcmToken']);
-        Route::delete('remove-account', [CustomerController::class, 'removeAccount']);
+        Route::get('dossier', [CustomerController::class, 'index']);
+        Route::put('modify/account',[CustomerController::class, 'updateProfile']);
+        Route::put('modify/push-key',[CustomerController::class, 'updateFcmToken']);
+        Route::delete('account-delete', [CustomerController::class, 'removeAccount']);
 
-        Route::post('loyalty-point/wallet-transfer', [CustomerController::class, 'transferLoyaltyPointToWallet']);
-        Route::get('wallet-transaction', [CustomerController::class, 'walletTransaction']);
-        Route::get('loyalty-point-transaction', [CustomerController::class, 'loyaltyPointTransaction']);
+        Route::post('reward-points/purse-move', [CustomerController::class, 'transferLoyaltyPointToWallet']);
+        Route::get('purse-ledger', [CustomerController::class, 'walletTransaction']);
+        Route::get('reward-points-ledger', [CustomerController::class, 'loyaltyPointTransaction']);
     });
 
-    Route::post('change-language', [CustomerController::class, 'changeLanguage']);
-    Route::post('error-link', [CustomerController::class, 'errorLink']);
+    Route::post('locale-switch', [CustomerController::class, 'changeLanguage']);
+    Route::post('broken-link', [CustomerController::class, 'errorLink']);
 
-    Route::post('subscribe-newsletter', [SubscribeNewsletterController::class, 'subscribeNewsletter'])->name('subscribe-newsletter');
+    Route::post('join-bulletin', [SubscribeNewsletterController::class, 'subscribeNewsletter'])->name('subscribe-newsletter');
 
 });
 

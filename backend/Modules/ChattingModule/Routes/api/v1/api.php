@@ -17,36 +17,36 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admi
     });
 });
 
-Route::group(['prefix' => 'customer', 'as' => 'customer.', 'namespace' => 'Api\V1\Customer', 'middleware' => ['auth:api']], function () {
-    Route::group(['prefix' => 'chat'], function () {
-        Route::get('channel-list', [CustomerChattingController::class, 'channelList']);
-        Route::post('channel-list-search', [CustomerChattingController::class, 'channelListSearch']);
+Route::group(['prefix' => 'client', 'as' => 'customer.', 'namespace' => 'Api\V1\Customer', 'middleware' => ['auth:api']], function () {
+    Route::group(['prefix' => 'inbox'], function () {
+        Route::get('thread-index', [CustomerChattingController::class, 'channelList']);
+        Route::post('thread-lookup', [CustomerChattingController::class, 'channelListSearch']);
         Route::get('referenced-channel-list', [CustomerChattingController::class, 'referencedChannelList']);
-        Route::post('create-channel', [CustomerChattingController::class, 'createChannel']);
-        Route::post('send-message', [CustomerChattingController::class, 'sendMessage']);
-        Route::get('conversation', [CustomerChattingController::class, 'conversation']);
+        Route::post('open-thread', [CustomerChattingController::class, 'createChannel']);
+        Route::post('transmit-note', [CustomerChattingController::class, 'sendMessage']);
+        Route::get('thread', [CustomerChattingController::class, 'conversation']);
     });
 });
 
-Route::group(['prefix' => 'provider', 'as' => 'provider.', 'namespace' => 'Api\V1\Provider', 'middleware' => ['auth:api', 'actch:provider_app']], function () {
-    Route::group(['prefix' => 'chat'], function () {
-        Route::get('channel-list', [ProviderChattingController::class, 'channelList']);
-        Route::post('channel-list-search', [ProviderChattingController::class, 'channelListSearch']);
-        Route::get('referenced-channel-list', [ProviderChattingController::class, 'referencedChannelList']);
-        Route::post('create-channel', [ProviderChattingController::class, 'createChannel']);
-        Route::post('send-message', [ProviderChattingController::class, 'sendMessage']);
-        Route::get('conversation', [ProviderChattingController::class, 'conversation']);
+Route::group(['prefix' => 'partner', 'as' => 'provider.', 'namespace' => 'Api\V1\Provider', 'middleware' => ['auth:api', 'actch:provider_app']], function () {
+    Route::group(['prefix' => 'inbox'], function () {
+        Route::get('thread-index', [ProviderChattingController::class, 'channelList']);
+        Route::post('thread-lookup', [ProviderChattingController::class, 'channelListSearch']);
+        Route::get('linked-thread-index', [ProviderChattingController::class, 'referencedChannelList']);
+        Route::post('open-thread', [ProviderChattingController::class, 'createChannel']);
+        Route::post('transmit-note', [ProviderChattingController::class, 'sendMessage']);
+        Route::get('thread', [ProviderChattingController::class, 'conversation']);
     });
 });
 
-Route::group(['prefix' => 'serviceman', 'as' => 'serviceman.', 'namespace' => 'Api\V1\Serviceman', 'middleware' => ['auth:api', 'actch:serviceman_app']], function () {
-    Route::group(['prefix' => 'chat'], function () {
-        Route::get('channel-list', [ServicemanChattingController::class, 'channelList']);
-        Route::post('channel-list-search', [ServicemanChattingController::class, 'channelListSearch']);
-        Route::get('referenced-channel-list', [ServicemanChattingController::class, 'referencedChannelList']);
-        Route::post('create-channel', [ServicemanChattingController::class, 'createChannel']);
-        Route::post('send-message', [ServicemanChattingController::class, 'sendMessage']);
-        Route::get('conversation', [ServicemanChattingController::class, 'conversation']);
+Route::group(['prefix' => 'technician', 'as' => 'serviceman.', 'namespace' => 'Api\V1\Serviceman', 'middleware' => ['auth:api', 'actch:serviceman_app']], function () {
+    Route::group(['prefix' => 'inbox'], function () {
+        Route::get('thread-index', [ServicemanChattingController::class, 'channelList']);
+        Route::post('thread-lookup', [ServicemanChattingController::class, 'channelListSearch']);
+        Route::get('linked-thread-index', [ServicemanChattingController::class, 'referencedChannelList']);
+        Route::post('open-thread', [ServicemanChattingController::class, 'createChannel']);
+        Route::post('transmit-note', [ServicemanChattingController::class, 'sendMessage']);
+        Route::get('thread', [ServicemanChattingController::class, 'conversation']);
     });
 });
 

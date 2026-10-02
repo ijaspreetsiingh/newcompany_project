@@ -6,57 +6,57 @@ use Modules\ServicemanModule\Http\Controllers\Api\V1\Provider\ServicemanControll
 use Modules\ServicemanModule\Http\Controllers\Api\V1\Serviceman\ServicemanController;
 
 //provider routes
-Route::group(['prefix' => 'provider', 'as' => 'provider', 'namespace' => 'Api\V1\Provider', 'middleware' => ['auth:api', 'actch:provider_app']], function () {
+Route::group(['prefix' => 'partner', 'as' => 'provider', 'namespace' => 'Api\V1\Provider', 'middleware' => ['auth:api', 'actch:provider_app']], function () {
 
     //serviceman
-    Route::group(['prefix' => 'serviceman', 'as' => 'serviceman.'], function () {
+    Route::group(['prefix' => 'technician', 'as' => 'serviceman.'], function () {
         Route::get('/', [ServicemanProviderController::class, 'index']);
         Route::post('/', [ServicemanProviderController::class, 'store']);
-        Route::get('{id}/edit', [ServicemanProviderController::class, 'edit']);
+        Route::get('{id}/revise', [ServicemanProviderController::class, 'edit']);
         Route::put('{id}', [ServicemanProviderController::class, 'update']);
         Route::get('{id}', [ServicemanProviderController::class, 'show']);
 
-        Route::delete('delete', [ServicemanProviderController::class, 'destroy']);
-        Route::put('status/update', [ServicemanProviderController::class, 'changeActiveStatus']);
+        Route::delete('erase', [ServicemanProviderController::class, 'destroy']);
+        Route::put('state/modify', [ServicemanProviderController::class, 'changeActiveStatus']);
     });
 
 });
 
 //customer section
-Route::group(['prefix' => 'serviceman', 'as' => 'serviceman.', 'namespace' => 'Api\V1\Serviceman'], function () {
+Route::group(['prefix' => 'technician', 'as' => 'serviceman.', 'namespace' => 'Api\V1\Serviceman'], function () {
 
-    Route::post('forgot-password', [ServicemanController::class, 'forgotPassword']);
-    Route::post('otp-verification', [ServicemanController::class, 'otpVerification']);
-    Route::put('reset-password', [ServicemanController::class, 'resetPassword']);
+    Route::post('secret-recovery', [ServicemanController::class, 'forgotPassword']);
+    Route::post('pin-validation', [ServicemanController::class, 'otpVerification']);
+    Route::put('secret-restore', [ServicemanController::class, 'resetPassword']);
 
     Route::group(['middleware' => ['auth:api', 'actch:serviceman_app']], function () {
-        Route::get('dashboard', [ServicemanController::class, 'dashboard']);
-        Route::get('dashboard/booking-statistics', [ServicemanController::class, 'bookingStatistics']);
+        Route::get('overview', [ServicemanController::class, 'dashboard']);
+        Route::get('overview/order-metrics', [ServicemanController::class, 'bookingStatistics']);
 
-        Route::group(['prefix' => 'config'], function () {
+        Route::group(['prefix' => 'setup'], function () {
             Route::get('/', [ServicemanConfigController::class, 'configuration'])->withoutMiddleware(['auth:api', 'actch:serviceman_app']);
-            Route::get('page-details/{key}', [ServicemanConfigController::class, 'pageDetails'])->withoutMiddleware('auth:api');
+            Route::get('page-facts/{key}', [ServicemanConfigController::class, 'pageDetails'])->withoutMiddleware('auth:api');
 
-            Route::get('get-zone-id', [ServicemanConfigController::class, 'getZone']);
-            Route::get('place-api-autocomplete', [ServicemanConfigController::class, 'placeApiAutocomplete']);
-            Route::get('distance-api', [ServicemanConfigController::class, 'distanceApi']);
-            Route::get('place-api-details', [ServicemanConfigController::class, 'placeApiDetails']);
-            Route::get('geocode-api', [ServicemanConfigController::class, 'geocodeApi']);
-            Route::get('get-routes', [ServicemanConfigController::class, 'getRoutes']);
+            Route::get('fetch-region-id', [ServicemanConfigController::class, 'getZone']);
+            Route::get('geo-suggest', [ServicemanConfigController::class, 'placeApiAutocomplete']);
+            Route::get('range-api', [ServicemanConfigController::class, 'distanceApi']);
+            Route::get('geo-spot-facts', [ServicemanConfigController::class, 'placeApiDetails']);
+            Route::get('geo-coder', [ServicemanConfigController::class, 'geocodeApi']);
+            Route::get('fetch-paths', [ServicemanConfigController::class, 'getRoutes']);
         });
 
-        Route::get('info', [ServicemanController::class, 'index']);
-        Route::put('update/profile', [ServicemanController::class, 'updateProfile']);
-        Route::put('update/fcm-token', [ServicemanController::class, 'updateFcmToken']);
-        Route::put('update/location', [ServicemanController::class, 'updateLocation']);
-        Route::get('push-notifications', [ServicemanController::class, 'pushNotifications']);
+        Route::get('dossier', [ServicemanController::class, 'index']);
+        Route::put('modify/account', [ServicemanController::class, 'updateProfile']);
+        Route::put('modify/push-key', [ServicemanController::class, 'updateFcmToken']);
+        Route::put('modify/position', [ServicemanController::class, 'updateLocation']);
+        Route::get('push-alerts', [ServicemanController::class, 'pushNotifications']);
 
-        Route::group(['prefix' => 'profile', 'middleware' => ['auth:api']], function () {
-            Route::put('info', [ServicemanController::class, 'profileInfo']);
-            Route::put('change-password', [ServicemanController::class, 'changePassword']);
+        Route::group(['prefix' => 'account', 'middleware' => ['auth:api']], function () {
+            Route::put('dossier', [ServicemanController::class, 'profileInfo']);
+            Route::put('alter-secret', [ServicemanController::class, 'changePassword']);
         });
     });
 
-    Route::post('change-language', [ServicemanController::class, 'changeLanguage']);
+    Route::post('locale-switch', [ServicemanController::class, 'changeLanguage']);
 });
 

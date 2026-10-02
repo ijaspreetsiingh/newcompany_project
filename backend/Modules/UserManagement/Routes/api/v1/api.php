@@ -14,24 +14,24 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admi
 
 
 //User
-Route::group(['prefix' => 'user', 'namespace' => 'Api\V1'], function () {
+Route::group(['prefix' => 'member', 'namespace' => 'Api\V1'], function () {
     //verification
-    Route::group(['prefix' => 'verification'], function () {
-        Route::post('send-otp', [OTPVerificationController::class, 'check']);
-        Route::post('verify-otp', [OTPVerificationController::class, 'verify']);
+    Route::group(['prefix' => 'validation'], function () {
+        Route::post('transmit-pin', [OTPVerificationController::class, 'check']);
+        Route::post('check-pin', [OTPVerificationController::class, 'verify']);
 
-        Route::post('firebase-auth-verify', [OTPVerificationController::class, 'firebaseAuthVerify']);
-        Route::post('login-otp-verify', [OTPVerificationController::class, 'loginVerifyOTP']);
-        Route::post('registration-with-otp', [OTPVerificationController::class, 'registrationWithOTP']);
+        Route::post('firebase-access-check', [OTPVerificationController::class, 'firebaseAuthVerify']);
+        Route::post('signin-pin-check', [OTPVerificationController::class, 'loginVerifyOTP']);
+        Route::post('signup-with-pin', [OTPVerificationController::class, 'registrationWithOTP']);
     });
 
     //forget password
-    Route::group(['prefix' => 'forget-password'], function () {
-        Route::post('send-otp', [PasswordResetController::class, 'check']);
-        Route::post('verify-otp', [PasswordResetController::class, 'verify']);
-        Route::put('reset', [PasswordResetController::class, 'resetPassword']);
+    Route::group(['prefix' => 'lost-secret'], function () {
+        Route::post('transmit-pin', [PasswordResetController::class, 'check']);
+        Route::post('check-pin', [PasswordResetController::class, 'verify']);
+        Route::put('restore', [PasswordResetController::class, 'resetPassword']);
     });
 
-    Route::post('check-existing-customer', [OTPVerificationController::class, 'checkExistingCustomer']);
+    Route::post('verify-member-exists', [OTPVerificationController::class, 'checkExistingCustomer']);
 });
 

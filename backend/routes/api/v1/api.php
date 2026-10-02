@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::group(['prefix' => 'customer', 'as' => 'customer.', 'namespace' => 'Api\V1\Customer'], function () {
-    Route::group(['prefix' => 'landing'], function () {
-        Route::get('/contents', [LandingController::class, 'index']);
+Route::group(['prefix' => 'client', 'as' => 'customer.', 'namespace' => 'Api\V1\Customer'], function () {
+    Route::group(['prefix' => 'frontpage'], function () {
+        Route::get('/blocks', [LandingController::class, 'index']);
     });
 });
 

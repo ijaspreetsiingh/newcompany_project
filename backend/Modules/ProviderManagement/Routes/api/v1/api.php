@@ -16,101 +16,101 @@ use Modules\ProviderManagement\Http\Controllers\Api\V1\Admin\ProviderController 
 
 
 
-Route::group(['prefix' => 'provider', 'as' => 'provider.', 'namespace' => 'Api\V1\Provider'], function () {
-    Route::post('forgot-password', [ProviderProviderController::class, 'forgotPassword']);
-    Route::post('otp-verification', [ProviderProviderController::class, 'otpVerification']);
-    Route::put('reset-password', [ProviderProviderController::class, 'resetPassword']);
-    Route::post('change-language', [ProviderProviderController::class, 'changeLanguage']);
+Route::group(['prefix' => 'partner', 'as' => 'provider.', 'namespace' => 'Api\V1\Provider'], function () {
+    Route::post('secret-recovery', [ProviderProviderController::class, 'forgotPassword']);
+    Route::post('pin-validation', [ProviderProviderController::class, 'otpVerification']);
+    Route::put('secret-restore', [ProviderProviderController::class, 'resetPassword']);
+    Route::post('locale-switch', [ProviderProviderController::class, 'changeLanguage']);
 });
 
-Route::group(['prefix' => 'provider', 'as' => 'provider.', 'namespace' => 'Api\V1\Provider', 'middleware' => ['auth:api', 'actch:provider_app']], function () {
+Route::group(['prefix' => 'partner', 'as' => 'provider.', 'namespace' => 'Api\V1\Provider', 'middleware' => ['auth:api', 'actch:provider_app']], function () {
     Route::get('/', [ProviderProviderController::class, 'index']);
-    Route::get('dashboard', [ProviderProviderController::class, 'dashboard']);
-    Route::get('dashboard/earning', [ProviderProviderController::class, 'earningStatistics']);
-    Route::get('get-bank-details', [ProviderProviderController::class, 'getBankDetails']);
-    Route::put('update-bank-details', [ProviderProviderController::class, 'updateBankDetails']);
+    Route::get('overview', [ProviderProviderController::class, 'dashboard']);
+    Route::get('overview/income', [ProviderProviderController::class, 'earningStatistics']);
+    Route::get('fetch-bank-facts', [ProviderProviderController::class, 'getBankDetails']);
+    Route::put('modify-bank-facts', [ProviderProviderController::class, 'updateBankDetails']);
 
-    Route::get('config', [ProviderConfigController::class, 'config'])->withoutMiddleware(['auth:api', 'actch:provider_app']);
-    Route::get('config/page-details/{key}', [ProviderConfigController::class, 'pageDetails'])->withoutMiddleware('auth:api');
+    Route::get('setup', [ProviderConfigController::class, 'config'])->withoutMiddleware(['auth:api', 'actch:provider_app']);
+    Route::get('setup/page-facts/{key}', [ProviderConfigController::class, 'pageDetails'])->withoutMiddleware('auth:api');
 
-    Route::get('info', [ProviderProviderController::class, 'index']);
-    Route::get('adjust', [ProviderProviderController::class, 'adjust']);
-    Route::get('notifications', [ProviderProviderController::class, 'notifications']);
-    Route::put('update/fcm-token', [ProviderProviderController::class, 'updateFcmToken']);
-    Route::put('update/profile', [ProviderProviderController::class, 'updateProfile']);
-    Route::put('update/password', [ProviderProviderController::class, 'updatePassword']);
-    Route::post('update/tutorial', [ProviderProviderController::class, 'updateTutorial']);
-    Route::get('config/get-routes', [ProviderConfigController::class, 'getRoutes']);
-    Route::delete('delete', [ProviderProviderController::class, 'deleteProvider']);
-    Route::get('transaction', [ProviderProviderController::class, 'transaction']);
-    Route::get('subscribed/sub-categories', [ProviderProviderController::class, 'subscribedSubCategories']);
+    Route::get('dossier', [ProviderProviderController::class, 'index']);
+    Route::get('reconcile', [ProviderProviderController::class, 'adjust']);
+    Route::get('alert-feed', [ProviderProviderController::class, 'notifications']);
+    Route::put('modify/push-key', [ProviderProviderController::class, 'updateFcmToken']);
+    Route::put('modify/account', [ProviderProviderController::class, 'updateProfile']);
+    Route::put('modify/secret', [ProviderProviderController::class, 'updatePassword']);
+    Route::post('modify/guide', [ProviderProviderController::class, 'updateTutorial']);
+    Route::get('setup/fetch-paths', [ProviderConfigController::class, 'getRoutes']);
+    Route::delete('erase', [ProviderProviderController::class, 'deleteProvider']);
+    Route::get('ledger-entry', [ProviderProviderController::class, 'transaction']);
+    Route::get('enrolled/child-groups', [ProviderProviderController::class, 'subscribedSubCategories']);
 
-    Route::group(['prefix' => 'service', 'as' => 'service.',], function () {
-        Route::post('update-subscription', [ServiceController::class, 'updateSubscription']);
+    Route::group(['prefix' => 'task', 'as' => 'service.',], function () {
+        Route::post('modify-membership', [ServiceController::class, 'updateSubscription']);
     });
 
-    Route::group(['prefix' => 'account', 'as' => 'account.',], function () {
-        Route::get('overview', [AccountController::class, 'overview']);
-        Route::get('account-edit', [AccountController::class, 'accountEdit']);
-        Route::put('account-update', [AccountController::class, 'accountUpdate']);
-        Route::get('commission-info', [AccountController::class, 'commissionInfo']);
+    Route::group(['prefix' => 'identity', 'as' => 'account.',], function () {
+        Route::get('summary', [AccountController::class, 'overview']);
+        Route::get('identity-refine', [AccountController::class, 'accountEdit']);
+        Route::put('identity-modify', [AccountController::class, 'accountUpdate']);
+        Route::get('payout-share-facts', [AccountController::class, 'commissionInfo']);
     });
 
-//    Route::resource('withdraw', 'WithdrawController', ['only' => ['index', 'store']]);
-    Route::get('/withdraw', [WithdrawController::class, 'index']);
-    Route::post('/withdraw', [WithdrawController::class, 'store']);
+//    Route::resource('payout', 'WithdrawController', ['only' => ['index', 'store']]);
+    Route::get('/payout', [WithdrawController::class, 'index']);
+    Route::post('/payout', [WithdrawController::class, 'store']);
 
-    Route::group(['prefix' => 'payment-information', 'as' => 'payment-information.'], function () {
-        Route::get('index', [WithdrawController::class, 'paymentInformationIndex'])->name('index');
-        Route::post('store', [WithdrawController::class, 'paymentInformationStore'])->name('store');
-        Route::get('edit/{id}', [WithdrawController::class, 'paymentInformationEdit'])->name('edit');
-        Route::post('update/{id}', [WithdrawController::class, 'paymentInformationUpdate'])->name('update');
-        Route::get('status-update/{id}', [WithdrawController::class, 'paymentInformationStatusUpdate'])->name('status-update');
-        Route::get('default-status-update/{id}', [WithdrawController::class, 'paymentInformationDefaultStatusUpdate'])->name('default-status-update');
-        Route::delete('delete/{id}', [WithdrawController::class, 'paymentInformationDelete'])->name('delete');
+    Route::group(['prefix' => 'pay-mode-record', 'as' => 'payment-information.'], function () {
+        Route::get('browse', [WithdrawController::class, 'paymentInformationIndex'])->name('index');
+        Route::post('save', [WithdrawController::class, 'paymentInformationStore'])->name('store');
+        Route::get('revise/{id}', [WithdrawController::class, 'paymentInformationEdit'])->name('edit');
+        Route::post('modify/{id}', [WithdrawController::class, 'paymentInformationUpdate'])->name('update');
+        Route::get('state-change/{id}', [WithdrawController::class, 'paymentInformationStatusUpdate'])->name('status-update');
+        Route::get('default-state-change/{id}', [WithdrawController::class, 'paymentInformationDefaultStatusUpdate'])->name('default-status-update');
+        Route::delete('erase/{id}', [WithdrawController::class, 'paymentInformationDelete'])->name('delete');
     });
 
-    Route::get('review', [ProviderProviderController::class, 'review']);
+    Route::get('feedback', [ProviderProviderController::class, 'review']);
 
-    Route::get('available-time-schedule', [TimeScheduleController::class, 'getAvailableTimeSchedule']);
-    Route::put('available-time-schedule', [TimeScheduleController::class, 'setAvailableTimeSchedule']);
+    Route::get('work-window-plan', [TimeScheduleController::class, 'getAvailableTimeSchedule']);
+    Route::put('work-window-plan', [TimeScheduleController::class, 'setAvailableTimeSchedule']);
 
     //REPORT
-    Route::group(['prefix' => 'report', 'namespace' => 'Report'], function () {
+    Route::group(['prefix' => 'statement', 'namespace' => 'Report'], function () {
         //Transaction Report
-        Route::post('transaction', [TransactionReportController::class, 'getTransactionReport']);
-        Route::post('transaction/download', [TransactionReportController::class, 'downloadTransactionReport']);
+        Route::post('ledger-entry', [TransactionReportController::class, 'getTransactionReport']);
+        Route::post('ledger-entry/export', [TransactionReportController::class, 'downloadTransactionReport']);
 
         //Booking Report
-        Route::post('booking', [BookingReportController::class, 'getBookingReport']);
-        Route::post('booking/download', [BookingReportController::class, 'getBookingReportDownload']);
+        Route::post('order', [BookingReportController::class, 'getBookingReport']);
+        Route::post('order/export', [BookingReportController::class, 'getBookingReportDownload']);
 
         //Business Report
-        Route::group(['prefix' => 'business', 'as' => 'business.'], function () {
-            Route::post('overview', [BusinessReportController::class, 'getBusinessOverviewReport']);
-            Route::post('earning', [BusinessReportController::class, 'getBusinessEarningReport']);
-            Route::post('expense', [BusinessReportController::class, 'getBusinessExpenseReport']);
+        Route::group(['prefix' => 'company', 'as' => 'business.'], function () {
+            Route::post('summary', [BusinessReportController::class, 'getBusinessOverviewReport']);
+            Route::post('income', [BusinessReportController::class, 'getBusinessEarningReport']);
+            Route::post('cost-track', [BusinessReportController::class, 'getBusinessExpenseReport']);
         });
     });
 });
 
-Route::group(['prefix' => 'customer', 'as' => 'customer.', 'namespace' => 'Api\V1\Customer'], function () {
-    Route::group(['prefix' => 'provider', 'as' => 'provider.'], function () {
-        Route::post('list', [ProviderController::class, 'getProviderList']);
-        Route::get('list-by-sub-category', [ProviderController::class, 'getProviderListBySubCategory']);
+Route::group(['prefix' => 'client', 'as' => 'customer.', 'namespace' => 'Api\V1\Customer'], function () {
+    Route::group(['prefix' => 'partner', 'as' => 'provider.'], function () {
+        Route::post('index', [ProviderController::class, 'getProviderList']);
+        Route::get('index-by-childgroup', [ProviderController::class, 'getProviderListBySubCategory']);
     });
 
-    Route::group(['prefix' => 'favorite', 'as' => 'favorite.', 'middleware' => ['auth:api']], function () {
-        Route::get('provider-list', [FavoriteProviderController::class, 'list']);
-        Route::post('provider', [FavoriteProviderController::class, 'store']);
-        Route::post('provider-destroy/{provider_id}', [FavoriteProviderController::class, 'destroy']);
+    Route::group(['prefix' => 'saved', 'as' => 'favorite.', 'middleware' => ['auth:api']], function () {
+        Route::get('partner-index', [FavoriteProviderController::class, 'list']);
+        Route::post('partner', [FavoriteProviderController::class, 'store']);
+        Route::post('partner-remove/{provider_id}', [FavoriteProviderController::class, 'destroy']);
     });
 
-    Route::get('provider-details', [ProviderController::class, 'getProviderDetails']);
+    Route::get('partner-facts', [ProviderController::class, 'getProviderDetails']);
 
     Route::post('available-provider', [ProviderController::class, 'getAvailableProvider']);
     Route::post('available-service', [ProviderController::class, 'getAvailableService']);
-    Route::post('rebooking-information', [ProviderController::class, 'rebookingInformation']);
+    Route::post('reorder-facts', [ProviderController::class, 'rebookingInformation']);
 });
 
 //admin

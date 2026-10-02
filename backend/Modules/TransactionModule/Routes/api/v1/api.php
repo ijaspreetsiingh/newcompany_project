@@ -11,8 +11,8 @@ Route::group(['prefix' => 'admin', 'as'=>'admin.', 'namespace' => 'Api\V1\Admin'
     });
 });
 
-Route::group(['prefix' => 'provider', 'as'=>'provider.', 'namespace' => 'Api\V1\Provider','middleware'=>['auth:api']], function () {
-    Route::group(['prefix' => 'withdraw', 'as'=>'withdraw.'], function () {
-        Route::get('methods', [WithdrawController::class, 'getMethods']);
+Route::group(['prefix' => 'partner', 'as'=>'provider.', 'namespace' => 'Api\V1\Provider','middleware'=>['auth:api']], function () {
+    Route::group(['prefix' => 'payout', 'as'=>'withdraw.'], function () {
+        Route::get('options', [WithdrawController::class, 'getMethods']);
     });
 });
