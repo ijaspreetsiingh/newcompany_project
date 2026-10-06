@@ -29,51 +29,50 @@ class _NewPassScreenState extends State<NewPassScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: CustomAppBar(title: "change_password".tr),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeLarge),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center,children: [
+    return GetBuilder<AuthController>(builder: (controller){
+      return AuthShell(
+        title: "create_new_password".tr,
+        subtitle: "new_password_subtitle".tr,
+        onBack: () {
+          if (Navigator.canPop(context)) {
+            Get.back();
+          } else {
+            Get.offAllNamed(RouteHelper.getInitialRoute());
+          }
+        },
+        children: [
+          TextFieldTitle(title: 'New_Password'.tr),
+          CustomTextField(
+            hintText: "********",
+            controller: _newPasswordController,
+            focusNode: _newPasswordFocus,
+            nextFocus: _confirmPasswordFocus,
+            inputType: TextInputType.visiblePassword,
+            isPassword: true,
+          ),
 
-            CustomTextField(
-              title: 'New_Password'.tr,
-              hintText: "********",
-              controller: _newPasswordController,
-              focusNode: _newPasswordFocus,
-              nextFocus: _confirmPasswordFocus,
-              inputType: TextInputType.visiblePassword,
-              isPassword: true,
+          TextFieldTitle(title: "Confirm_New_Password".tr),
+          CustomTextField(
+            hintText: "********",
+            controller: _confirmPasswordController,
+            focusNode: _confirmPasswordFocus,
+            inputAction: TextInputAction.done,
+            inputType: TextInputType.visiblePassword,
+            isPassword: true,
+          ),
+
+          KButton(
+            label: (controller.isLoading ?? false) ? 'loading'.tr : "change_password_btn".tr,
+            height: 48,
+            onTap: (controller.isLoading ?? false)
+                ? null
+                : ()=> _resetPassword(
+                _identity,widget.otp,_newPasswordController.text.trim(),_confirmPasswordController.text.trim()
             ),
-
-            const SizedBox(height: Dimensions.paddingSizeDefault),
-
-            CustomTextField(
-              title: "Confirm_New_Password".tr,
-              hintText: "********",
-              controller: _confirmPasswordController,
-              focusNode: _confirmPasswordFocus,
-              inputAction: TextInputAction.done,
-              inputType: TextInputType.visiblePassword,
-              isPassword: true,
-            ),
-            const SizedBox(height: Dimensions.paddingSizeDefault),
-            const SizedBox(height: Dimensions.paddingSizeDefault),
-
-            GetBuilder<AuthController>(builder: (controller){
-              return CustomButton(
-                isLoading: controller.isLoading!,
-                btnTxt: "change_password".tr,
-                onPressed: ()=> _resetPassword(
-                    _identity,widget.otp,_newPasswordController.text.trim(),_confirmPasswordController.text.trim()
-                ),
-              );
-            })
-          ]),
-        ),
-      ),
-    );
+          ),
+        ],
+      );
+    });
   }
   void _resetPassword(String identity,String otp,String password,String conPassword){
     String password0 = _newPasswordController.text.trim();

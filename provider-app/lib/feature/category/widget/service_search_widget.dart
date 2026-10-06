@@ -7,123 +7,88 @@ class ServiceSearchWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: Dimensions.paddingSizeSmall,
-      ),
-      child: GetBuilder<ServiceCategoryController>(
-        builder: (serviceCategoryController) {
-          return TextField(
-            controller: serviceCategoryController.searchController,
-            style: Theme.of(context).textTheme.bodySmall!.copyWith(
-              color: Theme.of(context).textTheme.bodyLarge!.color,
-              fontSize: Dimensions.fontSizeDefault,
-            ),
-
-            cursorColor: Theme.of(context).hintColor,
-            autofocus: false,
-            textAlignVertical: TextAlignVertical.center,
-            textInputAction: TextInputAction.search,
-            onChanged: (text) =>
-                serviceCategoryController.showSuffixIcon(context, text),
-            onSubmitted: (text) {
-              if (text.isNotEmpty) {
-                serviceCategoryController
-                    .getSearchedServiceListBasedOnSubcategory(
-                      subCategoryId: subcategoryId,
-                      queryText: text,
-                    );
-              }
-              FocusScope.of(context).unfocus();
-            },
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 10,
-                horizontal: 22,
+    return GetBuilder<ServiceCategoryController>(
+      builder: (serviceCategoryController) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: InkColors.card,
+            borderRadius: BorderRadius.circular(50),
+            border: Border.all(color: InkColors.border),
+          ),
+          child: Row(
+            children: [
+               Icon(
+                Icons.search_rounded,
+                size: 16,
+                color: InkColors.mutedForeground,
               ),
-              fillColor: Theme.of(context).cardColor,
-              border: OutlineInputBorder(
-                borderRadius: const BorderRadius.horizontal(
-                  right: Radius.circular(10),
-                  left: Radius.circular(10),
-                ),
-                borderSide: BorderSide(
-                  width: 0.5,
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: const BorderRadius.horizontal(
-                  right: Radius.circular(10),
-                  left: Radius.circular(10),
-                ),
-                borderSide: BorderSide(
-                  width: 0.5,
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
-                ),
-              ),
-
-              focusedBorder: OutlineInputBorder(
-                borderRadius: const BorderRadius.horizontal(
-                  right: Radius.circular(10),
-                  left: Radius.circular(10),
-                ),
-                borderSide: BorderSide(
-                  width: 0.5,
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: const BorderRadius.horizontal(
-                  right: Radius.circular(10),
-                  left: Radius.circular(10),
-                ),
-                borderSide: BorderSide(
-                  width: 0.5,
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
-                ),
-              ),
-
-              isDense: true,
-              hintText: 'search_services'.tr,
-              hintStyle: Theme.of(context).textTheme.bodySmall!.copyWith(
-                fontSize: Dimensions.fontSizeDefault,
-                color: Theme.of(context).hintColor,
-              ),
-              filled: true,
-              suffixIcon: serviceCategoryController.isActiveSuffixIcon
-                  ? IconButton(
-                      color: Get.isDarkMode
-                          ? light.cardColor.withValues(alpha: 0.8)
-                          : Theme.of(context).colorScheme.primary,
-                      onPressed: () {
-                        if (serviceCategoryController.searchController.text
-                            .trim()
-                            .isNotEmpty) {
-                          serviceCategoryController.clearSearchController();
-                        }
-                        FocusScope.of(context).unfocus();
-                      },
-                      icon: Icon(
-                        Icons.cancel_outlined,
-                        size: 18,
-                        color: Theme.of(context).hintColor,
-                      ),
-                    )
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: Dimensions.paddingSizeDefault,
-                      ),
-                      child: Icon(
-                        Icons.search_outlined,
-                        color: Theme.of(context).hintColor,
-                        size: 22,
-                      ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: serviceCategoryController.searchController,
+                  style:  TextStyle(
+                    fontSize: 13,
+                    height: 1.3,
+                    color: InkColors.foreground,
+                  ),
+                  cursorColor: InkColors.foreground,
+                  autofocus: false,
+                  textAlignVertical: TextAlignVertical.center,
+                  textInputAction: TextInputAction.search,
+                  onChanged: (text) =>
+                      serviceCategoryController.showSuffixIcon(context, text),
+                  onSubmitted: (text) {
+                    if (text.isNotEmpty) {
+                      serviceCategoryController
+                          .getSearchedServiceListBasedOnSubcategory(
+                            subCategoryId: subcategoryId,
+                            queryText: text,
+                          );
+                    }
+                    FocusScope.of(context).unfocus();
+                  },
+                  decoration: InputDecoration(
+                    isDense: true,
+                    isCollapsed: true,
+                    border: InputBorder.none,
+                    hintText: 'search_services'.tr,
+                    hintStyle:  TextStyle(
+                      fontSize: 13,
+                      height: 1.3,
+                      color: InkColors.mutedForeground,
                     ),
-            ),
-          );
-        },
-      ),
+                    suffixIcon: serviceCategoryController.isActiveSuffixIcon
+                        ? IconButton(
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 24,
+                              minHeight: 24,
+                            ),
+                            onPressed: () {
+                              if (serviceCategoryController
+                                  .searchController.text
+                                  .trim()
+                                  .isNotEmpty) {
+                                serviceCategoryController
+                                    .clearSearchController();
+                              }
+                              FocusScope.of(context).unfocus();
+                            },
+                            icon:  Icon(
+                              Icons.cancel_outlined,
+                              size: 18,
+                              color: InkColors.mutedForeground,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

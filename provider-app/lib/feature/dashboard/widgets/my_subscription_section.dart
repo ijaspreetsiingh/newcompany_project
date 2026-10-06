@@ -1,134 +1,103 @@
-import 'package:demandium_provider/helper/extension_helper.dart';
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 import 'package:demandium_provider/util/core_export.dart';
 
 class MySubscriptionSection extends StatelessWidget {
   const MySubscriptionSection({super.key});
 
+  void _openPlanScreen() {
+    Get.toNamed(RouteHelper.getBusinessPlanScreen());
+  }
+
   @override
   Widget build(BuildContext context) {
-    final Color primary = Theme.of(context).primaryColor;
+    return GetBuilder<UserProfileController>(
+      builder: (userProfileController) {
+        final subscriptionInfo =
+            userProfileController.providerModel?.content?.subscriptionInfo;
+        final packageDetails = subscriptionInfo?.subscribedPackageDetails;
 
-    return GetBuilder<DashboardController>(
-      builder: (dashboardController) {
-        return dashboardController.dashboardSubscriptionList.isEmpty
-            ? const SizedBox()
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      Dimensions.paddingSizeDefault,
-                      Dimensions.paddingSizeDefault,
-                      Dimensions.paddingSizeDefault,
-                      Dimensions.paddingSizeSmall,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              height: 22,
-                              width: 5,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    primary,
-                                    Color.lerp(
-                                      primary,
-                                      const Color(0xFF1E40AF),
-                                      0.5,
-                                    )!,
-                                  ],
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                ),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            const SizedBox(width: Dimensions.paddingSizeSmall),
-                            Text(
-                              "mySubscription".tr,
-                              style: robotoBold.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge!
-                                    .color!
-                                    .withValues(alpha: 0.9),
-                              ),
-                            ),
-                          ],
-                        ),
+        if (packageDetails == null ||
+            (packageDetails.packageName ?? '').isEmpty) {
+          return const SizedBox();
+        }
 
-                        GestureDetector(
-                          onTap: () =>
-                              Get.toNamed(RouteHelper.getMySubscriptionRoute()),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: Dimensions.paddingSizeSmall,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(50),
-                            ),
-                            child: Text(
-                              "view_all".tr,
-                              style: robotoSemiBold.copyWith(
-                                fontSize: Dimensions.fontSizeSmall,
-                                color: primary,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: Dimensions.paddingSizeDefault,
-                    ),
-                    child: Container(
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(
-                          Dimensions.radiusExtraLarge,
-                        ),
-                        boxShadow: context.customThemeColors.cardShadow,
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: SizedBox(
-                        height: 100,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemBuilder: (context, index) {
-                            if (dashboardController
-                                    .dashboardSubscriptionList[index]
-                                    .subCategory !=
-                                null) {
-                              return SubscriptionCardItem(
-                                subscriptionModelData: dashboardController
-                                    .dashboardSubscriptionList[index],
-                                index: index,
-                              );
-                            } else {
-                              return const SizedBox();
-                            }
-                          },
-                          physics: const ClampingScrollPhysics(),
-                          itemCount: dashboardController
-                              .dashboardSubscriptionList
-                              .length,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+        final DateTime? packageEndDate = DateTime.tryParse(
+          packageDetails.packageEndDate ?? '',
+        );
+        final int daysLeft = packageEndDate == null
+            ? 0
+            : DateConverter.countDays(endDate: packageEndDate);
+        final String renewDate = packageEndDate == null
+            ? ''
+            : DateConverter.dateStringMonthYear(
+                packageEndDate,
+                format: 'd MMM',
               );
+        final String meta = renewDate.isEmpty
+            ? '$daysLeft ${'days_left'.tr}'
+            : '$daysLeft ${'days_left'.tr} · ${'renews'.tr} $renewDate';
+
+        return InkSection(
+          title: 'My subscription'.tr,
+          action: 'Manage'.tr,
+          onAction: _openPlanScreen,
+          child: InkCard(
+            onTap: _openPlanScreen,
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      InkEyebrow('current_plan'.tr),
+                      const SizedBox(height: 6),
+                      Text(
+                        packageDetails.packageName ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: displayBold.copyWith(
+                          fontSize: 18,
+                          height: 1.2,
+                          color: InkColors.foreground,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        meta,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: robotoRegular.copyWith(
+                          fontSize: 12,
+                          color: InkColors.mutedForeground,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: InkColors.foreground,
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  child: Text(
+                    'renew'.tr,
+                    style: robotoSemiBold.copyWith(
+                      fontSize: 12,
+                      color: InkColors.background,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       },
     );
   }

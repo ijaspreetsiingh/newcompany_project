@@ -71,3 +71,4 @@ class CategorySection extends StatelessWidget {
     );
   }
 }
+

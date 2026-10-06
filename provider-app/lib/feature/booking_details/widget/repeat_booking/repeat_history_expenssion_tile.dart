@@ -146,13 +146,16 @@ class _RepeatBookingHistoryExpansionTileState extends State<RepeatBookingHistory
           minVerticalPadding: -10,
           contentPadding: EdgeInsets.zero,
           visualDensity: VisualDensity.compact,
-          child: ListTile(
-            onTap: null,
-            leading: widget.leading,
-            dense: true,
-            contentPadding: widget.tilePadding ?? expansionTileTheme.tilePadding,
-            title: widget.titleWidget,
-            subtitle: widget.subtitle,
+          child: Material(
+            type: MaterialType.transparency,
+            child: ListTile(
+              onTap: null,
+              leading: widget.leading,
+              dense: true,
+              contentPadding: widget.tilePadding ?? expansionTileTheme.tilePadding,
+              title: widget.titleWidget,
+              subtitle: widget.subtitle,
+            ),
           ),
         ),
         ClipRect(

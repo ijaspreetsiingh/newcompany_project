@@ -277,10 +277,10 @@ class PaymentInfoWidget extends StatefulWidget {
   const PaymentInfoWidget({super.key, required this.methodInfo, this.offlinePaymentId, this.offlinePaymentData}) ;
 
   @override
-  State<PaymentInfoWidget> createState() => _PaymentInfoWidgetState();
+  State<PaymentInfoWidget> createState() => _PaymentInfowidgetstate();
 }
 
-class _PaymentInfoWidgetState extends State<PaymentInfoWidget> {
+class _PaymentInfowidgetstate extends State<PaymentInfoWidget> {
 
   @override
   void initState() {
@@ -323,10 +323,10 @@ class _PaymentInfoWidgetState extends State<PaymentInfoWidget> {
                       title:  widget.methodInfo?[index].fieldName?.replaceAll("_", " ").capitalizeFirst ?? "",
                       hintText:  widget.methodInfo?[index].placeholder?.replaceAll("_", " ").capitalizeFirst ?? "",
                       controller: checkoutController.offlinePaymentInputField[index],
-                      onValidate: widget.methodInfo?[index].isRequired == 1 ? (String? value){
+                      onValidate: widget.methodInfo?[index].isrequired == 1 ? (String? value){
                         return FormValidation().validateDynamicTextFiled(value!, widget.methodInfo?[index].fieldName?.replaceAll("_", " ").capitalizeFirst ?? "");
                       }: null,
-                      isRequired:  widget.methodInfo?[index].isRequired == 1 ? true : false,
+                      isrequired:  widget.methodInfo?[index].isrequired == 1 ? true : false,
                     ),
 
                   ),
@@ -340,3 +340,6 @@ class _PaymentInfoWidgetState extends State<PaymentInfoWidget> {
     );
   }
 }
+
+
+

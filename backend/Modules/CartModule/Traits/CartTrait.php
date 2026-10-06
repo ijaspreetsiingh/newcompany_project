@@ -22,12 +22,13 @@ trait CartTrait
 
         if (!isset($cart) || !isset($service)) return false;
 
-        $basicDiscount = basic_discount_calculation($service, $cart->service_cost * $quantity);
+        $basicDiscount = basic_discount_calculation($service, $cart->service_cost * $quantity, $cart->provider_id);
         $campaignDiscount = campaign_discount_calculation($service, $cart->service_cost * $quantity);
         $subtotal = round($cart->service_cost * $quantity, 2);
 
         $applicableDiscount = ($campaignDiscount >= $basicDiscount) ? $campaignDiscount : $basicDiscount;
-        $tax = round(((($cart->service_cost*$quantity - $applicableDiscount) * $service['tax']) / 100), 2);
+        $effectiveTaxPercent = providerEffectiveTaxPercent($cart->provider, (float) $service['tax']);
+        $tax = round(((($cart->service_cost*$quantity - $applicableDiscount) * $effectiveTaxPercent) / 100), 2);
 
         //between normal discount & campaign discount, greater one will be calculated
         $basicDiscount = $basicDiscount > $campaignDiscount ? $basicDiscount : 0;

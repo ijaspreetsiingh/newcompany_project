@@ -33,13 +33,14 @@ List<PopupMenuItem<DateTime>> buildMonthPickerItems({
             padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
             child: Text(
               DateConverter.dateStringMonthYear(monthDate, format: 'MMMM y'),
-              style: robotoRegular.copyWith(
-                fontSize: Dimensions.fontSizeDefault,
+              style: robotoMedium.copyWith(
+                fontSize: 13,
+                height: 1.3,
                 color: isDisabled
-                    ? Theme.of(context).disabledColor
+                    ? InkColors.accent
                     : isSelected
-                    ? Theme.of(context).primaryColor
-                    : Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.7),
+                    ? InkColors.foreground
+                    : InkColors.mutedForeground,
               ),
             ),
           ),

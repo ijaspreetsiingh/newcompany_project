@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -22,6 +23,7 @@ use Modules\BookingModule\Entities\BookingRepeat;
 use Modules\BookingModule\Entities\BookingRepeatDetails;
 use Modules\BookingModule\Entities\BookingRepeatHistory;
 use Modules\BookingModule\Entities\BookingScheduleHistory;
+use Modules\BookingModule\Entities\BookingServiceman;
 use Modules\BookingModule\Entities\BookingStatusHistory;
 use Modules\BookingModule\Http\Traits\BookingTrait;
 use Modules\CartModule\Entities\Cart;
@@ -880,8 +882,12 @@ class BookingController extends Controller
             $bookingIgnore->provider_id = $providerId;
 
             $wasAutoAssigned = (bool)$booking->auto_assigned;
+            // ON-mode decision: provider assignment chhod raha hai -> booking usi
+            // provider ke paas rahegi par system khud nearest serviceman assign karega
+            $isProviderDecision = $booking->assignment_mode === 'provider_manual'
+                && $booking->provider_id == $providerId;
 
-            if (!empty($booking->provider_id)) {
+            if (!$isProviderDecision && !empty($booking->provider_id)) {
                 $booking->provider_id = null;
 
                 $fcmToken = $booking?->customer?->fcm_token ?? null;
@@ -895,7 +901,7 @@ class BookingController extends Controller
                 }
             }
 
-            // auto-assign flow: is provider ka timer ignore mark karo, phir next provider dhundo
+            // auto-assign flow: is provider ka timer ignore mark karo
             if ($wasAutoAssigned) {
                 ProviderBookingTimer::where('booking_id', $bookingId)
                     ->where('provider_id', $providerId)
@@ -905,16 +911,31 @@ class BookingController extends Controller
                 $booking->auto_assign_expires_at = null;
             }
 
+            if ($isProviderDecision) {
+                // decision window band — automatic mode me convert karo
+                $booking->auto_assigned = 0;
+                $booking->assignment_mode = 'auto';
+            }
 
-            DB::transaction(function () use ($bookingIgnore, $booking, $repeatBookings) {
+
+            DB::transaction(function () use ($bookingIgnore, $booking, $repeatBookings, $isProviderDecision) {
                 $bookingIgnore->save();
                 $booking->save();
 
                 foreach ($repeatBookings as $repeatBooking) {
-                    $repeatBooking->provider_id = null;
-                    $repeatBooking->save();
+                    // decision mode me booking provider ke paas hi rahti hai
+                    if (!$isProviderDecision) {
+                        $repeatBooking->provider_id = null;
+                        $repeatBooking->save();
+                    }
                 }
             });
+
+            if ($isProviderDecision) {
+                // provider ne chhoda -> system khud nearest serviceman assign kare
+                dispatchNearestServicemanRequest($booking);
+                return response()->json(response_formatter(BOOKING_IGNORE_SUCCESS_200), 200);
+            }
 
             // auto-assign booking hai toh agli eligible provider ko bhejo
             if ($wasAutoAssigned) {
@@ -1226,7 +1247,7 @@ class BookingController extends Controller
     public function assignServiceman(Request $request, string $bookingId): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'serviceman_id' => 'required|uuid',
+            'serviceman_id' => 'required|string|max:36',
         ]);
 
         if ($validator->fails()) {
@@ -1239,11 +1260,152 @@ class BookingController extends Controller
         }
 
         if (isset($booking)) {
-            $booking->serviceman_id = $request['serviceman_id'];
+            $serviceman = \Modules\UserManagement\Entities\Serviceman::where('id', $request['serviceman_id'])
+                ->where('provider_id', $request->user()->provider->id)
+                ->first();
+
+            if (!isset($serviceman)) {
+                return response()->json(response_formatter(DEFAULT_400, null, 'Serviceman not found in your company'), 400);
+            }
+
+            $booking->serviceman_id = $serviceman->id;
             $booking->save();
             return response()->json(response_formatter(SERVICEMAN_ASSIGN_SUCCESS_200, $booking), 200);
         }
         return response()->json(response_formatter(DEFAULT_204), 200);
+    }
+
+    /**
+     * Assign screen ke liye suggestions: customer location se distance-wise
+     * servicemen + decision window ka remaining time + team size limit
+     */
+    public function assignSuggestions(Request $request, string $bookingId): JsonResponse
+    {
+        $provider = $request->user()->provider;
+        $booking = $this->booking
+            ->where('id', $bookingId)
+            ->where('provider_id', $provider->id)
+            ->first();
+
+        if (!isset($booking)) {
+            return response()->json(response_formatter(DEFAULT_204), 200);
+        }
+
+        $slots = BookingServiceman::where('booking_id', $booking->id)
+            ->pluck('status', 'serviceman_id');
+
+        // provider ko sab apne servicemen dikhne chahiye (auto-loop me tried honge,
+        // manual assign me phir bhi provider ki marzi) — status flag ke saath
+        $servicemen = findNearestServicemen($booking, $provider->id, [])
+            ->map(function ($serviceman) use ($slots) {
+                return [
+                    'id' => $serviceman->id,
+                    'name' => trim(($serviceman->user?->first_name ?? '') . ' ' . ($serviceman->user?->last_name ?? '')),
+                    'image' => $serviceman->user?->profile_image_full_path
+                        ?? ($serviceman->user?->profile_image ? asset('public/assets/provider-module/img/user2x.png') : null),
+                    'fcm_token' => $serviceman->user?->fcm_token ? '1' : '0',
+                    'distance_km' => $serviceman->distance_km !== null ? round($serviceman->distance_km, 2) : null,
+                    'slot_status' => $slots[$serviceman->id] ?? null,
+                ];
+            })
+            ->values();
+
+        return response()->json(response_formatter(DEFAULT_200, [
+            'booking_id' => $booking->id,
+            'booking_status' => $booking->booking_status,
+            'assignment_mode' => $booking->assignment_mode,
+            'remaining_seconds' => $booking->auto_assign_expires_at
+                ? max(0, now()->diffInSeconds($booking->auto_assign_expires_at, false))
+                : 0,
+            'wait_time' => (int) ($provider->auto_assign_wait_time ?: 60),
+            'max_team_size' => 5,
+            'servicemen' => $servicemen,
+        ]), 200);
+    }
+
+    /**
+     * Provider ka decision: 1 ya zyada (team, max 5) servicemen assign karo.
+     * Booking tab tak PENDING rehti hai jab tak servicemen accept na karein.
+     */
+    public function assignServicemen(Request $request, string $bookingId): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'serviceman_ids' => 'required|array|min:1|max:5',
+            'serviceman_ids.*' => 'string|max:36',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
+        }
+
+        $provider = $request->user()->provider;
+        $booking = $this->booking
+            ->where('id', $bookingId)
+            ->where('provider_id', $provider->id)
+            ->first();
+
+        if (!isset($booking)) {
+            return response()->json(response_formatter(DEFAULT_204), 200);
+        }
+
+        if ($booking->booking_status !== 'pending') {
+            return response()->json(response_formatter(DEFAULT_400, null, [['error_code' => 'booking', 'message' => 'Booking is not pending']]), 400);
+        }
+
+        $servicemanIds = array_values(array_unique($request->input('serviceman_ids')));
+        $validServicemen = \Modules\UserManagement\Entities\Serviceman::whereIn('id', $servicemanIds)
+            ->where('provider_id', $provider->id)
+            ->pluck('id')
+            ->toArray();
+
+        if (count($validServicemen) !== count($servicemanIds)) {
+            return response()->json(response_formatter(DEFAULT_400, null, 'Serviceman not found in your company'), 400);
+        }
+
+        $waitTime = max(30, (int) ($provider->auto_assign_wait_time ?: 60));
+
+        DB::transaction(function () use ($booking, $validServicemen, $waitTime) {
+            // purane pending slots hatao (re-assign case)
+            BookingServiceman::where('booking_id', $booking->id)
+                ->where('status', BookingServiceman::STATUS_PENDING)
+                ->delete();
+
+            foreach ($validServicemen as $servicemanId) {
+                BookingServiceman::updateOrCreate(
+                    ['booking_id' => $booking->id, 'serviceman_id' => $servicemanId],
+                    ['status' => BookingServiceman::STATUS_PENDING, 'expires_at' => now()->addSeconds($waitTime)]
+                );
+            }
+
+            // provider decision window band
+            $booking->serviceman_id = $validServicemen[0];
+            $booking->serviceman_assign_expires_at = now()->addSeconds($waitTime);
+            $booking->auto_assign_expires_at = null;
+            $booking->assignment_mode = 'provider_manual';
+            $booking->save();
+
+            ProviderBookingTimer::where('booking_id', $booking->id)
+                ->where('provider_id', $booking->provider_id)
+                ->where('status', 'pending')
+                ->update(['status' => 'accepted']);
+        });
+
+        // har assigned serviceman ko push
+        try {
+            $servicemen = \Modules\UserManagement\Entities\Serviceman::whereIn('id', $validServicemen)
+                ->with('user:id,fcm_token')
+                ->get();
+            foreach ($servicemen as $serviceman) {
+                $fcmToken = $serviceman?->user?->fcm_token ?? null;
+                if (!is_null($fcmToken)) {
+                    device_notification($fcmToken, 'New Service Assignment', 'auto_assign', null, $booking->id, 'new_booking_request');
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error('assignServicemen notification failed: ' . $e->getMessage());
+        }
+
+        return response()->json(response_formatter(SERVICEMAN_ASSIGN_SUCCESS_200, $booking->load('servicemenAssignments')), 200);
     }
 
 
@@ -1361,7 +1523,7 @@ class BookingController extends Controller
 
 
         $data = [];
-
+        $providerId = $request->user()->provider->id;
 
         foreach (json_decode($request['service_info'], true) as $item) {
             $service = Service::active()
@@ -1375,7 +1537,7 @@ class BookingController extends Controller
             $quantity = $item['quantity'];
             $variationPrice = $service?->variations[0]?->price;
 
-            $basicDiscount = basic_discount_calculation($service, $variationPrice * $quantity);
+            $basicDiscount = basic_discount_calculation($service, $variationPrice * $quantity, $providerId);
             $campaignDiscount = campaign_discount_calculation($service, $variationPrice * $quantity);
             $subTotal = round($variationPrice * $quantity, 2);
 
@@ -1933,6 +2095,7 @@ class BookingController extends Controller
             'booking_id' => $booking->id,
             'booking_status' => $booking->booking_status,
             'auto_assigned' => (int)$booking->auto_assigned,
+            'assignment_mode' => $booking->assignment_mode,
             'expires_at' => $booking->auto_assign_expires_at?->timestamp,
             'remaining_seconds' => $booking->auto_assign_expires_at
                 ? max(0, now()->diffInSeconds($booking->auto_assign_expires_at, false))

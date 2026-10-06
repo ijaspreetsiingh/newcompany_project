@@ -38,7 +38,7 @@ class CustomSlideUpAnimationWidget extends StatefulWidget {
   /// Callback when animation starts
   final VoidCallback? onAnimationStart;
 
-  /// Whether to play the animation on widget initialization
+  /// Whether to play the animation on widget inttialization
   /// Default: true
   final bool autoPlay;
 
@@ -81,10 +81,10 @@ class CustomSlideUpAnimationWidget extends StatefulWidget {
         'fadeEndOpacity must be between 0.0 and 1.0');
 
   @override
-  State<CustomSlideUpAnimationWidget> createState() => CustomSlideUpAnimationWidgetState();
+  State<CustomSlideUpAnimationWidget> createState() => CustomSlideUpAnimationwidgetstate();
 }
 
-class CustomSlideUpAnimationWidgetState extends State<CustomSlideUpAnimationWidget>
+class CustomSlideUpAnimationwidgetstate extends State<CustomSlideUpAnimationWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _slideAnimation;
@@ -100,7 +100,7 @@ class CustomSlideUpAnimationWidgetState extends State<CustomSlideUpAnimationWidg
     }
   }
 
-  /// Initialize the animation controller and animations
+  /// initialize the animation controller and animations
   void _initializeAnimation() {
     _controller = AnimationController(
       vsync: this,
@@ -205,8 +205,8 @@ class CustomSlideUpAnimationWidgetState extends State<CustomSlideUpAnimationWidg
 /// Extension to provide easy access to the animation state
 extension CustomSlideUpAnimationExtension on BuildContext {
   /// Find the nearest CustomSlideUpAnimationState ancestor
-  CustomSlideUpAnimationWidgetState? findSlideUpAnimation() {
-    return findAncestorStateOfType<CustomSlideUpAnimationWidgetState>();
+  CustomSlideUpAnimationwidgetstate? findSlideUpAnimation() {
+    return findAncestorStateOfType<CustomSlideUpAnimationwidgetstate>();
   }
 }
 
@@ -236,8 +236,8 @@ class CustomStaggeredSlideUpAnimation extends StatelessWidget {
   /// Animation curve
   final Curve curve;
 
-  /// Initial delay before first animation starts
-  final Duration initialDelay;
+  /// inttial delay before first animation starts
+  final Duration inttialDelay;
 
   /// Whether to animate opacity along with the slide
   final bool fadeIn;
@@ -251,7 +251,7 @@ class CustomStaggeredSlideUpAnimation extends StatelessWidget {
     this.staggerDelay = const Duration(milliseconds: 100),
     this.duration = const Duration(milliseconds: 400),
     this.curve = Curves.easeOutCubic,
-    this.initialDelay = Duration.zero,
+    this.inttialDelay = Duration.zero,
     this.fadeIn = false,
     this.slideOffset = 1.0,
   });
@@ -265,7 +265,7 @@ class CustomStaggeredSlideUpAnimation extends StatelessWidget {
             (index) => CustomSlideUpAnimationWidget(
           duration: duration,
           curve: curve,
-          delay: initialDelay + (staggerDelay * index),
+          delay: inttialDelay + (staggerDelay * index),
           fadeIn: fadeIn,
           slideOffset: slideOffset,
           child: children[index],
@@ -300,3 +300,5 @@ class SlideUpAnimationPresets {
   /// Elastic curve
   static const Curve elastic = Curves.elasticOut;
 }
+
+

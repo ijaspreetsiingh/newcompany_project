@@ -12,7 +12,9 @@ class ServicemanNotificationSetup extends StatelessWidget {
       List<NotificationSetup>? nList = notificationSetupController.tabController?.index == 1 && notificationSetupController.isActiveSuffixIcon ?
       notificationSetupController.searchedServicemanNotificationSetupList : notificationSetupController.servicemanNotificationSetupList;
 
-      return Padding( padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+      final bool canUpdate = nList != null && nList.isNotEmpty;
+
+      return Padding( padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           children: [
             Expanded(
@@ -23,16 +25,16 @@ class ServicemanNotificationSetup extends StatelessWidget {
                 );
               }, itemCount: nList.length,
                 separatorBuilder: (context, index){
-                  return const SizedBox(height: Dimensions.paddingSizeSmall,);
+                  return const SizedBox(height: 12,);
                 },
               ) :  nList != null && nList.isEmpty ? NoDataScreen(text: "no_data_found".tr,
               ) : nList == null ? const NotificationSetupShimmer() : const SizedBox(),
             ),
 
-            const SizedBox(height: Dimensions.paddingSizeSmall,),
+            const SizedBox(height: 12,),
 
             CustomButton(btnTxt: "update".tr,
-              onPressed: nList != null && nList.isNotEmpty? (){
+              onPressed: canUpdate ? (){
                 dynamic body;
                 if (!notificationSetupController.isActiveSuffixIcon) {
                   body = notificationSetupController.getNotificationObject(notificationSetupController.servicemanNotificationSetupList);
@@ -42,8 +44,12 @@ class ServicemanNotificationSetup extends StatelessWidget {
                 notificationSetupController.updateNotificationSetup(body: body);
               } : null,
               isLoading: notificationSetupController.isLoading,
+              color: InkColors.foreground,
+              textColor: canUpdate ? InkColors.background : InkColors.foreground,
+              radius: 50,
+              height: 44,
             ),
-            const SizedBox(height: Dimensions.paddingSizeDefault,),
+            const SizedBox(height: 16,),
           ],
         ),
       );

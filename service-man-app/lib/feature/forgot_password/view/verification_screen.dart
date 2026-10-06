@@ -43,137 +43,159 @@ class VerificationScreenState extends State<VerificationScreen> {
     });
   }
 
+  String _formatSeconds() {
+    final int seconds = _seconds ?? 0;
+    final String minutes = (seconds ~/ 60).toString().padLeft(2, '0');
+    final String remainder = (seconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$remainder';
+  }
+
   @override
   void dispose() {
-    super.dispose();
     _timer?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: CustomAppBar(title: 'otp_verification'.tr),
-      body: Center(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-          child: GetBuilder<AuthController>(builder: (authController) {
-            return Column(children: [
-              Image.asset(Images.otp, width: 140),
-              const SizedBox(height: Dimensions.paddingSizeDefault,),
 
-              Get.find<SplashController>().configModel?.content?.appEnvironment == "demo" ? Text(
-                'for_demo_purpose'.tr, style: robotoRegular,
-              ) : RichText(
-                textAlign: TextAlign.center,
-                text: TextSpan(
-                  style: DefaultTextStyle.of(context).style,
-                  children: [
-                    TextSpan(text: 'we_have_sent_a_verification_code_to'.tr, style: robotoRegular.copyWith(
-                      color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.5),
+    final bool isDemo =
+        Get.find<SplashController>().configModel?.content?.appEnvironment == "demo";
+    final String subtitle = isDemo
+        ? 'for_demo_purpose'.tr
+        : '${'we_have_sent_a_verification_code_to'.tr}\n${StringParser.obfuscateMiddle(_identity ?? "")}';
 
-                    )),
-                    const TextSpan(text: "\n"),
-                    TextSpan(text: StringParser.obfuscateMiddle(_identity??""), style: robotoMedium.copyWith(
-                      color: Theme.of(context).textTheme.bodyLarge!.color,)
+    return GetBuilder<AuthController>(builder: (authController) {
+      return AuthShell(
+        title: 'enter_verification'.tr,
+        subtitle: subtitle,
+        onBack: () {
+          if (Navigator.canPop(context)) {
+            Get.back();
+          } else {
+            Get.offAllNamed(RouteHelper.getInitialRoute());
+          }
+        },
+        children: [
+          PinCodeTextField(
+            length: 6,
+            appContext: context,
+            keyboardType: TextInputType.number,
+            animationType: AnimationType.slide,
+            mainAxisAlignment: MainAxisAlignment.center,
+            pinTheme: PinTheme(
+              shape: PinCodeFieldShape.box,
+              fieldHeight: 48,
+              fieldWidth: (width - 88) / 6,
+              borderWidth: 1,
+              activeBorderWidth: 1,
+              inactiveBorderWidth: 1,
+              errorBorderWidth: 1,
+              selectedBorderWidth: 1,
+              borderRadius: BorderRadius.circular(kRadiusMd),
+              selectedColor: authController.isWrongOtpSubmitted ? context.kDestructive : context.kForeground,
+              selectedFillColor: context.kCard,
+              inactiveFillColor: context.kCard,
+              inactiveColor: context.kInputBorder,
+              activeColor: authController.isWrongOtpSubmitted ? context.kDestructive : context.kForeground,
+              activeFillColor: context.kCard,
+              errorBorderColor: context.kDestructive,
+            ),
+            textStyle: robotoBold.copyWith(
+              fontSize: 18,
+              color: context.kForeground,
+            ),
+            animationDuration: const Duration(milliseconds: 300),
+            backgroundColor: Colors.transparent,
+            enableActiveFill: true,
+            onChanged: authController.updateVerificationCode,
+            beforeTextPaste: (text) => true,
+            pastedTextStyle: robotoRegular.copyWith(color: context.kForeground),
+            separatorBuilder: (context, index){
+              return const SizedBox(width: 8,);
+            },
+          ),
+
+          if (authController.isWrongOtpSubmitted)
+            Text('incorrect_otp'.tr,
+              style: robotoRegular.copyWith(fontSize: 12, color: context.kDestructive),
+              textAlign: TextAlign.center,
+            ),
+
+          if (widget.identity != null && widget.identity!.isNotEmpty && _seconds! > 0)
+            Text.rich(
+              textAlign: TextAlign.center,
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '${'resend_code'.tr} ',
+                    style: robotoRegular.copyWith(
+                      fontSize: 12,
+                      color: context.kMutedForeground,
                     ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: Dimensions.paddingSizeDefault * 2,),
-
-              PinCodeTextField(
-                length: 6,
-                appContext: context,
-                keyboardType: TextInputType.number,
-                animationType: AnimationType.slide,
-                mainAxisAlignment: MainAxisAlignment.center,
-                pinTheme: PinTheme(
-                  shape: PinCodeFieldShape.box,
-                  fieldHeight: ResponsiveHelper.isMobile(context) ? width/9 : 60,
-                  fieldWidth: ResponsiveHelper.isMobile(context) ? width/9 : 60,
-                  borderWidth: 0.5,
-                  activeBorderWidth: 0.5,
-                  inactiveBorderWidth: 0.5,
-                  errorBorderWidth: 0.5,
-                  borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                  selectedColor:  authController.isWrongOtpSubmitted ? Theme.of(context).colorScheme.error.withValues(alpha:0.5) : Theme.of(context).primaryColor.withValues(alpha:0.2),
-                  selectedFillColor: Get.isDarkMode?Colors.grey.withValues(alpha:0.6):Colors.white,
-                  inactiveFillColor: Get.isDarkMode ? Theme.of(context).disabledColor.withValues(alpha: 0.50) : Theme.of(context).disabledColor.withValues(alpha:0.20),
-                  inactiveColor: Theme.of(context).primaryColor.withValues(alpha:0.2),
-                  activeColor: authController.isWrongOtpSubmitted ? Theme.of(context).colorScheme.error : Theme.of(context).primaryColor.withValues(alpha:0.4),
-                  activeFillColor: Theme.of(context).disabledColor.withValues(alpha:0.2),
-                ),
-                animationDuration: const Duration(milliseconds: 300),
-                backgroundColor: Colors.transparent,
-                enableActiveFill: true,
-                onChanged: authController.updateVerificationCode,
-                beforeTextPaste: (text) => true,
-                pastedTextStyle: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color),
-                separatorBuilder: (context, index){
-                  return const SizedBox(width: Dimensions.paddingSizeDefault,);
-                },
-              ),
-
-              authController.isWrongOtpSubmitted ? Text('incorrect_otp'.tr,
-                style: robotoRegular.copyWith(color: Theme.of(context).colorScheme.error),
-                textAlign: TextAlign.center,
-              ) : const Text(" "),
-
-              const SizedBox(height: Dimensions.paddingSizeSmall,),
-
-
-              CustomButton(
-                margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
-                btnTxt: "verify".tr, isLoading: authController.isLoading!,
-                onPressed: authController.verificationCode.length == 6 ? (){
-                  _otpVerify(_identity!,widget.identityType, authController.verificationCode,authController);
-                } : null,
-              ),
-
-              (widget.identity != null && widget.identity!.isNotEmpty) ? Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text(
-                  'did_not_receive_the_code'.tr,
-                  style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.5)),
-                ),
-                TextButton(
-                  style: TextButton.styleFrom(
-                    minimumSize: const Size(1, 40),
-                    backgroundColor: Theme.of(context).colorScheme.surface,
-                    textStyle: TextStyle(color: Theme.of(context).primaryColor)
                   ),
-                  onPressed: _seconds! < 1 ? () {
+                  TextSpan(
+                    text: _formatSeconds(),
+                    style: robotoBold.copyWith(
+                      fontSize: 12,
+                      color: context.kForeground,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-                    var config = Get.find<SplashController>().configModel?.content;
-                    SendOtpType  type = config?.firebaseOtpVerification == 1 && widget.identityType == "phone"
-                        ? SendOtpType.firebase : SendOtpType.forgetPassword;
+          KButton(
+            label: (authController.isLoading ?? false) ? 'loading'.tr : 'verify_code'.tr,
+            height: 48,
+            onTap: authController.verificationCode.length == 6 && !(authController.isLoading ?? false)
+                ? (){
+                    _otpVerify(_identity!,widget.identityType, authController.verificationCode,authController);
+                  }
+                : null,
+          ),
 
-                    authController.sendVerificationCode(identity: _identity!, identityType: widget.identityType, type: type, resendOtp: true).then((status){
-                      if(status !=null){
-                        if (status.isSuccess!) {
-                          _startTimer();
-                          showCustomSnackBar('resend_code_successful'.tr, type : ToasterMessageType.success);
-                        } else {
-                          showCustomSnackBar(status.message);
-                        }
+          if (widget.identity != null && widget.identity!.isNotEmpty)
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _seconds! < 1 ? () {
+
+                  var config = Get.find<SplashController>().configModel?.content;
+                  SendOtpType  type = config?.firebaseOtpVerification == 1 && widget.identityType == "phone"
+                      ? SendOtpType.firebase : SendOtpType.forgetPassword;
+
+                  authController.sendVerificationCode(identity: _identity!, identityType: widget.identityType, type: type, resendOtp: true).then((status){
+                    if(status !=null){
+                      if (status.isSuccess!) {
+                        _startTimer();
+                        showCustomSnackBar('resend_code_successful'.tr, type : ToasterMessageType.success);
+                      } else {
+                        showCustomSnackBar(status.message);
                       }
-                    });
+                    }
+                  });
 
-                  } : null,
-                  child: Text('${'resend'.tr}${_seconds! > 0 ? ' ($_seconds)' : ''}',style: robotoRegular.copyWith(
-                    fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).primaryColor,)),
+                } : null,
+                borderRadius: BorderRadius.circular(kRadiusMd),
+                child: SizedBox(
+                  height: 48,
+                  child: Center(
+                    child: Text(
+                      'resend_code'.tr,
+                      style: robotoMedium.copyWith(
+                        fontSize: 14,
+                        color: _seconds! < 1 ? context.kForeground : context.kMutedForeground,
+                      ),
+                    ),
+                  ),
                 ),
-              ]) : const SizedBox(),
-
-              SizedBox(height: Get.height*0.1,)
-            ]);
-          }),
-        ),
-      ),
-    );
+              ),
+            ),
+        ],
+      );
+    });
   }
 
   void _otpVerify(String identity,String identityType,String otp, AuthController authController) async {

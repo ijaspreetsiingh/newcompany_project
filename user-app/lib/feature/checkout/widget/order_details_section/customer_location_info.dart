@@ -26,14 +26,16 @@ class CustomerLocationInfo extends StatelessWidget {
 
         return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-          isFromCreatePostPage ? const SizedBox() : Text('customer_details'.tr, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault)),
+          isFromCreatePostPage ? const SizedBox() : Text('customer_details'.tr, style: robotoBold.copyWith(
+            fontSize: Dimensions.fontSizeLarge, color: Theme.of(context).textTheme.bodyLarge!.color)),
           const SizedBox(height: Dimensions.paddingSizeDefault),
 
+          /// nest. address card : bordered rounded + home icon chip
           Container( width: Get.width,
             padding: const EdgeInsets.symmetric(horizontal : Dimensions.paddingSizeDefault,vertical: Dimensions.paddingSizeDefault),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(Dimensions.radiusSeven), color: Theme.of(context).cardColor,
-              border: Border.all(color: Theme.of(context).hintColor.withValues(alpha: 0.3), width: 0.5),
+              borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge), color: Theme.of(context).cardColor,
+              border: Border.all(color: Theme.of(context).primaryColorLight.withValues(alpha: Get.isDarkMode ? 0.4 : 1)),
             ),
             child: Row(mainAxisAlignment:MainAxisAlignment.spaceBetween, crossAxisAlignment:CrossAxisAlignment.start, children: [
               Expanded( flex: 7,
@@ -57,10 +59,11 @@ class CustomerLocationInfo extends StatelessWidget {
 
 
                   if(addressModel.address != null && addressModel.address != "" ) Row( crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.start, children: [
-                    Icon(Icons.location_on_sharp, size: 15, color: Theme.of(context).colorScheme.primary),
+                    Icon(Icons.location_on_outlined, size: 15, color: Theme.of(context).hintColor),
                     const SizedBox(width: 3),
                     Expanded( child: Text( addressModel.address ?? "", maxLines: 2, overflow: TextOverflow.ellipsis,
-                      style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall),
+                      style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,
+                        color: Theme.of(context).textTheme.bodySmall?.color),
                     )),
                   ]),
 
@@ -151,10 +154,10 @@ class _CustomerInfoInputWidget extends StatefulWidget {
   const _CustomerInfoInputWidget({this.address});
 
   @override
-  State<_CustomerInfoInputWidget> createState() => _CustomerInfoInputWidgetState();
+  State<_CustomerInfoInputWidget> createState() => _CustomerInfoInputwidgetstate();
 }
 
-class _CustomerInfoInputWidgetState extends State<_CustomerInfoInputWidget> {
+class _CustomerInfoInputwidgetstate extends State<_CustomerInfoInputWidget> {
 
   final GlobalKey<FormState> addressFormKey = GlobalKey<FormState>();
 
@@ -268,3 +271,5 @@ class _CustomerInfoInputWidgetState extends State<_CustomerInfoInputWidget> {
     });
   }
 }
+
+

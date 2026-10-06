@@ -24,15 +24,16 @@ class _SubcategoryServiceViewState extends State<SubcategoryServiceView>  with S
       width:ResponsiveHelper.isDesktop(context)? Dimensions.webMaxWidth/1.5:Dimensions.webMaxWidth,
       padding: const EdgeInsets.only(top: Dimensions.paddingSizeLarge),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(Dimensions.radiusExtraLarge)),
+        color: context.kCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(kRadiusLg)),
+        border: Border(top: BorderSide(color: context.kBorder, width: 1)),
       ),
       child: SingleChildScrollView(
         child: Column(mainAxisSize: MainAxisSize.min,crossAxisAlignment: CrossAxisAlignment.start, children: [
 
           Center(child: Container(height: 5,width: 90,decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(Dimensions.fontSizeDefault),
-            color: Theme.of(context).hintColor,
+            color: context.kMuted,
           ),)),
           const SizedBox(height: Dimensions.paddingSizeDefault,),
 
@@ -75,13 +76,9 @@ class _SubcategoryServiceViewState extends State<SubcategoryServiceView>  with S
                           child: Container(
                             padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
                             decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                                boxShadow: Get.find<ThemeController>().darkTheme? [const BoxShadow()]: [BoxShadow(
-                                  offset: const Offset(0, 2),
-                                  blurRadius: 5,
-                                  color: Colors.black.withValues(alpha:0.05),
-                                )],
-                                color: Theme.of(context).cardColor
+                                borderRadius: BorderRadius.circular(kRadiusMd),
+                                border: Border.all(color: context.kBorder, width: 1),
+                                color: context.kCard
                             ),
                             child: Row(crossAxisAlignment: CrossAxisAlignment.start,children: [
                               ClipRRect(borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
@@ -98,7 +95,7 @@ class _SubcategoryServiceViewState extends State<SubcategoryServiceView>  with S
                                       maxLines: 1, overflow: TextOverflow.ellipsis),
                                   const SizedBox(height: Dimensions.paddingSizeSmall),
                                   Text("start_form".tr,style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                                      color: Theme.of(context).textTheme.bodyMedium!.color!.withValues(alpha:0.5)),),
+                                      color: context.kMutedForeground),),
                                   const SizedBox(height: Dimensions.paddingSizeExtraSmall),
                                   Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +109,7 @@ class _SubcategoryServiceViewState extends State<SubcategoryServiceView>  with S
                                             style: robotoRegular.copyWith(
                                                 fontSize: Dimensions.fontSizeLarge,
                                                 decoration: TextDecoration.lineThrough,
-                                                color: Theme.of(context).colorScheme.error.withValues(alpha:.8)),),
+                                                color: context.kDestructive.withValues(alpha:.8)),),
                                         ),
                                       discountModel.discountAmount! > 0?
                                       Directionality(
@@ -124,13 +121,13 @@ class _SubcategoryServiceViewState extends State<SubcategoryServiceView>  with S
                                               discountType: discountModel.discountAmountType),
                                           style: robotoMedium.copyWith(
                                               fontSize: Dimensions.paddingSizeDefault,
-                                              color:  Get.isDarkMode? Theme.of(context).primaryColorLight: Theme.of(context).primaryColor),
+                                              color: context.kForeground),
                                         ),
                                       ): Directionality(
                                         textDirection: TextDirection.ltr,
                                         child: Text( PriceConverter.convertPrice(lowestPrice.toDouble()),
                                           style: robotoMedium.copyWith(fontSize:Dimensions.fontSizeLarge,
-                                            color: Get.isDarkMode? Theme.of(context).primaryColorLight: Theme.of(context).primaryColor,
+                                            color: context.kForeground,
                                           ),
                                         ),
                                       ),
@@ -187,9 +184,9 @@ class SubCategoryShimmer extends StatelessWidget {
       padding: ResponsiveHelper.isDesktop(context) ? const EdgeInsets.all(Dimensions.paddingSizeSmall)
           : const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
       decoration: BoxDecoration(
-        color: Get.isDarkMode?Colors.grey[700]:Colors.white,
-        borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-        boxShadow: Get.isDarkMode? null: [BoxShadow(color: Colors.grey[300]!, blurRadius: 10, spreadRadius: 1)],
+        color: context.kCard,
+        borderRadius: BorderRadius.circular(kRadiusMd),
+        border: Border.all(color: context.kBorder, width: 1),
       ),
       child: Shimmer(
         duration: const Duration(seconds: 2),
@@ -203,8 +200,8 @@ class SubCategoryShimmer extends StatelessWidget {
                   height: desktop ? 70 : 50,
                   width: desktop ? 70 : 50,
                   decoration: BoxDecoration(
-                      color: Colors.grey[400],
-                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault)
+                      color: context.kMuted,
+                      borderRadius: BorderRadius.circular(kRadiusSm)
                   ),
                 ),
                 const SizedBox(width: Dimensions.paddingSizeDefault,),
@@ -214,8 +211,8 @@ class SubCategoryShimmer extends StatelessWidget {
                     Container(
                       height: desktop ? 20 : 20,
                       decoration: BoxDecoration(
-                          color: Colors.grey[400],
-                          borderRadius: BorderRadius.circular(Dimensions.radiusSmall)
+                          color: context.kMuted,
+                          borderRadius: BorderRadius.circular(kRadiusSm)
                       ),
                     ),
                     const SizedBox(height: Dimensions.paddingSizeExtraSmall),
@@ -223,8 +220,8 @@ class SubCategoryShimmer extends StatelessWidget {
                       height: desktop ? 12 : 8,
                       margin: const EdgeInsets.only(right: Dimensions.paddingSizeLarge),
                       decoration: BoxDecoration(
-                          color: Colors.grey[400],
-                          borderRadius: BorderRadius.circular(Dimensions.radiusSmall)
+                          color: context.kMuted,
+                          borderRadius: BorderRadius.circular(kRadiusSm)
                       ),
                     ),
                     const SizedBox(height: Dimensions.paddingSizeExtraSmall),
@@ -232,8 +229,8 @@ class SubCategoryShimmer extends StatelessWidget {
                       height: desktop ? 12 : 8,
                       margin: const EdgeInsets.only(right: 100),
                       decoration: BoxDecoration(
-                          color: Colors.grey[400],
-                          borderRadius: BorderRadius.circular(Dimensions.radiusSmall)
+                          color: context.kMuted,
+                          borderRadius: BorderRadius.circular(kRadiusSm)
                       ),
                     ),
                   ]),

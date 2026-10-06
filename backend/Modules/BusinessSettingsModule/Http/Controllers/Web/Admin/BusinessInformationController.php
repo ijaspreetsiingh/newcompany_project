@@ -423,7 +423,7 @@ class BusinessInformationController extends Controller
     {
         $this->authorize('business_update');
 
-        collect(['booking_otp', 'service_complete_photo_evidence', 'bidding_status', 'bid_offers_visibility_for_providers', 'booking_additional_charge', 'instant_booking', 'repeat_booking', 'schedule_booking_time_restriction', 'schedule_booking', 'direct_provider_booking'])
+        collect(['booking_otp', 'service_complete_photo_evidence', 'bidding_status', 'bid_offers_visibility_for_providers', 'booking_additional_charge', 'instant_booking', 'repeat_booking', 'schedule_booking_time_restriction', 'schedule_booking', 'direct_provider_booking', 'cross_zone_fallback_enabled'])
             ->each(fn($item, $key) => $request[$item] = $request->has($item) ? (int)$request[$item] : 0);
 
         $validator = Validator::make($request->all(), [
@@ -444,6 +444,8 @@ class BusinessInformationController extends Controller
             'min_booking_amount' => 'required|numeric|gte:0',
             'max_booking_amount' => 'required|numeric|gt:min_booking_amount',
             'direct_provider_booking' => 'required|in:0,1',
+            'cross_zone_fallback_enabled' => 'required|in:0,1',
+            'cross_zone_distance_limit' => 'required|numeric|gte:1',
         ]);
 
         if ($validator->fails()) {

@@ -60,7 +60,7 @@ class PostController extends GetxController  with GetSingleTickerProviderStateMi
 
     scrollController.addListener(() {
       if(scrollController.position.maxScrollExtent == scrollController.position.pixels) {
-        if(_offset < _pageSize! ) {
+        if(_pageSize != null && _offset < _pageSize! ) {
           if(tabController!.index==0){
             getCustomerPostList(offset+1,"new_request",reload: true, fromBid: false);
           }else{
@@ -85,26 +85,29 @@ class PostController extends GetxController  with GetSingleTickerProviderStateMi
     Response response = await postRepo.getCustomerPostList(offset,status);
     if(response.statusCode==200){
      _postModel = PostModel.fromJson(response.body);
-     _pageSize = _postModel!.content!.lastPage;
+     _pageSize = _postModel?.content?.lastPage ?? 1;
 
-     if(_postModel?.content!= null){
+      if(_postModel?.content?.data != null){
+        final List<PostData> data = _postModel!.content!.data!;
 
-       if(offset==1){
-         if(fromBid){
-           bidPostList = [];
-           bidPostList!.addAll(_postModel!.content!.data!);
-         }else{
-           postList = [];
-           postList!.addAll(_postModel!.content!.data!);
-         }
-       }else{
-         if(fromBid){
-           bidPostList!.addAll(_postModel!.content!.data!);
-         }else{
-           postList!.addAll(_postModel!.content!.data!);
-         }
-       }
-     }
+        if(offset==1){
+          if(fromBid){
+            bidPostList = [];
+            bidPostList!.addAll(data);
+          }else{
+            postList = [];
+            postList!.addAll(data);
+          }
+        }else{
+          if(fromBid){
+            bidPostList ??= [];
+            bidPostList!.addAll(data);
+          }else{
+            postList ??= [];
+            postList!.addAll(data);
+          }
+        }
+      }
     }else{
       postList = [];
       bidPostList=[];

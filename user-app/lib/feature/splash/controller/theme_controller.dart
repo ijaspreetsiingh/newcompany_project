@@ -6,9 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ThemeController extends GetxController implements GetxService {
   final SharedPreferences sharedPreferences;
   ThemeController({required this.sharedPreferences}) {
+    // Load the saved choice before the first app build. Reading it after the
+    // map assets finish loading can briefly show the opposite theme.
+    _darkTheme = sharedPreferences.getBool(AppConstants.theme) ?? false;
     _loadCurrentTheme();
   }
-
 
   bool _darkTheme = false;
   String _lightMap = '[]';
@@ -27,7 +29,6 @@ class ThemeController extends GetxController implements GetxService {
   void _loadCurrentTheme() async {
     _lightMap = await rootBundle.loadString('assets/map/light_map.json');
     _darkMap = await rootBundle.loadString('assets/map/dark_map.json');
-    _darkTheme = sharedPreferences.getBool(AppConstants.theme) ?? false;
     update();
   }
 }

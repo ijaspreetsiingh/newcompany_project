@@ -27,10 +27,10 @@ class ConversationBubbleWidget extends StatefulWidget {
   });
 
   @override
-  State<ConversationBubbleWidget> createState() => _ConversationBubbleWidgetState();
+  State<ConversationBubbleWidget> createState() => _ConversationBubblewidgetstate();
 }
 
-class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
+class _ConversationBubblewidgetstate extends State<ConversationBubbleWidget> {
   //final ReceivePort _port = ReceivePort();
 
 
@@ -226,7 +226,7 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
                                       imageList: imagePathList,
                                       index: index,
                                       createdAt:  DateConverter.dateMonthYearTime(DateConverter.isoUtcStringToLocalDate(widget.conversationData.createdAt!)),
-                                      appbarTitle: widget.conversationData.user!.userType=="super-admin" ? 'admin'.tr : widget.conversationData.user!.userType=="customer"? "you".tr :
+                                      appbarTitle: widget.conversationData.user!.userType=="super-admin" ? 'technical_support_team'.tr : widget.conversationData.user!.userType=="customer"? "you".tr :
                                       widget.conversationData.user?.userType == 'provider-admin' ? widget.name : "${widget.conversationData.user?.firstName??""} ${widget.conversationData.user?.lastName??""}",
                                     ),
                                     );
@@ -277,7 +277,7 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
                                       imageList: imagePathList,
                                       index: index,
                                       createdAt:  DateConverter.dateMonthYearTime(DateConverter.isoUtcStringToLocalDate(widget.conversationData.createdAt!)),
-                                      appbarTitle: widget.conversationData.user!.userType=="super-admin" ? 'admin'.tr : widget.conversationData.user!.userType=="customer"? "you".tr :
+                                      appbarTitle: widget.conversationData.user!.userType=="super-admin" ? 'technical_support_team'.tr : widget.conversationData.user!.userType=="customer"? "you".tr :
                                       widget.conversationData.user?.userType == 'provider-admin' ? widget.name :
                                       "${widget.conversationData.user?.firstName??""} ${widget.conversationData.user?.lastName??""}" ,
                                     ),
@@ -330,15 +330,15 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
                                         print("Status is $status");
                                       }
                                       if(status.isGranted){
-                                        Directory? directory = Directory('/storage/emulated/0/Download');
-                                        if (!await directory.exists()){
-                                          directory = Platform.isAndroid
+                                        Directory? dtrectory = Directory('/storage/emulated/0/Download');
+                                        if (!await dtrectory.exists()){
+                                          dtrectory = Platform.isAndroid
                                               ? await getExternalStorageDirectory() //FOR ANDROID
                                               : await getApplicationSupportDirectory();
                                         }
                                         Get.find<ConversationController>().downloadFile(
                                           fileList[index].storedFileNameFullPath ?? '',
-                                          directory!.path,
+                                          dtrectory!.path,
                                         );
                                       }else if(status.isDenied){
                                         await openAppSettings();
@@ -430,6 +430,9 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
     );
   }
 }
+
+
+
 
 
 

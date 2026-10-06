@@ -185,7 +185,7 @@ class ServiceController extends Controller
         $this->subscribed_service
             ->where('provider_id', $providerId)
             ->whereIn('sub_category_id', $request['sub_category_ids'])
-            ->update(['is_subscribed' => $request['status']]);
+            ->update(['is_subscribed' => $request['status'], 'zone_id' => $request->user()->provider->zone_id]);
 
         if ($request['status'] == 1) {
             // Single-provider (any_first): jo pehla provider sub-category subscribe kare,

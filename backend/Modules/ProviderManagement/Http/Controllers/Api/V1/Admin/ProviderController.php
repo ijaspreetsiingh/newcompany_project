@@ -392,7 +392,7 @@ class ProviderController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'sub_category_ids' => 'required|array',
-            'sub_category_ids.*' => 'uuid',
+            'sub_category_ids.*' => 'exists:categories,id',
         ]);
 
         if ($validator->fails()) {
@@ -509,7 +509,7 @@ class ProviderController extends Controller
     public function removeImage(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'provider_id' => 'required|uuid',
+            'provider_id' => 'required|exists:providers,id',
             'image_name' => 'required|string',
             'image_type' => 'required|in:logo,identity_image'
         ]);

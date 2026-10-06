@@ -119,7 +119,7 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="mb-30 service_selector" id="service_selector">
+                                    <div class="mb-30 service_selector" id="service_selector" style="display: none">
                                         <select class="service-select theme-input-style w-100" name="service_ids[]"
                                                 multiple="multiple" id="service_selector__select">
                                             <option value="all">{{translate('Select All')}}</option>
@@ -137,6 +137,10 @@
                                             @endforeach
                                         </select>
                                     </div>
+
+                                    @include('promotionmanagement::admin.partials.provider-selector', [
+                                        'providerRoute' => route('admin.coupon.get-providers'),
+                                    ])
                                 </div>
 
                                 <div class="discount-amount-type">
@@ -160,7 +164,7 @@
                                                 <div class="form-floating form-floating__icon">
                                                     <input type="number" class="form-control" name="discount_amount"
                                                            placeholder="{{translate('amount')}}" id="discount_amount"
-                                                           min="0.01" max="100" step="any" value="0">
+                                                           min="0.01" max="100" step="any" required>
                                                     <label id="discount_amount__label">{{translate('amount')}}
                                                         (%) *</label>
                                                     <span class="material-icons">price_change</span>

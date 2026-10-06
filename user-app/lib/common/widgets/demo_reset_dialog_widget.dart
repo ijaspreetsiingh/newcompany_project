@@ -5,10 +5,10 @@ class DemoResetDialogWidget extends StatefulWidget {
   const DemoResetDialogWidget({super.key});
 
   @override
-  State<DemoResetDialogWidget> createState() => _DemoResetDialogWidgetState();
+  State<DemoResetDialogWidget> createState() => _DemoResetDialogwidgetstate();
 }
 
-class _DemoResetDialogWidgetState extends State<DemoResetDialogWidget> {
+class _DemoResetDialogwidgetstate extends State<DemoResetDialogWidget> {
   bool _isLoading = false;
 
   @override
@@ -47,7 +47,7 @@ class _DemoResetDialogWidgetState extends State<DemoResetDialogWidget> {
                 setState(() {
                   _isLoading = false;
                 });
-                Get.offAllNamed(RouteHelper.getInitialRoute());
+                Get.offAllNamed(RouteHelper.getinitialRoute());
               }
             });
           }),
@@ -56,3 +56,5 @@ class _DemoResetDialogWidgetState extends State<DemoResetDialogWidget> {
     );
   }
 }
+
+

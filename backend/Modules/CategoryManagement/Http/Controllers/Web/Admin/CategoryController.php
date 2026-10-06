@@ -92,34 +92,10 @@ class CategoryController extends Controller
             })
             ->ofType('main')
             ->latest()
-            ->paginate(pagination_limit())
+            ->paginate(pagination_limit(), ['*'], 'page', $page)
             ->appends($queryParams);
 
         $totalCategory = $categories->total();
-        $categories->withPath(route('admin.category.create'));
-
-        // Fallback logic: If current page has no data, go back one page
-        if ($categories->isEmpty() && $page > 1) {
-            $page = $page - 1;
-            $request->merge(['page' => $page]);
-
-            $categories = Category::withCount(['children', 'zones' => function ($query) {
-                $query->withoutGlobalScope('translate');
-            }])
-                ->when($search, function ($query) use ($search) {
-                    $keys = explode(' ', $search);
-                    foreach ($keys as $key) {
-                        $query->orWhere('name', 'LIKE', "%$key%");
-                    }
-                })
-                ->when($status != 'all', function ($query) use ($status) {
-                    $query->ofStatus($status == 'active' ? 1 : 0);
-                })
-                ->ofType('main')
-                ->latest()
-                ->paginate(pagination_limit())
-                ->appends($queryParams);
-        }
 
         return response()->json([
             'view' =>  view('categorymanagement::admin.partials._table', compact('categories', 'search', 'status', 'totalCategory'))->render(),
@@ -370,6 +346,26 @@ class CategoryController extends Controller
         })->ofType('sub')->with(['zones'])->where('parent_id', $request['id'])->orderBY('name', 'asc')->paginate(pagination_limit());
 
         return response()->json(response_formatter(DEFAULT_200, $childes), 200);
+    }
+
+    /**
+     * Get sub-categories as simple JSON (for service create form dropdown)
+     * @param string $categoryId
+     * @return JsonResponse
+     */
+    public function ajaxSubCategories(string $categoryId): JsonResponse
+    {
+        $subcategories = $this->category
+            ->ofStatus(1)
+            ->ofType('sub')
+            ->where('parent_id', $categoryId)
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $subcategories
+        ], 200);
     }
 
     /**

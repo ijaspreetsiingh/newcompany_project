@@ -1,136 +1,95 @@
 import 'package:demandium_serviceman/utils/core_export.dart';
 
 class ProfileShimmer extends StatelessWidget {
-  const ProfileShimmer ({super.key}) ;
+  const ProfileShimmer({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Shimmer(
       duration: const Duration(seconds: 3),
-      interval: const Duration(seconds: 5), //Default value: Duration(seconds: 0)
-      color: Colors.white, //Default value
-      colorOpacity: 0, //Default value
-      enabled: true, //Default value
+      interval: const Duration(seconds: 5),
+      color: Colors.white,
+      colorOpacity: 0,
+      enabled: true,
       direction: const ShimmerDirection.fromLTRB(),
       child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(),
-            const SizedBox(height: Dimensions.paddingSizeLarge,),
             Container(
-              height: 100,
-              width: 100,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100),
-                color: Theme.of(context).shadowColor
-              ),
-            ),
-            const SizedBox(height: Dimensions.paddingSizeDefault,),
-            Container(
-              height: 20,
-              width: 150,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
-                color: Theme.of(context).shadowColor
-              ),
-            ),
-            const SizedBox(height: Dimensions.paddingSizeDefault,),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 20,
-                      width: 10,
-                        color: Theme.of(context).shadowColor
-                    ),
-                    const SizedBox(height: Dimensions.paddingSizeSmall,),
-                    Container(
-                      height: 15,
-                      width:90,
-                      color:Theme.of(context).shadowColor
-                    ),
-                    const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
-                    Container(
-                      height: 15,
-                      width:50,
-                      color:Theme.of(context).shadowColor
-                    ),
-                  ],
-                ),
-
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 20,
-                      width: 10,
-                        color:Theme.of(context).shadowColor
-                    ),
-                    const SizedBox(height: Dimensions.paddingSizeSmall,),
-                    Container(
-                      height: 15,
-                      width:90,
-                      color:Theme.of(context).shadowColor
-                    ),
-                    const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
-                    Container(
-                      height: 15,
-                      width:50,
-                      color:Theme.of(context).shadowColor,
-                    ),
-                  ],
-                ),
-
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 20,
-                      width: 10,
-                      color: Theme.of(context).shadowColor,
-                    ),
-                    const SizedBox(height: Dimensions.paddingSizeSmall,),
-                    Container(
-                      height: 15,
-                      width:90,
-                      color:Theme.of(context).shadowColor,
-                    ),
-                    const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
-                    Container(
-                      height: 15,
-                      width:50,
-                      color:Theme.of(context).shadowColor,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            const SizedBox(height: Dimensions.paddingSizeLarge,),
-
-            ListView.builder(
-            shrinkWrap: true,
-            itemCount: 5,
-              itemBuilder: (context,index){
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault,vertical: Dimensions.paddingSizeSmall),
-                child: Container(
-                  height: 55,
-                  decoration: BoxDecoration(
-                      color:Theme.of(context).shadowColor,
-                      borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall)
+              width: double.infinity,
+              color: context.kPrimary,
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          _block(context, 36, 36),
+                          const Spacer(),
+                          _block(context, 36, 36),
+                        ],
+                      ),
+                      const SizedBox(height: 28),
+                      Center(
+                        child: _block(context, 96, 96, radius: 100),
+                      ),
+                      const SizedBox(height: 12),
+                      Center(child: _block(context, 160, 22)),
+                      const SizedBox(height: 6),
+                      Center(child: _block(context, 110, 14)),
+                      const SizedBox(height: 8),
+                      Center(child: _block(context, 140, 20, radius: 4)),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(child: _block(context, 0, 40)),
+                          const SizedBox(width: 16),
+                          Expanded(child: _block(context, 0, 40)),
+                          const SizedBox(width: 16),
+                          Expanded(child: _block(context, 0, 40)),
+                        ],
+                      ),
+                    ],
                   ),
-                  child: const Row(),
                 ),
-              );
-            })
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 112),
+              child: Column(
+                children: [
+                  _block(context, 0, 76),
+                  const SizedBox(height: 20),
+                  _block(context, 0, 224),
+                  const SizedBox(height: 20),
+                  _block(context, 0, 168),
+                  const SizedBox(height: 20),
+                  _block(context, 0, 48),
+                ],
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _block(
+    BuildContext context,
+    double width,
+    double height, {
+    double radius = kRadiusMd,
+  }) {
+    return Container(
+      width: width == 0 ? double.infinity : width,
+      height: height,
+      decoration: BoxDecoration(
+        color: context.kMuted,
+        borderRadius: BorderRadius.circular(radius),
       ),
     );
   }

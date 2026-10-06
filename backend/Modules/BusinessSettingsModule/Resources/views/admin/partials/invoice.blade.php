@@ -19,7 +19,7 @@
                     Av: 11, R: 09, Dhaka 1216, BD
                 </div>
                 <div>+8801100000001</div>
-                <div>support@jassbooking.com</div>
+                <div>support@yovo.com</div>
             </div>
         </div>
 
@@ -91,5 +91,5 @@
             </div>
         </div>
     </div>
-    <div class="invoice-footer">All rights reserved By @JassBooking 2024</div>
+    <div class="invoice-footer">All rights reserved By @YOVO 2024</div>
 </div>

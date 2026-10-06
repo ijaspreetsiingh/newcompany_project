@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 
 class FooterBaseView extends StatelessWidget {
@@ -50,3 +50,5 @@ class FooterBaseView extends StatelessWidget {
     ) : child;
   }
 }
+
+

@@ -1,9 +1,9 @@
+import 'dart:ui';
+
 import 'package:demandium_provider/feature/payement_information/controller/payment_info_controller.dart';
 import 'package:demandium_provider/feature/menu/view/more_screen.dart';
-import 'package:demandium_provider/helper/extension_helper.dart';
 import 'package:demandium_provider/util/core_export.dart';
 import 'package:get/get.dart';
-import 'package:showcaseview/showcaseview.dart';
 
 class BottomNavScreen extends StatefulWidget {
   final int pageIndex;
@@ -28,9 +28,11 @@ class BottomNavScreen extends StatefulWidget {
     await Get.find<UserProfileController>().getProviderInfo(reload: true).then((
       isProviderModelAvailable,
     ) {
-      Get.find<BusinessSubscriptionController>().getSubscriptionPackageList();
-      if (pageIndex != 1) {
-        Get.find<BusinessSubscriptionController>().openTrialEndBottomSheet();
+      if (Get.find<UserProfileController>().isSubscriptionRequired) {
+        Get.find<BusinessSubscriptionController>().getSubscriptionPackageList();
+        if (pageIndex != 1) {
+          Get.find<BusinessSubscriptionController>().openTrialEndBottomSheet();
+        }
       }
       Get.find<UserProfileController>().trialWidgetShow(route: "");
     });
@@ -80,6 +82,9 @@ class BottomNavScreenState extends State<BottomNavScreen> {
     _pageController = PageController(initialPage: widget.pageIndex);
 
     Future.delayed(const Duration(seconds: 1), () {
+      if (isTutorialActive) {
+        Get.to(() => const AllServicesScreen(isTutorialActive: true));
+      }
       setState(() {});
     });
   }
@@ -89,11 +94,7 @@ class BottomNavScreenState extends State<BottomNavScreen> {
     _screens = [
       const DashBoardScreen(),
       const BookingRequestScreen(),
-      ShowCaseWidget(
-        builder: (context) {
-          return AllServicesScreen(isTutorialActive: isTutorialActive);
-        },
-      ),
+      const MyServicesScreen(),
       Text("more".tr),
     ];
 
@@ -117,68 +118,30 @@ class BottomNavScreenState extends State<BottomNavScreen> {
         }
       },
       child: Scaffold(
+        backgroundColor: InkColors.background,
         bottomNavigationBar: Container(
-          color: Colors.transparent,
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                /// Floating pill nav bar
-                Container(
-                  margin: const EdgeInsets.fromLTRB(
-                    Dimensions.paddingSizeDefault,
-                    0,
-                    Dimensions.paddingSizeDefault,
-                    Dimensions.paddingSizeSmall,
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: Dimensions.paddingSizeExtraSmall,
-                    vertical: Dimensions.paddingSizeExtraSmall,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Get.isDarkMode
-                        ? Theme.of(context).cardColor
-                        : Colors.white,
-                    borderRadius: BorderRadius.circular(
-                      Dimensions.radiusExtraLarge + 6,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(
-                          alpha: Get.isDarkMode ? 0.35 : 0.10,
-                        ),
-                        blurRadius: 24,
-                        offset: const Offset(0, 6),
-                      ),
+          decoration: BoxDecoration(
+            color: InkColors.card.withValues(alpha: 0.96),
+            border: Border(top: BorderSide(color: InkColors.border)),
+          ),
+          child: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
+                  child: Row(
+                    children: [
+                      _getBottomNavItem(0, Icons.dashboard_outlined, 'dashboard'.tr),
+                      _getBottomNavItem(1, Icons.inbox_outlined, 'requests'.tr),
+                      _buildCenterFab(),
+                      _getBottomNavItem(2, Icons.home_repair_service_rounded, 'my_services'.tr),
+                      _getBottomNavItem(3, Icons.menu_rounded, 'more'.tr),
                     ],
                   ),
-                  child: SizedBox(
-                    height: 56,
-                    child: Row(
-                      children: [
-                        _getBottomNavItem(0, Images.dashboard, 'dashboard'.tr),
-                        _getBottomNavItem(1, Images.requests, 'requests'.tr),
-                        _getBottomNavItem(2, Images.service, 'services'.tr),
-                        _getBottomNavItem(3, Images.more, 'more'.tr),
-                      ],
-                    ),
-                  ),
                 ),
-
-                /// Home indicator line
-                Container(
-                  height: 4,
-                  width: 110,
-                  margin: const EdgeInsets.only(
-                    bottom: Dimensions.paddingSizeExtraSmall + 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).hintColor.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -194,40 +157,54 @@ class BottomNavScreenState extends State<BottomNavScreen> {
             );
           },
         ),
-        floatingActionButton:
-            Get.find<SplashController>().configModel.content?.biddingStatus ==
-                    1 &&
-                Get.find<SplashController>().showCustomBookingButton
-            ? GestureDetector(
-                onTap: () => Get.find<BusinessSubscriptionController>()
-                    .openTrialEndBottomSheet()
-                    .then((isTrial) {
-                      if (isTrial) {
-                        if (Get.find<UserProfileController>()
-                            .checkAvailableFeatureInSubscriptionPlan(
-                              featureType: 'bidding',
-                            )) {
-                          Get.to(() => const CustomerRequestListScreen());
-                        }
-                      }
-                    }),
-                child: Container(
-                  decoration: BoxDecoration(
-                    boxShadow: context.customThemeColors.shadow,
-                    borderRadius: BorderRadius.circular(50),
-                    color: Theme.of(context).cardColor,
-                  ),
-                  padding: const EdgeInsets.all(
-                    Dimensions.paddingSizeDefault - 2,
-                  ),
-                  child: Image.asset(
-                    Images.createPostIconWithRedDot,
-                    height: 40,
-                    width: 40,
-                  ),
+      ),
+    );
+  }
+
+  /// Center "+" FAB — links to custom requests (bids) like the design.
+  Widget _buildCenterFab() {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => Get.find<BusinessSubscriptionController>()
+            .openTrialEndBottomSheet()
+            .then((isTrial) {
+              if (isTrial) {
+                if (Get.find<UserProfileController>()
+                    .checkAvailableFeatureInSubscriptionPlan(featureType: 'bidding')) {
+                  Get.to(() => const CustomerRequestListScreen());
+                }
+              }
+            }),
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Transform.translate(
+              offset: const Offset(0, -8),
+              child: Container(
+                height: 56,
+                width: 56,
+                decoration:  BoxDecoration(
+                  color: InkColors.foreground,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x59000000),
+                      blurRadius: 30,
+                      offset: Offset(0, 10),
+                      spreadRadius: -12,
+                    ),
+                  ],
                 ),
-              )
-            : null,
+                child:  Icon(Icons.add_rounded, size: 26, color: InkColors.background),
+              ),
+            ),
+            Transform.translate(
+              offset: const Offset(0, -8),
+              child: const SizedBox(height: 4),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -240,113 +217,59 @@ class BottomNavScreenState extends State<BottomNavScreen> {
       });
     } else {
       setState(() {
-        if (pageIndex == 2) {
-          final bool tutorialCurrentStatus =
-              Get.find<UserProfileController>()
-                  .providerModel
-                  ?.content
-                  ?.providerInfo!
-                  .tutorialData?[AppConstants.serviceSubscriptionTutorialKey]
-                  ?.contains('0') ??
-              true;
-
-          isTutorialActive = tutorialCurrentStatus;
-        }
-
         _pageController?.jumpToPage(pageIndex);
         _pageIndex = pageIndex;
       });
     }
   }
 
-  Widget _getBottomNavItem(int index, String icon, String title) {
-    bool isActive = _pageIndex == index;
-    final Color primary = Theme.of(context).colorScheme.primary;
-    final Color inactive = Get.isDarkMode
-        ? Theme.of(context).hintColor
-        : const Color(0xFF9AA3B2);
+  /// Design tab item: icon pill + label. The active tab is filled with the
+  /// ink colour so it is always clearly highlighted in both themes.
+  Widget _getBottomNavItem(int index, IconData icon, String title) {
+    final bool isActive = _pageIndex == index;
+    final Color activeFg = InkColors.foreground;
+    final Color idleFg = InkColors.mutedForeground;
 
     return Expanded(
       child: InkWell(
         onTap: () => _setPage(index),
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
-        borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-        child: Center(
-          child: isActive
-              /// Active gradient chip
-              ? Container(
-                  height: 50,
-                  width: 72,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        primary,
-                        Color.lerp(primary, const Color(0xFF1E40AF), 0.45)!,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-                    boxShadow: [
-                      BoxShadow(
-                        color: primary.withValues(alpha: 0.35),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      icon.isEmpty
-                          ? const SizedBox(width: 20, height: 20)
-                          : Image.asset(
-                              icon,
-                              width: 20,
-                              height: 20,
-                              color: Colors.white,
-                            ),
-                      const SizedBox(height: 2),
-                      Text(
-                        title,
-                        style: robotoBold.copyWith(
-                          fontSize: 9,
-                          color: Colors.white,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                )
-              /// Inactive item
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    icon.isEmpty
-                        ? const SizedBox(width: 22, height: 22)
-                        : Image.asset(
-                            icon,
-                            width: 22,
-                            height: 22,
-                            color: inactive,
-                          ),
-                    const SizedBox(height: 4),
-                    Text(
-                      title,
-                      style: robotoMedium.copyWith(
-                        fontSize: Dimensions.fontSizeExtraSmall,
-                        color: inactive,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              height: 32,
+              width: isActive ? 60 : 32,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isActive ? activeFg : Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                icon,
+                size: 19,
+                color: isActive ? InkColors.background : idleFg,
+                weight: isActive ? 2.4 : 1.8,
+              ),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 10,
+                height: 1.2,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                letterSpacing: 0.2,
+                color: isActive ? activeFg : idleFg,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ),
       ),
     );

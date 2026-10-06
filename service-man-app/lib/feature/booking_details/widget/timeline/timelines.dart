@@ -1,6 +1,7 @@
 import 'package:demandium_serviceman/feature/booking_details/widget/timeline/timeline_tile_builder.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/widgets.dart';
 import 'timeline_theme.dart';
 
@@ -40,7 +41,8 @@ class Timeline extends BoxScrollView {
       physics: physics,
       shrinkWrap: shrinkWrap,
       padding: padding,
-      cacheExtent: cacheExtent,
+      scrollCacheExtent:
+          cacheExtent != null ? ScrollCacheExtent.pixels(cacheExtent) : null,
       semanticChildCount: semanticChildCount ?? builder.itemCount,
       dragStartBehavior: dragStartBehavior,
       keyboardDismissBehavior: keyboardDismissBehavior,
@@ -65,7 +67,7 @@ class Timeline extends BoxScrollView {
     bool addAutomaticKeepAlives = true,
     bool addRepaintBoundaries = true,
     bool addSemanticIndexes = true,
-    super.cacheExtent,
+    super.scrollCacheExtent,
     List<Widget> children = const <Widget>[],
     int? semanticChildCount,
     super.dragStartBehavior,
@@ -101,7 +103,7 @@ class Timeline extends BoxScrollView {
     bool addAutomaticKeepAlives = true,
     bool addRepaintBoundaries = true,
     bool addSemanticIndexes = true,
-    super.cacheExtent,
+    super.scrollCacheExtent,
     int? semanticChildCount,
     super.dragStartBehavior,
     super.keyboardDismissBehavior,
@@ -135,7 +137,7 @@ class Timeline extends BoxScrollView {
     super.padding,
     this.itemExtent,
     required this.childrenDelegate,
-    super.cacheExtent,
+    super.scrollCacheExtent,
     super.semanticChildCount,
     super.dragStartBehavior,
     super.keyboardDismissBehavior,

@@ -8,8 +8,8 @@ class UpdateProfileScreen extends StatefulWidget {
   final String? email;
   final String? tempToken;
   final String? userName;
-  final String? redirectUrl;
-  const UpdateProfileScreen({super.key, this.phone, this.email, this.tempToken, this.userName, this.redirectUrl});
+  final String? redtrectUrl;
+  const UpdateProfileScreen({super.key, this.phone, this.email, this.tempToken, this.userName, this.redtrectUrl});
 
   @override
   State<UpdateProfileScreen> createState() => _UpdateProfileScreenState();
@@ -185,14 +185,14 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
         SystemNavigator.pop();
       } else {
         _socialLogout();
-        Navigator.pushNamed(context, RouteHelper.getInitialRoute());
+        Navigator.pushNamed(context, RouteHelper.getinitialRoute());
       }
       return Future.value(false);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('back_press_again_to_exit'.tr, style: const TextStyle(color: Colors.white)),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.green,
+        backgroundColor: Theme.of(Get.context!).colorScheme.primary,
         duration: const Duration(seconds: 2),
         margin: const EdgeInsets.all(Dimensions.paddingSizeSmall),
       ));
@@ -218,7 +218,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
          lastName: lastName,
          email: widget.email,
          phone: phone,
-         redirectUrl: widget.redirectUrl,
+         redtrectUrl: widget.redtrectUrl,
        );
 
      }else{
@@ -227,10 +227,12 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
          lastName: lastName,
          email: email,
          phone: widget.phone,
-         redirectUrl: widget.redirectUrl,
+         redtrectUrl: widget.redtrectUrl,
        );
      }
 
     }
   }
 }
+
+

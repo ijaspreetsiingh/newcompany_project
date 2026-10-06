@@ -7,6 +7,7 @@ use Modules\BusinessSettingsModule\Http\Controllers\Web\Admin\CronJobController;
 use Modules\BusinessSettingsModule\Http\Controllers\Web\Admin\LanguageController;
 use Modules\BusinessSettingsModule\Http\Controllers\Web\Admin\SEOSettingController;
 use Modules\BusinessSettingsModule\Http\Controllers\Web\Admin\LoginSetupController;
+use Modules\BusinessSettingsModule\Http\Controllers\Web\Admin\LocationSettingsController;
 use Modules\BusinessSettingsModule\Http\Controllers\Web\Admin\SubscriptionPackageController;
 use Modules\BusinessSettingsModule\Http\Controllers\Web\Admin\SubscriptionSettingsController;
 use Modules\BusinessSettingsModule\Http\Controllers\Web\Admin\SubscriberController;
@@ -94,6 +95,12 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Web\Admin',
         Route::get('check-active-social-media', [LoginSetupController::class, 'checkActiveSocialMedia'])->name('check-active-social-media');
         Route::get('check-email-or-sms-configured', [LoginSetupController::class, 'checkEmailOrSMSConfigured'])->name('check-email-or-sms-configured');
         Route::post('set-otp-login-information', [LoginSetupController::class, 'otpLoginInformationSet'])->name('set-otp-login-information');
+
+        // Location Settings
+        Route::group(['prefix' => 'location-settings', 'as' => 'location-settings.'], function () {
+            Route::get('/', [LocationSettingsController::class, 'index'])->name('index');
+            Route::put('update', [LocationSettingsController::class, 'update'])->name('update');
+        });
 
     });
 

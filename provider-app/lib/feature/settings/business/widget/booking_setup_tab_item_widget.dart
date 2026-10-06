@@ -1,5 +1,5 @@
-import 'package:demandium_provider/helper/extension_helper.dart';
 import 'package:demandium_provider/util/core_export.dart';
+import 'package:demandium_provider/feature/profile/view/view/auto_assign_settings_screen.dart';
 import 'package:get/get.dart';
 
 class BookingSetupTabItemWidget extends StatelessWidget {
@@ -12,56 +12,56 @@ class BookingSetupTabItemWidget extends StatelessWidget {
       final config = Get.find<SplashController>().configModel.content;
 
       return Padding(
-        padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
         child: Column(
           children: [
             Expanded(
               child: SingleChildScrollView(
                 child: Column( children: [
 
-                  Container(
-                    decoration: BoxDecoration(
-                      boxShadow: context.customThemeColors.lightShadow,
-                      color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                    ),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  InkCard(
+                    padding: EdgeInsets.zero,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(19),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
 
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault,vertical: Dimensions.paddingSizeDefault),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('booking_requirest_setup'.tr, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge)),
-                            SizedBox(height: Dimensions.paddingSizeExtraSmall),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('booking_requirest_setup'.tr, style: robotoSemiBold.copyWith(fontSize: 14, height: 1.3, color: InkColors.foreground)),
+                              const SizedBox(height: 4),
 
-                            Text('here_you_can_setup_for_service_man_where_hint'.tr, style: robotoRegular.copyWith(
-                              color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
-                            )),
-                          ],
+                              Text('here_you_can_setup_for_service_man_where_hint'.tr, style: robotoRegular.copyWith(
+                                fontSize: 12,
+                                height: 1.5,
+                                color: InkColors.mutedForeground,
+                              )),
+                            ],
+                          ),
                         ),
-                      ),
-                      SizedBox(height: Dimensions.paddingSizeExtraSmall),
+                        const SizedBox(height: 4),
 
-                      ListView.builder(
-                        itemBuilder: (context, index){
-                          final config = Get.find<SplashController>().configModel.content;
-                          final item = businessSettingController.settingItem[index];
+                        ListView.builder(
+                          itemBuilder: (context, index){
+                            final config = Get.find<SplashController>().configModel.content;
+                            final item = businessSettingController.settingItem[index];
 
-                          bool isDisabled = false;
-                          switch (item.settingTitle) {
-                            case 'Cancel Booking Request':
-                              isDisabled = !(config?.canServiceManCancelBooking ?? true);
-                              break;
-                            case 'Edit Booking Request':
-                              isDisabled = !(config?.canServiceManEditBooking ?? true);
-                              break;
-                            default:
-                              isDisabled = false;
-                          }
-                          return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            bool isDisabled = false;
+                            switch (item.settingTitle) {
+                              case 'Cancel Booking Request':
+                                isDisabled = !(config?.canServiceManCancelBooking ?? true);
+                                break;
+                              case 'Edit Booking Request':
+                                isDisabled = !(config?.canServiceManEditBooking ?? true);
+                                break;
+                              default:
+                                isDisabled = false;
+                            }
+                            return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                              if (index != 0)  SizedBox(height: 1, child: ColoredBox(color: InkColors.border)),
+
                               IgnorePointer(
                                 ignoring: isDisabled,
                                 child: Opacity(
@@ -74,63 +74,60 @@ class BookingSetupTabItemWidget extends StatelessWidget {
                                     },
                                     // tooltipController: businessSettingController.settingItem[index].toolTipController!,
                                     tootTipText: '',
-                                    showOutSideBorder: true,
-                                    titleTextStyle: robotoMedium,
 
                                   ),
                                 ),
                               ),
-                              SizedBox(height: Dimensions.paddingSizeExtraSmall),
 
-                              Text((businessSettingController.settingItem[index].toolTipText ?? '').tr,
-                                style: robotoRegular.copyWith(
-                                    color: Theme.of(context).textTheme.bodySmall?.color,
-                                    fontSize: Dimensions.fontSizeSmall + 1,
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                                child: Text((businessSettingController.settingItem[index].toolTipText ?? '').tr,
+                                  style: robotoRegular.copyWith(
+                                    fontSize: 12,
+                                    height: 1.5,
+                                    color: InkColors.mutedForeground,
+                                  ),
+                                  textAlign: TextAlign.justify,
                                 ),
-                                textAlign: TextAlign.justify,
                               ),
-                              SizedBox(height: Dimensions.paddingSizeDefault),
 
-                            ]),
-                          );
+                            ]);
 
-                        },
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        padding: EdgeInsets.zero,
-                        itemCount: businessSettingController.settingItem.length,
-                      ),
-                    ]),
+                          },
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.zero,
+                          itemCount: businessSettingController.settingItem.length,
+                        ),
+                      ]),
+                    ),
                   ),
 
 
 
 
-                  SizedBox(height: Dimensions.paddingSizeSmall),
+                  const SizedBox(height: 12),
 
                   _AutoAssignCardWidget(),
 
-                  SizedBox(height: Dimensions.paddingSizeSmall),
+                  const SizedBox(height: 12),
 
-                  config?.serviceAtProviderPlace == 1 ? Container(
-                    decoration: BoxDecoration(
-                      boxShadow: context.customThemeColors.lightShadow,
-                      color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                    ),
-                    padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault,vertical: Dimensions.paddingSizeDefault),
+                  config?.serviceAtProviderPlace == 1 ? InkCard(
+                    padding: const EdgeInsets.all(16),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('service_location'.tr, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge)),
-                      SizedBox(height: Dimensions.paddingSizeExtraSmall),
+                      Text('service_location'.tr, style: robotoSemiBold.copyWith(fontSize: 14, height: 1.3, color: InkColors.foreground)),
+                      const SizedBox(height: 4),
                       Text('service_location_business_setting_hint'.tr,
-                        style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7)),
+                        style: robotoRegular.copyWith(fontSize: 12, height: 1.5, color: InkColors.mutedForeground),
                       ),
-                      SizedBox(height: Dimensions.paddingSizeDefault),
+                      const SizedBox(height: 12),
 
                       Container(
+                        width: double.infinity,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+                          color: InkColors.secondary,
+                          border: Border.all(color: InkColors.border),
+                          borderRadius: BorderRadius.circular(12),
                         ),
 
                         child: Column(children: [
@@ -213,49 +210,57 @@ class _AutoAssignCardWidget extends StatelessWidget {
       final bool autoAssignOn = userProfileController.autoAssignMode;
       final int waitTime = userProfileController.autoAssignWaitTime;
 
-      return Container(
-        decoration: BoxDecoration(
-          boxShadow: context.customThemeColors.lightShadow,
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeDefault),
+      return InkCard(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Expanded(child: Text('auto_assign_mode'.tr, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge))),
+            Expanded(child: Text('auto_assign_mode'.tr, style: robotoSemiBold.copyWith(fontSize: 14, height: 1.3, color: InkColors.foreground))),
 
             userProfileController.autoAssignLoading
-                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                ?  SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: InkColors.foreground))
                 :            Switch.adaptive(
                     value: autoAssignOn,
-                    activeTrackColor: Theme.of(context).primaryColor,
-                    onChanged: (bool value) => userProfileController.toggleAutoAssignMode(value),
+                    activeTrackColor: InkColors.foreground,
+                    inactiveTrackColor: InkColors.accent,
+                    thumbColor: const WidgetStatePropertyAll<Color>(Colors.white),
+                    onChanged: (bool value) {
+                      if (value && !autoAssignOn) {
+                        // ON karne se pehle wait time confirm karo
+                        AutoAssignSettingsScreen.showWaitTimeDialog(context, userProfileController, waitTime);
+                      } else if (!value) {
+                        userProfileController.toggleAutoAssignMode(false);
+                      }
+                    },
                   ),
           ]),
-          SizedBox(height: Dimensions.paddingSizeExtraSmall),
+          const SizedBox(height: 6),
 
           Text(autoAssignOn
               ? 'auto_assign_mode_on_hint'.tr
               : 'auto_assign_mode_off_hint'.tr,
             style: robotoRegular.copyWith(
-              color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+              fontSize: 12,
+              height: 1.5,
+              color: InkColors.mutedForeground,
             ),
             textAlign: TextAlign.justify,
           ),
-          SizedBox(height: Dimensions.paddingSizeDefault),
+          const SizedBox(height: 12),
 
           Text('${'wait_time'.tr}: ${_formatWaitTime(waitTime)}',
-            style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault),
+            style: robotoSemiBold.copyWith(fontSize: 14, height: 1.3, color: InkColors.foreground),
           ),
-          SizedBox(height: Dimensions.paddingSizeExtraSmall),
+          const SizedBox(height: 6),
 
           Slider(
             min: 30,
             max: 600,
             divisions: 19,
             value: waitTime.toDouble().clamp(30, 600),
-            activeColor: Theme.of(context).primaryColor,
+            activeColor: InkColors.foreground,
+            inactiveColor: InkColors.accent,
+            thumbColor: InkColors.foreground,
             onChanged: (double value) {
               userProfileController.autoAssignWaitTimeLocal = value.round();
             },
@@ -266,8 +271,9 @@ class _AutoAssignCardWidget extends StatelessWidget {
 
           Text('auto_assign_wait_time_hint'.tr,
             style: robotoRegular.copyWith(
-              fontSize: Dimensions.fontSizeSmall,
-              color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+              fontSize: 12,
+              height: 1.5,
+              color: InkColors.mutedForeground,
             ),
             textAlign: TextAlign.justify,
           ),
@@ -288,39 +294,39 @@ class _CheckBoxWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => onChanged(!value),
-      child: Row( crossAxisAlignment: CrossAxisAlignment.start, children: [
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: Row( crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-        Checkbox(
-          value: value,
-          onChanged: onChanged,
-          activeColor: Theme.of(context).primaryColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-          ),
-          side: WidgetStateBorderSide.resolveWith((states) => BorderSide(
-            width: 1,
-            color: states.contains(WidgetState.selected)
-                ? Theme.of(context).primaryColor
-                : Colors.grey, // Use your desired border color
-          )),
-        ),
-
-        Expanded(child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, spacing: 5, children: [
-            Text(title.tr, style: value ? robotoMedium : robotoRegular),
-
-            Text(subTitle.tr, style: robotoRegular.copyWith(
-              fontSize: Dimensions.fontSizeSmall,
-              color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
-              height: 1.5,
+          Checkbox(
+            value: value,
+            onChanged: onChanged,
+            activeColor: InkColors.foreground,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+            ),
+            side: WidgetStateBorderSide.resolveWith((states) => BorderSide(
+              width: 1,
+              color: states.contains(WidgetState.selected)
+                  ? InkColors.foreground
+                  : InkColors.mutedForeground,
             )),
-          ]),
-        )),
+          ),
 
-        SizedBox(width: Dimensions.paddingSizeDefault)
-      ]),
+          Expanded(child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, spacing: 5, children: [
+              Text(title.tr, style: robotoSemiBold.copyWith(fontSize: 14, height: 1.3, color: InkColors.foreground)),
+
+              Text(subTitle.tr, style: robotoRegular.copyWith(
+                fontSize: 12,
+                color: InkColors.mutedForeground,
+                height: 1.5,
+              )),
+            ]),
+          )),
+        ]),
+      ),
     );
   }
 }
-

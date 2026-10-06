@@ -24,25 +24,28 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> with WidgetsBindi
     super.dispose();
   }
 
+  void _checkConfigAgain() {
+    final SplashController splashController = Get.find<SplashController>();
+    splashController.getConfigData().then((bool isSuccess) {
+      if(isSuccess){
+        final config = splashController.configModel!;
+        if(config.content?.maintenanceMode?.maintenanceStatus == 0) {
+          Get.offAllNamed(RouteHelper.getInitialRoute());
+        }
+      }
+    });
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      final SplashController splashController = Get.find<SplashController>();
-      splashController.getConfigData().then((bool isSuccess) {
-        if(isSuccess){
-          final config = splashController.configModel!;
-          if(config.content?.maintenanceMode?.maintenanceStatus == 0) {
-            Get.offAllNamed(RouteHelper.getInitialRoute());
-          }
-        }
-      });
+      _checkConfigAgain();
     }
   }
 
   @override
   Widget build(BuildContext context) {
 
-    final size = MediaQuery.of(context).size;
     var configModel = Get.find<SplashController>().configModel?.content;
 
     return CustomPopScopeWidget(
@@ -58,97 +61,126 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> with WidgetsBindi
         }
       },
       child: Scaffold(
-        body: Center(
-          child: Container(
-            width: Dimensions.webMaxWidth,
-            padding: EdgeInsets.all(MediaQuery.of(context).size.height * 0.03),
-            child: Center(
+        backgroundColor: context.kBackground,
+        body: SafeArea(
+          child: Center(
+            child: Container(
+              width: Dimensions.webMaxWidth,
+              padding: EdgeInsets.all(MediaQuery.of(context).size.height * 0.03),
               child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
 
-                Image.asset(Images.maintenance, width: 250),
-                SizedBox(height: size.height * 0.07),
+                Container(
+                  width: 112,
+                  height: 112,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: context.kMuted,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.build_outlined,
+                    size: 46,
+                    color: context.kMutedForeground,
+                  ),
+                ),
+                const SizedBox(height: 28),
 
                 if(configModel != null) ... [
 
                   Text(configModel.maintenanceMode?.maintenanceMessages?.maintenanceMessage ?? "maintenance_title".tr,
                     textAlign: TextAlign.center,
-                    style: robotoRegular.copyWith(
-                      fontSize: Dimensions.fontSizeLarge,
-                      fontWeight: FontWeight.w700,
-                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                    style: robotoBold.copyWith(
+                      fontSize: 30,
+                      color: context.kForeground,
                     ),
                   ),
-                  const SizedBox(height: Dimensions.paddingSizeDefault),
+                  const SizedBox(height: 12),
 
-                  Text(configModel.maintenanceMode?.maintenanceMessages?.messageBody ?? "maintenance_subtitle".tr,
-                    textAlign: TextAlign.center,
-                    style: robotoMedium.copyWith(
-                      fontSize: Dimensions.fontSizeDefault,
-                      color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha:0.6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(configModel.maintenanceMode?.maintenanceMessages?.messageBody ?? "maintenance_subtitle".tr,
+                      textAlign: TextAlign.center,
+                      style: robotoRegular.copyWith(
+                        fontSize: 14,
+                        height: 1.7,
+                        color: context.kMutedForeground,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: Dimensions.paddingSizeExtraLarge),
 
                   if(configModel.maintenanceMode?.maintenanceMessages?.businessEmail == 1 ||
                       configModel.maintenanceMode?.maintenanceMessages?.businessNumber == 1) ...[
 
-                      Row(
-                        children: List.generate(size.width ~/10, (index) => Expanded(
-                          child: Container(
-                            color: index%2==0?Colors.transparent
-                                :Theme.of(context).hintColor.withValues(alpha:0.2),
-                            height: 1.2,
-                          ),
-                        )),
-                      ),
-                      const SizedBox(height: Dimensions.paddingSizeExtraLarge),
+                    const SizedBox(height: 24),
+                    Container(
+                      width: double.infinity,
+                      height: 1,
+                      color: context.kBorder,
+                    ),
+                    const SizedBox(height: 16),
 
                     Text(configModel.maintenanceMode?.maintenanceMessages?.businessEmail == 1 && configModel.maintenanceMode?.maintenanceMessages?.businessNumber == 1
                         ? 'any_query_feel_free_to_call_or_email'.tr : configModel.maintenanceMode?.maintenanceMessages?.businessEmail == 1
                         ? "any_query_feel_free_to_email".tr : "any_query_feel_free_to_call".tr,
+                      textAlign: TextAlign.center,
                       style: robotoMedium.copyWith(
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                        fontSize: 13,
+                        color: context.kMutedForeground,
                       ),
                     ),
-                    const SizedBox(height: Dimensions.paddingSizeDefault),
 
-                    configModel.maintenanceMode?.maintenanceMessages?.businessNumber == 1 ?
-                    InkWell(
-                      onTap: (){
-                        launchUrl(Uri.parse(
-                          'tel:${configModel.businessPhone ?? ""}',
-                        ), mode: LaunchMode.externalApplication);
-                      },
-                      child: Text(configModel.businessPhone ?? "",
-                        style: robotoMedium.copyWith(
-                          color: Theme.of(context).primaryColor,
-                          fontSize: Dimensions.fontSizeDefault,
-                          decoration: TextDecoration.underline,
-                          decorationColor: Theme.of(context).primaryColor,
+                    if(configModel.maintenanceMode?.maintenanceMessages?.businessNumber == 1) ...[
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: (){
+                          launchUrl(Uri.parse(
+                            'tel:${configModel.businessPhone ?? ""}',
+                          ), mode: LaunchMode.externalApplication);
+                        },
+                        child: Text(configModel.businessPhone ?? "",
+                          textAlign: TextAlign.center,
+                          style: robotoMedium.copyWith(
+                            color: context.kPrimary,
+                            fontSize: Dimensions.fontSizeDefault,
+                            decoration: TextDecoration.underline,
+                            decorationColor: context.kPrimary,
+                          ),
                         ),
                       ),
-                    ): const SizedBox(),
+                    ],
 
-                    SizedBox(height:configModel.maintenanceMode?.maintenanceMessages?.businessNumber == 1 ? Dimensions.paddingSizeExtraSmall : 0),
-
-                    configModel.maintenanceMode?.maintenanceMessages?.businessEmail == 1 ? InkWell(
-                      onTap: (){
-                        launchUrl(Uri.parse(
-                          'mailto :${configModel.businessEmail ?? ""}',
-                        ), mode: LaunchMode.externalApplication);
-                      },
-
-                      child: Text(configModel.businessEmail ?? "",
-                        style: robotoMedium.copyWith(
-                          color: Theme.of(context).primaryColor,
-                          fontSize: Dimensions.fontSizeDefault,
-                          decoration: TextDecoration.underline,
-                          decorationColor: Theme.of(context).primaryColor,
+                    if(configModel.maintenanceMode?.maintenanceMessages?.businessEmail == 1) ...[
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: (){
+                          launchUrl(Uri.parse(
+                            'mailto :${configModel.businessEmail ?? ""}',
+                          ), mode: LaunchMode.externalApplication);
+                        },
+                        child: Text(configModel.businessEmail ?? "",
+                          textAlign: TextAlign.center,
+                          style: robotoMedium.copyWith(
+                            color: context.kPrimary,
+                            fontSize: Dimensions.fontSizeDefault,
+                            decoration: TextDecoration.underline,
+                            decorationColor: context.kPrimary,
+                          ),
                         ),
                       ),
-                    ) : const SizedBox(),
+                    ],
                   ]
                 ],
+
+                const SizedBox(height: 28),
+
+                Center(
+                  child: KButton(
+                    label: 'check_again'.tr,
+                    icon: Icons.refresh_rounded,
+                    expanded: false,
+                    onTap: _checkConfigAgain,
+                  ),
+                ),
 
               ]),
             ),

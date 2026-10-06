@@ -98,23 +98,25 @@ class CartController extends Controller
             $cart = $checkCart ?? $this->cart;
             $quantity = $request['quantity'];
 
-            $basicDiscount = basic_discount_calculation($service, $variation->price * $quantity);
-            $campaignDiscount = campaign_discount_calculation($service, $variation->price * $quantity);
-            $subtotal = round($variation->price * $quantity, 2);
-
-            $applicableDiscount = ($campaignDiscount >= $basicDiscount) ? $campaignDiscount : $basicDiscount;
-
-            $tax = round((($variation->price * $quantity - $applicableDiscount) * $service['tax']) / 100, 2);
-
-            //between normal discount & campaign discount, greater one will be calculated
-            $basicDiscount = $basicDiscount > $campaignDiscount ? $basicDiscount : 0;
-            $campaignDiscount = $campaignDiscount >= $basicDiscount ? $campaignDiscount : 0;
-
             // Single-provider exclusive service: cart me hamesha locked provider hi rahega
             $cartProviderId = $request['provider_id'];
             if (!empty($service->is_single_provider) && !empty($service->single_provider_id)) {
                 $cartProviderId = $service->single_provider_id;
             }
+            $cartProvider = $cartProviderId ? $this->provider->find($cartProviderId) : null;
+
+            $basicDiscount = basic_discount_calculation($service, $variation->price * $quantity, $cartProviderId);
+            $campaignDiscount = campaign_discount_calculation($service, $variation->price * $quantity);
+            $subtotal = round($variation->price * $quantity, 2);
+
+            $applicableDiscount = ($campaignDiscount >= $basicDiscount) ? $campaignDiscount : $basicDiscount;
+
+            $effectiveTaxPercent = providerEffectiveTaxPercent($cartProvider, (float) $service['tax']);
+            $tax = round((($variation->price * $quantity - $applicableDiscount) * $effectiveTaxPercent) / 100, 2);
+
+            //between normal discount & campaign discount, greater one will be calculated
+            $basicDiscount = $basicDiscount > $campaignDiscount ? $basicDiscount : 0;
+            $campaignDiscount = $campaignDiscount >= $basicDiscount ? $campaignDiscount : 0;
 
             $cart->provider_id = $cartProviderId;
             $cart->customer_id = $customerUserId;
@@ -172,10 +174,7 @@ class CartController extends Controller
 
         $walletBalance = $this->user->find($customerUserId)?->wallet_balance ?? 0;
 
-        $additionalCharge = 0;
-        if ((business_config('booking_additional_charge', 'booking_setup'))?->live_values) {
-            $additionalCharge = (business_config('additional_charge_fee_amount', 'booking_setup'))?->live_values;
-        }
+        $additionalCharge = bookingExtraFee($cart->first()?->provider);
 
         foreach ($cart as $cartItem) {
             if ($cartItem?->coupon_code && $cartItem?->coupon_id) {
@@ -265,10 +264,7 @@ class CartController extends Controller
             }
         }
 
-        $additionalCharge = 0;
-        if ((business_config('booking_additional_charge', 'booking_setup'))?->live_values) {
-            $additionalCharge = (business_config('additional_charge_fee_amount', 'booking_setup'))?->live_values;
-        }
+        $additionalCharge = bookingExtraFee($cart->first()?->provider);
         $totalCost = $cart->sum('total_cost');
         $totalTax = $cart->sum('tax_amount');
 
@@ -318,7 +314,57 @@ class CartController extends Controller
             ->where('customer_id', $this->customerUserId)
             ->update(['provider_id' => $providerId]);
 
+        $newProvider = $providerId ? $this->provider->find($providerId) : null;
+        $this->recomputeCartTaxesForProvider($newProvider);
+
         return response()->json(response_formatter(DEFAULT_UPDATE_200), 200);
+    }
+
+    /**
+     * Provider change ke baad har cart row ka basic discount, coupon
+     * validity aur tax per-provider settings se dobara lagao.
+     */
+    private function recomputeCartTaxesForProvider(?Provider $provider): void
+    {
+        $cartRows = $this->cart->where('customer_id', $this->customerUserId)->get();
+        foreach ($cartRows as $row) {
+            $service = $this->service->find($row->service_id);
+            if (!$service) continue;
+
+            $subtotal = $row->service_cost * $row->quantity;
+
+            // basic discount: naye provider ke liye dobara
+            $basicDiscount = basic_discount_calculation($service, $subtotal, $row->provider_id);
+            $campaignDiscount = campaign_discount_calculation($service, $subtotal);
+            $applicableDiscount = max($basicDiscount, $campaignDiscount);
+
+            $basicStored = $basicDiscount > $campaignDiscount ? $basicDiscount : 0;
+            $campaignStored = $campaignDiscount >= $basicStored ? $campaignDiscount : 0;
+
+            // coupon: naye provider par valid hai to amount dobara, warna hata do
+            $couponDiscount = 0;
+            if ($row->coupon_id && $row->coupon_code) {
+                $coupon = $this->coupon->with('discount')->find($row->coupon_id);
+                if ($coupon?->discount && discount_applies_to_provider($coupon->discount, $row->provider_id)) {
+                    $couponDiscount = booking_discount_calculator($coupon->discount, $subtotal - $applicableDiscount);
+                } else {
+                    $row->coupon_discount = 0;
+                    $row->coupon_code = null;
+                    $row->coupon_id = null;
+                }
+            }
+
+            $taxBase = $subtotal - $applicableDiscount - $couponDiscount;
+            $effectiveTaxPercent = providerEffectiveTaxPercent($provider, (float) $service['tax']);
+            $tax = round(($taxBase * $effectiveTaxPercent) / 100, 2);
+
+            $row->discount_amount = $basicStored;
+            $row->campaign_discount = $campaignStored;
+            $row->coupon_discount = $couponDiscount;
+            $row->tax_amount = $tax;
+            $row->total_cost = round($subtotal - $basicStored - $campaignStored - $couponDiscount + $tax, 2);
+            $row->save();
+        }
     }
 
     /**
@@ -419,13 +465,14 @@ class CartController extends Controller
                         $quantity = $detail->quantity;
 
                         //calculation
-                        $basicDiscount = basic_discount_calculation($service, $variation->price * $quantity);
+                        $basicDiscount = basic_discount_calculation($service, $variation->price * $quantity, $provider?->id);
                         $campaignDiscount = campaign_discount_calculation($service, $variation->price * $quantity);
                         $subtotal = round($variation->price * $quantity, 2);
 
                         $applicableDiscount = ($campaignDiscount >= $basicDiscount) ? $campaignDiscount : $basicDiscount;
 
-                        $tax = round((($variation->price * $quantity - $applicableDiscount) * $service['tax']) / 100, 2);
+                        $effectiveTaxPercent = providerEffectiveTaxPercent($provider, (float) $service['tax']);
+                        $tax = round((($variation->price * $quantity - $applicableDiscount) * $effectiveTaxPercent) / 100, 2);
 
                         //between normal discount & campaign discount, greater one will be calculated
                         $basicDiscount = $basicDiscount > $campaignDiscount ? $basicDiscount : 0;

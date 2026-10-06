@@ -1,6 +1,9 @@
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:jdds/common/design_system/nest_screens_kit.dart';
 import 'package:jdds/util/core_export.dart';
 
+/// nest. `.page-header` : 42px circular back Â· centered 18px title Â· 42px action
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
   final String? subTitle;
@@ -10,7 +13,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool? centerTitle;
   final Color? bgColor;
   final Widget? actionWidget;
-  final GlobalKey<CustomShakingWidgetState>?  shakeKey;
+  final GlobalKey<CustomShakingWidgetState>? shakeKey;
   final bool isBackgroundTransparent;
 
   const CustomAppBar({
@@ -31,53 +34,101 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     bool isDark = Get.isDarkMode;
 
-    return ResponsiveHelper.isDesktop(context) ?  WebMenuBar(searchbarShakeKey: shakeKey ) : AppBar(
-      backgroundColor: isBackgroundTransparent
-          ? Colors.transparent
-          : bgColor ?? (isDark ? Theme.of(context).cardColor.withValues(alpha: .2) : Theme.of(context).scaffoldBackgroundColor),
-      surfaceTintColor: Colors.transparent,
-      centerTitle: false,
-      shape: Border(bottom: BorderSide(width: .4, color: Theme.of(context).primaryColorLight.withValues(alpha: .2))), elevation: 0,
-      titleSpacing: 0,
-      title: Column(crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title!, style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge, color: Theme.of(context).textTheme.bodyLarge!.color),),
-          if(subTitle!=null) Text(subTitle!,style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,color: Theme.of(context).hintColor),),
-
-        ],
-      ),
-
-      leading: isBackButtonExist! ? IconButton(
-        hoverColor:Colors.transparent,
-        icon: Icon(Icons.arrow_back_ios, color: isBackgroundTransparent ? Theme.of(context).colorScheme.primary : Theme.of(context).textTheme.bodyLarge!.color),
-        color: Theme.of(context).textTheme.bodyLarge!.color,
-        onPressed: () => onBackPressed != null ? onBackPressed!() : Navigator.of(context).canPop() ? Navigator.pop(context) : Get.offAllNamed(RouteHelper.getInitialRoute()),
-      ) : const SizedBox(),
-
-      actions: showCart! ? [
-        IconButton(
-          onPressed: () => Get.toNamed(RouteHelper.getCartRoute()),
-          icon: CartWidget(color: isDark ? Theme.of(context).primaryColorLight : const Color(0xFF333333), size: Dimensions.cartWidgetSize),
-        )] : actionWidget != null ? [actionWidget!] : [
-        /// Rounded outlined action button - SS-3 style
-        Container(
-          height: 36, width: 36,
-          margin: const EdgeInsets.only(right: Dimensions.paddingSizeDefault),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: isDark
-                  ? Theme.of(context).primaryColorLight.withValues(alpha: .3)
-                  : const Color(0xFFE9EAEC),
-              width: 1,
+    return ResponsiveHelper.isDesktop(context)
+        ? WebMenuBar(searchbarShakeKey: shakeKey)
+        : AppBar(
+            backgroundColor: isBackgroundTransparent
+                ? Colors.transparent
+                : bgColor ??
+                    (isDark
+                        ? Theme.of(context).cardColor.withValues(alpha: .2)
+                        : Theme.of(context).scaffoldBackgroundColor),
+            surfaceTintColor: Colors.transparent,
+            centerTitle: centerTitle,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            shape: const Border(),
+            titleSpacing: 0,
+            toolbarHeight: 56,
+            title: Column(
+              crossAxisAlignment: centerTitle == true
+                  ? CrossAxisAlignment.center
+                  : CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title ?? '',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.manrope(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).textTheme.bodyLarge!.color,
+                  ),
+                ),
+                if (subTitle != null)
+                  Text(
+                    subTitle!,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                      color: Theme.of(context).hintColor,
+                    ),
+                  ),
+              ],
             ),
-          ),
-          alignment: Alignment.center,
-          child: Icon(Icons.more_horiz, size: 20, color: Theme.of(context).textTheme.bodyLarge!.color),
-        ),
-      ],
-    );
+
+            /// 42px circular back button (nest. style)
+            leadingWidth: 62,
+            leading: isBackButtonExist!
+                ? Padding(
+                    padding: const EdgeInsets.only(left: 20),
+                    child: NestRoundButton(
+                      icon: Icons.arrow_back_ios_new_rounded,
+                      iconSize: 17,
+                      onTap: () => onBackPressed != null
+                          ? onBackPressed!()
+                          : Navigator.of(context).canPop()
+                              ? Navigator.pop(context)
+                              : Get.offAllNamed(RouteHelper.getinitialRoute()),
+                    ),
+                  )
+                : const SizedBox(width: 62),
+
+            actions: [
+              if (showCart!)
+                Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: NestRoundButton(
+                    icon: Icons.shopping_bag_outlined,
+                    onTap: () => Get.toNamed(RouteHelper.getCartRoute()),
+                    child: Center(
+                      child: CartWidget(
+                        color: isDark ? NestInk.primary : const Color(0xFF333333),
+                        size: Dimensions.cartwidgetsize,
+                      ),
+                    ),
+                  ),
+                )
+              else if (actionWidget != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: actionWidget!,
+                ),
+
+              /// reserved 42px action slot (grid balance)
+              const SizedBox(width: 62),
+            ],
+          );
   }
+
   @override
-  Size get preferredSize => Size(Dimensions.webMaxWidth, ResponsiveHelper.isDesktop(Get.context) ? Dimensions.preferredSizeWhenDesktop : Dimensions.preferredSize );
+  Size get preferredSize => Size(
+        Dimensions.webMaxWidth,
+        ResponsiveHelper.isDesktop(Get.context)
+            ? Dimensions.preferredSizeWhenDesktop
+            : Dimensions.preferredSize,
+      );
 }
+
+
+

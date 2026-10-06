@@ -1,4 +1,4 @@
-import 'package:jdds/util/dimensions.dart';
+﻿import 'package:jdds/util/dimensions.dart';
 import 'package:jdds/util/styles.dart';
 import 'package:flutter/material.dart';
 
@@ -33,4 +33,6 @@ class WebMidSectionContentItem extends StatelessWidget {
     );
   }
 }
+
+
 

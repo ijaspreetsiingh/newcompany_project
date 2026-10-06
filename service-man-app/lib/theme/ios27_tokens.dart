@@ -2,8 +2,10 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-/// iOS 27 design tokens transcribed from the public ios27-design-system kit
-/// (measured against Apple iOS 27 UI Kit 27.0.2). Visual chrome only.
+/// Design tokens transcribed from the `design_refrence` prototype
+/// (KaamPro monochrome token system — green reserved for live status).
+/// Visual chrome only. Class keeps its historic `Ios27Tokens` name so the
+/// whole app picks up the new palette without renaming call sites.
 class Ios27Tokens {
   Ios27Tokens._();
 
@@ -13,11 +15,12 @@ class Ios27Tokens {
   static double get opacityScale => 1.6 + (-1.1 * transparency);
   static double get blurScale => 0.5 + (0.8 * transparency);
 
-  static const double radiusSm = 14;
-  static const double radiusMd = 22;
-  static const double radiusLg = 34;
+  /// Reference radii: --radius 0.75rem → rounded-md = 10px, rounded-lg = 12px.
+  static const double radiusSm = 10;
+  static const double radiusMd = 10;
+  static const double radiusLg = 12;
   static const double radiusPill = 100;
-  static const double controlHeight = 50;
+  static const double controlHeight = 48;
   static const double minTap = 44;
 
   static const double blurRegular = 6;
@@ -26,37 +29,43 @@ class Ios27Tokens {
   static const double blurChrome = 50;
   static const double saturate = 1.8;
 
-  /// Option B — Royal Blue brand palette
-  static const Color accent = Color(0xFF2563EB);
-  static const Color accentDark = Color(0xFF1D4ED8);
-  static const Color accentDeep = Color(0xFF1E40AF);
-  static const Color accentSoft = Color(0xFF3B82F6);
-  static const Color accentTint = Color(0xFFDBEAFE);
-  static const Color systemBlue = Color(0xFF2563EB);
-  static const Color systemGreen = Color(0xFF22C55E);
-  static const Color systemRed = Color(0xFFEF4444);
+  /// Monochrome brand palette — primary is near-black in light mode and
+  /// near-white in dark mode (see [accentDark]).
+  static const Color accent = Color(0xFF070707);
+  static const Color accentDark = Color(0xFFE2E8F0);
+  static const Color accentDeep = Color(0xFF0F172B);
+  static const Color accentSoft = Color(0xFF5B5B5B);
+  static const Color accentTint = Color(0xFFEBEBEB);
+  static const Color systemBlue = Color(0xFF070707);
+  static const Color systemGreen = Color(0xFF008849);
+  static const Color systemRed = Color(0xFFE7000B);
   static const Color systemOrange = Color(0xFFF59E0B);
   static const Color systemYellow = Color(0xFFFBBF24);
   static const Color systemTeal = Color(0xFF14B8A6);
-  static const Color brandSecondary = Color(0xFF0EA5E9);
+  static const Color brandSecondary = Color(0xFFE6E6E6);
 
-  static const Color lightCanvas = Color(0xFFF2F2F7);
-  static const Color lightGrouped = Color(0xFFF2F2F7);
+  /// Reference success tokens.
+  static const Color success = Color(0xFF008849);
+  static const Color successSoft = Color(0xFFD8F4DF);
+  static const Color destructive = Color(0xFFE7000B);
+
+  static const Color lightCanvas = Color(0xFFF7F7F7);
+  static const Color lightGrouped = Color(0xFFF7F7F7);
   static const Color lightCard = Color(0xFFFFFFFF);
-  static const Color lightLabel = Color(0xFF000000);
-  static const Color lightSecondaryLabel = Color(0x993C3C43);
-  static const Color lightTertiaryLabel = Color(0x4D3C3C43);
-  static const Color lightFill = Color(0x14747480);
-  static const Color lightSeparator = Color(0x4A3C3C43);
+  static const Color lightLabel = Color(0xFF070707);
+  static const Color lightSecondaryLabel = Color(0xFF5B5B5B);
+  static const Color lightTertiaryLabel = Color(0xFF8A8A8A);
+  static const Color lightFill = Color(0xFFFFFFFF);
+  static const Color lightSeparator = Color(0xB3CACACA);
 
-  static const Color darkCanvas = Color(0xFF000000);
-  static const Color darkGrouped = Color(0xFF000000);
-  static const Color darkCard = Color(0xFF1C1C1E);
-  static const Color darkLabel = Color(0xFFFFFFFF);
-  static const Color darkSecondaryLabel = Color(0x99EBEBF5);
-  static const Color darkTertiaryLabel = Color(0x4DEBEBF5);
-  static const Color darkFill = Color(0x1F767680);
-  static const Color darkSeparator = Color(0x99545458);
+  static const Color darkCanvas = Color(0xFF020618);
+  static const Color darkGrouped = Color(0xFF020618);
+  static const Color darkCard = Color(0xFF0F172B);
+  static const Color darkLabel = Color(0xFFF8FAFC);
+  static const Color darkSecondaryLabel = Color(0xFF90A1B9);
+  static const Color darkTertiaryLabel = Color(0xFF90A1B9);
+  static const Color darkFill = Color(0xFF0F172B);
+  static const Color darkSeparator = Color(0x1AFFFFFF);
 
   static bool reduceTransparency(BuildContext context) {
     final features =
@@ -79,22 +88,20 @@ class Ios27Tokens {
   static Color glassFill(BuildContext context, {bool prominent = false}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     if (prominent) {
-      return Colors.white.withValues(alpha: 0.94);
+      return isDark ? darkCard : Colors.white;
     }
     if (isDark) {
-      return const Color(
-        0xFF1A1A1A,
-      ).withValues(alpha: glassAlpha(context, base: 0.7));
+      return darkCard;
     }
-    return Colors.white.withValues(alpha: glassAlpha(context, base: 0.7));
+    return Colors.white;
   }
 
   static Color rim(BuildContext context, {bool small = false}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     if (small) {
-      return Color(isDark ? 0xFFE6E6E6 : 0xFFEBEBEB);
+      return isDark ? const Color(0x1AFFFFFF) : const Color(0xB3CACACA);
     }
-    return Color(isDark ? 0xFFA6A6A6 : 0xFFDBDBDB);
+    return isDark ? const Color(0x1AFFFFFF) : const Color(0xB3CACACA);
   }
 
   static Color edge(BuildContext context) {
@@ -104,7 +111,7 @@ class Ios27Tokens {
 
   static Color fieldFill(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return isDark ? darkFill : lightFill;
+    return isDark ? darkCard : lightCard;
   }
 
   static List<BoxShadow> glassShadow(
@@ -112,19 +119,13 @@ class Ios27Tokens {
     bool small = false,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    if (small) {
-      return [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: isDark ? 0.04 : 0.02),
-          blurRadius: 15,
-          offset: const Offset(0, 8),
-        ),
-      ];
+    if (small || isDark) {
+      return const [];
     }
     return [
       BoxShadow(
-        color: Colors.black.withValues(alpha: isDark ? 0.45 : 0.25),
-        blurRadius: 48,
+        color: Colors.black.withValues(alpha: 0.02),
+        blurRadius: 15,
         offset: const Offset(0, 8),
       ),
     ];
@@ -134,11 +135,6 @@ class Ios27Tokens {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     if (isDark) return const [];
     return [
-      BoxShadow(
-        color: Colors.black.withValues(alpha: 0.06),
-        blurRadius: 24,
-        offset: const Offset(0, 8),
-      ),
       BoxShadow(
         color: Colors.black.withValues(alpha: 0.03),
         blurRadius: 2,
@@ -153,10 +149,10 @@ class Ios27Tokens {
     bool glass = false,
   }) {
     return BoxDecoration(
-      color: glass ? glassFill(context) : Theme.of(context).cardColor,
+      color: Theme.of(context).cardColor,
       borderRadius: BorderRadius.circular(radius),
-      border: Border.all(color: rim(context), width: 0.5),
-      boxShadow: glass ? glassShadow(context) : cardShadow(context),
+      border: Border.all(color: rim(context), width: 1),
+      boxShadow: glass ? glassShadow(context, small: true) : cardShadow(context),
     );
   }
 

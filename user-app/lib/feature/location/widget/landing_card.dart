@@ -27,3 +27,4 @@ class LandingCard extends StatelessWidget {
     );
   }
 }
+

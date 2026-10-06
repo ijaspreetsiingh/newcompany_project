@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:universal_html/html.dart' as html;
 
 class GoogleTagManager {
@@ -33,3 +33,4 @@ class GoogleTagManager {
     });
   }
 }
+

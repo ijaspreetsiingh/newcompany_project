@@ -1,3 +1,4 @@
+import 'package:jdds/common/design_system/nest_screens_kit.dart';
 import 'package:jdds/common/widgets/custom_pop_widget.dart';
 import 'package:jdds/common/widgets/staggered_list_animation.dart';
 import 'package:get/get.dart';
@@ -77,73 +78,68 @@ class _AddressScreenState extends State<AddressScreen> {
                               StaggeredListAnimationWrapper(
                                 key: ValueKey(addressList.length),
                                 duration: const Duration(milliseconds: 600),
-                                child: GridView.builder(
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  shrinkWrap: true,
-                                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: ResponsiveHelper.isMobile(context) ?  1 :  2,
-                                    childAspectRatio:ResponsiveHelper.isMobile(context) ?  4 : 6,
-                                    crossAxisSpacing: Dimensions.paddingSizeExtraLarge,
-                                    mainAxisExtent: Dimensions.addressItemHeight,
-                                    mainAxisSpacing:ResponsiveHelper.isDesktop(context) || ResponsiveHelper.isTab(context) ? Dimensions.paddingSizeExtraLarge: 2.0,
-                                  ),
+                                child: Column(
+                                  children: [
+                                    for(int index=0; index<addressList.length; index++)
+                                      StaggeredListAnimationItem(
+                                        index: index,
+                                        child: AddressWidget(
+                                          selectedUserAddressId: addressModel?.id,
+                                          address: addressList![index],
+                                          fromAddress: true,
+                                          fromCheckout: widget.fromPage == 'checkout' ? true : false,
 
-                                  padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-                                  itemCount: addressList.length,
-                                  itemBuilder: (context, index) {
-                                    return StaggeredListAnimationItem(
-                                      index: index,
-                                      child: AddressWidget(
-                                        selectedUserAddressId: addressModel?.id,
-                                        address: addressList![index],
-                                        fromAddress: true,
-                                        fromCheckout: widget.fromPage == 'checkout' ? true : false,
-
-                                        onTap: () async {
-                                          if(widget.fromPage == 'checkout'){
-                                            if(isRedundentClick(DateTime.now())){
-                                              return;
-                                            }
-                                            Get.dialog(const CustomLoader(),barrierDismissible: false);
-                                            await locationController.setAddressIndex(addressList![index]).then((isSuccess){
-                                              Get.back();
-                                              if(!isSuccess){
-                                                customSnackBar('this_service_not_available'.tr);
+                                          onTap: () async {
+                                            if(widget.fromPage == 'checkout'){
+                                              if(isRedundentClick(DateTime.now())){
+                                                return;
                                               }
-                                            });
-                                            Get.back();
-                                          }
-                                        },
-
-                                        onEditPressed: () {
-                                          Get.toNamed(
-                                              RouteHelper.getEditAddressRoute(addressList![index], false));
-                                        },
-                                        onRemovePressed: () {
-                                          if (Get.isSnackbarOpen) {
-                                            Get.back();
-                                          }
-                                          Get.dialog(ConfirmationDialog(
-                                            icon: Images.warning,
-                                            description: 'are_you_sure_want_to_delete_address'.tr,
-                                            onYesPressed: () {
-                                              Navigator.of(context).pop();
-
-                                              Get.dialog(
-                                                const CustomLoader(), barrierDismissible: false,
-                                              );
-                                              locationController.deleteUserAddressByID(addressList![index],
-                                              ).then((response) {
+                                              Get.dialog(const CustomLoader(),barrierDismissible: false);
+                                              await locationController.setAddressIndex(addressList![index]).then((isSuccess){
                                                 Get.back();
-                                                customSnackBar(response.message!.tr.capitalizeFirst,type : ToasterMessageType.success);
+                                                if(!isSuccess){
+                                                  customSnackBar('this_service_not_available'.tr);
+                                                }
                                               });
-                                            },
-                                          ));
-                                        },
-                                      ),
-                                    );
-                                  },
+                                              Get.back();
+                                            }
+                                          },
 
+                                          onEditPressed: () {
+                                            Get.toNamed(
+                                                RouteHelper.getEditAddressRoute(addressList![index], false));
+                                          },
+                                          onRemovePressed: () {
+                                            if (Get.isSnackbarOpen) {
+                                              Get.back();
+                                            }
+                                            Get.dialog(ConfirmationDialog(
+                                              icon: Images.warning,
+                                              description: 'are_you_sure_want_to_delete_address'.tr,
+                                              onYesPressed: () {
+                                                Navigator.of(context).pop();
+
+                                                Get.dialog(
+                                                  const CustomLoader(), barrierDismissible: false,
+                                                );
+                                                locationController.deleteUserAddressByID(addressList![index],
+                                                ).then((response) {
+                                                  Get.back();
+                                                  customSnackBar(response.message!.tr.capitalizeFirst,type : ToasterMessageType.success);
+                                                });
+                                              },
+                                            ));
+                                          },
+                                        ),
+                                      ),
+                                    const SizedBox(height: Dimensions.paddingSizeSmall),
+                                    NestOutlineAction(
+                                      label: 'add_new_address'.tr,
+                                      icon: Icons.add_rounded,
+                                      onTap: () => Get.toNamed(RouteHelper.getAddAddressRoute(widget.fromPage == 'checkout' ? true : false)),
+                                    ),
+                                    const SizedBox(height: Dimensions.paddingSizeDefault),
+                                  ],
                                 ),
                               ): const SizedBox(),
                             ),
@@ -156,30 +152,6 @@ class _AddressScreenState extends State<AddressScreen> {
                 return const Center(child: CircularProgressIndicator(),);
               }
             }),
-
-        floatingActionButton: (!ResponsiveHelper.isDesktop(context) &&  Get.find<AuthController>().isLoggedIn()) ?  GestureDetector(
-          child: Container(
-              decoration: BoxDecoration(
-                  boxShadow:Get.isDarkMode ? null: shadow,
-                  color: Theme.of(context).colorScheme.primary,
-                  borderRadius: BorderRadius.circular(Dimensions.radiusExtraMoreLarge)
-              ),
-              height: Dimensions.addAddressHeight,
-              width: Dimensions.addAddressWidth,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.add, color: Colors.white,size: 20,),
-                  const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
-                  Text('add_new_address'.tr,style: robotoMedium.copyWith(
-                      fontSize: Dimensions.fontSizeDefault,
-                      color: Theme.of(context).primaryColorLight),),
-                ],
-              )),
-          onTap:() {
-            Get.toNamed(RouteHelper.getAddAddressRoute(widget.fromPage == 'checkout' ? true : false));
-          },
-        ) : null,
       ),
     );
   }

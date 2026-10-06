@@ -1,9 +1,30 @@
 import 'dart:ui' as ui;
 import 'package:get/get.dart';
+import 'package:jdds/common/design_system/nest_screens_kit.dart';
 import 'package:jdds/util/core_export.dart';
 
 class EnableLocationPopup extends StatefulWidget {
   const EnableLocationPopup({super.key});
+
+  /// Opens the location selector over the current screen. New users use a
+  /// non-dismissible version so they can choose a service area before browsing.
+  static Future<T?> show<T>(
+    BuildContext context, {
+    bool barrierDismissible = true,
+  }) {
+    return showGeneralDialog<T>(
+      context: context,
+      useRootNavigator: true,
+      barrierDismissible: barrierDismissible,
+      barrierLabel: 'location_picker'.tr,
+      barrierColor: Colors.transparent,
+      transitionDuration: Duration.zero,
+      pageBuilder: (dialogContext, _, __) => PopScope(
+        canPop: barrierDismissible,
+        child: const EnableLocationPopup(),
+      ),
+    );
+  }
 
   @override
   State<EnableLocationPopup> createState() => _EnableLocationPopupState();
@@ -11,7 +32,9 @@ class EnableLocationPopup extends StatefulWidget {
 
 class _EnableLocationPopupState extends State<EnableLocationPopup>
     with SingleTickerProviderStateMixin {
-  static const Color _primary = Color(0xFFF26B22);
+  /// nest. style : primary ab theme se aata hai (black & white palette)
+  Color get _primary => NestInk.primary;
+
   late AnimationController _slideController;
   late Animation<Offset> _slideAnimation;
   bool _isLoading = false;
@@ -23,13 +46,10 @@ class _EnableLocationPopupState extends State<EnableLocationPopup>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
     _slideController.forward();
   }
 
@@ -51,39 +71,37 @@ class _EnableLocationPopupState extends State<EnableLocationPopup>
     if (_isLoading) return;
     _safeSetState(() => _isLoading = true);
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-    if (!mounted) return;
-    if (permission == LocationPermission.denied) {
-      _safeSetState(() => _isLoading = false);
-      customSnackBar('you_have_to_allow'.tr, type: ToasterMessageType.info);
-      return;
-    }
-    if (permission == LocationPermission.deniedForever) {
-      _safeSetState(() => _isLoading = false);
-      Get.dialog(const PermissionDialog());
-      return;
-    }
-
-    _safeSetState(() => _isLoading = true);
-
     try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (!mounted) return;
+      if (permission == LocationPermission.denied) {
+        _safeSetState(() => _isLoading = false);
+        customSnackBar('you_have_to_allow'.tr, type: ToasterMessageType.info);
+        return;
+      }
+      if (permission == LocationPermission.deniedForever) {
+        _safeSetState(() => _isLoading = false);
+        Get.dialog(const PermissionDialog());
+        return;
+      }
+
       LocationController locationController = Get.find<LocationController>();
-      AddressModel address = await locationController.getCurrentLocation(true, deviceCurrentLocation: true);
+      AddressModel address = await locationController.getCurrentLocation(
+        true,
+        deviceCurrentLocation: true,
+      );
       if (!mounted) return;
 
-      ZoneResponseModel response = await locationController.getZone(address.latitude!, address.longitude!, false);
-      if (!mounted) return;
-
-      if (response.isSuccess) {
+      if (address.zoneId?.isNotEmpty ?? false) {
         await locationController.saveUserAddress(address);
         HomeScreen.loadData(true);
         Get.offAllNamed(RouteHelper.getMainRoute('home'));
       } else {
         _safeSetState(() => _isLoading = false);
-        customSnackBar(response.message);
+        customSnackBar('service_not_available_in_this_area'.tr);
       }
     } catch (e) {
       if (!mounted) return;
@@ -92,13 +110,12 @@ class _EnableLocationPopupState extends State<EnableLocationPopup>
     }
   }
 
-
   /// Centered modal sheet - top rounded corners, compact, floats above content
   Widget _buildModalSheet(double maxWidth) {
     return Container(
       margin: EdgeInsets.zero,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: NestInk.card,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         boxShadow: [
           BoxShadow(
@@ -109,18 +126,22 @@ class _EnableLocationPopupState extends State<EnableLocationPopup>
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(24, 28, 24, 28 + MediaQuery.of(Get.context!).padding.bottom),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          28,
+          24,
+          28 + MediaQuery.of(Get.context!).padding.bottom,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-
             /// Drag handle
             Container(
               height: 4,
               width: 40,
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFFE4E4E7),
+                color: NestInk.border,
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -130,7 +151,7 @@ class _EnableLocationPopupState extends State<EnableLocationPopup>
               'enable_location'.tr,
               style: robotoBold.copyWith(
                 fontSize: Dimensions.fontSizeLarge,
-                color: const Color(0xff1A1A2E),
+                color: NestInk.primary,
               ),
             ),
             const SizedBox(height: 14),
@@ -156,9 +177,9 @@ class _EnableLocationPopupState extends State<EnableLocationPopup>
                     child: Container(
                       height: 18,
                       width: 18,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Color(0xFFF9A825),
+                        color: _primary.withValues(alpha: 0.25),
                       ),
                     ),
                   ),
@@ -201,7 +222,7 @@ class _EnableLocationPopupState extends State<EnableLocationPopup>
               style: robotoRegular.copyWith(
                 fontSize: Dimensions.fontSizeSmall,
                 height: 1.5,
-                color: const Color(0xff667085),
+                color: NestInk.mutedText,
               ),
             ),
             const SizedBox(height: 18),
@@ -217,33 +238,33 @@ class _EnableLocationPopupState extends State<EnableLocationPopup>
                       ? _primary.withValues(alpha: 0.6)
                       : _primary,
                   disabledBackgroundColor: _primary.withValues(alpha: 0.6),
-                  foregroundColor: Colors.white,
+                  foregroundColor: NestInk.background,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 child: _isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: NestInk.background,
                         ),
                       )
                     : Text(
                         'enable'.tr,
                         style: robotoMedium.copyWith(
                           fontSize: Dimensions.fontSizeDefault,
-                          color: Colors.white,
+                          color: NestInk.background,
                         ),
                       ),
               ),
             ),
             const SizedBox(height: 10),
 
-            /// Set location manually → open map screen with search
+            /// Set location manually â†’ open map screen with search
             SizedBox(
               width: maxWidth,
               height: 46,
@@ -251,13 +272,15 @@ class _EnableLocationPopupState extends State<EnableLocationPopup>
                 onPressed: _isLoading
                     ? null
                     : () {
-                        Get.toNamed(RouteHelper.getPickMapRoute(
-                          RouteHelper.accessLocation,
-                          false,
-                          'false',
-                          null,
-                          Get.find<LocationController>().getUserAddress(),
-                        ));
+                        Get.toNamed(
+                          RouteHelper.getPickMapRoute(
+                            RouteHelper.accessLocation,
+                            false,
+                            'false',
+                            null,
+                            Get.find<LocationController>().getUserAddress(),
+                          ),
+                        );
                       },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _primary,
@@ -288,6 +311,7 @@ class _EnableLocationPopupState extends State<EnableLocationPopup>
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
+    Theme.of(context);
 
     return BackdropFilter(
       filter: ui.ImageFilter.blur(sigmaX: 6, sigmaY: 6),

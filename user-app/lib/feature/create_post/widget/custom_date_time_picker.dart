@@ -23,7 +23,7 @@ class CustomDateTimePicker extends StatelessWidget {
   }
   Widget pointerInterceptor(){
 
-    Get.find<ScheduleController>().setInitialScheduleValue();
+    Get.find<ScheduleController>().setinttialScheduleValue();
     ConfigModel configModel = Get.find<SplashController>().configModel;
     var dateRangePickerController = DateRangePickerController();
 
@@ -68,7 +68,7 @@ class CustomDateTimePicker extends StatelessWidget {
                   children: [
                     CustomButton(width: 100, height: 40,
                       radius: Dimensions.radiusExtraMoreLarge,
-                      backgroundColor: scheduleController.initialSelectedScheduleType == ScheduleType.asap ? Theme.of(Get.context!).colorScheme.primary : Theme.of(Get.context!).disabledColor,
+                      backgroundColor: scheduleController.inttialSelectedScheduleType == ScheduleType.asap ? Theme.of(Get.context!).colorScheme.primary : Theme.of(Get.context!).disabledColor,
                       buttonText: "ASAP".tr.toUpperCase(),
                       onPressed: (){
                           scheduleController.updateScheduleType(scheduleType: ScheduleType.asap);
@@ -117,10 +117,10 @@ class CustomDateTimePicker extends StatelessWidget {
         onPressed: (){
           ConfigModel config = Get.find<SplashController>().configModel;
 
-          if(scheduleController.initialSelectedScheduleType == null){
+          if(scheduleController.inttialSelectedScheduleType == null){
             customSnackBar('select_your_preferable_booking_time'.tr, showDefaultSnackBar: false);
           }
-          else if(config.content!.advanceBooking != null && config.content?.scheduleBookingTimeRestriction == 1 && scheduleController.initialSelectedScheduleType != ScheduleType.asap){
+          else if(config.content!.advanceBooking != null && config.content?.scheduleBookingTimeRestriction == 1 && scheduleController.inttialSelectedScheduleType != ScheduleType.asap){
             if(scheduleController.checkValidityOfTimeRestriction(config.content!.advanceBooking!) !=null){
               customSnackBar(scheduleController.checkValidityOfTimeRestriction(config.content!.advanceBooking!), showDefaultSnackBar: false);
             }else{
@@ -128,7 +128,7 @@ class CustomDateTimePicker extends StatelessWidget {
               Get.back();
             }
           }else{
-            scheduleController.buildSchedule(scheduleType: scheduleController.initialSelectedScheduleType ?? ScheduleType.asap);
+            scheduleController.buildSchedule(scheduleType: scheduleController.inttialSelectedScheduleType ?? ScheduleType.asap);
             Get.back();
           }},
 
@@ -136,3 +136,4 @@ class CustomDateTimePicker extends StatelessWidget {
     ]);
   }
 }
+

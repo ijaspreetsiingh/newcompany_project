@@ -123,10 +123,10 @@ class NewPaymentMethodSelection extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: Dimensions.paddingSizeDefault),
         padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFF57C21).withValues(alpha:0.1) : Colors.grey[50],
+          color: isSelected ? primaryAccent.withValues(alpha:0.1) : Colors.grey[50],
           borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
           border: Border.all(
-            color: isSelected ? const Color(0xFFF57C21) : Colors.grey[300]!,
+            color: isSelected ? primaryAccent : Colors.grey[300]!,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -137,7 +137,7 @@ class NewPaymentMethodSelection extends StatelessWidget {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFF57C21) : Colors.white,
+                color: isSelected ? primaryAccent : Colors.white,
                 borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
               ),
               child: Center(
@@ -191,7 +191,7 @@ class NewPaymentMethodSelection extends StatelessWidget {
               },
               child: Radio<PaymentMethodName>(
                 value: paymentMethod.paymentMethodName,
-                activeColor: const Color(0xFFF57C21),
+                activeColor: primaryAccent,
               ),
             ),
           ],
@@ -214,10 +214,10 @@ class NewPaymentMethodSelection extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFF57C21).withValues(alpha:0.1) : Colors.grey[50],
+          color: isSelected ? primaryAccent.withValues(alpha:0.1) : Colors.grey[50],
           borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
           border: Border.all(
-            color: isSelected ? const Color(0xFFF57C21) : Colors.grey[300]!,
+            color: isSelected ? primaryAccent : Colors.grey[300]!,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -229,7 +229,7 @@ class NewPaymentMethodSelection extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFF57C21) : Colors.white,
+                color: isSelected ? primaryAccent : Colors.white,
                 borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
               ),
               child: Center(
@@ -258,3 +258,4 @@ class NewPaymentMethodSelection extends StatelessWidget {
     );
   }
 }
+

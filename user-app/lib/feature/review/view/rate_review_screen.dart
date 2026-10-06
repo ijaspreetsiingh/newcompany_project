@@ -169,7 +169,7 @@ class ReviewBookingDetailsCard extends StatelessWidget {
                       color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: 0.6)
                   ),
               ),
-              Text("${bookingDetailsContent.bookingStatus}".tr, style: robotoMedium.copyWith(color: Colors.green),),
+              Text("${bookingDetailsContent.bookingStatus}".tr, style: robotoMedium.copyWith(color: Theme.of(context).colorScheme.primary),),
             ],
           ),
           const SizedBox(height: Dimensions.paddingSizeExtraSmall,)
@@ -429,4 +429,7 @@ class NonEditableReview extends StatelessWidget {
     });
   }
 }
+
+
+
 

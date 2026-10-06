@@ -11,13 +11,13 @@ class PagerContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<OnBoardController>(builder: (onBoardingController) {
-      bool isLastPage = onBoardingController.pageIndex == 2;
-      final currentData = onBoardingController.onBoardPagerData[onBoardingController.pageIndex];
+      bool isLastPage = onBoardingController.pagetndex == 2;
+      final currentData = onBoardingController.onBoardPagerData[onBoardingController.pagetndex];
       final primaryColor = currentData["primaryColor"] as Color;
       final gradientColors = currentData["gradientColors"] as List<Color>;
       final orbColors = currentData["orbColors"] as List<Color>;
 
-      // Image 60% / sheet 40% — white sheet + black text on all pages
+      // Image 60% / sheet 40% â€” white sheet + black text on all pages
       final double sheetHeight = Get.height * 0.40;
       final double imageHeight = Get.height - sheetHeight;
       final Color sheetColor = Colors.white;
@@ -55,7 +55,7 @@ class PagerContent extends StatelessWidget {
             ),
           ),
 
-          // Fade: white-based gradient (avoid Colors.transparent → dark band artifact)
+          // Fade: white-based gradient (avoid Colors.transparent â†’ dark band artifact)
           Positioned(
             left: 0,
             right: 0,
@@ -80,7 +80,7 @@ class PagerContent extends StatelessWidget {
             ),
           ),
 
-          // Badge/Skip already baked into image assets (1.png/2.png/3.png) — no overlay needed
+          // Badge/Skip already baked into image assets (1.png/2.png/3.png) â€” no overlay needed
 
           // Bottom sheet: FULL theme color + contrasting light text
           Positioned(
@@ -111,7 +111,7 @@ class PagerContent extends StatelessWidget {
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Text(
-                          "0${onBoardingController.pageIndex + 1} / 03",
+                          "0${onBoardingController.pagetndex + 1} / 03",
                           style: robotoMedium.copyWith(fontSize: 12, color: primaryColor),
                         ),
                       ),
@@ -149,9 +149,9 @@ class PagerContent extends StatelessWidget {
                                 right: index < onBoardingController.onBoardPagerData.length - 1 ? 6 : 0,
                               ),
                               height: 7,
-                              width: onBoardingController.pageIndex == index ? 24 : 7,
+                              width: onBoardingController.pagetndex == index ? 24 : 7,
                               decoration: BoxDecoration(
-                                color: onBoardingController.pageIndex == index
+                                color: onBoardingController.pagetndex == index
                                     ? primaryColor
                                     : Colors.black.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(10),
@@ -182,7 +182,7 @@ class PagerContent extends StatelessWidget {
                           Expanded(
                             flex: 2,
                             child: CustomButton(
-                              buttonText: isLastPage ? "${"get_started".tr} →" : "Continue →",
+                              buttonText: isLastPage ? "${"get_started".tr} â†’" : "Continue â†’",
                               fontSize: Dimensions.fontSizeLarge,
                               height: 54,
                               radius: 14,
@@ -235,3 +235,6 @@ void _checkPermissionAndNavigate() async {
   Get.find<SplashController>().disableShowOnboardingScreen();
   Get.offAllNamed(RouteHelper.getMainRoute('home'));
 }
+
+
+

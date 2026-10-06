@@ -55,3 +55,4 @@ class NearbyProviderListview extends StatelessWidget {
         });
   }
 }
+

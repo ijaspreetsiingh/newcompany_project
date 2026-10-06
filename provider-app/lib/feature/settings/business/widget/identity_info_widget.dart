@@ -14,8 +14,10 @@ class IdentityInfoWidget extends StatelessWidget {
         builder: (identityController) {
           return Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
+                color: InkColors.card,
+                borderRadius: BorderRadius.circular(19),
+                border: Border.all(color: InkColors.border),
+                boxShadow: InkColors.cardShadow,
               ),
               padding: const EdgeInsets.symmetric(horizontal : Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeLarge),
               child: Column(
@@ -36,12 +38,12 @@ class IdentityInfoWidget extends StatelessWidget {
                           width: Get.width,
                           height: 40,
                           decoration: BoxDecoration(
-                            border: Border(bottom: BorderSide(color: Theme.of(context).hintColor.withValues(alpha: 0.4))),
+                            border: Border(bottom: BorderSide(color: InkColors.border)),
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
                               padding: EdgeInsets.zero,
-                              dropdownColor: Theme.of(context).cardColor,
+                              dropdownColor: InkColors.card,
                               borderRadius: BorderRadius.circular(5),
                               elevation: 2,
                               hint: Text('select_identity_type'.tr),
@@ -143,11 +145,11 @@ class IdentityInfoWidget extends StatelessWidget {
                                             transform: Matrix4.translationValues(8, -8, 0),
                                             decoration: BoxDecoration(
                                               borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                                              color: Theme.of(context).cardColor,
-                                              border: Border.all(color: Theme.of(context).primaryColor),
+                                              color: InkColors.card,
+                                              border: Border.all(color: InkColors.foreground),
                                             ),
                                             padding: EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
-                                            child: Icon(Icons.delete, color: Theme.of(context).colorScheme.error, size: Dimensions.paddingSizeDefault),
+                                            child: Icon(Icons.delete, color: InkColors.destructive, size: Dimensions.paddingSizeDefault),
                                           ),
                                         ),
                                       ),
@@ -162,11 +164,11 @@ class IdentityInfoWidget extends StatelessWidget {
                                           transform: Matrix4.translationValues(8, -8, 0),
                                           decoration: BoxDecoration(
                                             borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                                            color: Theme.of(context).cardColor,
-                                            border: Border.all(color: Theme.of(context).primaryColor),
+                                             color: InkColors.card,
+                                             border: Border.all(color: InkColors.foreground),
                                           ),
                                           padding: EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
-                                          child: Icon(pickedIdentityImage ? Icons.close : Icons.edit, color: Theme.of(context).primaryColor, size: Dimensions.paddingSizeDefault,),
+                                          child: Icon(pickedIdentityImage ? Icons.close : Icons.edit, color: InkColors.foreground, size: Dimensions.paddingSizeDefault,),
                                         ),
                                       ),
                                     ]),
@@ -208,11 +210,11 @@ class IdentityInfoWidget extends StatelessWidget {
                                         transform: Matrix4.translationValues(8, -8, 0),
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                                          color: Theme.of(context).cardColor,
-                                          border: Border.all(color: Theme.of(context).primaryColor),
+                                          color: InkColors.card,
+                                          border: Border.all(color: InkColors.foreground),
                                         ),
                                         padding: EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
-                                        child: Icon(Icons.close, color: Theme.of(context).primaryColor, size: Dimensions.paddingSizeDefault,),
+                                        child: Icon(Icons.close, color: InkColors.foreground, size: Dimensions.paddingSizeDefault,),
                                       ),
                                     ),
                                   )),

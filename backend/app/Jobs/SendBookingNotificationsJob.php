@@ -16,11 +16,11 @@ class SendBookingNotificationsJob implements ShouldQueue
     public int $timeout = 30;
 
     protected array $notifications;
-    protected int $bookingId;
+    protected string $bookingId;
     protected string $userRole;
-    protected ?int $providerId;
+    protected ?string $providerId;
 
-    public function __construct(array $notifications, int $bookingId, string $userRole, ?int $providerId = null)
+    public function __construct(array $notifications, string $bookingId, string $userRole, ?string $providerId = null)
     {
         $this->notifications = $notifications;
         $this->bookingId = $bookingId;

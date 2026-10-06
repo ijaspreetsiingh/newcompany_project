@@ -9,31 +9,44 @@ class BusinessReportBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      height: 250,
-      color: Theme.of(context).cardColor,
-      child: Column(
-        children: [
-          const SizedBox(height: Dimensions.paddingSizeSmall,),
-          Row(
-            children: [
-              Image.asset(Images.dashboardEarning,height: 15,width:15),
-              const SizedBox(width: Dimensions.paddingSizeSmall,),
-              Text("expense_statistics".tr,
-                style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,
-                    color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8)),
-              ),
-            ],
-          ),
-          const SizedBox(height: Dimensions.paddingSizeSmall,),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              height: 250,
-              color: Theme.of(context).cardColor,
+    return  Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        height: 250,
+        decoration: BoxDecoration(
+          color: InkColors.card,
+          borderRadius: BorderRadius.circular(19),
+          border: Border.all(color: InkColors.border),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  height: 34,
+                  width: 34,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: InkColors.secondary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child:  Icon(Icons.receipt_long_outlined, size: 17, color: InkColors.foreground),
+                ),
+                const SizedBox(width: 12,),
+                Text("expense_statistics".tr,
+                  style:  TextStyle(
+                    fontSize: 13.5,
+                    height: 1.3,
+                    fontWeight: FontWeight.w600,
+                    color: InkColors.foreground,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16,),
+            Expanded(
               child: Chart(
-                //data:basicData,
                 data: Get.find<BusinessReportController>().barChartData.isNotEmpty?Get.find<BusinessReportController>().barChartData:basicData,
                 variables: {
                   'Timeline': Variable(
@@ -44,19 +57,31 @@ class BusinessReportBarChart extends StatelessWidget {
                   ),
                 },
                 axes: [
-                  Defaults.horizontalAxis,
-                  Defaults.verticalAxis,
+                  AxisGuide(
+                    line: PaintStyle(strokeColor: InkColors.border, strokeWidth: 1),
+                    label: LabelStyle(
+                      textStyle:  TextStyle(fontSize: 10, color: InkColors.mutedForeground),
+                      offset: const Offset(0, 7.5),
+                    ),
+                  ),
+                  AxisGuide(
+                    grid: PaintStyle(strokeColor: InkColors.border, strokeWidth: 1),
+                    label: LabelStyle(
+                      textStyle:  TextStyle(fontSize: 10, color: InkColors.mutedForeground),
+                      offset: const Offset(-7.5, 0),
+                    ),
+                  ),
                 ],
                 selections: {'tap': PointSelection(dim: Dim.x)},
                 tooltip: TooltipGuide(
-                    backgroundColor: Theme.of(context).cardColor
+                    backgroundColor: InkColors.foreground,
+                    textStyle:  TextStyle(fontSize: 11, color: InkColors.card),
                 ),
-                marks: [IntervalMark()],
+                marks: [IntervalMark(color: ColorEncode(value: InkColors.destructive))],
               ),
             ),
-          ),
-          const SizedBox(height: Dimensions.paddingSizeSmall,),
-        ],
+          ],
+        ),
       ),
     );
   }

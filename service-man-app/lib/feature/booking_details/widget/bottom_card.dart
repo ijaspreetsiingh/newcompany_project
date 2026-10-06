@@ -13,59 +13,47 @@ class BottomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color:Get.isDarkMode?Theme.of(context).cardColor.withValues(alpha:0.6):Theme.of(context).primaryColor.withValues(alpha:0.05),
-        //boxShadow: shadow
-      ),
+    return Column(
+      children: [
+        ClipRRect(
+            borderRadius: BorderRadius.circular(50),
+            child: CustomImage(
+              height: 50,
+              width: 50,
+              image: image,
+              placeholder: Images.userPlaceHolder,
+            )
+        ),
 
-      child: Column(
-        children: [
-          const Row(),
+        const SizedBox(height: Dimensions.paddingSizeSmall,),
+        Text(name, style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault, color: context.kForeground),textAlign: TextAlign.center,),
 
-          const SizedBox(height: Dimensions.paddingSizeDefault,),
-          ClipRRect(
-              borderRadius: BorderRadius.circular(50),
-              child: CustomImage(
-                height: 50,
-                width: 50,
-                image: image,
-                placeholder: Images.userPlaceHolder,
-              )
-          ),
+        const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
+        Text(phone, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
+            color: context.kMutedForeground)),
 
+        if(address != null) ...[
           const SizedBox(height: Dimensions.paddingSizeSmall,),
-          Text(name, style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault,),textAlign: TextAlign.center,),
-
-          const SizedBox(height: Dimensions.paddingSizeSmall,),
-          Text(phone, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-              color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.7))),
-
-          const SizedBox(height: Dimensions.paddingSizeSmall,),
-          address != null ?
           Padding(padding: const EdgeInsets.symmetric(horizontal: 10),
             child: RichText(
                 text: TextSpan(text: '${'service_address'.tr} :',
                   style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault,
-                    color: Theme.of(context).textTheme.bodyLarge!.color,
+                    color: context.kForeground,
                   ),
                   children: [
                     TextSpan(
                       text: ' $address',
                       style: robotoRegular.copyWith(
                         fontSize: Dimensions.fontSizeDefault,
-                        color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.7),
+                        color: context.kMutedForeground,
                       ),
                     ),
                   ],
                 ),
                 textAlign: TextAlign.center),
-          ) : const SizedBox(),
-
-          const SizedBox(height:Dimensions.paddingSizeLarge),
+          ),
         ],
-      ),
+      ],
     );
   }
 }

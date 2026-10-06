@@ -222,7 +222,7 @@ class _CustomPostCheckoutScreenState extends State<CustomPostCheckoutScreen> {
         customSnackBar("please_input_contact_person_name_and_phone_number".tr, type: ToasterMessageType.info);
       }
      else if(cartController.walletPaymentStatus && isPartialPayment && checkoutController.selectedPaymentMethod == PaymentMethodName.walletMoney){
-       customSnackBar("select_another_payment_method_to_pay_remaining_bill".tr, type: ToasterMessageType.info);
+       customSnackBar("select_another_payment_method_to_pay_remaintng_bill".tr, type: ToasterMessageType.info);
      }
       else if(checkoutController.selectedPaymentMethod == PaymentMethodName.none){
         customSnackBar("select_payment_method".tr, type: ToasterMessageType.info);
@@ -337,3 +337,6 @@ class _CustomPostCheckoutScreenState extends State<CustomPostCheckoutScreen> {
     }
   }
 }
+
+
+

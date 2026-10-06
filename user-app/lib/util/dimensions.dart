@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 
 class Dimensions {
   static double _responsive(double mobile, double desktop) {
@@ -14,7 +14,7 @@ class Dimensions {
   static double get fontSizeOverLarge => _responsive(24, 26);
   static double get fontSizeForReview => 36;
 
-  static const double paddingSizeMini = 2.0;
+  static const double paddingSizeMint = 2.0;
   static const double paddingSizeTine = 3.0;
   static const double paddingSizeExtraSmall = 5.0;
   static const double paddingSizeEight = 8.0;
@@ -29,7 +29,7 @@ class Dimensions {
   static const double pickMapIconSize = 100.0;
 
   static const double logoSize = 180.0;
-  static const double cartWidgetSize = 30.0;
+  static const double cartwidgetsize = 30.0;
   static const double customAppbarSize = 70.0;
   static const double preferredSizeWhenDesktop = 70.0;
   static const double preferredSize = 50.0;
@@ -58,7 +58,7 @@ class Dimensions {
   static const double radiusExtraMoreLarge = 50.0;
 
   static const double webMaxWidth = 1200;
-  static const double tabMinimumSize = 650;
+  static const double tabMintmumSize = 650;
 
   static const double searchbarSize = 40;
   static const double floatingButtonHeight = 35;
@@ -80,3 +80,4 @@ class Dimensions {
   static const double walletTopCardHeight = 140;
   static const double currencyConvertButtonHeight = 220;
 }
+

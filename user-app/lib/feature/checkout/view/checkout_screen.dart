@@ -2,6 +2,7 @@
 import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 import 'package:jdds/common/widgets/address_selection_drawer.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 
 class CheckoutScreen extends StatefulWidget {
@@ -51,6 +52,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
+
     return WillPopScope(
       onWillPop: ()  => _exitApp(),
       child: GetBuilder<CheckOutController>(builder: (checkoutController){
@@ -59,22 +64,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           drawer: ResponsiveHelper.isDesktop(context) ? const AddressSelectionDrawer() : null,
 
           endDrawer: ResponsiveHelper.isDesktop(context) ? const MenuDrawer() : null,
-          appBar: CustomAppBar( title: 'checkout'.tr,
-            onBackPressed: () {
-              if(widget.pageState == 'payment' || checkoutController.currentPageState == PageState.payment) {
-                checkoutController.changePaymentMethod();
-                checkoutController.updateState(PageState.orderDetails);
-                if(ResponsiveHelper.isWeb()) {
-                  Get.toNamed(RouteHelper.getCheckoutRoute('cart','orderDetails','null'));
+          appBar: AppBar(
+            automaticallyImplyLeading: true,
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back_ios_new_rounded, color: primaryColor),
+              onPressed: () {
+                if(widget.pageState == 'payment' || checkoutController.currentPageState == PageState.payment) {
+                  checkoutController.changePaymentMethod();
+                  checkoutController.updateState(PageState.orderDetails);
+                  if(ResponsiveHelper.isWeb()) {
+                    Get.toNamed(RouteHelper.getCheckoutRoute('cart','orderDetails','null'));
+                  }
+                } else if(widget.pageState == 'complete' || Get.find<CheckOutController>().currentPageState == PageState.complete){
+                  Get.offAllNamed(RouteHelper.getMainRoute('home'));
+                } else {
+                  checkoutController.updateState(PageState.orderDetails);
+                  Get.back();
                 }
-              } else if(widget.pageState == 'complete' || Get.find<CheckOutController>().currentPageState == PageState.complete){
-                Get.offAllNamed(RouteHelper.getMainRoute('home'));
-                return false;
-              } else {
-                checkoutController.updateState(PageState.orderDetails);
-                Get.back();
-              }
-            }
+              },
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: Text('checkout'.tr,
+              style: GoogleFonts.manrope(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: primaryColor,
+              ),
+            ),
           ),
           body: SafeArea(child: FooterBaseView( child: WebShadowWrap(
             child: SizedBox(width: Dimensions.webMaxWidth, child:  Column(mainAxisAlignment: MainAxisAlignment.start, children: [
@@ -122,6 +139,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 }
+
+
 
 
 

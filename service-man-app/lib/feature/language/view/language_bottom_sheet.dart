@@ -1,109 +1,226 @@
 import 'package:demandium_serviceman/utils/core_export.dart';
 import 'package:get/get.dart';
 
-
-
 class ChooseLanguageBottomSheet extends StatelessWidget {
-  const ChooseLanguageBottomSheet({super.key,});
+  const ChooseLanguageBottomSheet({super.key});
 
   @override
   Widget build(BuildContext context) {
-
     return GetBuilder<LocalizationController>(
       initState: (_) {
         Get.find<LocalizationController>().filterLanguage(shouldUpdate: false);
       },
-      builder: (localizationController){
-        return Ios27Glass(
-          size: Ios27GlassSize.large,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(Ios27Tokens.radiusLg)),
-          child: Container(
+      builder: (localizationController) {
+        return Container(
           width: Dimensions.webMaxWidth,
-          padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
+          decoration: BoxDecoration(
+            color: context.kBackground,
+            borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(Ios27Tokens.radiusLg)),
+            border: Border(top: BorderSide(color: context.kBorder, width: 1)),
+          ),
+          padding: EdgeInsets.only(
+            left: Dimensions.paddingSizeLarge,
+            right: Dimensions.paddingSizeLarge,
+            top: Dimensions.paddingSizeSmall,
+            bottom: Dimensions.paddingSizeLarge + MediaQuery.of(context).padding.bottom,
+          ),
           child: SingleChildScrollView(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: Dimensions.paddingSizeDefault),
-                  Container(
-                    height: 5, width: 45,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                        color: Theme.of(context).hintColor.withValues(alpha:0.15)
-                    ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  height: 5,
+                  width: 45,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                    color: context.kMuted,
                   ),
-                  const SizedBox(height:Dimensions.paddingSizeExtraLarge),
-                  Text("select_language".tr,style: robotoMedium.copyWith( color: Theme.of(context).primaryColorLight, fontSize: Dimensions.fontSizeDefault)),
-                  const SizedBox(height: Dimensions.paddingSizeDefault),
-                  Text("choose_your_language_to_proceed".tr,style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault)),
-                  const SizedBox(height: Dimensions.paddingSizeDefault),
+                ),
+                const SizedBox(height: 16),
 
-                  ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxHeight: Get.height * 0.5,
-                      minHeight: Get.height * 0.1,
+                Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: context.kMuted,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.language_rounded,
+                        color: context.kForeground,
+                        size: 22,
+                      ),
                     ),
-                    child: ListView.builder(
-                        itemCount: localizationController.localLanguages.length,
-                        shrinkWrap: true,
-                        itemBuilder: (BuildContext context, int index) => InkWell (
-                          onTap: () {
-                            localizationController.setSelectIndex(index);
-                          },
-                          child: Container (
-                            height: 70,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(Dimensions.paddingSizeDefault),
-                                border: Border.all(color: localizationController.selectedIndex == index ? Theme.of(context).primaryColor.withValues(alpha:0.15) : Colors.transparent ),
-                                color:  localizationController.selectedIndex == index ? Get.isDarkMode? Colors.grey.withValues(alpha:0.2) : Theme.of(context).primaryColor.withValues(alpha:0.03) : Colors.transparent
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "select_language".tr,
+                            style: robotoBold.copyWith(
+                              fontSize: 20,
+                              color: context.kForeground,
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeSmall),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            "choose_your_language_to_proceed".tr,
+                            style: robotoRegular.copyWith(
+                              fontSize: Dimensions.fontSizeSmall,
+                              color: context.kMutedForeground,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: Get.height * 0.45,
+                    minHeight: Get.height * 0.1,
+                  ),
+                  child: ListView.builder(
+                    itemCount: localizationController.localLanguages.length,
+                    shrinkWrap: true,
+                    itemBuilder: (BuildContext context, int index) {
+                      final bool isSelected =
+                          localizationController.selectedIndex == index;
+                      final LanguageModel language =
+                          localizationController.localLanguages[index];
+
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                            bottom: Dimensions.paddingSizeSmall),
+                        child: InkWell(
+                          onTap: () =>
+                              localizationController.setSelectIndex(index),
+                          borderRadius: BorderRadius.circular(kRadiusMd),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: Dimensions.paddingSizeDefault,
+                              vertical: Dimensions.paddingSizeSmall + 2,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(kRadiusMd),
+                              color: isSelected
+                                  ? context.kPrimary
+                                  : context.kCard,
+                              border: Border.all(
+                                color: isSelected
+                                    ? context.kPrimary
+                                    : context.kBorder,
+                                width: 1,
+                              ),
+                            ),
                             child: Row(
                               children: [
                                 ClipRRect(
-                                  borderRadius: BorderRadius.circular(50),
-                                  child: Image.asset(localizationController.localLanguages[index].imageUrl!, width: 36, height: 36),
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.asset(
+                                    language.imageUrl!,
+                                    width: 34,
+                                    height: 34,
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
-                                const SizedBox(width: Dimensions.paddingSizeSmall),
-
-                                Text(localizationController.localLanguages[index].languageName!, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeLarge)),
+                                const SizedBox(
+                                    width: Dimensions.paddingSizeDefault),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        language.languageName!,
+                                        style: robotoMedium.copyWith(
+                                          fontSize:
+                                              Dimensions.fontSizeDefault,
+                                          color: isSelected
+                                              ? context.kPrimaryForeground
+                                              : context.kForeground,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        (language.languageCode ?? '')
+                                            .toUpperCase(),
+                                        style: robotoRegular.copyWith(
+                                          fontSize:
+                                              Dimensions.fontSizeExtraSmall,
+                                          color: isSelected
+                                              ? context.kPrimaryForeground
+                                                  .withValues(alpha: 0.8)
+                                              : context.kMutedForeground,
+                                          letterSpacing: 0.8,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (isSelected)
+                                  Icon(
+                                    Icons.check_rounded,
+                                    size: 18,
+                                    color: context.kPrimaryForeground,
+                                  )
+                                else
+                                  const SizedBox.shrink(),
                               ],
                             ),
-
                           ),
-                        )
-                    ),
+                        ),
+                      );
+                    },
                   ),
+                ),
+                const SizedBox(height: 8),
 
-                  GetBuilder<LocalizationController>(builder: (localizationController){
-                    return  CustomButton(
-                      btnTxt: 'select'.tr,
-                      margin: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-                      onPressed: () {
-                        Get.find<SplashController>().disableIntro();
-                        if(localizationController.localLanguages.isNotEmpty && localizationController.selectedIndex != -1) {
-                          localizationController.setLanguage(Locale(
-                            localizationController.localLanguages[localizationController.selectedIndex].languageCode!,
-                            localizationController.localLanguages[localizationController.selectedIndex].countryCode,
-                          ));
-                          Get.find<SplashController>().getConfigData();
-                          Get.back();
-                        }else {
-                          showCustomSnackBar('select_a_language'.tr, type: ToasterMessageType.info);
-                        }
-                      },
-                    );
-                  })
-                ],
-              ),
-
-
-              SizedBox(height: ResponsiveHelper.isMobile(context) ? Dimensions.paddingSizeSmall : 0),
-            ]),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      top: Dimensions.paddingSizeSmall),
+                  child: KButton(
+                    label: 'select'.tr,
+                    height: 48,
+                    onTap: () {
+                      Get.find<SplashController>().disableIntro();
+                      if (localizationController.localLanguages.isNotEmpty &&
+                          localizationController.selectedIndex != -1) {
+                        localizationController.setLanguage(Locale(
+                          localizationController
+                              .localLanguages[
+                                  localizationController.selectedIndex]
+                              .languageCode!,
+                          localizationController
+                              .localLanguages[
+                                  localizationController.selectedIndex]
+                              .countryCode,
+                        ));
+                        Get.find<SplashController>().getConfigData();
+                        Get.back();
+                      } else {
+                        showCustomSnackBar('select_a_language'.tr,
+                            type: ToasterMessageType.info);
+                      }
+                    },
+                  ),
+                ),
+                SizedBox(
+                    height:
+                        ResponsiveHelper.isMobile(context) ? Dimensions.paddingSizeSmall : 0),
+              ],
+            ),
           ),
-        ),
         );
       },
     );

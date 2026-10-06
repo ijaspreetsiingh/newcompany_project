@@ -44,3 +44,4 @@ class NoInternetScreen extends StatelessWidget {
     );
   }
 }
+

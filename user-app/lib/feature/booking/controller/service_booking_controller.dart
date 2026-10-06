@@ -1,253 +1,306 @@
+import 'package:get/get.dart';
 import 'package:jdds/common/models/popup_menu_model.dart';
-import 'package:jdds/helper/debounce_helper.dart';
-import 'package:jdds/util/core_export.dart';
 import 'package:jdds/feature/booking/model/service_availability_model.dart';
 import 'package:jdds/feature/booking/widget/provider_available_bottom_sheet.dart';
 import 'package:jdds/feature/booking/widget/service_unavailable_dialog.dart';
-import 'package:get/get.dart';
+import 'package:jdds/util/core_export.dart';
 
-enum BookingStatusTabs {all, pending, accepted, ongoing,completed,canceled }
+enum BookingStatusTabs { all, ongoing, completed, cancelled }
 
-class ServiceBookingController extends GetxController implements GetxService {
+class ServiceBookingController extends GetxController {
   final ServiceBookingRepo serviceBookingRepo;
 
   ServiceBookingController({required this.serviceBookingRepo});
 
-  List<BookingModel>? _bookingList;
+  List<BookingModel>? bookingList;
+  BookingContent? bookingContent;
 
-  List<BookingModel>? get bookingList => _bookingList;
-  int _offset = 1;
-
-  int? get offset => _offset;
-  BookingContent? _bookingContent;
-
-  BookingContent? get bookingContent => _bookingContent;
-
-  int _bookingListPageSize = 0;
-  final int _bookingListCurrentPage = 0;
-
-  int get bookingListPageSize => _bookingListPageSize;
-
-  int get bookingListCurrentPage => _bookingListCurrentPage;
-  BookingStatusTabs _selectedBookingStatus = BookingStatusTabs.all;
-
-  BookingStatusTabs get selectedBookingStatus => _selectedBookingStatus;
-
-  bool _isNotAvailable = false;
-  bool get isNotAvailable => _isNotAvailable;
-
-  bool _isPriceChanged = false;
-  bool get isPriceChanged => _isPriceChanged;
-
-  ServiceAvailabilityModel? serviceAvailability;
-
-  int _rebookIndex=-1;
-  int get  selectedRebookIndex => _rebookIndex;
-
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
-
+  BookingStatusTabs selectedBookingStatus = BookingStatusTabs.all;
   ServiceType selectedServiceType = ServiceType.all;
 
-  bool _isTabLoading = false;
-  bool get isTabLoading => _isTabLoading;
+  bool isLoading = false;
+  bool isTabLoading = false;
+  int rebookIndex = -1;
 
-  final DebounceHelper _debounceHelper = DebounceHelper(milliseconds: 300);
+  String get selectedBookingStatusApiValue => _statusApiValue(selectedBookingStatus);
 
+  String _statusApiValue(BookingStatusTabs status) =>
+      status == BookingStatusTabs.cancelled ? 'canceled' : status.name.toLowerCase();
 
+  ServiceAvailabilityModel? serviceAvailability;
+  bool isNotAvailable = false;
+  bool isPriceChanged = false;
 
-  void updateBookingStatusTabs(BookingStatusTabs bookingStatusTabs, {
-    bool firstTimeCall = true, bool fromMenu = false,
-  }) {
+  Future<void> getAllBookingService({
+    required int offset,
+    required String bookingStatus,
+    required bool isFromPagination,
+    required String serviceType,
+  }) async {
+    if (!isFromPagination) {
+      isLoading = true;
+    }
+    update();
 
-    // Don't do anything if the same tab is already selected
-    if (_selectedBookingStatus == bookingStatusTabs) {
+    try {
+      Response response = await serviceBookingRepo.getBookingList(
+        offset: offset,
+        bookingStatus: bookingStatus,
+        serviceType: serviceType,
+      );
+
+      if (response.statusCode == 200 && response.body is Map) {
+        final Map<String, dynamic> body = Map<String, dynamic>.from(response.body as Map);
+
+        if (body['content'] is Map || body['content'] is List) {
+          final rawContent = body['content'];
+          final normalizedBody = Map<String, dynamic>.from(body);
+          if (rawContent is List) {
+            normalizedBody['content'] = <String, dynamic>{'data': rawContent, 'total': rawContent.length, 'current_page': offset};
+          }
+          ServiceBookingList serviceBookingList = ServiceBookingList.fromJson(normalizedBody);
+          BookingContent? content = serviceBookingList.content;
+
+          if (content != null) {
+            content.total ??= content.bookingModel?.length ?? 0;
+            content.currentPage ??= offset;
+            bookingContent = content;
+
+            List<BookingModel> fetchedBookings = content.bookingModel ?? [];
+            if (isFromPagination && bookingList != null) {
+              bookingList!.addAll(fetchedBookings);
+            } else {
+              bookingList = fetchedBookings;
+            }
+          }
+        } else {
+          bookingList ??= [];
+        }
+      } else {
+        bookingList ??= [];
+        ApiChecker.checkApi(response);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('getAllBookingService error: $e');
+      }
+      bookingList ??= [];
+    }
+
+    isLoading = false;
+    isTabLoading = false;
+    update();
+  }
+
+  void updateBookingStatusTabs(BookingStatusTabs status, {bool firstTimeCall = true}) {
+    selectedBookingStatus = status;
+    update();
+
+    if (firstTimeCall) {
+      getAllBookingService(
+        offset: 1,
+        bookingStatus: _statusApiValue(status),
+        isFromPagination: false,
+        serviceType: selectedServiceType.name,
+      );
+    }
+  }
+
+  void updateSelectedServiceType({ServiceType? type}) {
+    selectedServiceType = type ?? ServiceType.all;
+    update();
+
+    if (type != null) {
+      getAllBookingService(
+        offset: 1,
+        bookingStatus: selectedBookingStatusApiValue,
+        isFromPagination: false,
+        serviceType: selectedServiceType.name,
+      );
+    }
+  }
+
+  Future<void> checkCartSubcategory(String bookingId, String subCategoryId) async {
+    isLoading = true;
+    update();
+
+    final CartController cartController = Get.find<CartController>();
+    try {
+      await cartController.getCartListFromServer(shouldUpdate: false);
+    } catch (e) {
+      if (kDebugMode) {
+        print('checkCartSubcategory cart fetch error: $e');
+      }
+    }
+
+    if (cartController.cartList.isNotEmpty &&
+        cartController.cartList.first.subCategoryId != subCategoryId) {
+      isLoading = false;
+      update();
+
+      Get.dialog(ConfirmationDialog(
+        icon: Images.warning,
+        title: "are_you_sure_to_reset".tr,
+        description: 'you_have_service_from_other_sub_category'.tr,
+        onYesPressed: () async {
+          Get.back();
+          Get.dialog(const CustomLoader(), barrierDismissible: false);
+          await cartController.removeAllCartItem();
+          Get.back();
+          await _checkAvailabilityAndRebook(bookingId);
+        },
+      ));
       return;
     }
 
-    _selectedBookingStatus = bookingStatusTabs;
-    update(); // Update UI immediately to show selected tab
+    await _checkAvailabilityAndRebook(bookingId);
+  }
 
-    if (firstTimeCall) {
-      // Clear previous booking list data immediately to show shimmer
-      _bookingList = null;
+  Future<void> _checkAvailabilityAndRebook(String bookingId) async {
+    isLoading = true;
+    update();
 
-      // Set loading state for tab change
-      _isTabLoading = true;
+    try {
+      Response response = await serviceBookingRepo.rebookCheck(bookingId);
+
+      if (response.statusCode == 200 && response.body is Map) {
+        serviceAvailability = ServiceAvailabilityModel.fromJson(
+          Map<String, dynamic>.from(response.body as Map),
+        );
+
+        final content = serviceAvailability?.content;
+        final List<Services> services = content?.services ?? [];
+
+        isNotAvailable = services.any((s) => s.isAvailable == 0);
+        isPriceChanged = services.any((s) => s.isPriceChanged == 1);
+        if (!isNotAvailable && !isPriceChanged && (content?.isServiceInfoUnchanged ?? 1) == 0) {
+          isPriceChanged = true;
+        }
+
+        isLoading = false;
+        update();
+
+        if ((content?.isProviderAvailable ?? 1) == 0) {
+          _showRebookWarningSheet(bookingId);
+        } else if (isNotAvailable || isPriceChanged) {
+          _showServiceIssueDialog(bookingId);
+        } else {
+          await rebook(bookingId);
+        }
+        return;
+      }
+
+      isLoading = false;
       update();
 
-      // Use DebounceHelper to debounce the API call
-      _debounceHelper.run(() {
-        getAllBookingService(
-          offset: 1,
-          bookingStatus: _selectedBookingStatus.name.toLowerCase(),
-          isFromPagination: false,
-          serviceType: selectedServiceType.name,
-        );
-      });
+      if (response.statusCode == 401 || response.statusCode == 403 || response.statusCode == 204) {
+        ApiChecker.checkApi(response);
+      } else {
+        // Availability API unavailable - attempt rebook dtrectly so user is not stuck.
+        await rebook(bookingId);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('rebook availability check error: $e');
+      }
+      isLoading = false;
+      update();
+      await rebook(bookingId);
     }
   }
 
-
-  Future<void> getAllBookingService({required int offset, required String bookingStatus, required bool isFromPagination, bool fromMenu = false, required String serviceType}) async {
-    _offset = offset;
-    if (!isFromPagination) {
-      _bookingList = null;
-    }
-    Response response = await serviceBookingRepo.getBookingList(offset: offset, bookingStatus: bookingStatus, serviceType: serviceType);
-    if (response.statusCode == 200) {
-      ServiceBookingList serviceBookingModel = ServiceBookingList.fromJson(
-          response.body);
-      if (!isFromPagination) {
-        _bookingList = [];
-      }
-      for (var element in serviceBookingModel.content!.bookingModel!) {
-        _bookingList!.add(element);
-      }
-      _bookingListPageSize = response.body['content']['last_page'];
-      _bookingContent = serviceBookingModel.content!;
+  void _showRebookWarningSheet(String bookingId) {
+    if (ResponsiveHelper.isDesktop(Get.context!)) {
+      Get.dialog(Center(child: RebookWarningBottomSheet(bookingId: bookingId)));
     } else {
-      ApiChecker.checkApi(response);
+      Get.bottomSheet(
+        RebookWarningBottomSheet(bookingId: bookingId),
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+      );
     }
-
-    // Clear tab loading state
-    _isTabLoading = false;
-    update();
   }
 
+  void _showServiceIssueDialog(String bookingId) {
+    final Widget dialog = ServiceUnavailableDialog(
+      bookingId: bookingId,
+      isPriceChanged: isPriceChanged,
+      isNotAvailable: isNotAvailable,
+      isAllNotAvailable: checkAllServiceAvailable(serviceAvailability?.content?.services),
+    );
+
+    if (ResponsiveHelper.isDesktop(Get.context!)) {
+      Get.dialog(Center(child: dialog));
+    } else {
+      Get.bottomSheet(
+        dialog,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+      );
+    }
+  }
 
   Future<void> rebook(String bookingId, {bool isBack = false}) async {
-    _isLoading = true;
-    update();
-    Response response = await serviceBookingRepo.addRebookToServer(bookingId);
-    _isLoading = false;
-    update();
-    if (response.statusCode == 200) {
-      if(isBack){
-        Get.back();
-      }
-      Get.find<CartController>().getCartListFromServer(shouldUpdate: true);
-      customSnackBar(response.body['message'], type : ToasterMessageType.success);
+    if (isBack) {
+      Get.back();
     }
-  }
 
-
-  Future<void> checkRebookAvailability(String bookingId) async {
-    _isPriceChanged = false;
-    _isNotAvailable = false;
-    _isLoading = true;
+    isLoading = true;
     update();
 
-    Get.dialog(const CustomLoader(), barrierDismissible: true);
+    try {
+      Response response = await serviceBookingRepo.addRebookToServer(bookingId);
+      isLoading = false;
 
-    Response response = await serviceBookingRepo.rebookCheck(bookingId);
-
-    Get.back();
-    serviceAvailability = ServiceAvailabilityModel.fromJson(response.body);
-    _isLoading = false;
-    update();
-    if(response.statusCode == 200) {
-
-      for(int i=0; i<serviceAvailability!.content!.services!.length; i++) {
-        if (!_isPriceChanged && serviceAvailability!.content!.services![i].isPriceChanged == 1) {
-          _isPriceChanged = true;
-        }
-        if (!_isNotAvailable && serviceAvailability!.content!.services![i].isAvailable == 0) {
-          _isNotAvailable = true;
-        }
+      if (response.statusCode == 200) {
         update();
+        customSnackBar("successfully_added_to_cart".tr, type: ToasterMessageType.success);
+        await Get.find<CartController>().getCartListFromServer();
+        Get.toNamed(RouteHelper.getCheckoutRoute('cart', 'orderDetails', 'null'));
+      } else {
+        update();
+        ApiChecker.checkApi(response);
       }
-
-      if(serviceAvailability!.content!.isProviderAvailable! == 1 && !_isNotAvailable && !_isPriceChanged) {
-        await rebook(bookingId);
-      } else if (serviceAvailability!.content!.isProviderAvailable! == 0) {
-        if (ResponsiveHelper.isDesktop(Get.context)) {
-           Get.dialog(Center(child: RebookWarningBottomSheet(bookingId: bookingId)));
-        } else {
-          Get.bottomSheet(RebookWarningBottomSheet(bookingId: bookingId), backgroundColor: Colors.transparent, isScrollControlled: true);
-        }
-      } else if (_isNotAvailable || _isPriceChanged) {
-        if (ResponsiveHelper.isDesktop(Get.context)) {
-          Get.dialog(Center(child: ServiceUnavailableDialog(bookingId: bookingId, isPriceChanged: _isPriceChanged, isNotAvailable: _isNotAvailable, isAllNotAvailable: checkAllServiceAvailable(serviceAvailability!.content!.services),)));
-        } else {
-          Get.bottomSheet(ServiceUnavailableDialog(bookingId: bookingId, isPriceChanged: _isPriceChanged, isNotAvailable: _isNotAvailable, isAllNotAvailable: checkAllServiceAvailable(serviceAvailability!.content!.services)), backgroundColor: Colors.transparent, isScrollControlled: true);
-        }
+    } catch (e) {
+      if (kDebugMode) {
+        print('rebook error: $e');
       }
-    }else{
-      ApiChecker.checkApi(response);
+      isLoading = false;
+      update();
+      customSnackBar('error_loading'.tr, type: ToasterMessageType.error);
     }
   }
 
+  bool checkAllServiceAvailable(List<Services>? services) {
+    if (services == null || services.isEmpty) return false;
+    return services.every((service) => service.isAvailable == 0);
+  }
 
-    Future<void> checkCartSubcategory(String bookingId, String subcategoryId) async {
-      if(Get.find<CartController>().cartList.isNotEmpty) {
-        List<CartModel> cartList =  Get.find<CartController>().cartList;
-        if(cartList[0].subCategoryId != subcategoryId) {
-          Get.dialog(ConfirmationDialog(
-            icon: Images.warning,
-            title: "are_you_sure_to_reset".tr,
-            description: 'you_have_service_from_other_sub_category'.tr,
-            onYesPressed: () async {
-              Get.find<CartController>().removeAllCartItem();
-              checkRebookAvailability(bookingId);
-              Get.back();
-            },
-          ));
-        }else {
-          await checkRebookAvailability(bookingId);
-        }
-      } else {
-        await checkRebookAvailability(bookingId);
-      }
+  List<PopupMenuModel> getPopupMenuList({
+    required String status,
+    required bool isRepeatBooking,
+    required bool isCustomizeBooking,
+  }) {
+    if (status == "completed" || status == "canceled" || status == "cancelled") {
+      return [
+        PopupMenuModel(title: "booking_details", icon: Icons.remove_red_eye),
+        PopupMenuModel(title: "rebook", icon: Icons.repeat),
+        PopupMenuModel(title: "download_invoice", icon: Icons.file_download_outlined),
+      ];
     }
 
-  void updateRebookIndex (int index) {
-    _rebookIndex = index;
+    return [
+      PopupMenuModel(title: "booking_details", icon: Icons.remove_red_eye),
+      PopupMenuModel(title: "download_invoice", icon: Icons.file_download_outlined),
+      PopupMenuModel(title: "cancel", icon: Icons.cancel_outlined),
+    ];
+  }
+
+  void updateRebookIndex(int index) {
+    rebookIndex = index;
     update();
   }
-
-
-  bool checkAllServiceAvailable (List<Services>? services) {
-    bool available = true;
-    for (int i = 0; i< services!.length; i++) {
-      if(available && services[i].isAvailable == 1) {
-        available = false;
-      }
-    }
-    return available;
-  }
-
-  void updateSelectedServiceType({ServiceType? type}){
-    if(type!=null){
-      selectedServiceType = type;
-      update();
-      getAllBookingService(offset: 1, bookingStatus: _selectedBookingStatus.name, isFromPagination: false, serviceType: type.name);
-    }else{
-      selectedServiceType = ServiceType.all;
-    }
-  }
-
-  List<PopupMenuModel> getPopupMenuList({required String status, bool isRepeatBooking = false, RepeatBooking? ongoingRepeatBooking, required bool isCustomizeBooking}) {
-    if (status == "pending") {
-      return [
-        PopupMenuModel(title: "booking_details", icon: Icons.remove_red_eye_sharp),
-        PopupMenuModel(title: "download_invoice", icon: Icons.file_download_outlined),
-        PopupMenuModel(title: "cancel", icon: Icons.cancel_outlined),
-      ];
-    } else if (status == "accepted" || status == "ongoing") {
-      return [
-        PopupMenuModel(title: "booking_details", icon: Icons.remove_red_eye_sharp),
-        PopupMenuModel(title: "download_invoice", icon: Icons.file_download_outlined),
-      ];
-    }
-    else if (status == "canceled"|| status == "completed") {
-      return [
-        PopupMenuModel(title: "booking_details", icon: Icons.remove_red_eye_sharp),
-        PopupMenuModel(title: "download_invoice", icon: Icons.file_download_outlined),
-        if(!isRepeatBooking && !isCustomizeBooking)  PopupMenuModel(title: "rebook", icon: Icons.repeat),
-      ];
-    }
-    return [];
-  }
-
 }
+
+
+

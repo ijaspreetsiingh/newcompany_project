@@ -40,7 +40,7 @@ class CollectCashController extends Controller
         $this->authorize('provider_update');
 
         Validator::make($request->all(), [
-            'provider_id' => 'required|uuid',
+            'provider_id' => 'required|exists:providers,id',
             'amount' => 'required|numeric|min:1',
         ]);
 

@@ -139,6 +139,26 @@
                                                    placeholder="{{translate('search_here')}}"/>
                                             <div class="map_canvas" id="map-canvas"></div>
                                         </div>
+
+                                        <div class="form-group mb-3">
+                                            <label class="input-label"
+                                                   for="provider_search_radius">{{translate('partner_search_radius_km')}}</label>
+                                            <input type="number" name="provider_search_radius"
+                                                   id="provider_search_radius" class="form-control"
+                                                   min="1" max="100" step="0.5" required
+                                                   value="{{ old('provider_search_radius', $zone->provider_search_radius ?? 5) }}">
+                                            <small class="text-muted d-block mt-1">{{translate('customers_will_only_see_providers_within_this_distance_from_their_location')}}</small>
+                                        </div>
+
+                                        <div class="form-group mb-3">
+                                            <label class="input-label"
+                                                   for="max_search_radius">{{translate('max_search_radius_km')}}</label>
+                                            <input type="number" name="max_search_radius"
+                                                   id="max_search_radius" class="form-control"
+                                                   min="1" max="100" step="0.5" required
+                                                   value="{{ old('max_search_radius', $zone->max_search_radius ?? 15) }}">
+                                            <small class="text-muted d-block mt-1">{{translate('maximum_radius_customers_can_expand_to_when_no_provider_is_found')}}</small>
+                                        </div>
                                     </div>
                                     <div class="col-12">
                                         <div class="d-flex justify-content-end gap-20 mt-30">

@@ -6,73 +6,67 @@ class ConversationSearchWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding( padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
-      child: GetBuilder<ConversationController>(
-        builder: (conversationController){
-          return TextField(
-
-            controller: conversationController.searchController,
-            style: Theme.of(context).textTheme.bodySmall!.copyWith(
-              color: Theme.of(context).textTheme.bodyLarge!.color, fontSize: Dimensions.fontSizeDefault,
-            ),
-
-            cursorColor: Theme.of(context).hintColor,
-            autofocus: false,
-            textAlignVertical: TextAlignVertical.center,
-            textInputAction: TextInputAction.search,
-            onChanged: (text) => conversationController.showSuffixIcon(context,text),
-            onSubmitted: (text){
-              if(text.isNotEmpty) {
-                conversationController.getSearchedChannelList(query: text);
-              }
-              FocusScope.of(context).unfocus();
-            },
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 22),
-              fillColor: Ios27Tokens.fieldFill(context),
-              border:  OutlineInputBorder(
-                borderRadius: BorderRadius.circular(Ios27Tokens.radiusPill),
-                borderSide: BorderSide( width: 0.5, color: Ios27Tokens.rim(context)),
-              ),
-              errorBorder:  OutlineInputBorder(
-                borderRadius: BorderRadius.circular(Ios27Tokens.radiusPill),
-                borderSide: BorderSide( width: 0.5, color: Ios27Tokens.rim(context)),
-              ),
-
-              focusedBorder:  OutlineInputBorder(
-                borderRadius: BorderRadius.circular(Ios27Tokens.radiusPill),
-                borderSide: BorderSide( width: 0.5, color: Theme.of(context).primaryColor),
-              ),
-              enabledBorder :  OutlineInputBorder(
-                borderRadius: BorderRadius.circular(Ios27Tokens.radiusPill),
-                borderSide: BorderSide( width: 0.5, color: Ios27Tokens.rim(context)),
-              ),
-
-              isDense: true,
-              hintText: 'search'.tr,
-              hintStyle: Theme.of(context).textTheme.bodySmall!.copyWith(
-                fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).hintColor,
-              ),
-              filled: true,
-              suffixIcon: conversationController.isActiveSuffixIcon ? IconButton(
-                color: Get.isDarkMode? light.cardColor.withValues(alpha:0.8) :Theme.of(context).colorScheme.primary,
-                onPressed: () {
-                  if(conversationController.searchController.text.trim().isNotEmpty) {
-                    conversationController.clearSearchController();
-                  }
-                  FocusScope.of(context).unfocus();
-                },
-                icon: Icon(
-                  Icons.cancel_outlined, size: 18,color: Theme.of(context).hintColor
+    return GetBuilder<ConversationController>(
+      builder: (conversationController){
+        return Container(
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: context.kCard,
+            borderRadius: BorderRadius.circular(kRadiusMd),
+            border: Border.all(color: context.kInputBorder, width: 1),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.search_rounded, size: 18, color: context.kMutedForeground),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: conversationController.searchController,
+                  style: robotoMedium.copyWith(
+                    fontSize: Dimensions.fontSizeDefault,
+                    color: context.kForeground,
+                  ),
+                  cursorColor: context.kMutedForeground,
+                  autofocus: false,
+                  textAlignVertical: TextAlignVertical.center,
+                  textInputAction: TextInputAction.search,
+                  onChanged: (text) => conversationController.showSuffixIcon(context,text),
+                  onSubmitted: (text){
+                    if(text.isNotEmpty) {
+                      conversationController.getSearchedChannelList(query: text);
+                    }
+                    FocusScope.of(context).unfocus();
+                  },
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    hintText: 'search_by_name'.tr,
+                    hintStyle: robotoRegular.copyWith(
+                      fontSize: Dimensions.fontSizeDefault,
+                      color: context.kMutedForeground,
+                    ),
+                    suffixIcon: conversationController.isActiveSuffixIcon ?
+                    InkWell(
+                      onTap: () {
+                        if(conversationController.searchController.text.trim().isNotEmpty) {
+                          conversationController.clearSearchController();
+                        }
+                        FocusScope.of(context).unfocus();
+                      },
+                      child: Icon(
+                        Icons.cancel_outlined, size: 19, color: context.kMutedForeground,
+                      ),
+                    ) : null,
+                    suffixIconConstraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+                  ),
                 ),
-              ) : Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-                child: Icon(Icons.search_outlined,color: Theme.of(context).hintColor, size: 22,),
               ),
-            ),
-          );
-        },
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

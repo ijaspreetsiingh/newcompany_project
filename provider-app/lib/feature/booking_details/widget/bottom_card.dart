@@ -42,26 +42,26 @@ class BottomCard extends StatelessWidget {
           Text(phone, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
               color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.7))),
 
-          // const SizedBox(height: Dimensions.paddingSizeSmall,),
-          // address != null ?
-          // Padding(padding: const EdgeInsets.symmetric(horizontal: 10),
-          //   child: RichText(
-          //     text: TextSpan(text: '${'service_address'.tr} :',
-          //       style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault,
-          //         color: Theme.of(context).textTheme.bodyLarge!.color,
-          //       ),
-          //     children: [
-          //         TextSpan(
-          //           text: ' $address',
-          //             style: robotoRegular.copyWith(
-          //               fontSize: Dimensions.fontSizeDefault,
-          //               color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.7),
-          //             ),
-          //         ),
-          //     ],
-          //   ),
-          //     textAlign: TextAlign.center),
-          // ) : const SizedBox(),
+          const SizedBox(height: Dimensions.paddingSizeSmall,),
+          address != null ?
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: RichText(
+              text: TextSpan(text: '${'service_address'.tr} :',
+                style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault,
+                  color: Theme.of(context).textTheme.bodyLarge!.color,
+                  ),
+              children: [
+                  TextSpan(
+                    text: ' $address',
+                      style: robotoRegular.copyWith(
+                        fontSize: Dimensions.fontSizeDefault,
+                        color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.7),
+                      ),
+                  ),
+              ],
+            ),
+              textAlign: TextAlign.center),
+          ) : const SizedBox(),
 
            const SizedBox(height:Dimensions.paddingSizeLarge),
         ],

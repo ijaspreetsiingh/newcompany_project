@@ -19,90 +19,78 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      elevation: 0,
-      titleSpacing: 0,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      surfaceTintColor: Colors.transparent,
-      shadowColor: Colors.transparent,
-      centerTitle: centerTitle,
-      leading: IconButton(
-        onPressed: onBackPressed ??
-            () {
-              if (Navigator.canPop(context)) {
-                Get.back();
-              } else {
-                Get.offAllNamed(RouteHelper.getInitialRoute());
-              }
-            },
-        icon: Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: Theme.of(context).primaryColor,
-            size: 16,
+    return Container(
+      decoration: BoxDecoration(
+        color: context.kBackground,
+        border: showDivider
+            ? Border(bottom: BorderSide(color: context.kBorder, width: 1))
+            : null,
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 64),
+          padding: const EdgeInsets.fromLTRB(8, 10, 16, 10),
+          child: Row(
+            children: [
+              KIconButton(
+                icon: Icons.arrow_back_rounded,
+                color: context.kForeground,
+                onTap: onBackPressed ??
+                    () {
+                      if (Navigator.canPop(context)) {
+                        Get.back();
+                      } else {
+                        Get.offAllNamed(RouteHelper.getInitialRoute());
+                      }
+                    },
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: centerTitle
+                      ? CrossAxisAlignment.center
+                      : CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: robotoBold.copyWith(
+                        fontSize: 20,
+                        color: context.kForeground,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 1),
+                      Text(
+                        subtitle!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: robotoRegular.copyWith(
+                          fontSize: 12,
+                          color: context.kMutedForeground,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (title == 'my_profile'.tr)
+                KIconButton(
+                  icon: Icons.edit_outlined,
+                  iconSize: 18,
+                  color: context.kForeground,
+                  onTap: () => Get.toNamed(RouteHelper.profileInformation),
+                ),
+            ],
           ),
         ),
       ),
-      title: Column(
-        crossAxisAlignment: centerTitle ? CrossAxisAlignment.center : CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: robotoBold.copyWith(
-              fontSize: Dimensions.fontSizeLarge,
-              color: Theme.of(context).textTheme.bodyLarge!.color,
-            ),
-          ),
-          if (subtitle != null)
-            Text(
-              subtitle!,
-              style: robotoRegular.copyWith(
-                fontSize: Dimensions.fontSizeSmall,
-                color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
-              ),
-            ),
-        ],
-      ),
-      actions: [
-        if (title == 'my_profile'.tr)
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: GestureDetector(
-              onTap: () => Get.toNamed(RouteHelper.profileInformation),
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.edit_outlined,
-                  size: 18,
-                  color: Theme.of(context).primaryColor,
-                ),
-              ),
-            ),
-          ),
-      ],
-      bottom: showDivider
-          ? PreferredSize(
-              preferredSize: const Size.fromHeight(0.5),
-              child: Container(
-                height: 0.5,
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
-              ),
-            )
-          : null,
     );
   }
 
   @override
-  Size get preferredSize => Size(double.maxFinite, showDivider ? 56 : 55);
+  Size get preferredSize => Size(double.maxFinite, showDivider ? 85 : 84);
 }

@@ -1,4 +1,4 @@
-class ErrorResponse {
+﻿class ErrorResponse {
   List<Errors>? _errors;
 
   List<Errors>? get errors => _errors;
@@ -48,3 +48,4 @@ class Errors {
     return data;
   }
 }
+

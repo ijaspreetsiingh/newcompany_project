@@ -259,7 +259,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       customSnackBar("please_input_contact_person_name_and_phone_number".tr, type: ToasterMessageType.info);
     }
     else if(createPostController.selectedService==null){
-      customSnackBar("select_your_desired_service".tr, type: ToasterMessageType.info);
+      customSnackBar("select_your_destred_service".tr, type: ToasterMessageType.info);
     }else if(createPostController.descriptionController.text.isEmpty){
       customSnackBar("enter_service_description".tr, type: ToasterMessageType.info);
     }else{
@@ -270,3 +270,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     }
   }
 }
+
+
+

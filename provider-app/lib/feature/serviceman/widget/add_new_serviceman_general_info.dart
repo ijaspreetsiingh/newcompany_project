@@ -62,7 +62,7 @@ class _ServiceManGeneralInfoState extends State<ServiceManGeneralInfo> {
                                ),
                                child: IconButton(
                                        onPressed: ()=> servicemanSetupController.pickProfileImage(false),
-                                       icon: Icon(Icons.edit,color: light.cardColor,size: 17,)),
+                                       icon: Icon(Icons.edit,color: Colors.white,size: 17,)),
                              )
                            ],
                          )

@@ -26,70 +26,114 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
   }
 
   @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
+
+  void _selectTab(BookingDetailsController bookingDetailsController, int index) {
+    controller?.animateTo(index);
+    if (index == 0) {
+      bookingDetailsController.updateServicePageCurrentState(
+        BookingDetailsTabControllerState.bookingDetails,
+      );
+    } else {
+      bookingDetailsController.updateServicePageCurrentState(
+        BookingDetailsTabControllerState.status,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GetBuilder<BookingDetailsController>(
       builder: (bookingDetailsController){
+
+        final bookingDetails = bookingDetailsController.bookingDetails?.bookingContent?.bookingDetailsContent;
+        final String readableId = bookingDetails?.readableId ?? '';
+        final bool hasReadableId = readableId.isNotEmpty && readableId != 'null';
+
+        final int isGuest = bookingDetails?.isGuest ?? 0;
+        final bool isPartial = (bookingDetails != null && bookingDetails.partialPayments != null && bookingDetails.partialPayments!.isNotEmpty);
+        final String bookingStatus = bookingDetails?.bookingStatus ?? "";
+        final bool subBookingPaid = widget.isSubBooking && bookingDetails?.isPaid == 1;
+
+        final bool isEditBooking = (Get.find<SplashController>().configModel?.content?.serviceManCanEditBooking == 1
+            && bookingDetailsController.bookingDetails?.bookingContent?.providerServicemanCanEditBooking == 1)
+            && (!subBookingPaid && !isPartial && (bookingStatus == "accepted" || bookingStatus == "ongoing")
+                && ((isGuest == 1 && bookingDetails?.paymentMethod != "cash_after_service") ? false : true));
+
         return CustomPopScopeWidget(
           child: Scaffold(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            appBar: CustomAppBar(
-              title: 'booking_details'.tr,
-              onBackPressed: (){
-                if(widget.fromPage == 'fromNotification'){
-                  Get.offAllNamed(RouteHelper.getInitialRoute());
-                }else{
-                  Get.back();
-                }
-              },
-            ),
-            body: Column(children: [
-              Container(
-                height: 45, width: Get.width,
-                color: Theme.of(context).colorScheme.surface,
-                padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-                child: TabBar(
-                  unselectedLabelColor:Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha:0.5),
-                  indicatorColor: Theme.of(context).primaryColor,
-                  controller: controller,
-                  labelColor: Theme.of(context).primaryColorLight,
-                  labelStyle:  robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge),
-                  labelPadding: EdgeInsets.zero,
-                  dividerColor: Colors.transparent,
-                  indicatorSize: TabBarIndicatorSize.label,
-                  onTap: (int? index) {
-                    switch (index) {
-                      case 0:
-                        bookingDetailsController.updateServicePageCurrentState(
-                            BookingDetailsTabControllerState.bookingDetails
-                        );
-                        break;
-                      case 1:
-                        bookingDetailsController.updateServicePageCurrentState(
-                            BookingDetailsTabControllerState.status
-                        );
-                        break;
+            backgroundColor: context.kBackground,
+            body: SafeArea(
+              bottom: false,
+              child: Column(children: [
+
+                PageHeader(
+                  title: 'booking_details_title'.tr,
+                  subtitle: hasReadableId ? '#$readableId' : '',
+                  onBack: (){
+                    if(widget.fromPage == 'fromNotification'){
+                      Get.offAllNamed(RouteHelper.getInitialRoute());
+                    }else{
+                      Get.back();
                     }
                   },
-                  tabs: [
-                    SizedBox(width: MediaQuery.of(context).size.width * 0.5,child: Tab(text: 'booking_details'.tr)),
-                    SizedBox(width: MediaQuery.of(context).size.width * 0.5, child: Tab(text: 'status'.tr)),
+                  right: KIconButton(
+                    icon: Icons.edit_outlined,
+                    color: isEditBooking ? context.kForeground : context.kMutedForeground,
+                    onTap: isEditBooking ? (){
+                      Get.to(()=> BookingEditScreen(isSubBooking: widget.isSubBooking,));
+                    } : null,
+                  ),
+                ),
+
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: context.kBorder, width: 1)),
+                  ),
+                  child: AnimatedBuilder(
+                    animation: controller!,
+                    builder: (context, _) => Row(children: [
+                      _tabButton(context, 0, 'details'.tr, bookingDetailsController),
+                      _tabButton(context, 1, 'status'.tr, bookingDetailsController),
+                    ]),
+                  ),
+                ),
+
+                Expanded(
+                  child: TabBarView(controller: controller, children:  [
+                    BookingDetailsWidget(isSubBooking: widget.isSubBooking,),
+                    const BookingStatus(),
+                  ]),
+                ),
+              ]),
+            ),
+
+            floatingActionButton: bookingDetailsController.isShowChattingButton(bookingDetails) ? Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Container(
+                height: 56, width: 56,
+                decoration: BoxDecoration(
+                  color: context.kPrimary,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.18),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
                   ],
                 ),
-              ),
-              Expanded(
-                child: TabBarView(controller: controller, children:  [
-                  BookingDetailsWidget(isSubBooking: widget.isSubBooking,),
-                  const BookingStatus(),
-                ]),
-              ),
-            ]),
-
-            floatingActionButton:  bookingDetailsController.isShowChattingButton(bookingDetailsController.bookingDetails?.bookingContent?.bookingDetailsContent) ? Container(
-              height: 50, width: 50, margin: const EdgeInsets.only(bottom: 50),
-              child: FloatingActionButton(
-                elevation: 0.0, backgroundColor: Theme.of(context).primaryColor,
-                onPressed: ()=> Get.bottomSheet( const CreateChannelDialog()),
-                child: Icon(Icons.message_rounded,color: light.cardColor,),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: ()=> Get.bottomSheet( const CreateChannelDialog()),
+                    customBorder: const CircleBorder(),
+                    child: Icon(Icons.chat_bubble_rounded, size: 24, color: context.kPrimaryForeground),
+                  ),
+                ),
               ),
             ) : null,
 
@@ -98,5 +142,33 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
       },
     );
   }
-}
 
+  Widget _tabButton(BuildContext context, int index, String label, BookingDetailsController bookingDetailsController) {
+    final bool isActive = controller?.index == index;
+    return Expanded(
+      child: InkWell(
+        onTap: () => _selectTab(bookingDetailsController, index),
+        child: Container(
+          height: 48,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: isActive ? context.kForeground : Colors.transparent,
+                width: 2,
+              ),
+            ),
+          ),
+          child: Text(
+            label,
+            style: robotoMedium.copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isActive ? context.kForeground : context.kMutedForeground,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

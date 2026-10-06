@@ -38,7 +38,7 @@ class MyPostView extends StatelessWidget {
           border: Border.all(
             color: status =="bid_available"? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
                  : status == "no_bid"?Theme.of(context).colorScheme.error.withValues(alpha: 0.2)
-                 : Colors.green.withValues(alpha: 0.2),
+                 : Get.theme.colorScheme.primary.withValues(alpha: 0.15),
           ),
           borderRadius: BorderRadius.circular(Dimensions.radiusDefault),),
           padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
@@ -78,7 +78,7 @@ class MyPostView extends StatelessWidget {
                           bookingStatus=="ongoing" ? Theme.of(context).colorScheme.primary:
                           bookingStatus=="pending" ? Theme.of(context).colorScheme.primary.withValues(alpha: .2):
                           bookingStatus=="accepted" ? Theme.of(context).colorScheme.primary:
-                          bookingStatus=="completed" ? Colors.green :
+                          bookingStatus=="completed" ? Get.theme.colorScheme.primary :
                           Theme.of(context).colorScheme.error),
                       ),
                     ),
@@ -116,3 +116,4 @@ class MyPostView extends StatelessWidget {
     );
   }
 }
+

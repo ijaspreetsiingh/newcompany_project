@@ -122,7 +122,7 @@ class _ProductBottomSheetState extends State<ProviderFilterView> {
                           child: Text('ratings'.tr,style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge),),
                         )),
 
-                        const Center(child: FilterRatingWidgets()),
+                        const Center(child: FilterRatingwidgets()),
                         const SizedBox(height: Dimensions.paddingSizeDefault,),
                         Row(
                           children: [
@@ -159,3 +159,5 @@ class _ProductBottomSheetState extends State<ProviderFilterView> {
     );
   }
 }
+
+

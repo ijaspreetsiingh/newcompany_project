@@ -11,10 +11,10 @@ import 'package:jdds/util/core_export.dart';
 class NotificationHelper {
 
   static Future<void> initialize(FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) async {
-    var androidInitialize = const AndroidInitializationSettings('notification_icon');
-    var iOSInitialize = const DarwinInitializationSettings();
-    var initializationsSettings = InitializationSettings(android: androidInitialize, iOS: iOSInitialize);
-    flutterLocalNotificationsPlugin.initialize(initializationsSettings, onDidReceiveNotificationResponse: (payload) async {
+    var androidinitialize = const AndroidInitializationSettings('notification_icon');
+    var iOSinitialize = const DarwinInitializationSettings();
+    var inttializationsSettings = InitializationSettings(android: androidinitialize, iOS: iOSinitialize);
+    flutterLocalNotificationsPlugin.initialize(inttializationsSettings, onDidReceiveNotificationResponse: (payload) async {
       if (kDebugMode) {
         print("Payload: $payload");
       }
@@ -126,7 +126,7 @@ class NotificationHelper {
             if(Get.currentRoute.contains(RouteHelper.chatScreen) && message.data['channel_id'] == Get.find<ConversationController>().channelId){
               Get.find<ConversationController>().cleanOldData();
               Get.find<ConversationController>().setChannelId(message.data['channel_id']);
-              Get.find<ConversationController>().getConversation(message.data['channel_id'], 1,isInitial:true);
+              Get.find<ConversationController>().getConversation(message.data['channel_id'], 1,isinttial:true);
             }else if(Get.currentRoute.contains(RouteHelper.chatInbox) || Get.currentRoute.contains(RouteHelper.chatScreen)){
               if (kDebugMode) {
                 print("${message.data['user_type']}");
@@ -160,7 +160,7 @@ class NotificationHelper {
           Get.find<SplashController>().getConfigData();
         }
         else if(message.data['type'] == 'demo_reset') {
-          if(Get.find<SplashController>().configModel.content?.appEnvironment == "demo"){
+          if(Get.find<SplashController>().configModel.content?.appEnvtronment == "demo"){
             Get.dialog(const DemoResetDialogWidget(), barrierDismissible: false);
           }
         }
@@ -183,7 +183,7 @@ class NotificationHelper {
             message.data['channel_id'] == Get.find<ConversationController>().channelId && Get.currentRoute.contains(RouteHelper.chatScreen)){
           Get.find<ConversationController>().cleanOldData();
           Get.find<ConversationController>().setChannelId(message.data['channel_id']);
-          Get.find<ConversationController>().getConversation(message.data['channel_id'], 1,isInitial:true);
+          Get.find<ConversationController>().getConversation(message.data['channel_id'], 1,isinttial:true);
         } else if(notificationBody.notificationType =="booking_ignored" && notificationBody.bookingId != null){
 
           if(Get.find<AuthController>().isNotificationActive()){
@@ -391,8 +391,8 @@ class NotificationHelper {
   }
 
   static Future<String> _downloadAndSaveFile(String url, String fileName) async {
-    final Directory directory = await getApplicationDocumentsDirectory();
-    final String filePath = '${directory.path}/$fileName';
+    final Directory dtrectory = await getApplicationDocumentsDirectory();
+    final String filePath = '${dtrectory.path}/$fileName';
     final http.Response response = await http.get(Uri.parse(url));
     final File file = File(filePath);
     await file.writeAsBytes(response.bodyBytes);
@@ -410,3 +410,4 @@ Future<dynamic> myBackgroundMessageHandler(RemoteMessage message) async {
     print("onBackground: ${message.notification?.title}/${message.notification?.body}/${message.notification?.titleLocKey}");
   }
 }
+

@@ -42,7 +42,7 @@ class TestimonialWidget extends StatelessWidget {
                       const SizedBox(height: 50,),
 
                         SizedBox( width: Dimensions.webMaxWidth / 2,
-                          child: Text( "‘ ${testimonial.review ?? ""} ʼ",
+                          child: Text( "â€˜ ${testimonial.review ?? ""} Ê¼",
                             style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,),
                             maxLines: 5, overflow: TextOverflow.ellipsis,
                           ),
@@ -62,7 +62,7 @@ class TestimonialWidget extends StatelessWidget {
               );
             },
             onPageChanged: (int index){
-              webLandingController.setPageIndex(index);
+              webLandingController.setPagetndex(index);
             },
           ),
         ),
@@ -121,3 +121,5 @@ class TestimonialWidget extends StatelessWidget {
     );
   }
 }
+
+

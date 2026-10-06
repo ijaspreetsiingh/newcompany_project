@@ -4,11 +4,12 @@ import 'package:jdds/common/widgets/custom_pop_widget.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:jdds/common/widgets/address_selection_drawer.dart';
+import 'package:jdds/common/design_system/nest_screens_kit.dart';
 
 class NewPassScreen extends StatefulWidget {
   final ForgetPasswordBody? forgetPasswordBody;
-  final String? redirectUrl;
-  const NewPassScreen({super.key, this.forgetPasswordBody, this.redirectUrl});
+  final String? redtrectUrl;
+  const NewPassScreen({super.key, this.forgetPasswordBody, this.redtrectUrl});
 
   @override
   State<NewPassScreen> createState() => _NewPassScreenState();
@@ -35,7 +36,7 @@ class _NewPassScreenState extends State<NewPassScreen> with TickerProviderStateM
         if (status.isSuccess!) {
           if (kDebugMode) print("Session Available");
         } else {
-          if (kDebugMode) print("Session Expired");
+          if (kDebugMode) print("Session Exptred");
         }
       });
     }
@@ -51,17 +52,27 @@ class _NewPassScreenState extends State<NewPassScreen> with TickerProviderStateM
   Widget build(BuildContext context) {
     return CustomPopWidget(
       child: Scaffold(
-        backgroundColor: const Color(0xffFFF5EE),
+        backgroundColor: NestInk.background,
         drawer: ResponsiveHelper.isDesktop(context) ? const AddressSelectionDrawer() : null,
         endDrawer: ResponsiveHelper.isDesktop(context) ? const MenuDrawer() : null,
-        body: GetBuilder<AuthController>(builder: (controller) {
+        body: Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: NestInk.primary,
+              onPrimary: NestInk.background,
+            ),
+          ),
+          child: GetBuilder<AuthController>(builder: (controller) {
           return Stack(
             children: [
               AnimatedBuilder(
                 animation: _blobController,
                 builder: (context, _) {
                   return CustomPaint(
-                    painter: _LiquidBlobPainter(animation: _blobController),
+                    painter: _LiquidBlobPainter(
+                      animation: _blobController,
+                      isDark: Theme.of(context).brightness == Brightness.dark,
+                    ),
                     size: MediaQuery.of(context).size,
                   );
                 },
@@ -78,12 +89,12 @@ class _NewPassScreenState extends State<NewPassScreen> with TickerProviderStateM
                               Get.find<AuthController>().updateVerificationCode('');
                               Get.back();
                             },
-                            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xff101828), size: 20),
+                            icon: Icon(Icons.arrow_back_ios_new_rounded, color: NestInk.primary, size: 20),
                           ),
                           const Spacer(),
                           Text(
                             'Change Password',
-                            style: robotoBold.copyWith(fontSize: 17, color: const Color(0xff101828)),
+                            style: robotoBold.copyWith(fontSize: 17, color: NestInk.primary),
                           ),
                           const Spacer(),
                           const SizedBox(width: 48),
@@ -91,20 +102,20 @@ class _NewPassScreenState extends State<NewPassScreen> with TickerProviderStateM
                       ),
                     ),
                     Expanded(
-                      child: controller.forgetPasswordUrlSessionExpired && controller.isLoading
-                          ? const Center(child: CircularProgressIndicator(color: Color(0xffFF6B2C)))
-                          : controller.forgetPasswordUrlSessionExpired && !controller.isLoading
+                      child: controller.forgetPasswordUrlSessionExptred && controller.isLoading
+                          ? Center(child: CircularProgressIndicator(color: NestInk.primary))
+                          : controller.forgetPasswordUrlSessionExptred && !controller.isLoading
                               ? Center(
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text("url_session_expired".tr, style: robotoMedium.copyWith(color: const Color(0xff667085))),
+                                      Text("url_session_exptred".tr, style: robotoMedium.copyWith(color: NestInk.mutedText)),
                                       const SizedBox(height: 20),
                                       CustomButton(
                                         width: 200,
                                         buttonText: "go_back".tr,
-                                        backgroundColor: const Color(0xffFF6B2C),
-                                        textColor: Colors.white,
+                                        backgroundColor: NestInk.primary,
+                                        textColor: NestInk.background,
                                         onPressed: () {
                                           Get.offAllNamed(RouteHelper.getSignInRoute());
                                         },
@@ -125,10 +136,10 @@ class _NewPassScreenState extends State<NewPassScreen> with TickerProviderStateM
                                           width: 80.0,
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
-                                            color: Colors.white.withValues(alpha: 0.6),
+                                            color: NestInk.card.withValues(alpha: 0.75),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: const Color(0xffFF6B2C).withValues(alpha: 0.1),
+                                                color: NestInk.primary.withValues(alpha: 0.08),
                                                 blurRadius: 25,
                                                 spreadRadius: 2,
                                               ),
@@ -140,9 +151,9 @@ class _NewPassScreenState extends State<NewPassScreen> with TickerProviderStateM
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   shape: BoxShape.circle,
-                                                  border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 2),
+                                                  border: Border.all(color: NestInk.border, width: 2),
                                                 ),
-                                                child: const Icon(Icons.lock_outline, color: Color(0xffFF6B2C), size: 36),
+                                                child: Icon(Icons.lock_outline, color: NestInk.primary, size: 36),
                                               ),
                                             ),
                                           ),
@@ -150,13 +161,13 @@ class _NewPassScreenState extends State<NewPassScreen> with TickerProviderStateM
                                         const SizedBox(height: 25),
                                         Text(
                                           'Set new password',
-                                          style: robotoBold.copyWith(fontSize: 20, color: const Color(0xff101828)),
+                                          style: robotoBold.copyWith(fontSize: 20, color: NestInk.primary),
                                         ),
                                         const SizedBox(height: 8),
                                         Text(
                                           'Create strong and secured\nnew password.',
                                           textAlign: TextAlign.center,
-                                          style: robotoRegular.copyWith(fontSize: 14, height: 1.5, color: const Color(0xff667085)),
+                                          style: robotoRegular.copyWith(fontSize: 14, height: 1.5, color: NestInk.mutedText),
                                         ),
                                         const SizedBox(height: 35),
                                         _buildFieldLabel('new_password'.tr),
@@ -196,11 +207,11 @@ class _NewPassScreenState extends State<NewPassScreen> with TickerProviderStateM
                                           height: 52,
                                           width: double.infinity,
                                           decoration: BoxDecoration(
-                                            color: const Color(0xffFF6B2C),
+                                            color: NestInk.primary,
                                             borderRadius: BorderRadius.circular(14),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: const Color(0xffFF6B2C).withValues(alpha: 0.3),
+                                                color: NestInk.primary.withValues(alpha: 0.12),
                                                 blurRadius: 15,
                                                 offset: const Offset(0, 6),
                                               ),
@@ -215,10 +226,10 @@ class _NewPassScreenState extends State<NewPassScreen> with TickerProviderStateM
                                               );
                                             },
                                             child: controller.isLoading
-                                                ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                                                ? SizedBox(height: 22, width: 22, child: CircularProgressIndicator(color: NestInk.background, strokeWidth: 2.5))
                                                 : Text(
                                                     'Save Password',
-                                                    style: robotoSemiBold.copyWith(fontSize: 16, color: Colors.white),
+                                                    style: robotoSemiBold.copyWith(fontSize: 16, color: NestInk.background),
                                                   ),
                                           ),
                                         ),
@@ -233,7 +244,8 @@ class _NewPassScreenState extends State<NewPassScreen> with TickerProviderStateM
               ),
             ],
           );
-        }),
+          }),
+        ),
       ),
     );
   }
@@ -243,7 +255,7 @@ class _NewPassScreenState extends State<NewPassScreen> with TickerProviderStateM
       margin: const EdgeInsets.only(bottom: 12),
       child: Text(
         text,
-        style: robotoSemiBold.copyWith(color: const Color(0xff344054), fontSize: 14),
+        style: robotoSemiBold.copyWith(color: NestInk.primary, fontSize: 14),
       ),
     );
   }
@@ -260,7 +272,7 @@ class _NewPassScreenState extends State<NewPassScreen> with TickerProviderStateM
           password: newPassword,
           confirmPassword: confirmNewPassword,
           isFirebaseOtp: widget.forgetPasswordBody?.isFirebaseOtp ?? 0,
-          redirectUrl: widget.redirectUrl,
+          redtrectUrl: widget.redtrectUrl,
         );
       }
     }
@@ -269,7 +281,8 @@ class _NewPassScreenState extends State<NewPassScreen> with TickerProviderStateM
 
 class _LiquidBlobPainter extends CustomPainter {
   final Animation<double> animation;
-  _LiquidBlobPainter({required this.animation}) : super(repaint: animation);
+  final bool isDark;
+  _LiquidBlobPainter({required this.animation, required this.isDark}) : super(repaint: animation);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -278,13 +291,16 @@ class _LiquidBlobPainter extends CustomPainter {
 
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), Paint()..shader = ui.Gradient.linear(
       Offset(0, 0), Offset(size.width * 0.5, size.height),
-      [const Color(0xffFFF8F3), const Color(0xffFFF0E5)],
+      isDark
+          ? const [Color(0xFF0D0D0D), Color(0xFF171717)]
+          : const [Colors.white, Color(0xFFF6F6F6)],
     ));
 
-    _drawBlob(canvas, paint, time, 0, size.width * 0.78, size.height * 0.04, size.width * 0.45, const Color(0xffFF6B2C).withValues(alpha: 0.13));
-    _drawBlob(canvas, paint, time, 1, -size.width * 0.12, size.height * 0.4, size.width * 0.4, const Color(0xffFF8F5C).withValues(alpha: 0.10));
-    _drawBlob(canvas, paint, time, 2, size.width * 0.88, size.height * 0.85, size.width * 0.35, const Color(0xffFF5722).withValues(alpha: 0.08));
-    _drawBlob(canvas, paint, time, 3, size.width * 0.35, size.height * 0.92, size.width * 0.3, const Color(0xffFFB88C).withValues(alpha: 0.07));
+    final Color accent = isDark ? Colors.white : const Color(0xFF141414);
+    _drawBlob(canvas, paint, time, 0, size.width * 0.78, size.height * 0.04, size.width * 0.45, accent.withValues(alpha: 0.045));
+    _drawBlob(canvas, paint, time, 1, -size.width * 0.12, size.height * 0.4, size.width * 0.4, accent.withValues(alpha: 0.035));
+    _drawBlob(canvas, paint, time, 2, size.width * 0.88, size.height * 0.85, size.width * 0.35, accent.withValues(alpha: 0.03));
+    _drawBlob(canvas, paint, time, 3, size.width * 0.35, size.height * 0.92, size.width * 0.3, accent.withValues(alpha: 0.025));
   }
 
   void _drawBlob(Canvas canvas, Paint paint, double time, int index, double baseX, double baseY, double radius, Color color) {
@@ -319,3 +335,6 @@ class _LiquidBlobPainter extends CustomPainter {
   @override
   bool shouldRepaint(_LiquidBlobPainter oldDelegate) => true;
 }
+
+
+

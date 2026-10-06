@@ -1,81 +1,58 @@
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class   ServiceRequestSectionMenu extends SliverPersistentHeaderDelegate{
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
+    final bgColor = isDark ? const Color(0xFF0D0D0D) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF333333) : const Color(0xFFE5E5E5);
+
     return GetBuilder<ServiceBookingController>(builder: (serviceBookingController){
-      return Center(
-        child: Container(
-          margin: EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(Dimensions.radiusLarge),
-              bottomRight: Radius.circular(Dimensions.radiusLarge),
-            ),
-          ),
+      return Container(
+        color: bgColor,
+        child: Center(
           child: Container(
-            height: double.infinity, width: Dimensions.webMaxWidth,
-            padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
+            margin: EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),
             decoration: BoxDecoration(
-                color: ResponsiveHelper.isDesktop(context) && Get.isDarkMode ?
-                Theme.of(context).cardColor : ResponsiveHelper.isDesktop(context)
-                    ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.07) : Get.isDarkMode ? Colors.transparent
-                    : Theme.of(context).cardColor,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(Dimensions.radiusLarge),
-                  bottomRight: Radius.circular(Dimensions.radiusLarge),
-                )
+              border: Border(
+                bottom: BorderSide(color: borderColor, width: 1),
+              ),
             ),
-
-            child: ResponsiveHelper.isDesktop(context) ? Column(
-              mainAxisSize: MainAxisSize.max, mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-
-                const SizedBox(),
-                Text('my_bookings'.tr, style: robotoBold.copyWith(fontSize: Dimensions.fontSizeExtraLarge),),
-
-
-                Row( mainAxisAlignment: MainAxisAlignment.spaceBetween,children: [
-                  const SizedBox(),
-                  Padding( padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeEight),
-                    child: Wrap(alignment: WrapAlignment.center, children: BookingStatusTabs.values.map((e) {
+            child: Container(
+              height: double.infinity, width: Dimensions.webMaxWidth,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Center(
+                child: SizedBox(
+                  height: 32,
+                  child: ListView.builder(
+                    itemCount: 4,
+                    scrollDirection: Axis.horizontal,
+                    itemBuilder: (context,index){
                       return GetBuilder<ServiceBookingController>(builder: (controller){
-                        return InkWell(
-                          child: BookingStatusTabItem(
-                            title: e.name,
+                        const tabs = [BookingStatusTabs.all, BookingStatusTabs.ongoing, BookingStatusTabs.completed, BookingStatusTabs.cancelled];
+                        final tab = tabs[index];
+                        final isSelected = controller.selectedBookingStatus == tab;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 18),
+                          child: InkWell(child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: isSelected ? primaryColor : Colors.transparent, width: 3))),
+                            child: Center(child: Text(tab.name == 'cancelled' ? 'canceled'.tr : tab.name.tr,
+                              style: GoogleFonts.dmSans(fontSize: 13, fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                                color: isSelected ? primaryColor : mutedColor))),
                           ),
-                          onTap: (){
-                            controller.updateBookingStatusTabs(e);
-                          },
+                            onTap: (){
+                              controller.updateBookingStatusTabs(tab);
+                            },
+                          ),
                         );
-                      },);
-                    }
-                    ).toList()),
+                      });
+                    },
                   ),
-                  const FilterPopUpMenuWidget()
-                ]),
-
-              ],
-            ) : Center(
-              child: SizedBox(
-                height: 30,
-                child: ListView.builder(
-                  itemCount: BookingStatusTabs.values.length,
-                  scrollDirection: Axis.horizontal,
-                  itemBuilder: (context,index){
-                    return GetBuilder<ServiceBookingController>(builder: (controller){
-                      return InkWell(
-                        child: BookingStatusTabItem(
-                          title: BookingStatusTabs.values.elementAt(index).name,
-                        ),
-                        onTap: (){
-                          controller.updateBookingStatusTabs(BookingStatusTabs.values.elementAt(index));
-                        },
-                      );
-                    });
-                  },
                 ),
               ),
             ),
@@ -86,10 +63,10 @@ class   ServiceRequestSectionMenu extends SliverPersistentHeaderDelegate{
   }
 
   @override
-  double get maxExtent => ResponsiveHelper.isDesktop(Get.context!)  ? 110 : 60;
+  double get maxExtent => ResponsiveHelper.isDesktop(Get.context!)  ? 110 : 56;
 
   @override
-  double get minExtent => ResponsiveHelper.isDesktop(Get.context!)  ? 110 : 60;
+  double get minExtent => ResponsiveHelper.isDesktop(Get.context!)  ? 110 : 56;
 
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
@@ -97,3 +74,4 @@ class   ServiceRequestSectionMenu extends SliverPersistentHeaderDelegate{
   }
 
 }
+

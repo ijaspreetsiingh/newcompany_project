@@ -213,6 +213,7 @@ class ServiceController extends Controller
 
         $subscribedService->provider_id = $request->user()->provider->id;
         $subscribedService->sub_category_id = $request['sub_category_id'];
+        $subscribedService->zone_id = auth()->user()->provider->zone_id; // Add zone_id
 
         $parent = $this->category->where('id', $request['sub_category_id'])->whereHas('parent.zones', function ($query) {
             $query->where('zone_id', auth()->user()->provider->zone_id);

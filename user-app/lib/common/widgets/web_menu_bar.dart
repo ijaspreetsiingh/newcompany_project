@@ -23,7 +23,7 @@ class WebMenuBar extends StatelessWidget implements PreferredSizeWidget {
         InkWell( onTap: (){
           _closeSearchDialog();
           Get.find<AllSearchController>().clearSearchController();
-          Get.toNamed(RouteHelper.getInitialRoute());
+          Get.toNamed(RouteHelper.getinitialRoute());
         },
           child: Image.asset(Images.webAppbarLogo,width: 150),
         ),
@@ -148,7 +148,7 @@ class WebMenuBar extends StatelessWidget implements PreferredSizeWidget {
                 Get.toNamed(RouteHelper.getBookingScreenRoute(true));
               }else{
                 if(!Get.currentRoute.contains(RouteHelper.signIn)) {
-                  Get.toNamed(RouteHelper.getSignInRoute(redirectUrl: Get.currentRoute));
+                  Get.toNamed(RouteHelper.getSignInRoute(redtrectUrl: Get.currentRoute));
 
                 }
               }},
@@ -242,6 +242,9 @@ class MenuButtonWeb extends StatelessWidget {
     );
   }
 }
+
+
+
 
 
 

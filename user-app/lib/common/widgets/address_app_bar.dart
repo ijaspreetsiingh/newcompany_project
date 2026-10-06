@@ -2,6 +2,10 @@ import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:jdds/common/widgets/address_selection_bottom_sheet.dart';
 
+/// nest. style header (reference: design_refrence/home-harmony-hub app-shell)
+/// - Left  : black rounded square logo + brand name
+/// - Right : bordered circular icon buttons
+/// - Bottom: bordered location pill
 class AddressAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool? backButton;
   const AddressAppBar({super.key, this.backButton = true});
@@ -9,103 +13,84 @@ class AddressAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     bool isloggedIn = Get.find<AuthController>().isLoggedIn();
     bool isDark = Get.isDarkMode;
-
-    String greeting;
-    final hour = DateTime.now().hour;
-    if (hour < 12) {
-      greeting = 'good_morning'.tr;
-    } else if (hour < 17) {
-      greeting = 'good_afternoon'.tr;
-    } else {
-      greeting = 'good_evening'.tr;
-    }
+    final Color borderColor = isDark
+        ? Theme.of(context).primaryColorLight.withValues(alpha: 0.4)
+        : Theme.of(context).shadowColor.withValues(alpha: 0.6);
+    final Color foreground = Theme.of(context).textTheme.bodyLarge!.color!;
 
     String userName = '';
-    String? userImage;
     if (isloggedIn) {
       final userInfo = Get.find<UserController>().userInfoModel;
       userName = '${userInfo?.fName ?? ''} ${userInfo?.lName ?? ''}'.trim();
-      userImage = userInfo?.imageFullPath;
     }
     if (userName.isEmpty) {
       userName = 'guest'.tr;
     }
 
-    final Color iconColor = isDark ? Theme.of(context).primaryColorLight : const Color(0xFF333333);
-
     return AppBar(
       backgroundColor: isDark
-          ? Theme.of(context).cardColor.withValues(alpha: .2)
+          ? Theme.of(context).scaffoldBackgroundColor
           : Theme.of(context).scaffoldBackgroundColor,
       surfaceTintColor: Colors.transparent,
       automaticallyImplyLeading: false,
       elevation: 0,
       titleSpacing: 0,
+      shape: Border(bottom: BorderSide(width: 0.6, color: borderColor)),
       title: Padding(
         padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
         child: Row(children: [
 
-          /// Avatar - SS layout
-          Container(
-            height: 48, width: 48,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(50),
-              child: CustomImage(
-                image: userImage ?? '',
-                height: 48, width: 48,
-                fit: BoxFit.cover,
-                placeholder: Images.userPlaceHolder,
+          /// Brand - black rounded square with white home icon (nest. style)
+          InkWell(
+            onTap: () => Get.offAllNamed(RouteHelper.getinitialRoute()),
+            borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+            child: Row(children: [
+              Container(
+                height: 32, width: 32,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  borderRadius: BorderRadius.circular(Dimensions.radiusDefault - 2),
+                ),
+                child: Icon(Icons.home_rounded, size: 17, color: isDark ? Colors.black : Colors.white),
               ),
-            ),
-          ),
-          const SizedBox(width: Dimensions.paddingSizeDefault),
-
-          /// Greeting + name - SS layout
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(greeting, style: robotoRegular.copyWith(
-                color: isDark ? Theme.of(context).hintColor : const Color(0xFF7D848D),
-                fontSize: Dimensions.fontSizeSmall,
-              ), maxLines: 1, overflow: TextOverflow.ellipsis),
-              const SizedBox(height: 2),
-              Text(userName, style: robotoBold.copyWith(
-                color: Theme.of(context).textTheme.bodyLarge!.color,
-                fontSize: Dimensions.fontSizeExtraLarge,
-              ), maxLines: 1, overflow: TextOverflow.ellipsis),
+              const SizedBox(width: Dimensions.paddingSizeSmall),
+              Text(
+                AppConstants.appName,
+                style: robotoBold.copyWith(
+                  fontSize: Dimensions.fontSizeExtraLarge,
+                  color: foreground,
+                  letterSpacing: -0.3,
+                ),
+                maxLines: 1, overflow: TextOverflow.ellipsis,
+              ),
             ]),
           ),
+          const Spacer(),
 
-          /// Notification circle button - SS layout
+          /// Notification - bordered circle button (nest. style)
           _HeaderCircleButton(
             icon: Icons.notifications_none_rounded,
-            iconSize: 20,
-            iconColor: iconColor,
             onTap: () => Get.toNamed(RouteHelper.getNotificationRoute()),
           ),
           const SizedBox(width: Dimensions.paddingSizeSmall),
 
-          /// Favorite circle button - SS layout
+          /// Favorite - bordered circle button (nest. style)
           _HeaderCircleButton(
             icon: Icons.bookmark_border_rounded,
-            iconSize: 18,
-            iconColor: iconColor,
             onTap: () => Get.toNamed(RouteHelper.getMyFavoriteScreen()),
           ),
         ]),
       ),
       bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(30),
+        preferredSize: const Size.fromHeight(52),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(Dimensions.paddingSizeDefault, 0, Dimensions.paddingSizeDefault, Dimensions.paddingSizeSmall),
+          padding: const EdgeInsets.fromLTRB(Dimensions.paddingSizeDefault, Dimensions.paddingSizeSmall, Dimensions.paddingSizeDefault, Dimensions.paddingSizeSmall),
           child: InkWell(
             splashColor: Colors.transparent,
             hoverColor: Colors.transparent,
             highlightColor: Colors.transparent,
+            borderRadius: BorderRadius.circular(Dimensions.radiusExtraMoreLarge),
             onTap: () => showModalBottomSheet(
               context: context,
               isScrollControlled: true,
@@ -115,23 +100,31 @@ class AddressAppBar extends StatelessWidget implements PreferredSizeWidget {
               builder: (context) => const AddressSelectionBottomSheet(),
             ),
             child: GetBuilder<LocationController>(builder: (locationController) {
-              return Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-                Icon(Icons.location_on, color: Theme.of(context).colorScheme.primary, size: 18),
-                const SizedBox(width: Dimensions.paddingSizeMini + 2),
-                Expanded(
-                  child: Text(
-                    locationController.getUserAddress()?.address ?? 'set_location'.tr,
-                    style: robotoMedium.copyWith(
-                      color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: .7),
-                      fontSize: Dimensions.fontSizeSmall,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+              return Container(
+                height: 38,
+                padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+                decoration: BoxDecoration(
+                  border: Border.all(color: borderColor, width: 1),
+                  borderRadius: BorderRadius.circular(Dimensions.radiusExtraMoreLarge),
                 ),
-                Icon(Icons.arrow_forward_ios_rounded, size: 14,
-                  color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: .3)),
-              ]);
+                child: Row(children: [
+                  Icon(Icons.location_on_outlined, color: foreground.withValues(alpha: 0.8), size: 16),
+                  const SizedBox(width: Dimensions.paddingSizeExtraSmall + 1),
+                  Expanded(
+                    child: Text(
+                      locationController.getUserAddress()?.address ?? 'set_location'.tr,
+                      style: robotoMedium.copyWith(
+                        color: foreground.withValues(alpha: 0.85),
+                        fontSize: Dimensions.fontSizeSmall,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Icon(Icons.keyboard_arrow_down_rounded, size: 18,
+                    color: foreground.withValues(alpha: 0.4)),
+                ]),
+              );
             }),
           ),
         ),
@@ -139,26 +132,25 @@ class AddressAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
   @override
-  Size get preferredSize => const Size.fromHeight(98);
+  Size get preferredSize => const Size.fromHeight(108); // kToolbarHeight(56) + bottom(52)
 }
 
-/// Circular white icon button used in the header - SS layout
+/// Bordered circular icon button used in the header - nest. style
 class _HeaderCircleButton extends StatelessWidget {
   final IconData icon;
-  final double iconSize;
-  final Color iconColor;
   final Function() onTap;
 
   const _HeaderCircleButton({
     required this.icon,
-    required this.iconSize,
-    required this.iconColor,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     bool isDark = Get.isDarkMode;
+    final Color borderColor = isDark
+        ? Theme.of(context).primaryColorLight.withValues(alpha: 0.4)
+        : Theme.of(context).shadowColor.withValues(alpha: 0.6);
 
     return InkWell(
       hoverColor: Colors.transparent,
@@ -169,11 +161,13 @@ class _HeaderCircleButton extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: isDark ? Theme.of(context).cardColor : Colors.white,
-          boxShadow: Get.find<ThemeController>().darkTheme ? null : searchBoxShadow,
+          border: Border.all(color: borderColor, width: 1),
         ),
-        child: Icon(icon, size: iconSize, color: iconColor),
+        child: Icon(icon, size: 19, color: Theme.of(context).textTheme.bodyLarge!.color),
       ),
     );
   }
 }
+
+
+

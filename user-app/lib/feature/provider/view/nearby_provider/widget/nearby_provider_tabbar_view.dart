@@ -140,3 +140,5 @@ class NearbyProviderTaBarView extends StatelessWidget {
     });
   }
 }
+
+

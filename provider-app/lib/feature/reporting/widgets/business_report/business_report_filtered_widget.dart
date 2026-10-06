@@ -7,7 +7,9 @@ class BusinessReportFilteredWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return  GetBuilder<BusinessReportController>(builder: (businessReportController){
-      return  Wrap(direction: Axis.horizontal, alignment:WrapAlignment.start,children: [
+      return  Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Wrap(direction: Axis.horizontal, alignment:WrapAlignment.start,children: [
 
         if(businessReportController.selectedZoneName !=null) FilterRemoveItem(
           title: "${businessReportController.selectedZoneName}".tr,
@@ -57,7 +59,8 @@ class BusinessReportFilteredWidget extends StatelessWidget {
               Get.back();
             },),
 
-      ]);
+      ]),
+      );
     });
   }
 }
@@ -72,7 +75,3 @@ Future<void> loadData(BusinessReportController controller) async {
     await controller.getBusinessReportOverviewData(1,reload: true);
   }
 }
-
-
-
-

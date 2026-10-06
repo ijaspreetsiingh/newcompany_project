@@ -1173,6 +1173,49 @@
                                         </div>
                                     </div>
 
+                                    <!-- Cross-Zone Fallback -->
+                                    <div class="card p-20 mb-20">
+                                        <div class="border-bottom mb-20 pb-3">
+                                            <h4 class="mb-1">{{ translate('Cross-Zone Fallback') }}</h4>
+                                            <p class="fz-12">{{ translate('Allow bookings to be assigned to providers from nearby zones if no provider is available in the customer\'s zone.') }}</p>
+                                        </div>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="card2 p-20">
+                                                    <h5 class="mb-1 fz-14 fw-medium">{{ translate('Enable Cross-Zone Fallback') }}</h5>
+                                                    <p class="fz-12 mb-10">
+                                                        {{ translate('If enabled, system will search for providers in nearby zones when no provider is available in customer\'s zone.') }}
+                                                    </p>
+                                                    <div class="border p-12 rounded d-flex justify-content-between bg-white">
+                                                        <span class="text-dark fz-14">{{ translate('Enable') }}</span>
+                                                        <label class="switcher">
+                                                            <input class="switcher_input" type="checkbox"
+                                                                   id="cross_zone_fallback_enabled"
+                                                                   name="cross_zone_fallback_enabled"
+                                                                   value="1"
+                                                                {{$dataValues->where('key_name', 'cross_zone_fallback_enabled')?->first()?->live_values ? 'checked' : ''}}>
+                                                            <span class="switcher_control"></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card2 p-20">
+                                                    <h5 class="mb-1 fz-14 fw-medium">{{ translate('Distance Limit (km)') }}</h5>
+                                                    <p class="fz-12 mb-10">
+                                                        {{ translate('Maximum distance (in km) to search for providers in nearby zones.') }}
+                                                    </p>
+                                                    <div class="message-textarea">
+                                                        <input class="form-control" name="cross_zone_distance_limit"
+                                                               placeholder="{{translate('Distance Limit')}} *"
+                                                               type="number" required step="1"
+                                                               value="{{$dataValues->where('key_name', 'cross_zone_distance_limit')->first()->live_values ?? 50}}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     @can('business_update')
                                         <div class="d-flex justify-content-end trans3 mt-4">
                                             <div class="d-flex justify-content-sm-end justify-content-center gap-2 gap-sm-3 flex-grow-1 flex-grow-sm-0 bg-white action-btn-wrapper trans3">

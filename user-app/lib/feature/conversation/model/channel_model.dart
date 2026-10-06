@@ -1,4 +1,3 @@
-
 import 'package:jdds/feature/conversation/model/conversation_user.dart';
 
 class ChannelModel {
@@ -11,7 +10,9 @@ class ChannelModel {
   ChannelModel.fromJson(Map<String, dynamic> json) {
     responseCode = json['response_code'];
     message = json['message'];
-    conversationContent = json['content'] != null ? ChannelContent.fromJson(json['content']) : null;
+    conversationContent = json['content'] != null
+        ? ChannelContent.fromJson(json['content'])
+        : null;
   }
 
   Map<String, dynamic> toJson() {
@@ -39,19 +40,20 @@ class ChannelContent {
   int? to;
   int? total;
 
-  ChannelContent(
-      {this.currentPage,
-        this.conversationList,
-        this.firstPageUrl,
-        this.from,
-        this.lastPage,
-        this.lastPageUrl,
-        this.nextPageUrl,
-        this.path,
-        this.perPage,
-        this.prevPageUrl,
-        this.to,
-        this.total});
+  ChannelContent({
+    this.currentPage,
+    this.conversationList,
+    this.firstPageUrl,
+    this.from,
+    this.lastPage,
+    this.lastPageUrl,
+    this.nextPageUrl,
+    this.path,
+    this.perPage,
+    this.prevPageUrl,
+    this.to,
+    this.total,
+  });
 
   ChannelContent.fromJson(Map<String, dynamic> json) {
     currentPage = json['current_page'];
@@ -109,20 +111,20 @@ class ChannelData {
   int? lastSentFileCount;
   List<ConversationUserModel>? channelUsers;
 
-  ChannelData(
-      {this.id,
-        this.referenceId,
-        this.referenceType,
-        this.deletedAt,
-        this.createdAt,
-        this.updatedAt,
-        this.channelUsersCount,
-        this.channelUsers,
-        this.lastSentMessage,
-        this.lastSentAttachmentType,
-        this.lastMessageSentUser,
-        this.lastSentFileCount
-      });
+  ChannelData({
+    this.id,
+    this.referenceId,
+    this.referenceType,
+    this.deletedAt,
+    this.createdAt,
+    this.updatedAt,
+    this.channelUsersCount,
+    this.channelUsers,
+    this.lastSentMessage,
+    this.lastSentAttachmentType,
+    this.lastMessageSentUser,
+    this.lastSentFileCount,
+  });
 
   ChannelData.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -130,11 +132,12 @@ class ChannelData {
     referenceType = json['reference_type'];
     deletedAt = json['deleted_at'];
     createdAt = json['created_at'];
+    updatedAt = json['updated_at'];
     lastSentMessage = json['last_sent_message'];
     lastSentAttachmentType = json['last_sent_attachment_type'];
     lastMessageSentUser = json['last_message_sent_user'];
-    channelUsersCount =int.tryParse( json['channel_users_count'].toString());
-    lastSentFileCount =int.tryParse( json['last_sent_files_count'].toString());
+    channelUsersCount = int.tryParse(json['channel_users_count'].toString());
+    lastSentFileCount = int.tryParse(json['last_sent_files_count'].toString());
     if (json['channel_users'] != null) {
       channelUsers = <ConversationUserModel>[];
       json['channel_users'].forEach((v) {
@@ -151,14 +154,13 @@ class ChannelData {
     data['deleted_at'] = deletedAt;
     data['created_at'] = createdAt;
     data['updated_at'] = updatedAt;
-    data['updated_at'] = lastSentMessage;
-    data['last_sent_message'] = lastSentAttachmentType;
+    data['last_sent_message'] = lastSentMessage;
+    data['last_sent_attachment_type'] = lastSentAttachmentType;
     data['channel_users_count'] = channelUsersCount;
     data['last_message_sent_user'] = lastMessageSentUser;
     data['last_sent_files_count'] = lastSentFileCount;
     if (channelUsers != null) {
-      data['channel_users'] =
-          channelUsers!.map((v) => v.toJson()).toList();
+      data['channel_users'] = channelUsers!.map((v) => v.toJson()).toList();
     }
     return data;
   }

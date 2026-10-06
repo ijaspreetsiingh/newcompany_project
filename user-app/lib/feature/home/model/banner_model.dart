@@ -1,4 +1,4 @@
-import 'package:jdds/util/core_export.dart';
+﻿import 'package:jdds/util/core_export.dart';
 
 class BannerContentModel {
 
@@ -36,7 +36,7 @@ class BannerModel {
   String? _bannerTitle;
   String? _resourceType;
   String? _resourceId;
-  String? _redirectLink;
+  String? _redtrectLink;
   String? _bannerImage;
   String? _bannerImageFullPath;
   String? _createdAt;
@@ -49,7 +49,7 @@ class BannerModel {
         String? bannerTitle,
         String? resourceType,
         String? resourceId,
-        String? redirectLink,
+        String? redtrectLink,
         String? bannerImage,
         String? bannerImageFullPath,
         String? createdAt,
@@ -68,8 +68,8 @@ class BannerModel {
     if (resourceId != null) {
       _resourceId = resourceId;
     }
-    if (redirectLink != null) {
-      _redirectLink = redirectLink;
+    if (redtrectLink != null) {
+      _redtrectLink = redtrectLink;
     }
     if (bannerImage != null) {
       _bannerImage = bannerImage;
@@ -95,7 +95,7 @@ class BannerModel {
   String? get bannerTitle => _bannerTitle;
   String? get resourceType => _resourceType;
   String? get resourceId => _resourceId;
-  String? get redirectLink => _redirectLink;
+  String? get redtrectLink => _redtrectLink;
   String? get bannerImage => _bannerImage;
   String? get bannerImageFullPath => _bannerImageFullPath;
   String? get createdAt => _createdAt;
@@ -109,7 +109,7 @@ class BannerModel {
     _bannerTitle = json['banner_title'];
     _resourceType = json['resource_type'];
     _resourceId = json['resource_id'];
-    _redirectLink = json['redirect_link'];
+    _redtrectLink = json['redtrect_link'];
     _bannerImage = json['banner_image'];
     _bannerImageFullPath = json['banner_image_full_path'];
     _createdAt = json['created_at'];
@@ -126,7 +126,7 @@ class BannerModel {
     data['banner_title'] = _bannerTitle;
     data['resource_type'] = _resourceType;
     data['resource_id'] = _resourceId;
-    data['redirect_link'] = _redirectLink;
+    data['redtrect_link'] = _redtrectLink;
     data['banner_image'] = _bannerImage;
     data['banner_image_full_path'] = _bannerImageFullPath;
     data['created_at'] = _createdAt;
@@ -140,3 +140,4 @@ class BannerModel {
     return data;
   }
 }
+

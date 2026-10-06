@@ -143,6 +143,10 @@ class  BusinessSubscriptionController extends GetxController implements GetxServ
 
   Future<bool> openTrialEndBottomSheet() async {
 
+    if(!Get.find<UserProfileController>().isSubscriptionRequired){
+      return true;
+    }
+
     SubscriptionInfo ? subscriptionInfo = Get.find<UserProfileController>().providerModel?.content?.subscriptionInfo;
     int remainingDay =  DateConverter.countDays(endDate : DateTime.tryParse( subscriptionInfo?.subscribedPackageDetails?.packageEndDate ?? ""));
     bool isFreeTrial = subscriptionInfo?.subscribedPackageDetails?.trialDuration != null && subscriptionInfo?.subscribedPackageDetails?.trialDuration != 0;

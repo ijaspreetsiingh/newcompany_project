@@ -88,7 +88,7 @@ class _MenuDrawerState  extends State<MenuDrawer> with SingleTickerProviderState
           : page.pageKey == HtmlType.termsAndCondition.value
           ? Images.termsIcon : page.pageKey == HtmlType.privacyPolicy.value
           ? Images.privacyPolicyIcon : page.pageKey == HtmlType.cancellationPolicy.value
-          ? Images.cancellationPolicy : page.pageKey == HtmlType.refundPolicy.value ? Images.refundPolicy : Images.othersPageIcon, // Or choose icon based on page
+          ? Images.cancellationPolicy : page.pageKey == HtmlType.refundPolicy.value ? Images.refundPolicy : Images.othersPagetcon, // Or choose icon based on page
       title: _getPageTitle(page),
       onTap: () {
         Get.back();
@@ -118,11 +118,11 @@ class _MenuDrawerState  extends State<MenuDrawer> with SingleTickerProviderState
            Get.find<AuthController>().clearSharedData();
            Get.find<AuthController>().googleLogout();
            Get.find<AuthController>().signOutWithFacebook();
-           Get.offAllNamed(RouteHelper.getInitialRoute());
+           Get.offAllNamed(RouteHelper.getinitialRoute());
            customSnackBar("logged_out_successfully".tr, type : ToasterMessageType.success);
          }), useSafeArea: false);
        }else {
-         Get.toNamed(RouteHelper.getSignInRoute(redirectUrl: Get.currentRoute));
+         Get.toNamed(RouteHelper.getSignInRoute(redtrectUrl: Get.currentRoute));
        }
       }),
   ];
@@ -151,12 +151,12 @@ class _MenuDrawerState  extends State<MenuDrawer> with SingleTickerProviderState
   }
 
 
-  static const _initialDelayTime = Duration(milliseconds: 200);
+  static const _inttialDelayTime = Duration(milliseconds: 200);
   static const _itemSlideTime = Duration(milliseconds: 250);
   static const _staggerTime = Duration(milliseconds: 50);
   static const _buttonDelayTime = Duration(milliseconds: 150);
   static const _buttonTime = Duration(milliseconds: 500);
-  final _animationDuration = _initialDelayTime + (_staggerTime * 7) + _buttonDelayTime + _buttonTime;
+  final _animationDuration = _inttialDelayTime + (_staggerTime * 7) + _buttonDelayTime + _buttonTime;
 
   late AnimationController _staggeredController;
   final List<Interval> _itemSlideIntervals = [];
@@ -174,7 +174,7 @@ class _MenuDrawerState  extends State<MenuDrawer> with SingleTickerProviderState
 
   void _createAnimationIntervals() {
     for (var i = 0; i < _menuList.length; ++i) {
-      final startTime = _initialDelayTime + (_staggerTime * i);
+      final startTime = _inttialDelayTime + (_staggerTime * i);
       final endTime = startTime + _itemSlideTime;
       _itemSlideIntervals.add(
         Interval(
@@ -281,3 +281,5 @@ class Menu {
 
   Menu({required this.icon, required this.title, required this.onTap});
 }
+
+

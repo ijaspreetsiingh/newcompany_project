@@ -146,3 +146,6 @@ class ProviderAvailabilityWidget extends StatelessWidget {
         && DateConverter.convertTimeToDateTime(time).isBefore(DateConverter.convertTimeToDateTime(endTime!));
   }
 }
+
+
+

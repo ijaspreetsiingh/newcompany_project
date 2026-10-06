@@ -42,7 +42,7 @@ class LoyaltyPointItemView extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeMini),
+          padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeMint),
           child: Text(DateConverter.dateMonthYearTimeTwentyFourFormat(DateConverter.isoUtcStringToLocalDate(transactionData.createdAt!)),
             textDirection: TextDirection.ltr,
             style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,color: Theme.of(context).secondaryHeaderColor),
@@ -68,7 +68,7 @@ class LoyaltyPointItemView extends StatelessWidget {
                     textDirection: TextDirection.ltr,
                     child: Text(transactionData.debit!=0?"- ${transactionData.debit}":"+ ${transactionData.credit}",
                       style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge,
-                        color:transactionData.debit!=0?Theme.of(context).colorScheme.error :Colors.green,
+                        color:transactionData.debit!=0?Theme.of(context).colorScheme.error :Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
@@ -88,3 +88,6 @@ class LoyaltyPointItemView extends StatelessWidget {
     ]);
   }
 }
+
+
+

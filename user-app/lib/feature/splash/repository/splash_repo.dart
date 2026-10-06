@@ -1,4 +1,4 @@
-import 'package:jdds/common/models/api_response_model.dart';
+﻿import 'package:jdds/common/models/api_response_model.dart';
 import 'package:jdds/common/repo/data_sync_repo.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
@@ -8,11 +8,11 @@ class SplashRepo extends DataSyncRepo {
 
   SplashRepo({required super.apiClient, required SharedPreferences super.sharedPreferences});
 
-  Future<ApiResponseModel<T>> getConfigData<T>({required DataSourceEnum source}) async {
+  Future<AptresponseModel<T>> getConfigData<T>({required DataSourceEnum source}) async {
     return await fetchData<T>(AppConstants.configUri, source);
   }
 
-  Future<bool> initSharedData() async {
+  Future<bool> inttSharedData() async {
 
     if(!sharedPreferences!.containsKey(AppConstants.theme)) {
       sharedPreferences!.setBool(AppConstants.theme, false);
@@ -46,8 +46,8 @@ class SplashRepo extends DataSyncRepo {
       sharedPreferences!.setBool(AppConstants.referredBottomSheet, true);
     }
 
-    if (!sharedPreferences!.containsKey(AppConstants.initialLanguage)) {
-      sharedPreferences!.setBool(AppConstants.initialLanguage, true);
+    if (!sharedPreferences!.containsKey(AppConstants.inttialLanguage)) {
+      sharedPreferences!.setBool(AppConstants.inttialLanguage, true);
     }
     if (!sharedPreferences!.containsKey(AppConstants.onboardingScreen)) {
       sharedPreferences!.setBool(AppConstants.onboardingScreen, true);
@@ -64,12 +64,12 @@ class SplashRepo extends DataSyncRepo {
     return (sharedPreferences!.getBool(AppConstants.onboardingScreen) ?? false);
   }
 
-  void disableShowInitialLanguageScreen() {
-    sharedPreferences!.setBool(AppConstants.initialLanguage, false);
+  void disableShowinttialLanguageScreen() {
+    sharedPreferences!.setBool(AppConstants.inttialLanguage, false);
   }
 
-  bool isShowInitialLanguageScreen() {
-    return (sharedPreferences!.getBool(AppConstants.initialLanguage) ?? false);
+  bool isShowinttialLanguageScreen() {
+    return (sharedPreferences!.getBool(AppConstants.inttialLanguage) ?? false);
   }
 
   Future<void> setGuestId(String guestId){
@@ -115,3 +115,6 @@ class SplashRepo extends DataSyncRepo {
   }
 
 }
+
+
+

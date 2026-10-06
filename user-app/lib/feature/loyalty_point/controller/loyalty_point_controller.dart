@@ -1,4 +1,4 @@
-import 'package:jdds/util/core_export.dart';
+﻿import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 
 class LoyaltyPointController extends GetxController implements GetxService{
@@ -57,3 +57,5 @@ class LoyaltyPointController extends GetxController implements GetxService{
   }
 
 }
+
+

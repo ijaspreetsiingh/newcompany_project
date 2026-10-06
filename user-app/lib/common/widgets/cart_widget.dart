@@ -40,3 +40,6 @@ class CartWidget extends GetView<CartController> {
     ]);
   }
 }
+
+
+

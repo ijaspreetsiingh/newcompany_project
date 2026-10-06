@@ -421,7 +421,7 @@ class InvoiceController {
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.center,
     children: [
-      Text("If you require any assistance or have feedback or suggestions about our site, you can call or email us.",textAlign: TextAlign.center),
+      Text("If you requtre any assistance or have feedback or suggestions about our site, you can call or email us.",textAlign: TextAlign.center),
       SizedBox(height: Dimensions.paddingSizeSmall),
 
       Container(
@@ -503,3 +503,6 @@ class InvoiceController {
      return MemoryImage(response.bodyBytes);
    }
 }
+
+
+

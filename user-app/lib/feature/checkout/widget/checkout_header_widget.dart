@@ -1,5 +1,6 @@
 import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CheckoutHeaderWidget extends StatelessWidget {
   final String pageState;
@@ -7,16 +8,17 @@ class CheckoutHeaderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
+    final bgColor = isDark ? const Color(0xFF0D0D0D) : Colors.white;
+
     return GetBuilder<CheckOutController>(builder: (controller) {
       final int currentStep = controller.currentPageState == PageState.orderDetails
           ? 0
           : controller.currentPageState == PageState.payment
               ? 1
               : 2;
-
-      final Color activeColor = Theme.of(context).colorScheme.primary;
-      final Color completedColor = const Color(0xFF4CAF50);
-      final Color inactiveColor = Theme.of(context).hintColor.withValues(alpha: 0.3);
 
       final List<String> steps = [
         "booking_details".tr,
@@ -29,41 +31,29 @@ class CheckoutHeaderWidget extends StatelessWidget {
         bool isActive = index == currentStep;
 
         return Container(
-          width: 36,
-          height: 36,
+          width: 28,
+          height: 28,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isCompleted
-                ? completedColor
-                : isActive
-                    ? activeColor
-                    : Colors.transparent,
+            color: isCompleted || isActive
+                ? primaryColor
+                : Colors.transparent,
             border: Border.all(
-              color: isCompleted
-                  ? completedColor
-                  : isActive
-                      ? activeColor
-                      : inactiveColor,
-              width: 2,
+              color: isCompleted || isActive
+                  ? primaryColor
+                  : mutedColor.withValues(alpha: 0.3),
+              width: 1.5,
             ),
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: activeColor.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
           ),
           child: Center(
             child: isCompleted
-                ? const Icon(Icons.check_rounded, size: 18, color: Colors.white)
+                ? Icon(Icons.check_rounded, size: 14, color: bgColor)
                 : Text(
                     "${index + 1}",
-                    style: robotoBold.copyWith(
-                      fontSize: Dimensions.fontSizeSmall,
-                      color: isActive ? Colors.white : inactiveColor,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: isActive ? bgColor : mutedColor,
                     ),
                   ),
           ),
@@ -71,23 +61,23 @@ class CheckoutHeaderWidget extends StatelessWidget {
       }
 
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeLarge, vertical: Dimensions.paddingSizeSmall),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              height: 40,
+              height: 36,
               child: Row(
                 children: List.generate(steps.length * 2 - 1, (index) {
                   if (index.isOdd) {
                     int lineIndex = index ~/ 2;
                     return Expanded(
                       child: Container(
-                        height: 2,
+                        height: 1.5,
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
-                          color: lineIndex < currentStep ? completedColor : inactiveColor,
+                          color: lineIndex < currentStep ? primaryColor : mutedColor.withValues(alpha: 0.2),
                         ),
                       ),
                     );
@@ -97,7 +87,7 @@ class CheckoutHeaderWidget extends StatelessWidget {
                 }),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Row(
               children: List.generate(steps.length * 2 - 1, (index) {
                 if (index.isOdd) {
@@ -111,13 +101,10 @@ class CheckoutHeaderWidget extends StatelessWidget {
                       child: Text(
                         steps[stepIndex],
                         textAlign: TextAlign.center,
-                        style: robotoMedium.copyWith(
-                          fontSize: Dimensions.fontSizeExtraSmall,
-                          color: isCompleted
-                              ? completedColor
-                              : isActive
-                                  ? activeColor
-                                  : Theme.of(context).hintColor,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: isCompleted || isActive ? primaryColor : mutedColor,
                         ),
                       ),
                     ),
@@ -131,3 +118,5 @@ class CheckoutHeaderWidget extends StatelessWidget {
     });
   }
 }
+
+

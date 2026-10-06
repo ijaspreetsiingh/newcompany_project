@@ -21,7 +21,7 @@ class CalenderOrderListDialogWidget extends StatelessWidget {
       constraints: BoxConstraints(
         maxHeight: size.height * 0.8,
       ),
-      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+      padding: const EdgeInsets.all(16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -32,33 +32,31 @@ class CalenderOrderListDialogWidget extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context).hintColor.withValues(alpha: 0.3),
+                color: InkColors.accent,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
-          const SizedBox(height: Dimensions.paddingSizeDefault),
+          const SizedBox(height: 16),
 
           // Header Title
-          Align(
-            alignment: Alignment.center,
-            child: Text(
-              '${'booking_list'.tr} - ${controller.getFormattedDateRange()}',
-              style: robotoBold.copyWith(
-                color: Theme.of(context).textTheme.bodyLarge?.color,
-                fontSize: Dimensions.fontSizeLarge,
-              ),
+          Text(
+            '${'booking_list'.tr} · ${DateConverter.dateStringMonthYear(bookings.isEmpty ? null : bookings.first.serviceSchedule, format: 'd MMM, y')}',
+            style: robotoBold.copyWith(
+              fontSize: 15,
+              height: 1.3,
+              letterSpacing: -0.2,
+              color: InkColors.foreground,
             ),
           ),
-          const SizedBox(height: Dimensions.paddingSizeLarge),
+          const SizedBox(height: 16),
 
           // Bookings List
           Flexible(
             child: ListView.separated(
               shrinkWrap: true,
               itemCount: bookings.length,
-              separatorBuilder: (context, index) => 
-                const SizedBox(height: Dimensions.paddingSizeSmall),
+              separatorBuilder: (context, index) => const SizedBox(height: 0),
               itemBuilder: (context, index) {
                 return BookingItemCard(
                   booking: bookings[index],

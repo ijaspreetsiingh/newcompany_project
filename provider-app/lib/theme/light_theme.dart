@@ -2,39 +2,38 @@ import 'package:flutter/material.dart';
 
 import 'custom_theme_colors.dart';
 
-/// Option B — Royal Blue palette
-/// Primary: #2563EB · Primary Dark: #1D4ED8 · Gradient Deep: #1E40AF
-/// Gradient End: #3B82F6 · Scaffold: #F7F8FA · Card: #FFFFFF
+/// "Ink" — black & white theme.
+/// Ink: #111111 · Paper: #FFFFFF · Scaffold: #F6F6F6 · Hairline: #E9E9EB
 class AppThemeColors {
-  static const Color primary = Color(0xFF2563EB);
-  static const Color primaryDark = Color(0xFF1D4ED8);
-  static const Color gradientDeep = Color(0xFF1E40AF);
-  static const Color gradientEnd = Color(0xFF3B82F6);
-  static const Color primaryLight = Color(0xFFDBEAFE);
-  static const Color scaffold = Color(0xFFF7F8FA);
+  static const Color primary = Color(0xFF111111);
+  static const Color primaryDark = Color(0xFF000000);
+  static const Color gradientDeep = Color(0xFF1C1C1C);
+  static const Color gradientEnd = Color(0xFF2E2E2E);
+  static const Color primaryLight = Color(0xFFEDEDED);
+  static const Color scaffold = Color(0xFFF6F6F6);
   static const Color card = Color(0xFFFFFFFF);
-  static const Color textPrimary = Color(0xFF1A1A2E);
-  static const Color success = Color(0xFF22C55E);
-  static const Color danger = Color(0xFFEF4444);
-  static const Color secondary = Color(0xFF0EA5E9);
+  static const Color textPrimary = Color(0xFF111111);
+  static const Color success = Color(0xFF16A34A);
+  static const Color danger = Color(0xFFDC2626);
+  static const Color secondary = Color(0xFF6B6B6B);
 }
 
 ThemeData light = ThemeData(
-  fontFamily: 'Roboto',
+  fontFamily: 'Manrope',
   primaryColor: AppThemeColors.primary,
   primaryColorLight: AppThemeColors.primaryLight,
   primaryColorDark: AppThemeColors.primaryDark,
   scaffoldBackgroundColor: AppThemeColors.scaffold,
   cardColor: AppThemeColors.card,
 
-  shadowColor: const Color(0xFFE4E7EC),
+  shadowColor: const Color(0xFFE5E5E5),
   canvasColor: AppThemeColors.card,
 
-  secondaryHeaderColor: const Color(0xFF758493),
+  secondaryHeaderColor: const Color(0xFF6B6B6B),
   disabledColor: const Color(0xFFB9C0CC),
   brightness: Brightness.light,
-  hintColor: const Color(0xFF9AA1AC),
-  focusColor: const Color(0xFFEFF6FF),
+  hintColor: const Color(0xFF8E8E93),
+  focusColor: const Color(0xFFEFEFEF),
   hoverColor: AppThemeColors.primary,
   extensions: <ThemeExtension<CustomThemeColors>>[CustomThemeColors.light()],
   colorScheme: const ColorScheme.light(
@@ -66,7 +65,7 @@ ThemeData light = ThemeData(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       textStyle: const TextStyle(
-        fontFamily: 'Roboto',
+        fontFamily: 'Manrope',
         fontSize: 15,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.2,
@@ -77,10 +76,10 @@ ThemeData light = ThemeData(
   outlinedButtonTheme: OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
       foregroundColor: AppThemeColors.primary,
-      side: const BorderSide(color: Color(0x4D2563EB), width: 1.2),
+      side: const BorderSide(color: Color(0x33111111), width: 1.2),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       textStyle: const TextStyle(
-        fontFamily: 'Roboto',
+        fontFamily: 'Manrope',
         fontSize: 14,
         fontWeight: FontWeight.w600,
       ),
@@ -89,12 +88,12 @@ ThemeData light = ThemeData(
 
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: const Color(0xFFF3F5F8),
+    fillColor: const Color(0xFFF3F3F4),
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     hintStyle: const TextStyle(
-      fontFamily: 'Roboto',
+      fontFamily: 'Manrope',
       fontSize: 14,
-      color: Color(0xFF9AA1AC),
+      color: Color(0xFF9CA0A8),
     ),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
@@ -102,14 +101,11 @@ ThemeData light = ThemeData(
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: const Color(0xFFE9EAEC), width: 1),
+      borderSide: const BorderSide(color: Color(0xFFE9E9EB), width: 1),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(
-        color: AppThemeColors.primary.withValues(alpha: 0.8),
-        width: 1.3,
-      ),
+      borderSide: const BorderSide(color: Color(0xFF111111), width: 1.3),
     ),
     errorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
@@ -135,9 +131,9 @@ ThemeData light = ThemeData(
 
   snackBarTheme: SnackBarThemeData(
     behavior: SnackBarBehavior.floating,
-    backgroundColor: const Color(0xFF1E293B),
+    backgroundColor: const Color(0xFF111111),
     contentTextStyle: const TextStyle(
-      fontFamily: 'Roboto',
+      fontFamily: 'Manrope',
       color: Colors.white,
       fontSize: 14,
     ),
@@ -145,12 +141,12 @@ ThemeData light = ThemeData(
   ),
 
   timePickerTheme: const TimePickerThemeData(
-    hourMinuteTextColor: Color(0xFF10324a),
+    hourMinuteTextColor: Color(0xFF111111),
   ),
   datePickerTheme: const DatePickerThemeData(),
 
   dividerTheme: const DividerThemeData(
     thickness: 0.5,
-    color: Color(0x1A9AA1AC),
+    color: Color(0x14111111),
   ),
 );

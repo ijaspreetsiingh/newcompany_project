@@ -83,7 +83,7 @@ class BookingDetailsTopCard extends StatelessWidget {
             ),
             Text(bookingDetailsContent.readableId!.toString(),textDirection: TextDirection.ltr, style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge)),
             if(bookingDetailsContent.isRepeatBooking == 1)Container(
-              decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.green),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: Theme.of(Get.context!).colorScheme.primary),
               padding: const EdgeInsets.all(2),
               margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
               child: const Icon(Icons.repeat, color: Colors.white,size: 12,),
@@ -334,5 +334,7 @@ class WebBookingDetailsSection extends StatelessWidget {
     );
   }
 }
+
+
 
 

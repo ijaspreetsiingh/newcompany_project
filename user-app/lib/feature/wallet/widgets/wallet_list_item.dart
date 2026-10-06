@@ -67,7 +67,7 @@ class WalletListItem extends StatelessWidget {
                   Text.rich(
                     TextSpan(text: transactionData.debit!=0?"- ${PriceConverter.convertPrice(transactionAmount).replaceAll("-", "")}":"+ ${PriceConverter.convertPrice(transactionAmount)}",
                       style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge,
-                        color:transactionData.debit!=0?Theme.of(context).colorScheme.error :Colors.green,
+                        color:transactionData.debit!=0?Theme.of(context).colorScheme.error :Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     textDirection: TextDirection.ltr,
@@ -83,3 +83,5 @@ class WalletListItem extends StatelessWidget {
     ]);
   }
 }
+
+

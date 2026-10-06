@@ -224,7 +224,7 @@ class _CodePickerWidgetState extends State<CodePickerWidget> {
           ),
         ),
         useRootNavigator: true,
-        backgroundColor: Colors.white,
+        backgroundColor: Get.isDarkMode ? const Color(0xFF141414) : Colors.white,
         isScrollControlled: true,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.only(

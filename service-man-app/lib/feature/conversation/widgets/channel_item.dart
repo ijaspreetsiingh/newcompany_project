@@ -1,6 +1,22 @@
 import 'package:demandium_serviceman/utils/core_export.dart';
 import 'package:get/get.dart';
 
+String _channelRowTime(String? isoTime) {
+  if (isoTime == null || isoTime.isEmpty) return '';
+  try {
+    final DateTime local = DateConverter.isoUtcStringToLocalDate(isoTime);
+    final DateTime now = DateTime.now();
+    if (local.year == now.year &&
+        local.month == now.month &&
+        local.day == now.day) {
+      return DateConverter.convertStringTimeToDate(local);
+    }
+    return DateConverter.dateStringMonthYear(local);
+  } catch (_) {
+    return '';
+  }
+}
+
 class ChannelItem extends StatelessWidget {
   final ChannelData channelData;
   final bool isAdmin;
@@ -10,7 +26,6 @@ class ChannelItem extends StatelessWidget {
 
     ConversationUserModel? conversationUser;
     int? isRead;
-    int? isSeen;
     String ? imageWithPath;
     String? lastMessage;
     String userName = "${Get.find<UserController>().userInfo.firstName} ${Get.find<UserController>().userInfo.lastName}";
@@ -18,8 +33,7 @@ class ChannelItem extends StatelessWidget {
 
     if(channelData.channelUsers !=null && channelData.channelUsers!.length > 1){
       conversationUser = channelData.channelUsers?[0].user?.userType != "provider-serviceman" ? channelData.channelUsers![0] : channelData.channelUsers![1];
-      isRead = channelData.channelUsers?[0].user?.userType == "provider-serviceman" ? channelData.channelUsers![0].isRead : channelData.channelUsers![1].isRead;
-      isSeen = channelData.channelUsers?[0].user?.userType == "provider-serviceman" ? channelData.channelUsers![1].isRead : channelData.channelUsers![0].isRead;
+      isRead = channelData.channelUsers?[0].user?.userType == "provider-serviceman" ? channelData.channelUsers![0].isRead : channelData.channelUsers?[1].isRead;
 
       String? imageUrl = conversationUser.user?.userType == 'customer' ?
       conversationUser.user?.profileImageFullPath  :  conversationUser.user?.userType == 'super-admin' ? "${Get.find<SplashController>().configModel?.content?.faviconFullPath}" : conversationUser.user?.provider?.logoFullPath ?? "";
@@ -74,116 +88,136 @@ class ChannelItem extends StatelessWidget {
       }
     }
 
-    return conversationUser != null ? Container(
-      margin: const EdgeInsets.symmetric(vertical: 5,horizontal: 10),
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(Ios27Tokens.radiusMd),
-          color: isRead == 0 ? Theme.of(context).primaryColor.withValues(alpha:Get.isDarkMode?0.2:0.05) : Theme.of(context).cardColor.withValues(alpha:Get.isDarkMode?0.5:1),
-          boxShadow: Get.find<ThemeController>().darkTheme ? null : lightShadow ,
-          border: Border.all(
-              color:  isRead == 0 ? Theme.of(context).primaryColor.withValues(alpha:0.5): Ios27Tokens.rim(context),
-              width: 0.5
-          )
-      ),
-      child: Stack( children: [
+    if(conversationUser == null) return const SizedBox();
 
-        Padding(padding: const EdgeInsets.symmetric(horizontal : Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeDefault),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+    final ConversationUserModel chatUser = conversationUser;
 
-            Row(children: [
-              ClipRRect(borderRadius: BorderRadius.circular(50),
-                child: CustomImage(height: 55, width: 55,
-                  image: imageWithPath,
+    final String name = isAdmin ? "technical_support_team".tr : chatUser.user?.userType == "super-admin" ?
+    "technical_support_team".tr : chatUser.user?.userType == "provider-admin" ?
+    (chatUser.user?.provider?.companyName?.isNotEmpty == true ? chatUser.user!.provider!.companyName! : "zone_admin".tr)
+    : "${ chatUser.user?.firstName ?? ""} ${ chatUser.user?.lastName ?? ""}";
+
+    final String time = _channelRowTime(chatUser.updatedAt);
+    final bool isUnread = isRead == 0;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: (){
+          String image = '$imageWithPath';
+          String phone =  chatUser.user?.phone??"";
+          String userType =  chatUser.user?.userType??"";
+          Get.toNamed(RouteHelper.getChatScreenRoute(
+              chatUser.channelId ?? "",name,image,phone,userType));
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: context.kMuted,
+                  shape: BoxShape.circle,
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: ClipOval(
+                  child: (imageWithPath?.isNotEmpty ?? false)
+                      ? CustomImage(
+                          image: imageWithPath,
+                          width: 44,
+                          height: 44,
+                          fit: BoxFit.cover,
+                        )
+                      : Container(
+                          width: 44,
+                          height: 44,
+                          color: context.kMuted,
+                          alignment: Alignment.center,
+                          child: Text(
+                            name.isNotEmpty ? name[0].toUpperCase() : '',
+                            style: robotoBold.copyWith(
+                              fontSize: 16,
+                              color: context.kMutedForeground,
+                            ),
+                          ),
+                        ),
                 ),
               ),
 
-              const SizedBox(width: Dimensions.paddingSizeDefault,),
+              const SizedBox(width: 12),
 
-              Expanded(child: Column(children: [
-                Column( crossAxisAlignment: CrossAxisAlignment.start, children: [
-
-                  Row( children: [
-                    Expanded(
-                      child: Text( isAdmin ? "admin".tr : conversationUser.user?.userType == "provider-admin" ?
-                          conversationUser.user?.provider?.companyName ?? "" : "${ conversationUser.user?.firstName ?? ""} ${ conversationUser.user?.lastName}",
-                        style: robotoBold.copyWith(
-                            fontSize: Dimensions.fontSizeLarge,
-                            color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.7)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: robotoMedium.copyWith(
+                        fontSize: Dimensions.fontSizeDefault,
+                        fontWeight: FontWeight.w600,
+                        color: context.kForeground,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if(lastMessage != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        lastMessage,
+                        style: robotoRegular.copyWith(
+                          fontSize: Dimensions.fontSizeSmall,
+                          color: context.kMutedForeground,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    const SizedBox(width: 10,),
+                    ],
+                  ],
+                ),
+              ),
 
-                    if( conversationUser.user?.userType == "super-admin") Container(
+              const SizedBox(width: 8),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if(time.isNotEmpty)
+                    Text(
+                      time,
+                      style: robotoRegular.copyWith(
+                        fontSize: Dimensions.fontSizeExtraSmall,
+                        color: context.kMutedForeground,
+                      ),
+                      textDirection: TextDirection.ltr,
+                    ),
+                  if(isUnread) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      width: 20,
+                      height: 20,
+                      alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withValues(alpha:.2),
-                        borderRadius: const BorderRadius.all(Radius.circular(12.0)),
+                        color: context.kPrimary,
+                        shape: BoxShape.circle,
                       ),
-                      child: Padding(
-                        padding:  const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall,vertical: 3),
-                        child: Text('support'.tr,style: robotoMedium.copyWith(
-                          color: Theme.of(context).primaryColor,
-                          fontSize: Dimensions.fontSizeSmall,),
+                      child: Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: context.kPrimaryForeground,
+                          shape: BoxShape.circle,
                         ),
                       ),
                     ),
-                  ],),
-
-                  if(lastMessage!=null) Padding(padding: const EdgeInsets.only(top: Dimensions.paddingSizeExtraSmall -2),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(lastMessage,
-                            style: isRead ==0 ?robotoMedium.copyWith(
-                              color: Theme.of(context).textTheme.bodySmall!.color!.withValues(alpha:0.7),
-                              fontSize: Dimensions.fontSizeDefault ,
-                            ) : robotoRegular.copyWith(
-                              color: Theme.of(context).textTheme.bodySmall!.color!.withValues(alpha:0.5),
-                              fontSize: Dimensions.fontSizeDefault ,
-                            ),
-                            maxLines: 1, overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-
-                        const SizedBox(width: Dimensions.paddingSizeSmall,),
-
-                        channelData.lastMessageSentUser == userName ? Icon(Icons.done_all,
-                          color: isSeen ==1  && isRead == 1 ? Theme.of(context).primaryColor : Theme.of(context).hintColor.withValues(alpha:0.7),
-                          size: 20,
-                        ) : const SizedBox()
-                      ],
-                    ),
-                  ),
-
-                ],),
-              ],))
-            ],),
-            Text(DateConverter.dateMonthYearTime(DateConverter.isoUtcStringToLocalDate(conversationUser.updatedAt!)),
-              style: robotoRegular.copyWith(color:  Theme.of(context).hintColor, fontSize: Dimensions.fontSizeSmall + 1),
-              textDirection: TextDirection.ltr,
-            ),
-          ],),
+                  ],
+                ],
+              ),
+            ],
+          ),
         ),
-
-        Positioned.fill(child: CustomInkWell(
-          radius: Dimensions.radiusDefault,
-          onTap:(){
-            String name =  isAdmin ? "admin".tr : conversationUser?.user?.userType == "provider-admin" ?
-            conversationUser?.user?.provider?.companyName ?? "" : "${ conversationUser?.user?.firstName ?? ""} ${ conversationUser?.user?.lastName??""}";
-            String image = '$imageWithPath';
-            String phone =  conversationUser?.user?.phone??"";
-            String userType =  conversationUser?.user?.userType??"";
-            Get.toNamed(RouteHelper.getChatScreenRoute(
-                conversationUser?.channelId ?? "",name,image,phone,userType));
-          },
-        ),)
-
-      ],),
-
-    ) : const SizedBox();
+      ),
+    );
   }
 }
-

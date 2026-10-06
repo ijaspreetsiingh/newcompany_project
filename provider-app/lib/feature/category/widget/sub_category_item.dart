@@ -1,4 +1,3 @@
-import 'package:demandium_provider/helper/extension_helper.dart';
 import 'package:get/get.dart';
 import 'package:demandium_provider/util/core_export.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -11,426 +10,352 @@ class SubCategoryView extends StatelessWidget {
     required this.subCategoryList,
     required this.subscribeKey,
   });
+
+  void _openServices({
+    required ServiceCategoryController controller,
+    required int index,
+  }) {
+    Get.to(
+      ServicesScreen(
+        subcategoryModel: controller.serviceSubCategoryList[index],
+        fromPage: 'category',
+        index: index,
+      ),
+    );
+  }
+
+  /// Shown instead of the "no subcategory" message when the API call failed
+  /// (server unreachable / no internet) so the user can simply retry.
+  Widget _loadFailedState(ServiceCategoryController controller) {
+    return InkCard(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Icon(
+            Icons.error_outline_rounded,
+            size: 30,
+            color: InkColors.mutedForeground,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'something_went_wrong'.tr,
+            textAlign: TextAlign.center,
+            style: robotoSemiBold.copyWith(
+              fontSize: 13.5,
+              height: 1.3,
+              color: InkColors.foreground,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: 150,
+            child: CustomButton(
+              onPressed: () => controller.getSubCategoryList(
+                offset: 1,
+                isFromPagination: false,
+              ),
+              btnTxt: 'retry'.tr,
+              icon: Icons.refresh_rounded,
+              height: 38,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final Color primary = Theme.of(context).primaryColor;
+    final ServiceCategoryController controller = Get.find<
+      ServiceCategoryController
+    >();
 
-    return subCategoryList.isEmpty &&
-            !Get.find<ServiceCategoryController>().isSubCategoryLoading
-        ? Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CustomShowCaseWidget(
-                  isActive: true,
-                  showcaseKey: subscribeKey,
-                  showArrow: false,
-                  child: SizedBox(),
-                ),
-
-                Text(
-                  "no_sub_category_found".tr,
-                  style: robotoMedium.copyWith(
-                    fontSize: 16,
-                    color: Theme.of(context).primaryColorLight,
-                  ),
-                ),
-              ],
+    if (subCategoryList.isEmpty && !controller.isSubCategoryLoading) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          children: [
+            CustomShowCaseWidget(
+              isActive: true,
+              showcaseKey: subscribeKey,
+              showArrow: false,
+              child: const SizedBox.shrink(),
             ),
-          )
-        : Get.find<ServiceCategoryController>().isSubCategoryLoading
-        ? const SubCategoryItemShimmer()
-        : Column(
+            controller.hasSubCategoryLoadFailed
+                ? _loadFailedState(controller)
+                : InkEmptyState('no_sub_category_found'.tr),
+          ],
+        ),
+      );
+    }
+
+    if (controller.isSubCategoryLoading) {
+      return const SizedBox(height: 420, child: SubCategoryItemShimmer());
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          for (int index = 0; index < subCategoryList.length; index++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _subCategoryCard(context, controller, index),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _subCategoryCard(
+    BuildContext context,
+    ServiceCategoryController controller,
+    int index,
+  ) {
+    final ServiceSubCategoryModel subCategory = subCategoryList[index];
+    final bool isSubscribed = subCategory.isSubscribed == 1;
+
+    int totalService = 0;
+    for (var element in subCategory.services ?? <ServiceModel>[]) {
+      if (element.isActive == 1) {
+        totalService++;
+      }
+    }
+
+    return GetBuilder<ServiceCategoryController>(
+      builder: (allServiceController) {
+        final Widget card = InkCard(
+          padding: const EdgeInsets.all(16),
+          onTap: () =>
+              _openServices(controller: allServiceController, index: index),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: ResponsiveHelper.isTab(context) ? 2 : 1,
-                    mainAxisExtent: 172,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 54,
+                    width: 54,
+                    decoration: BoxDecoration(
+                      color: InkColors.secondary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: CustomImage(
+                      height: 54,
+                      width: 54,
+                      fit: BoxFit.cover,
+                      image: '${subCategory.imageFullPath}',
+                    ),
                   ),
-                  controller:
-                      Get.find<ServiceCategoryController>().scrollController,
-                  itemCount: subCategoryList.length,
-                  physics: const BouncingScrollPhysics(),
-                  shrinkWrap: true,
-                  itemBuilder: (context, index) {
-                    int totalService = 0;
-                    for (var element in subCategoryList[index].services!) {
-                      if (element.isActive == 1) {
-                        totalService++;
-                      }
-                    }
-                    return GetBuilder<ServiceCategoryController>(
-                      builder: (allServiceController) {
-                        final bool isSubscribed =
-                            subCategoryList[index].isSubscribed == 1;
-
-                        return Container(
-                          margin: const EdgeInsets.fromLTRB(
-                            Dimensions.paddingSizeDefault,
-                            2,
-                            Dimensions.paddingSizeDefault,
-                            Dimensions.paddingSizeSmall,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).cardColor,
-                            boxShadow: context.customThemeColors.cardShadow,
-                            borderRadius: BorderRadius.circular(
-                              Dimensions.radiusExtraLarge,
-                            ),
-                            border: Border.all(
-                              color: isSubscribed
-                                  ? primary.withValues(alpha: 0.25)
-                                  : Theme.of(
-                                      context,
-                                    ).hintColor.withValues(alpha: 0.08),
-                            ),
-                          ),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(
-                              Dimensions.radiusExtraLarge,
-                            ),
-                            onTap: () {
-                              Get.to(
-                                ServicesScreen(
-                                  subcategoryModel: allServiceController
-                                      .serviceSubCategoryList[index],
-                                  fromPage: 'category',
-                                  index: index,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                subCategory.name.toString(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: robotoBold.copyWith(
+                                  fontSize: 14,
+                                  height: 1.3,
+                                  color: InkColors.foreground,
                                 ),
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(
-                                Dimensions.paddingSizeDefault,
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(
-                                          Dimensions.paddingSizeSmall - 3,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: primary.withValues(
-                                            alpha: 0.07,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            Dimensions.radiusDefault,
-                                          ),
-                                        ),
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            Dimensions.radiusSmall,
-                                          ),
-                                          child: CustomImage(
-                                            height: 54,
-                                            width: 54,
-                                            fit: BoxFit.cover,
-                                            image:
-                                                '${subCategoryList[index].imageFullPath}',
-                                          ),
-                                        ),
-                                      ),
-
-                                      const SizedBox(
-                                        width: Dimensions.paddingSizeSmall,
-                                      ),
-
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Text(
-                                                    subCategoryList[index].name
-                                                        .toString(),
-                                                    style: robotoBold.copyWith(
-                                                      fontSize: Dimensions
-                                                          .fontSizeDefault,
-                                                    ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                                if (isSubscribed)
-                                                  Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 8,
-                                                          vertical: 3,
-                                                        ),
-                                                    decoration: BoxDecoration(
-                                                      color: context
-                                                          .customThemeColors
-                                                          .success
-                                                          .withValues(
-                                                            alpha: 0.12,
-                                                          ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            50,
-                                                          ),
-                                                    ),
-                                                    child: Icon(
-                                                      Icons
-                                                          .check_circle_rounded,
-                                                      size: 14,
-                                                      color: context
-                                                          .customThemeColors
-                                                          .success,
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                            const SizedBox(
-                                              height: Dimensions
-                                                  .paddingSizeExtraSmall,
-                                            ),
-                                            Text(
-                                              subCategoryList[index].description
-                                                  .toString(),
-                                              style: robotoRegular.copyWith(
-                                                fontSize:
-                                                    Dimensions.fontSizeSmall -
-                                                    1,
-                                                color: Theme.of(
-                                                  context,
-                                                ).hintColor,
-                                              ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                            ),
+                            if (isSubscribed) ...[
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: InkColors.accent,
+                                  borderRadius: BorderRadius.circular(50),
+                                ),
+                                child: Text(
+                                  'assigned_to_you'.tr,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: robotoSemiBold.copyWith(
+                                    fontSize: 10,
+                                    height: 1.2,
+                                    color: InkColors.foreground,
                                   ),
-
-                                  const SizedBox(
-                                    height: Dimensions.paddingSizeSmall,
-                                  ),
-                                  Divider(
-                                    thickness: 0.5,
-                                    height: 1,
-                                    color: Theme.of(
-                                      context,
-                                    ).hintColor.withValues(alpha: 0.12),
-                                  ),
-                                  const SizedBox(
-                                    height: Dimensions.paddingSizeSmall,
-                                  ),
-
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal:
-                                              Dimensions.paddingSizeSmall,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: primary.withValues(
-                                            alpha: 0.08,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            50,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.grid_view_rounded,
-                                              size: 13,
-                                              color: primary,
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              "${'services'.tr} ($totalService)",
-                                              style: robotoSemiBold.copyWith(
-                                                fontSize:
-                                                    Dimensions.fontSizeSmall,
-                                                color: primary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-
-                                      const Spacer(),
-
-                                      CustomShowCaseWidget(
-                                        showcaseKey: subscribeKey,
-                                        isActive: index == 0,
-                                        child: GetBuilder<ServiceCategoryController>(
-                                          builder: (allService) {
-                                            return Material(
-                                              color: Colors.transparent,
-                                              child: InkWell(
-                                                borderRadius:
-                                                    BorderRadius.circular(50),
-                                                onTap: isSubscribed
-                                                    ? null
-                                                    : () {
-                                                        Get.find<
-                                                              BusinessSubscriptionController
-                                                            >()
-                                                            .openTrialEndBottomSheet()
-                                                            .then((isTrail) {
-                                                              if (isTrail) {
-                                                                int?
-                                                                isSubscribe =
-                                                                    subCategoryList[index]
-                                                                        .isSubscribed;
-                                                                showCustomBottomSheet(
-                                                                  child: SubscribeUnsubscribeBottomSheet(
-                                                                    isSubscribe:
-                                                                        isSubscribe ==
-                                                                            1
-                                                                        ? false
-                                                                        : true,
-                                                                    subCategoryModel:
-                                                                        subCategoryList[index],
-                                                                    index:
-                                                                        index,
-                                                                    fromPage:
-                                                                        'category',
-                                                                  ),
-                                                                );
-                                                              }
-                                                            });
-                                                      },
-                                                child: Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: Dimensions
-                                                            .paddingSizeDefault,
-                                                        vertical: 8,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    gradient: isSubscribed
-                                                        ? null
-                                                        : LinearGradient(
-                                                            colors: [
-                                                              primary,
-                                                              Color.lerp(
-                                                                primary,
-                                                                const Color(
-                                                                  0xFF1E40AF,
-                                                                ),
-                                                                0.45,
-                                                              )!,
-                                                            ],
-                                                            begin: Alignment
-                                                                .topLeft,
-                                                            end: Alignment
-                                                                .bottomRight,
-                                                          ),
-                                                    color: isSubscribed
-                                                        ? context
-                                                              .customThemeColors
-                                                              .success
-                                                              .withValues(
-                                                                alpha: 0.10,
-                                                              )
-                                                        : null,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          50,
-                                                        ),
-                                                    boxShadow: isSubscribed
-                                                        ? null
-                                                        : [
-                                                            BoxShadow(
-                                                              color: primary
-                                                                  .withValues(
-                                                                    alpha: 0.30,
-                                                                  ),
-                                                              blurRadius: 8,
-                                                              offset:
-                                                                  const Offset(
-                                                                    0,
-                                                                    3,
-                                                                  ),
-                                                            ),
-                                                          ],
-                                                  ),
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Icon(
-                                                        isSubscribed
-                                                            ? Icons
-                                                                  .check_circle_rounded
-                                                            : Icons
-                                                                  .add_circle_outline_rounded,
-                                                        size: 14,
-                                                        color: isSubscribed
-                                                            ? context
-                                                                  .customThemeColors
-                                                                  .success
-                                                            : Colors.white,
-                                                      ),
-                                                      const SizedBox(width: 6),
-                                                      Text(
-                                                        isSubscribed
-                                                            ? "already_subscribed"
-                                                                  .tr
-                                                            : "subscribe".tr,
-                                                        style: robotoSemiBold.copyWith(
-                                                          color: isSubscribed
-                                                              ? context
-                                                                    .customThemeColors
-                                                                    .success
-                                                              : Colors.white,
-                                                          fontSize:
-                                                              Get.width < 350
-                                                              ? Dimensions
-                                                                        .fontSizeSmall -
-                                                                    2
-                                                              : Dimensions
-                                                                    .fontSizeSmall,
-                                                        ),
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                                ),
                               ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.check_circle_rounded,
+                                size: 16,
+                                color: InkColors.foreground,
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          subCategory.description.toString(),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: robotoRegular.copyWith(
+                            fontSize: 12,
+                            height: 1.4,
+                            color: InkColors.mutedForeground,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 14),
+               Divider(height: 1, thickness: 1, color: InkColors.border),
+              const SizedBox(height: 14),
+
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: InkColors.secondary,
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                         Icon(
+                          Icons.grid_view_rounded,
+                          size: 13,
+                          color: InkColors.foreground,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          "${'services'.tr} ($totalService)",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: robotoSemiBold.copyWith(
+                            fontSize: 12,
+                            color: InkColors.foreground,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  CustomShowCaseWidget(
+                    showcaseKey: subscribeKey,
+                    isActive: index == 0,
+                    child: GetBuilder<ServiceCategoryController>(
+                      builder: (allService) {
+                        final bool subscribed =
+                            allService
+                                .serviceSubCategoryList[index]
+                                .isSubscribed ==
+                            1;
+
+                        return GestureDetector(
+                          onTap: subscribed
+                              ? null
+                              : () {
+                                  Get.find<
+                                        BusinessSubscriptionController
+                                      >()
+                                      .openTrialEndBottomSheet()
+                                      .then((isTrail) {
+                                        if (isTrail) {
+                                          showCustomBottomSheet(
+                                            child: SubscribeUnsubscribeBottomSheet(
+                                              isSubscribe: !subscribed,
+                                              subCategoryModel:
+                                                  allService
+                                                      .serviceSubCategoryList[index],
+                                              index: index,
+                                              fromPage: 'category',
+                                            ),
+                                          );
+                                        }
+                                      });
+                                },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: subscribed
+                                  ? InkColors.card
+                                  : InkColors.foreground,
+                              borderRadius: BorderRadius.circular(50),
+                              border: subscribed
+                                  ? Border.all(color: InkColors.border)
+                                  : null,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  subscribed
+                                      ? Icons.check_rounded
+                                      : Icons.add_rounded,
+                                  size: 14,
+                                  color: subscribed
+                                      ? InkColors.foreground
+                                      : InkColors.background,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  subscribed
+                                      ? "already_subscribed".tr
+                                      : "subscribe".tr,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: robotoSemiBold.copyWith(
+                                    fontSize: 12,
+                                    color: subscribed
+                                        ? InkColors.foreground
+                                        : InkColors.background,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         );
                       },
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                ],
               ),
-              Get.find<ServiceCategoryController>().isPaginationLoading
-                  ? CircularProgressIndicator(
-                      color: Theme.of(context).hoverColor,
-                    )
-                  : const SizedBox.shrink(),
             ],
-          );
+          ),
+        );
+
+        if (!isSubscribed) {
+          return card;
+        }
+
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(19),
+            border: Border.all(color: InkColors.foreground, width: 2),
+          ),
+          child: card,
+        );
+      },
+    );
   }
 }
 

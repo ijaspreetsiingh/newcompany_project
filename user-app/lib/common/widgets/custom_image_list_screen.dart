@@ -52,7 +52,7 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
         appBar: CustomAppBar(
           centerTitle: false,
           title: widget.appbarTitle,
-          subTitle: "${widget.imageList.length} ${'images'.tr} ${widget.createdAt != null ?  " • ${widget.createdAt}" : "" }",
+          subTitle: "${widget.imageList.length} ${'images'.tr} ${widget.createdAt != null ?  " â€¢ ${widget.createdAt}" : "" }",
         ),
         body: FooterBaseView(
           child: Center(
@@ -108,3 +108,5 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
     );
   }
 }
+
+

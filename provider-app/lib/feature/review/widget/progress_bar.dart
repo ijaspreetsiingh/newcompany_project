@@ -33,7 +33,7 @@ class ProgressBar extends StatelessWidget {
                 minHeight: 6,
                 value: percent,
                 valueColor: AlwaysStoppedAnimation<Color>(color),
-                backgroundColor: const Color(0xFFEAEAEA),
+                backgroundColor: InkColors.accent,
               ),
             ),
           ),

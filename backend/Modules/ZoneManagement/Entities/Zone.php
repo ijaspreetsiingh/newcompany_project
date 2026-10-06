@@ -22,12 +22,16 @@ class Zone extends Model
 
     protected $casts = [
         'is_active' => 'integer',
+        'provider_search_radius' => 'float',
+        'max_search_radius' => 'float',
         'coordinates' => Polygon::class,
 
     ];
 
     protected $fillable = [
-        'coordinates'
+        'coordinates',
+        'provider_search_radius',
+        'max_search_radius'
     ];
 
     public function scopeOfStatus($query, $status)

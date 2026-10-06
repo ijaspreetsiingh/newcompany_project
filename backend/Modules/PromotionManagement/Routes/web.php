@@ -17,6 +17,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Web\Admin',
         Route::any('create', [DiscountController::class, 'create'])->name('create');
         Route::any('list', [DiscountController::class, 'index'])->name('list');
         Route::post('store', [DiscountController::class, 'store'])->name('store');
+        Route::post('get-providers', [DiscountController::class, 'getProviders'])->name('get-providers');
         Route::get('edit/{id}', [DiscountController::class, 'edit'])->name('edit');
         Route::put('update/{id}', [DiscountController::class, 'update'])->name('update');
         Route::any('status-update/{id}', [DiscountController::class, 'statusUpdate'])->name('status-update');
@@ -28,6 +29,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Web\Admin',
         Route::any('create', [CouponController::class, 'create'])->name('create');
         Route::any('list', [CouponController::class, 'index'])->name('list');
         Route::post('store', [CouponController::class, 'store'])->name('store');
+        Route::post('get-providers', [DiscountController::class, 'getProviders'])->name('get-providers');
         Route::get('edit/{id}', [CouponController::class, 'edit'])->name('edit');
         Route::put('update/{id}', [CouponController::class, 'update'])->name('update');
         Route::any('status-update/{id}', [CouponController::class, 'statusUpdate'])->name('status-update');

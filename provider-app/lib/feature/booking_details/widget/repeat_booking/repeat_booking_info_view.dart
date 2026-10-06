@@ -75,10 +75,17 @@ class MapUtils {
   static Future<void> openMap(double destinationLatitude, double destinationLongitude, double userLatitude, double userLongitude) async {
     String googleUrl = 'https://www.google.com/maps/dir/?api=1&origin=$userLatitude,$userLongitude'
         '&destination=$destinationLatitude,$destinationLongitude&mode=d';
-    if (await canLaunchUrl(Uri.parse(googleUrl))) {
-      await launchUrl(Uri.parse(googleUrl), mode: LaunchMode.externalApplication);
-    } else {
-      throw 'Could not open the map.';
+    bool opened = false;
+    try {
+      final Uri uri = Uri.parse(googleUrl);
+      if (await canLaunchUrl(uri)) {
+        opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {
+      opened = false;
+    }
+    if (!opened) {
+      showCustomSnackBar('something_went_wrong'.tr, type: ToasterMessageType.error);
     }
   }
 }

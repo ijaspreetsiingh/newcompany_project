@@ -11,7 +11,7 @@ class CartController extends GetxController implements GetxService {
   CartController({required this.cartRepo});
 
   List<CartModel> _cartList = [];
-  List<CartModel> _initialCartList = [];
+  List<CartModel> _inttialCartList = [];
   bool _isLoading = false;
   bool _isCartLoading = false;
   double _amount = 0.0;
@@ -19,13 +19,13 @@ class CartController extends GetxController implements GetxService {
   bool _isButton = false;
 
   List<CartModel> get cartList => _cartList;
-  List<CartModel> get initialCartList => _initialCartList;
+  List<CartModel> get inttialCartList => _inttialCartList;
   double get amount => _amount;
   bool get isLoading => _isLoading;
   bool get isCartLoading  => _isCartLoading ;
 
   /// Timeout / error fallback - loader stuck na ho
-  void setLoadingFalse() {
+  void setLoadingfalse() {
     _isLoading = false;
     _isCartLoading = false;
     update();
@@ -192,9 +192,9 @@ class CartController extends GetxController implements GetxService {
 
   void removeFromCartVariation(CartModel? cartModel) {
     if(cartModel == null) {
-      _initialCartList = [];
+      _inttialCartList = [];
     }else{
-      _initialCartList.remove(cartModel);
+      _inttialCartList.remove(cartModel);
       update();
     }
   }
@@ -206,12 +206,12 @@ class CartController extends GetxController implements GetxService {
 
   void updateQuantity(int index, bool isIncrement) {
     if(isIncrement){
-      _initialCartList[index].quantity += 1;
-      _totalPrice = _totalPrice + _initialCartList[index].totalCost;
+      _inttialCartList[index].quantity += 1;
+      _totalPrice = _totalPrice + _inttialCartList[index].totalCost;
     }else{
-      if(_initialCartList[index].quantity > -1) {
-        _initialCartList[index].quantity -= 1;
-        _totalPrice = _totalPrice - _initialCartList[index].totalCost;
+      if(_inttialCartList[index].quantity > -1) {
+        _inttialCartList[index].quantity -= 1;
+        _totalPrice = _totalPrice - _inttialCartList[index].totalCost;
       }
     }
     _isButton = _isQuantity();
@@ -220,7 +220,7 @@ class CartController extends GetxController implements GetxService {
 
  bool _isQuantity( ) {
     int count = 0;
-    for (var cart in _initialCartList) {
+    for (var cart in _inttialCartList) {
       count += cart.quantity;
     }
     return count > 0;
@@ -229,24 +229,24 @@ class CartController extends GetxController implements GetxService {
 
 
   void addDataToCart(){
-    if(_cartList.isNotEmpty && _initialCartList.first.subCategoryId != _cartList.first.subCategoryId) {
+    if(_cartList.isNotEmpty && _inttialCartList.first.subCategoryId != _cartList.first.subCategoryId) {
       Get.back();
       Get.dialog(ConfirmationDialog(
         icon: Images.warning,
         title: "are_you_sure_to_reset".tr,
         description: 'you_have_service_from_other_sub_category'.tr,
         onYesPressed: () async {
-          _initialCartList.removeWhere((cart) => cart.quantity < 1);
-          _cartList = _initialCartList;
+          _inttialCartList.removeWhere((cart) => cart.quantity < 1);
+          _cartList = _inttialCartList;
 
           update();
-          onDemandToast("successfully_added_to_cart".tr,Colors.green);
+          onDemandToast("successfully_added_to_cart".tr,Get.theme.colorScheme.primary);
           Get.back();
         },
       ));
     }else{
       update();
-      onDemandToast("successfully_added_to_cart".tr,Colors.green);
+      onDemandToast("successfully_added_to_cart".tr,Get.theme.colorScheme.primary);
       Get.back();
     }
 
@@ -257,7 +257,7 @@ class CartController extends GetxController implements GetxService {
     update();
     _replaceCartList();
 
-    if(_cartList.isNotEmpty && _initialCartList.isNotEmpty && _initialCartList.first.subCategoryId != _cartList.first.subCategoryId){
+    if(_cartList.isNotEmpty && _inttialCartList.isNotEmpty && _inttialCartList.first.subCategoryId != _cartList.first.subCategoryId){
       Get.back();
       Get.dialog(ConfirmationDialog(
         icon: Images.warning,
@@ -270,9 +270,9 @@ class CartController extends GetxController implements GetxService {
           Get.back();
           Get.dialog(const CustomLoader(), barrierDismissible: false,);
           await cartRepo.removeAllCartFromServer();
-          if(_initialCartList.isNotEmpty){
-            for (int index=0; index<_initialCartList.length;index++){
-              await addToCartApi(_initialCartList[index], providerId: providerId);
+          if(_inttialCartList.isNotEmpty){
+            for (int index=0; index<_inttialCartList.length;index++){
+              await addToCartApi(_inttialCartList[index], providerId: providerId);
             }
           }
          await getCartListFromServer();
@@ -353,9 +353,9 @@ class CartController extends GetxController implements GetxService {
     return index;
   }
 
-  void setInitialCartList(Service service) {
+  void setinttialCartList(Service service) {
     _totalPrice = 0;
-    _initialCartList = [];
+    _inttialCartList = [];
     service.variationsAppFormat?.zoneWiseVariations?.forEach((variation) {
       CartModel cartModel = CartModel(
           service.id ?? '',
@@ -376,19 +376,19 @@ class CartController extends GetxController implements GetxService {
       if(index != -1) {
         cartModel.copyWith(id: _cartList[index].id, quantity: _cartList[index].quantity);
       }
-      _initialCartList.add(cartModel);
+      _inttialCartList.add(cartModel);
     });
     _isButton = false;
 
   }
 
   List<CartModel> _replaceCartList() {
-    _initialCartList.removeWhere((cart) => cart.quantity < 0);
+    _inttialCartList.removeWhere((cart) => cart.quantity < 0);
 
-    for (var initCart in _initialCartList) {
-      _cartList.removeWhere((cart) => cart.id.contains(initCart.id) && cart.variantKey.contains(initCart.variantKey));
+    for (var inttCart in _inttialCartList) {
+      _cartList.removeWhere((cart) => cart.id.contains(inttCart.id) && cart.variantKey.contains(inttCart.variantKey));
     }
-    _cartList.addAll(_initialCartList);
+    _cartList.addAll(_inttialCartList);
     _cartList.removeWhere((element) => element.quantity == 0);
 
     return _cartList;
@@ -404,9 +404,16 @@ class CartController extends GetxController implements GetxService {
       _providerList = [];
       List<dynamic> list =  response.body['content'];
 
+      final userAddress = Get.find<LocationController>().getUserAddress();
       for (var element in list) {
-        providerList!.add(ProviderData.fromJson(element));
+        ProviderData provider = ProviderData.fromJson(element);
+        if(provider.distance == null && userAddress != null){
+          provider.distance = MapHelper.getDistanceBetweenUserCurrentLocationAndProvider(userAddress, provider);
+        }
+        providerList!.add(provider);
       }
+
+      _providerList?.sort((a, b) => (a.distance ?? double.maxFinite).compareTo(b.distance ?? double.maxFinite));
 
       if(_selectedProvider != null && _providerList != null && _providerList!.isNotEmpty){
         for(int i = 0 ; i <_providerList!.length ; i ++ ){
@@ -458,13 +465,13 @@ class CartController extends GetxController implements GetxService {
 
 
   Future<void> openWalletPaymentConfirmDialog() async {
-    bool initialCheck;
+    bool inttialCheck;
     bool checkAfterUsingCoupon;
 
     if(_bookingAmountWithoutCoupon > walletBalance){
-      initialCheck = true;
+      inttialCheck = true;
     }else{
-      initialCheck = false;
+      inttialCheck = false;
     }
     if(_bookingAmountWithoutCoupon > (walletBalance + _couponAmount)){
       checkAfterUsingCoupon =  true;
@@ -472,7 +479,7 @@ class CartController extends GetxController implements GetxService {
       checkAfterUsingCoupon = false;
     }
 
-    if(initialCheck != checkAfterUsingCoupon && walletPaymentStatus && isOpenPartialPaymentPopup){
+    if(inttialCheck != checkAfterUsingCoupon && walletPaymentStatus && isOpenPartialPaymentPopup){
       showGeneralDialog(barrierColor: Colors.black.withValues(alpha: 0.5),
         transitionBuilder: (context, a1, a2, widget) {
           return Transform.scale(
@@ -520,7 +527,7 @@ class CartController extends GetxController implements GetxService {
   }
 
 
-  void showMinimumAndMaximumOrderValueToaster() {
+  void showMintmumAndMaximumOrderValueToaster() {
     ConfigModel configModel = Get.find<SplashController>().configModel;
 
     Get.closeAllSnackbars();
@@ -530,7 +537,7 @@ class CartController extends GetxController implements GetxService {
 
     if(minAmount != 0 && minAmount > _totalPrice && _cartList.isNotEmpty){
       customSnackBar("message",
-        customWidget: Row(children: [
+        CustomWidget: Row(children: [
           Icon(Icons.circle, color: Colors.white.withValues(alpha: 0.8),size: 16,),
           Text("  ${'minimum_booking_amount'.tr} ${PriceConverter.convertPrice(minAmount.toDouble())}",
             style: robotoRegular.copyWith(color: Colors.white),
@@ -540,7 +547,7 @@ class CartController extends GetxController implements GetxService {
     }else{
       if(maxAmount != 0 && maxAmount < _totalPrice &&  _cartList.isNotEmpty){
         customSnackBar("message",
-          customWidget: Column(
+          CustomWidget: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(crossAxisAlignment: CrossAxisAlignment.start,children: [
@@ -566,7 +573,7 @@ class CartController extends GetxController implements GetxService {
     if (phoneNumber.length <= 6) {
       return phoneNumber;
     }
-    String maskedNumber = phoneNumber.substring(0, phoneNumber.length - 6); // Keep initial digits
+    String maskedNumber = phoneNumber.substring(0, phoneNumber.length - 6); // Keep inttial digits
 
     maskedNumber += '***';
     maskedNumber += phoneNumber.substring(phoneNumber.length - 3);
@@ -591,3 +598,6 @@ class CartController extends GetxController implements GetxService {
 
 
 }
+
+
+

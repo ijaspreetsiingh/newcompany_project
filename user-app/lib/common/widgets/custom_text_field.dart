@@ -25,7 +25,7 @@ class CustomTextField extends StatefulWidget {
   final String? Function(String?)? onValidate;
   final bool contentPadding;
   final double? borderRadius;
-  final bool isRequired;
+  final bool isrequired;
   final String? prefixIcon;
   final bool? isFromOfflinePayment;
   final Function? onSuffixTap;
@@ -54,7 +54,7 @@ class CustomTextField extends StatefulWidget {
     this.title,
     this.contentPadding = true,
     this.borderRadius,
-    this.isRequired = true,
+    this.isrequired = true,
     this.prefixIcon,
     this.isFromOfflinePayment = false,
     this.onSuffixTap,
@@ -148,7 +148,7 @@ class CustomTextFieldState extends State<CustomTextField> {
                 ),
                 child: Text(widget.title ?? ""),
               ),
-              if (widget.isRequired)
+              if (widget.isrequired)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2),
                   child: Text(
@@ -185,7 +185,7 @@ class CustomTextFieldState extends State<CustomTextField> {
             ),
             child: CodePickerWidget(
               onChanged: widget.onCountryChanged,
-              initialSelection: widget.countryDialCode,
+              inttialSelection: widget.countryDialCode,
               favorite: ['IN', widget.countryDialCode ?? ""],
               showDropDownButton: true,
               padding: EdgeInsets.zero,
@@ -299,3 +299,5 @@ class CustomTextFieldState extends State<CustomTextField> {
     });
   }
 }
+
+

@@ -21,18 +21,26 @@ class _SubscriptionTransactionListScreenState extends State<SubscriptionTransact
   @override
   Widget build(BuildContext context) {
     return GetBuilder<BusinessSubscriptionController>(builder: (businessSubscriptionController){
-      return  businessSubscriptionController.transactionList !=null ? Column(children: [
 
-        const SizedBox(height: Dimensions.paddingSizeDefault,),
-        const BusinessTransactionSearchWidget(),
+      if(businessSubscriptionController.transactionList == null){
+        return const SizedBox(height: 160, child: Center(child: CircularProgressIndicator()));
+      }
 
-        const SizedBox(height: Dimensions.paddingSizeDefault,),
+      return InkSection(
+        title: "subscription_history".tr,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-        businessSubscriptionController.searchedTransactionList == null && !businessSubscriptionController.isSearchComplete ?
-        const Expanded(child: BookingRequestItemShimmer()) :
-        SubscriptionTransactionListview(transactionList: businessSubscriptionController.isSearchComplete ? businessSubscriptionController.searchedTransactionList! : businessSubscriptionController.transactionList ?? [],),
+          const BusinessTransactionSearchWidget(),
 
-      ],) : const Center(child: CircularProgressIndicator(),);
+          const SizedBox(height: Dimensions.paddingSizeDefault),
+
+          businessSubscriptionController.searchedTransactionList == null && !businessSubscriptionController.isSearchComplete ?
+          const SizedBox(height: 240, child: BookingRequestItemShimmer()) :
+          SubscriptionTransactionListview(transactionList: businessSubscriptionController.isSearchComplete ?
+          businessSubscriptionController.searchedTransactionList! : businessSubscriptionController.transactionList ?? []),
+
+        ]),
+      );
     });
   }
 }

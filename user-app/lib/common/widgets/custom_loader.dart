@@ -16,3 +16,4 @@ class CustomLoader extends StatelessWidget {
     ));
   }
 }
+

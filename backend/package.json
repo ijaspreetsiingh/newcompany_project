@@ -1,4 +1,6 @@
 {
+    "name": "yovo",
+    "description": "YOVO - Professional Service Booking Platform",
     "private": true,
     "scripts": {
         "dev": "npm run development",

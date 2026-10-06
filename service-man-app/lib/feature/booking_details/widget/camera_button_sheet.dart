@@ -12,24 +12,25 @@ class CameraButtonSheet extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeLarge),
       decoration: BoxDecoration(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(Dimensions.radiusExtraLarge)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(kRadiusLg)),
         color: Theme.of(context).cardColor,
+        border: Border(top: BorderSide(color: context.kBorder, width: 1)),
       ),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Container(
           height: 4, width: 50,
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(Dimensions.radiusDefault), color: Theme.of(context).disabledColor),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(kRadiusMd), color: context.kMuted),
         ),
         const SizedBox(height: Dimensions.paddingSizeLarge),
 
         Text("submit_service_proof".tr , style: robotoBold.copyWith(
-            fontSize: Dimensions.fontSizeLarge, color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha:0.8)
+            fontSize: Dimensions.fontSizeLarge, color: context.kForeground
         ),),
         const SizedBox(height: Dimensions.paddingSizeSmall),
 
         Padding(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault * 2,),
           child: Text("photo_proof_hint".tr , maxLines: 3,
-            style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.7)),
+            style: robotoRegular.copyWith(color: context.kMutedForeground),
             textAlign: TextAlign.center,
           ),
         ),
@@ -49,14 +50,14 @@ class CameraButtonSheet extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(Dimensions.paddingSizeLarge),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha:0.1),
-                  borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                  color: context.kMuted,
+                  borderRadius: BorderRadius.circular(kRadiusMd),
                 ),
                 child: Image.asset(Images.upload, width: 30,),
               ),
               const SizedBox(height: Dimensions.paddingSizeSmall),
 
-              Text('upload_image'.tr, style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.7))),
+              Text('upload_image'.tr, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: context.kMutedForeground)),
             ]),
           ),
 
@@ -71,14 +72,14 @@ class CameraButtonSheet extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(Dimensions.paddingSizeLarge),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha:0.1),
-                  borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                  color: context.kMuted,
+                  borderRadius: BorderRadius.circular(kRadiusMd),
                 ),
-                child: Icon(Icons.camera_alt_outlined, size: 30, color: Theme.of(context).primaryColor),
+                child: Icon(Icons.camera_alt_outlined, size: 30, color: context.kForeground),
               ),
               const SizedBox(height: Dimensions.paddingSizeSmall),
 
-              Text('take_photo'.tr, style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.7)))
+              Text('take_photo'.tr, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: context.kMutedForeground)),
             ]),
           ),
           const SizedBox(),
@@ -96,7 +97,7 @@ class CameraButtonSheet extends StatelessWidget {
           }
 
         }, child: Text('skip'.tr,
-          style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.7)),),
+          style: robotoRegular.copyWith(fontSize: 14, color: context.kMutedForeground),),
         )
       ]),
     );

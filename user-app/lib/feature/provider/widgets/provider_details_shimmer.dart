@@ -119,3 +119,5 @@ class ProviderDetailsShimmer extends StatelessWidget {
     );
   }
 }
+
+

@@ -8,7 +8,15 @@ class BookingBinding extends Bindings{
       sharedPreferences: Get.find(),
       apiClient: Get.find(),
     )));
-    Get.lazyPut(() => ServiceBookingController(serviceBookingRepo: ServiceBookingRepo(sharedPreferences: Get.find(), apiClient: Get.find())));
+    Get.lazyPut(
+      () => ServiceBookingController(
+        serviceBookingRepo: ServiceBookingRepo(
+          sharedPreferences: Get.find(),
+          apiClient: Get.find(),
+        ),
+      ),
+      fenix: true,
+    );
     Get.lazyPut(() => ConversationController(conversationRepo: ConversationRepo(apiClient: Get.find())));
   }
 }

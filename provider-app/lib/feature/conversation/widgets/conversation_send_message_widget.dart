@@ -12,9 +12,8 @@ class ConversationSendMessageWidget extends StatelessWidget {
       return Container(
         color: conversationController.isLoading == false && ( conversationController.pickedImageFile!=null && conversationController.pickedImageFile!.isNotEmpty
             || (conversationController.objFile!=null && conversationController.objFile!.isNotEmpty)) ?
-        Theme.of(context).primaryColor.withValues(alpha:0.1) : null,
-        padding: const EdgeInsets.fromLTRB(15, 15, 15, 20),
-        margin: const EdgeInsets.only(top: Dimensions.paddingSizeSmall),
+        InkColors.secondary : null,
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
 
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
@@ -78,7 +77,8 @@ class ConversationSendMessageWidget extends StatelessWidget {
                     String fileSize =  ImageSize.getFileSizeFromPlatformFileToString(conversationController.objFile![index]);
                     return Container(width: 180,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
+                        color: InkColors.card,
+                        border: Border.all(color: InkColors.border),
                         borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
                       ),
                       padding: const EdgeInsets.only(left: 10, right: 5),
@@ -95,7 +95,7 @@ class ConversationSendMessageWidget extends StatelessWidget {
                           ),
 
                           Text(fileSize, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                            color: Theme.of(context).hintColor,
+                            color: InkColors.mutedForeground,
                           )),
                         ])),
 
@@ -108,7 +108,7 @@ class ConversationSendMessageWidget extends StatelessWidget {
                             child: Align(alignment: Alignment.topRight,
                               child: Icon(Icons.close,
                                 size: Dimensions.paddingSizeLarge,
-                                color: Theme.of(context).hintColor,
+                                color: InkColors.mutedForeground,
                               ),
                             ),
                           ),
@@ -135,7 +135,7 @@ class ConversationSendMessageWidget extends StatelessWidget {
           Padding(padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeExtraSmall),
             child: Align(alignment: Alignment.bottomRight,
               child: Text("${'uploading'.tr} ${conversationController.pickedImageFile!.length} ${conversationController.pickedImageFile!.length >1 ? "files".tr : "file"}",
-                style: robotoLight.copyWith(color: Theme.of(context).hintColor),
+                style: robotoLight.copyWith(color: InkColors.mutedForeground),
               ),
             ),
           ): conversationController.objFile != null && conversationController.objFile!.isNotEmpty ?
@@ -143,7 +143,7 @@ class ConversationSendMessageWidget extends StatelessWidget {
           Padding(padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeExtraSmall),
             child: Align(alignment: Alignment.bottomRight,
               child: Text("${'uploading'.tr} ${conversationController.objFile!.length} ${conversationController.objFile!.length >1 ? "files".tr : "file"}",
-                style: robotoLight.copyWith(color: Theme.of(context).hintColor),
+                style: robotoLight.copyWith(color: InkColors.mutedForeground),
               ),
             ),
           ): const SizedBox() : const SizedBox(),
@@ -151,72 +151,57 @@ class ConversationSendMessageWidget extends StatelessWidget {
 
           const SizedBox(height: Dimensions.paddingSizeExtraSmall),
 
-          Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
 
-            Expanded(flex: 6, child: Container(
+            _AttachButton(
+              isLoading: conversationController.isLoading,
+              icon: Icons.image_outlined,
+              onTap: () => conversationController.pickMultipleImage(false),
+            ),
+
+            const SizedBox(width: Dimensions.paddingSizeSmall),
+
+            _AttachButton(
+              isLoading: conversationController.isLoading,
+              icon: Icons.attach_file_rounded,
+              onTap: () => conversationController.pickOtherFile(false),
+            ),
+
+            const SizedBox(width: Dimensions.paddingSizeSmall),
+
+            Expanded(child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                color: conversationController.isLoading ? Theme.of(context).hintColor.withValues(alpha:0.1):
-                Theme.of(context).cardColor,
-                border: Border.all(
-                  color: conversationController.isLoading ? Colors.transparent:
-                  Theme.of(context).primaryColor.withValues(alpha:0.4),
+                borderRadius: BorderRadius.circular(50),
+                color: conversationController.isLoading ? InkColors.secondary : InkColors.card,
+                border: Border.all(color: InkColors.border),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+
+              child: TextField(
+                enabled: !conversationController.isLoading,
+                controller: conversationController.conversationController,
+                textCapitalization: TextCapitalization.sentences,
+                style: robotoRegular.copyWith(
+                  fontSize: 13,
+                  color: InkColors.foreground,
+                ),
+                keyboardType: TextInputType.multiline,
+                maxLines: 3, minLines: 1,
+                decoration: InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  hintText: "type_a_message".tr,
+                  hintStyle: robotoRegular.copyWith(
+                    color: InkColors.mutedForeground,
+                    fontSize: 13,
+                  ),
                 ),
               ),
-              padding:  const EdgeInsets.symmetric( horizontal: Dimensions.paddingSizeSmall,),
-
-              child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-
-                Expanded(child: TextField(
-                  enabled: conversationController.isLoading ? false : true,
-                  controller: conversationController.conversationController,
-                  textCapitalization: TextCapitalization.sentences,
-                  style: robotoMedium.copyWith(
-                    fontSize: Dimensions.fontSizeDefault,
-                    color:Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                  ),
-                  keyboardType: TextInputType.multiline,
-                  maxLines: 3, minLines: 1,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: "type_a_message".tr,
-                    hintStyle: robotoRegular.copyWith(
-                      color: Theme.of(context).hintColor.withValues(alpha:0.8),
-                      fontSize: 14,
-                    ),
-                    contentPadding: const EdgeInsets.only(bottom: 7, left: 5),
-                  ),
-                )),
-                const SizedBox(width: Dimensions.paddingSizeDefault),
-
-                Padding(padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeDefault,),
-                  child: Row(children: [
-
-
-                    InkWell(onTap: conversationController.isLoading ? null : () async {
-                      await conversationController.pickMultipleImage(false);
-                    },
-                      child: Image.asset(Images.imageIcon,height: 18,width: 18),
-                    ),
-                    const SizedBox(width: Dimensions.paddingSizeSmall,),
-
-                    InkWell(onTap: conversationController.isLoading ? null : () async {
-                       await conversationController.pickOtherFile(false);
-
-                    },
-                       child: Image.asset(Images.file,height: 18,width: 18),
-                    ),
-                    const SizedBox(width: Dimensions.paddingSizeSmall,),
-
-                  ]),
-                )],
-
-
-              ),
             )),
-            const SizedBox(width: Dimensions.paddingSizeDefault),
 
-            Expanded(child: InkWell(
+            const SizedBox(width: Dimensions.paddingSizeSmall),
+
+            GestureDetector(
               onTap: (){
                 if(conversationController.conversationController.text.isEmpty
                     && conversationController.pickedImageFile!.isEmpty
@@ -228,32 +213,51 @@ class ConversationSendMessageWidget extends StatelessWidget {
                 }
               },
               child: Container(
-                height: Dimensions.paddingSizeExtraLarge * 2,
-                width: Dimensions.paddingSizeExtraLarge * 2,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                  color: Theme.of(context).cardColor,
-                  border: Border.all(
-                    color: Theme.of(context).primaryColor.withValues(alpha:0.4),
-                  ),
+                height: 36,
+                width: 36,
+                alignment: Alignment.center,
+                decoration:  BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: InkColors.foreground,
                 ),
-                child:  Center(child: conversationController.isLoading ? SizedBox(
-                  height: Dimensions.paddingSizeExtraLarge,
-                  width: Dimensions.paddingSizeExtraLarge,
+                child: conversationController.isLoading ?  SizedBox(
+                  height: 16,
+                  width: 16,
                   child: CircularProgressIndicator(
-                    color: Theme.of(context).primaryColor.withValues(alpha:0.5),
-                    backgroundColor: Theme.of(context).primaryColor.withValues(alpha:0.1),
+                    strokeWidth: 2,
+                    color: InkColors.background,
                   ),
-                ): Image(image: AssetImage(Images.sendIcon),
-                  height: Dimensions.paddingSizeLarge + Dimensions.paddingSizeSmall,
-                  width: Dimensions.paddingSizeLarge + Dimensions.paddingSizeSmall,
-                ),
-                ),
+                ) :  Icon(Icons.send_rounded, size: 16, color: InkColors.background),
               ),
-            ),),
+            ),
           ],),
         ]),
       );
     });
+  }
+}
+
+class _AttachButton extends StatelessWidget {
+  final bool isLoading;
+  final IconData icon;
+  final VoidCallback onTap;
+  const _AttachButton({required this.isLoading, required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: isLoading ? null : onTap,
+      child: Container(
+        height: 36,
+        width: 36,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: InkColors.card,
+          border: Border.all(color: InkColors.border),
+        ),
+        child: Icon(icon, size: 18, color: isLoading ? InkColors.accent : InkColors.mutedForeground),
+      ),
+    );
   }
 }

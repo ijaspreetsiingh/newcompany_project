@@ -1,4 +1,4 @@
-import 'package:jdds/util/core_export.dart';
+﻿import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 
 
@@ -14,8 +14,8 @@ class CouponController extends GetxController implements GetxService{
   List<CouponModel>? _activeCouponList;
   List<CouponModel>? get activeCouponList => _activeCouponList;
 
-  List<CouponModel>? _expiredCouponList;
-  List<CouponModel>? get expiredCouponList => _expiredCouponList;
+  List<CouponModel>? _exptredCouponList;
+  List<CouponModel>? get exptredCouponList => _exptredCouponList;
 
   int _selectedCouponIndex = -1;
   int get selectedCouponIndex => _selectedCouponIndex;
@@ -28,18 +28,18 @@ class CouponController extends GetxController implements GetxService{
   Future<void> getCouponList({bool reload = true}) async {
     if(reload){
       _activeCouponList = null;
-      _expiredCouponList = null;
+      _exptredCouponList = null;
     }
 
     Response response = await couponRepo.getCouponList();
     if (response.statusCode == 200) {
       _activeCouponList = [];
-      _expiredCouponList = [];
+      _exptredCouponList = [];
       response.body["content"]['active_coupons']['data'].forEach((category) {
           _activeCouponList!.add(CouponModel.fromJson(category));
       });
-      response.body["content"]['expired_coupons']['data'].forEach((category) {
-        _expiredCouponList!.add(CouponModel.fromJson(category));
+      response.body["content"]['exptred_coupons']['data'].forEach((category) {
+        _exptredCouponList!.add(CouponModel.fromJson(category));
       });
     } else {
       ApiChecker.checkApi(response);
@@ -126,3 +126,5 @@ enum CouponTabState {
   currentCoupon,
   usedCoupon
 }
+
+

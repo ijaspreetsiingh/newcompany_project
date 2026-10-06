@@ -1,0 +1,119 @@
+# 🚀 INTEGRATION GUIDE - EXACT DESIGNNEW FLOW
+
+## YOUR CURRENT FLOW (Already Working):
+- Home → Services → Cart → Checkout → Order Success → Bookings
+
+## NEW SCREENS I CREATED (Drop-in Replacement):
+1. ✅ service_customize_sheet.dart (NEW - quantity selector)
+2. ✅ checkout_screen_final.dart (REPLACES existing checkout)
+3. ✅ payment_screen_final.dart (REPLACES existing payment)
+4. ✅ confirmation_and_tracking_final.dart (REPLACES success + booking tracking)
+
+---
+
+## STEP 1: ADD NEW ROUTES
+
+**File:** `lib/helper/route_helper.dart`
+
+Add these constants after existing route constants:
+
+```dart
+static const String checkoutFinal = '/checkout-final';
+static const String paymentFinal = '/payment-final';
+static const String confirmationFinal = '/confirmation-final';
+static const String trackingFinal = '/tracking-final';
+```
+
+Add these getters:
+
+```dart
+static String getCheckoutFinalRoute() => checkoutFinal;
+static String getPaymentFinalRoute() => paymentFinal;
+static String getConfirmationFinalRoute() => confirmationFinal;
+static String getTrackingFinalRoute({String? bookingId}) => '$trackingFinal?id=$bookingId';
+```
+
+---
+
+## STEP 2: ADD ROUTE PAGES
+
+**In RouteHelper.routes list**, add these GetPages (find the routes list around line 400+):
+
+```dart
+GetPage(name: checkoutFinal, page: () => const CheckoutScreenFinal()),
+
+GetPage(name: paymentFinal, page: () => const PaymentScreenFinal()),
+
+GetPage(name: confirmationFinal, page: () => const ConfirmationScreenFinal()),
+
+GetPage(name: trackingFinal, page: () => const BookingTrackingScreenFinal()),
+```
+
+---
+
+## STEP 3: UPDATE CART SCREEN
+
+**File:** `lib/feature/home/view/cart_screen.dart` (existing file)
+
+**Find this line:** (around checkout button)
+```dart
+Button onClick={() => navigate("checkout")}>Checkout · ₹2,748</Button>
+```
+
+**Replace with:**
+```dart
+onPressed: () => Get.toNamed(RouteHelper.getCheckoutFinalRoute()),
+```
+
+---
+
+## STEP 4: REMOVE BOTTOM NAV "INBOX"
+
+**File:** `lib/feature/bottomNav/view/bottom_nav_screen.dart`
+
+The bottom nav is ALREADY correct (no Inbox button). The Inbox menu item is only in Account screen (which is correct per designnew).
+
+---
+
+## STEP 5: TEST THE FLOW
+
+**Start your app:**
+```
+flutter run
+```
+
+**Test flow:**
+1. ✅ Home → Browse services
+2. ✅ Tap service card → Service detail → "Book now"
+3. ✅ Service Customize Sheet opens (quantity selector) → "Add to cart"
+4. ✅ Cart screen → "Checkout" button
+5. ✅ **NEW CHECKOUT SCREEN** (address + date + time, progress 1/3)
+6. ✅ "Continue to payment" → **PAYMENT SCREEN** (payment methods, progress 2/3)
+7. ✅ "Place booking" → **CONFIRMATION SCREEN** (success ticket)
+8. ✅ "Track booking" → **TRACKING SCREEN** (timeline + professional)
+9. ✅ Bottom nav → "Bookings" → Bookings list
+10. ✅ Tap booking card → Back to TRACKING SCREEN
+
+---
+
+## IMPORTANT: Your Existing Routes Stay Intact
+
+- ✅ `/checkout` (old) stays but unused
+- ✅ `/order-completed` (old) stays but unused
+- ✅ All other routes unchanged
+- ✅ No breaking changes to existing code
+
+---
+
+## QUICK CHECKLIST
+
+- [ ] Added 4 new route constants to RouteHelper
+- [ ] Added 4 new route getters to RouteHelper
+- [ ] Added 4 new GetPages to routes list
+- [ ] Updated Cart button to use getCheckoutFinalRoute()
+- [ ] Run flutter pub get (if needed)
+- [ ] Run flutter run and test the flow
+
+---
+
+Done! Your new flow works exactly like designnew. Test it now!

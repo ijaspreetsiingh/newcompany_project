@@ -1,5 +1,5 @@
 import 'package:demandium_serviceman/feature/booking_details/widget/booking_service_location.dart';
-import 'package:demandium_serviceman/helper/extension_helper.dart';
+import 'package:demandium_serviceman/helper/booking_helper.dart';
 import 'package:get/get.dart';
 import 'package:demandium_serviceman/utils/core_export.dart';
 
@@ -10,147 +10,168 @@ class BookingInformationView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return  GetBuilder<BookingDetailsController>(builder: (bookingDetailsController){
-      return Container(
-        decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            boxShadow: Get.find<ThemeController>().darkTheme ? null : lightShadow
-        ),
-        padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall, horizontal: Dimensions.paddingSizeDefault),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
 
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
+    String createdAtText = '';
+    if (bookingDetails.createdAt != null) {
+      createdAtText = DateConverter.dateMonthYearTime(
+          DateConverter.isoUtcStringToLocalDate(bookingDetails.createdAt!));
+    }
+
+    String serviceName = '';
+    if (bookingDetails.details != null && bookingDetails.details!.isNotEmpty) {
+      serviceName = bookingDetails.details!.first.service?.name ??
+          bookingDetails.details!.first.serviceName ??
+          '';
+    }
+
+    final String contactPersonName = bookingDetails.serviceAddress?.contactPersonName ??
+        bookingDetails.subBooking?.serviceAddress?.contactPersonName ??
+        "${bookingDetails.customer?.firstName ?? ""} ${bookingDetails.customer?.lastName ?? ""}";
+    final String contactPersonNumber = bookingDetails.serviceAddress?.contactPersonNumber ??
+        bookingDetails.subBooking?.serviceAddress?.contactPersonNumber ??
+        bookingDetails.customer?.phone ??
+        bookingDetails.customer?.email ??
+        "";
+
+    final DateTime? scheduleAt = bookingDetails.serviceSchedule != null
+        ? DateTime.tryParse(bookingDetails.serviceSchedule!)
+        : null;
+    final String scheduleText = scheduleAt != null
+        ? DateConverter.dateMonthYearTime(scheduleAt)
+        : createdAtText;
+
+    final String address = bookingDetails.serviceLocation == "customer"
+        ? BookingHelper.composeServiceAddress(
+            bookingDetails.serviceAddress ?? bookingDetails.subBooking?.serviceAddress,
+            fallback: 'address_not_found'.tr,
+          )
+        : bookingDetails.provider?.companyAddress ??
+            bookingDetails.subBooking?.provider?.companyAddress ??
+            'address_not_found'.tr;
+
+    final bool isPartial = bookingDetails.partialPayments != null &&
+        bookingDetails.partialPayments!.isNotEmpty;
+    final String paidLabel = isPartial && bookingDetails.isPaid == 0
+        ? "partially_paid".tr
+        : bookingDetails.isPaid == 0
+            ? "unpaid".tr
+            : "paid".tr;
+
+    final List<InfoRow> paymentRows = [
+      InfoRow(
+        Icons.account_balance_wallet_outlined,
+        "${bookingDetails.paymentMethod?.tr ?? ""}${isPartial ? " &_wallet_balance".tr : ""}",
+      ),
+      InfoRow(
+        Icons.currency_rupee_rounded,
+        "${PriceConverter.convertPrice(bookingDetails.totalBookingAmount ?? 0, isShowLongPrice: true)} · $paidLabel",
+      ),
+      if (bookingDetails.paymentMethod != "cash_after_service" &&
+          bookingDetails.paymentMethod != "offline_payment")
+        InfoRow(Icons.receipt_long_outlined,
+            "${'transaction_id'.tr} : ${bookingDetails.transactionId}"),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: context.kPrimary,
+            borderRadius: BorderRadius.circular(kRadiusMd),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              StatusBadge(status: bookingDetails.bookingStatus ?? ""),
+              const SizedBox(height: 12),
+              Row(children: [
                 Expanded(
-                  child: Row(children: [
-                    Text('${'booking'.tr} # ${bookingDetails.readableId}',
-                      overflow: TextOverflow.ellipsis,
-                      style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge,
-                          color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9), decoration: TextDecoration.none
-                      ),
-                    ),
-                    if(isSubBooking) Container(
-                      decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.green),
-                      padding: const EdgeInsets.all(2),
-                      margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
-                      child: const Icon(Icons.repeat, color: Colors.white,size: 12,),
-                    )
-                  ]),
+                  child: Text(
+                    serviceName.isNotEmpty ? serviceName : '${'booking'.tr} # ${bookingDetails.readableId}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: robotoBold.copyWith(
+                        fontSize: 20, color: context.kPrimaryForeground),
+                  ),
                 ),
-
-               Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: Dimensions.paddingSizeDefault,
-                      vertical: Dimensions.paddingSizeExtraSmall
+                if (isSubBooking) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(color: context.kSuccess, shape: BoxShape.circle),
+                    child: const Icon(Icons.repeat_rounded, size: 12, color: Colors.white),
                   ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5),
-                    color: Get.isDarkMode?
-                    Colors.grey.withValues(alpha:0.2): context.customThemeColors.buttonBackgroundColorMap[bookingDetails.bookingStatus],
-                  ),
-                  child: Center(
-                    child: Text(bookingDetails.bookingStatus?.tr ?? "",
-                      style: robotoMedium.copyWith(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 12,
-                          color:Get.isDarkMode?Theme.of(context).primaryColorLight : context.customThemeColors.buttonTextColorMap[bookingDetails.bookingStatus]
-                      ),
-                    ),
-                  ),
-                )
-              ],
-            ),
-            const SizedBox(height:Dimensions.paddingSizeDefault),
-            BookingItem(
-              img: Images.iconCalendar,
-              title: '${'booking_date'.tr} : ',
-              subTitle: DateConverter.dateMonthYearTime(
-                  DateConverter.isoUtcStringToLocalDate(bookingDetails.createdAt!)),
-            ),
-            if(bookingDetails.serviceSchedule!=null) const SizedBox(height:Dimensions.paddingSizeExtraSmall),
-
-            if(bookingDetails.serviceSchedule!=null) BookingItem(
-              img: Images.iconCalendar,
-              title: '${'scheduled_date'.tr} : ',
-              subTitle: ' ${DateConverter.dateMonthYearTime(DateTime.tryParse(bookingDetails.serviceSchedule!))}',
-            ),
-
-            const SizedBox(height:Dimensions.paddingSizeExtraSmall),
-            BookingServiceLocation(bookingDetails: bookingDetails, isSubBooking: isSubBooking,),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
-              child: Column( crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const SizedBox(height:Dimensions.paddingSizeSmall),
-                Text("payment_method".tr,
-                  style: robotoBold.copyWith(
-                      fontSize: Dimensions.fontSizeDefault,
-                      color: Theme.of(context).textTheme.bodyLarge!.color),
-                ),
-                const SizedBox(height:Dimensions.paddingSizeExtraSmall),
-
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Flexible(
-                    child: Text("${bookingDetails.paymentMethod!.tr} ${ bookingDetails.partialPayments !=null  && bookingDetails.partialPayments!.isNotEmpty ? "&_wallet_balance".tr: ""}",
-                        style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:.5))),
-                  ),
-                  SizedBox(width: Dimensions.paddingSizeSmall),
-
-                  RichText(
-                    text: TextSpan(text: "${'payment_status'.tr} ",
-                      style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).hintColor),
-                      children: <TextSpan>[
-                        TextSpan(
-                          text: bookingDetails.partialPayments != null && bookingDetails.partialPayments!.isNotEmpty && bookingDetails.isPaid == 0 ? "partially_paid".tr :  bookingDetails.isPaid == 0 ? "unpaid".tr : "paid".tr,
-                          style: robotoBold.copyWith(
-                            fontSize: Dimensions.fontSizeDefault,
-                            color: bookingDetails.partialPayments != null && bookingDetails.partialPayments!.isNotEmpty && bookingDetails.isPaid == 0 ? Theme.of(context).primaryColor : bookingDetails.isPaid == 0 ?
-                            Theme.of(context).colorScheme.error: Colors.green,
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ]),
-                const SizedBox(height:Dimensions.paddingSizeExtraSmall),
-
-                (bookingDetails.paymentMethod !="cash_after_service" && bookingDetails.paymentMethod !="offline_payment") ?
-                Padding(padding: const EdgeInsets.only(bottom : Dimensions.paddingSizeExtraSmall),
-                  child: Text("${'transaction_id'.tr} : ${bookingDetails.transactionId}",
-                    style: robotoRegular.copyWith(
-                      fontSize: Dimensions.fontSizeSmall,
-                      color: Theme.of(context).hintColor,
-                    ),
-                  ),
-                ):const SizedBox.shrink(),
-
-
-                Row(
-                  children: [
-                    Text("${'amount'.tr} : ",
-                      style: robotoBold.copyWith(
-                        fontSize: Dimensions.fontSizeSmall,
-                        color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.7),
-                      ),
-                    ),
-
-                    Text(PriceConverter.convertPrice(bookingDetails.totalBookingAmount ?? 0,isShowLongPrice:true),
-                      style: robotoBold.copyWith(
-                        fontSize: Dimensions.fontSizeSmall,
-                        color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.7),
-                      ),
-                    ),
-                  ],
-                )
-
+                ],
               ]),
-            )
+              const SizedBox(height: 4),
+              Text(
+                createdAtText.isNotEmpty
+                    ? "${'booking_date'.tr} : $createdAtText"
+                    : '-',
+                textDirection: TextDirection.ltr,
+                style: robotoRegular.copyWith(
+                    fontSize: 14,
+                    color: context.kPrimaryForeground.withValues(alpha: 0.6)),
+              ),
+            ],
+          ),
+        ),
 
+        const SizedBox(height: 16),
+
+        InfoCard(
+          title: 'customer_info'.tr,
+          rows: [
+            InfoRow(Icons.person_outline_rounded, contactPersonName),
+            InfoRow(Icons.call_outlined, contactPersonNumber),
           ],
         ),
-      );
-    });
+
+        const SizedBox(height: 16),
+
+        InfoCard(
+          title: 'schedule_address'.tr,
+          rows: [
+            InfoRow(Icons.schedule_rounded, scheduleText),
+            InfoRow(Icons.location_on_outlined, address),
+          ],
+        ),
+
+        const SizedBox(height: 16),
+
+        InfoCard(title: 'payment'.tr, rows: paymentRows),
+
+        const SizedBox(height: 16),
+
+        Row(children: [
+          Expanded(
+            child: KButton(
+              label: 'call_customer'.tr,
+              icon: Icons.call_outlined,
+              outline: true,
+              onTap: contactPersonNumber.isNotEmpty
+                  ? () => launchUrl(Uri.parse('tel:$contactPersonNumber'))
+                  : null,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: KButton(
+              label: 'directions'.tr,
+              icon: Icons.directions,
+              onTap: () => BookingServiceLocation.openDirections(bookingDetails),
+            ),
+          ),
+        ]),
+
+        const SizedBox(height: 16),
+
+        BookingServiceLocation(bookingDetails: bookingDetails, isSubBooking: isSubBooking),
+      ],
+    );
   }
 }
-

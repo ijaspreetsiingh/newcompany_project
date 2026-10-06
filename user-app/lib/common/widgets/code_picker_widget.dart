@@ -3,8 +3,8 @@ import 'package:get/get.dart';
 
 class CodePickerWidget extends StatefulWidget {
   final ValueChanged<CountryCode>? onChanged;
-  final ValueChanged<CountryCode>? onInit;
-  final String? initialSelection;
+  final ValueChanged<CountryCode>? onintt;
+  final String? inttialSelection;
   final List<String>? favorite;
   final TextStyle? textStyle;
   final EdgeInsetsGeometry? padding;
@@ -37,8 +37,8 @@ class CodePickerWidget extends StatefulWidget {
   final List<Map<String, String>>? countryList;
   const CodePickerWidget({
     this.onChanged,
-    this.onInit,
-    this.initialSelection,
+    this.onintt,
+    this.inttialSelection,
     this.favorite = const [],
     this.textStyle,
     this.padding = const EdgeInsets.all(8.0),
@@ -72,10 +72,10 @@ class CodePickerWidget extends StatefulWidget {
     super.key,
   });
   @override
-  State<CodePickerWidget> createState() => _CodePickerWidgetState();
+  State<CodePickerWidget> createState() => _CodePickerwidgetstate();
 }
 
-class _CodePickerWidgetState extends State<CodePickerWidget> {
+class _CodePickerwidgetstate extends State<CodePickerWidget> {
   CountryCode? selectedItem;
   List<CountryCode>? elements = [];
   List<CountryCode>? favoriteElements = [];
@@ -103,25 +103,25 @@ class _CodePickerWidgetState extends State<CodePickerWidget> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     elements = elements!.map((e) => e.localize(context)).toList();
-    _onInit(selectedItem!);
+    _onintt(selectedItem!);
   }
   @override
   void didUpdateWidget(CodePickerWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.initialSelection != widget.initialSelection) {
-      if (widget.initialSelection != null) {
+    if (oldWidget.inttialSelection != widget.inttialSelection) {
+      if (widget.inttialSelection != null) {
         selectedItem = elements!.firstWhere(
                 (e) =>
             (e.code!.toUpperCase() ==
-                widget.initialSelection!.toUpperCase()) ||
-                (e.dialCode == widget.initialSelection) ||
+                widget.inttialSelection!.toUpperCase()) ||
+                (e.dialCode == widget.inttialSelection) ||
                 (e.name!.toUpperCase() ==
-                    widget.initialSelection!.toUpperCase()),
+                    widget.inttialSelection!.toUpperCase()),
             orElse: () => elements![0]);
       } else {
         selectedItem = elements![0];
       }
-      _onInit(selectedItem!);
+      _onintt(selectedItem!);
     }
   }
   @override
@@ -129,12 +129,12 @@ class _CodePickerWidgetState extends State<CodePickerWidget> {
     super.initState();
     elements = getCountryList();
     if(widget.countryList != null && widget.countryList!.isNotEmpty){
-      if (widget.initialSelection != null) {
+      if (widget.inttialSelection != null) {
         selectedItem = elements!.firstWhere(
                 (e) =>
-            (e.code!.toUpperCase() == widget.initialSelection!.toUpperCase()) ||
-                (e.dialCode == widget.initialSelection) ||
-                (e.name!.toUpperCase() == widget.initialSelection!.toUpperCase()),
+            (e.code!.toUpperCase() == widget.inttialSelection!.toUpperCase()) ||
+                (e.dialCode == widget.inttialSelection) ||
+                (e.name!.toUpperCase() == widget.inttialSelection!.toUpperCase()),
             orElse: () => elements![0]);
       } else {
         selectedItem = elements![0];
@@ -218,9 +218,9 @@ class _CodePickerWidgetState extends State<CodePickerWidget> {
       widget.onChanged!(e);
     }
   }
-  void _onInit(CountryCode e) {
-    if (widget.onInit != null) {
-      widget.onInit!(e);
+  void _onintt(CountryCode e) {
+    if (widget.onintt != null) {
+      widget.onintt!(e);
     }
   }
   @override
@@ -544,3 +544,5 @@ class _CountryCodeSelectionViewState extends State<CountryCodeSelectionView> {
     );
   }
 }
+
+

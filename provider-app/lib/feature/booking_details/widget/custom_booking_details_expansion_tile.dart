@@ -147,7 +147,9 @@ class _CustomBookingDetailsExpansionTileState extends State<CustomBookingDetails
           minVerticalPadding: -10,
           contentPadding: EdgeInsets.zero,
           visualDensity: VisualDensity.compact,
-          child: ListTile(
+          child: Material(
+            type: MaterialType.transparency,
+            child: ListTile(
             onTap: _handleTap,
             leading: widget.leading,
             dense: true,
@@ -190,6 +192,7 @@ class _CustomBookingDetailsExpansionTileState extends State<CustomBookingDetails
             Icons.keyboard_arrow_down_rounded,
                 size: widget.trailingIconSize ?? Dimensions.paddingSizeLarge,
                 color: Theme.of(context).hintColor.withValues(alpha:0.6)): null,
+            ),
           ),
         ),
         ClipRect(

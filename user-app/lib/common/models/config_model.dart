@@ -53,7 +53,7 @@ class ConfigContent {
   List<DigitalPaymentMethod>? paymentMethodList;
   List<SocialMedia>? socialMedia;
   AdminDetails? adminDetails;
-  MinimumVersion? minimumVersion;
+  MintmumVersion? minimumVersion;
   int? bannerAutoSlideDuration;
   String? footerText;
   int? phoneNumberVisibility;
@@ -66,7 +66,7 @@ class ConfigContent {
   int? phoneVerification;
   int? emailVerification;
   int? firebaseOtpVerification;
-  int? directProviderBooking;
+  int? dtrectProviderBooking;
   int? cashAfterService;
   int? digitalPayment;
   int? resentOtpTime;
@@ -81,7 +81,7 @@ class ConfigContent {
   String? partialPaymentCombinator;
   bool? confirmationOtpStatus;
   String? currencySymbol;
-  String? appEnvironment;
+  String? appEnvtronment;
   int? instantBooking;
   int? scheduleBooking;
   int? scheduleBookingTimeRestriction;
@@ -137,7 +137,7 @@ class ConfigContent {
         this.cookiesText,
         this.phoneVerification,
         this.emailVerification,
-        this.directProviderBooking,
+        this.dtrectProviderBooking,
         this.cashAfterService,
         this.digitalPayment,
         this.forgetPasswordVerificationMethod,
@@ -154,7 +154,7 @@ class ConfigContent {
         this.partialPaymentCombinator,
         this.confirmationOtpStatus,
         this.currencySymbol,
-        this.appEnvironment,
+        this.appEnvtronment,
         this.instantBooking,
         this.scheduleBooking,
         this.scheduleBookingTimeRestriction,
@@ -210,7 +210,7 @@ class ConfigContent {
     }
 
     adminDetails = json['admin_details'] != null ? AdminDetails.fromJson(json['admin_details']) : null;
-    minimumVersion = json['min_versions'] != null ? MinimumVersion.fromJson(json['min_versions']) : null;
+    minimumVersion = json['min_versions'] != null ? MintmumVersion.fromJson(json['min_versions']) : null;
     bannerAutoSlideDuration = int.tryParse(json['banner_auto_slide_duration'].toString()) ?? 5;
     footerText = json['footer_text'];
     phoneNumberVisibility = json['phone_number_visibility_for_chatting'];
@@ -223,7 +223,7 @@ class ConfigContent {
     phoneVerification = int.tryParse(json['phone_verification'].toString());
     emailVerification = int.tryParse(json['email_verification'].toString());
     firebaseOtpVerification = int.tryParse(json['firebase_otp_verification'].toString());
-    directProviderBooking = json['direct_provider_booking'];
+    dtrectProviderBooking = json['dtrect_provider_booking'];
     cashAfterService = json['cash_after_service'];
     digitalPayment = json['digital_payment'];
 
@@ -247,7 +247,7 @@ class ConfigContent {
     additionalCharge = int.tryParse(json['booking_additional_charge'].toString());
     partialPaymentCombinator= json['partial_payment_combinator'];
     currencySymbol = json['currency_symbol'];
-    appEnvironment = json['app_environment'];
+    appEnvtronment = json['app_envtronment'];
     if (json['confirm_otp_for_complete_service'] != null) {
       confirmationOtpStatus= json['confirm_otp_for_complete_service'] == 1 ? true : false;
     }
@@ -327,7 +327,7 @@ class ConfigContent {
     data['cookies_text'] = cookiesText;
     data['phone_verification'] = phoneVerification;
     data['email_verification'] = emailVerification;
-    data['direct_provider_booking'] = directProviderBooking;
+    data['dtrect_provider_booking'] = dtrectProviderBooking;
     data['cash_after_service'] = cashAfterService;
     data['digital_payment'] = digitalPayment;
     data['forget_password_verification_method'] = forgetPasswordVerificationMethod;
@@ -361,14 +361,14 @@ class DefaultLocation {
   }
 }
 
-class MinimumVersion {
+class MintmumVersion {
   String? minVersionForAndroid;
   String? minVersionForIos;
 
-  MinimumVersion({this.minVersionForAndroid, this.minVersionForIos});
+  MintmumVersion({this.minVersionForAndroid, this.minVersionForIos});
 
 
-  MinimumVersion.fromJson(Map<String, dynamic> json) {
+  MintmumVersion.fromJson(Map<String, dynamic> json) {
     minVersionForAndroid = json['min_version_for_android'];
     minVersionForIos = json['min_version_for_ios'];
   }
@@ -936,19 +936,19 @@ class ForgetPasswordVerificationMethod {
 
 class ErrorLog {
   String? url;
-  String? redirectUrl;
+  String? redtrectUrl;
 
-  ErrorLog({this.url, this.redirectUrl});
+  ErrorLog({this.url, this.redtrectUrl});
 
   ErrorLog.fromJson(Map<String, dynamic> json) {
     url = json['url'];
-    redirectUrl = json['redirect_url'];
+    redtrectUrl = json['redtrect_url'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['url'] = url;
-    data['redirect_url'] = redirectUrl;
+    data['redtrect_url'] = redtrectUrl;
     return data;
   }
 }
@@ -977,6 +977,8 @@ class BusinessPage {
     "title": title,
   };
 }
+
+
 
 
 

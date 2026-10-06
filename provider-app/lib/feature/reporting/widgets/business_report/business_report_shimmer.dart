@@ -1,645 +1,145 @@
 import 'package:demandium_provider/util/core_export.dart';
-import 'package:get/get.dart';
 
 
 class BusinessReportShimmer extends StatelessWidget {
   const BusinessReportShimmer({super.key});
 
+  BoxDecoration get _cardDecoration => BoxDecoration(
+    color: InkColors.card,
+    borderRadius: BorderRadius.circular(19),
+    border: Border.all(color: InkColors.border),
+  );
+
+  Widget _bar({double width = 60, double height = 10}) => Container(
+    height: height,
+    width: width,
+    decoration: BoxDecoration(
+      color: InkColors.secondary,
+      borderRadius: BorderRadius.circular(6),
+    ),
+  );
+
+  Widget _circle(double size) => Container(
+    height: size,
+    width: size,
+    decoration:  BoxDecoration(
+      color: InkColors.secondary,
+      shape: BoxShape.circle,
+    ),
+  );
+
+  Widget _tileSkeleton() => Container(
+    height: 92,
+    decoration: _cardDecoration,
+    padding: const EdgeInsets.all(14),
+    child: Row(
+      children: [
+        _circle(34),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _bar(width: 90, height: 14),
+              const SizedBox(height: 6),
+              _bar(width: 120, height: 10),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _kvSkeleton() => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 5),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [_bar(width: 96, height: 10), _bar(width: 64, height: 10)],
+    ),
+  );
+
+  Widget _listRowSkeleton() => Container(
+    width: double.infinity,
+    decoration: _cardDecoration,
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [_bar(width: 84, height: 10), _bar(width: 56, height: 10)],
+        ),
+        const SizedBox(height: 18),
+        _kvSkeleton(),
+        _kvSkeleton(),
+        _kvSkeleton(),
+        const SizedBox(height: 8),
+        Container(height: 1, color: InkColors.border),
+        const SizedBox(height: 8),
+        _kvSkeleton(),
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     return Shimmer(duration: const Duration(seconds: 2),
       child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-
-          Padding(padding: const EdgeInsets.only(
-              left: Dimensions.paddingSizeSmall,
-              top: Dimensions.paddingSizeSmall
-          ),
-            child: Row(children: [
-
-
-            Expanded(
-              child: Container(
-                height: Dimensions.paddingSizeLarge * 6,
-                width: Dimensions.paddingSizeExtraLarge * 8,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(Dimensions.paddingSizeDefault),
-                  color: Theme.of(context).hintColor.withValues(alpha:0.2),
-                ),
-                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-
-
-                  Container(
-                    height: Dimensions.paddingSizeExtraLarge + Dimensions.paddingSizeSmall,
-                    width: Dimensions.paddingSizeExtraLarge + Dimensions.paddingSizeSmall,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                    ),
-                  ),
-                  const SizedBox(width: Dimensions.paddingSizeDefault),
-
-
-                  Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-
-
-                    Container(
-                      height: Dimensions.paddingSizeSmall,
-                      width: Dimensions.paddingSizeExtraLarge * 3,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                        color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                      ),
-                    ),
-                    const SizedBox(height: Dimensions.paddingSizeSmall),
-
-
-                    Container(
-                      height: Dimensions.paddingSizeSmall,
-                      width: Dimensions.paddingSizeExtraLarge * 3 ,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                        color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                      ),
-                    ),
-
-
-                  ],),
-
-
-                ],),
-              ),
-            ),
-            const SizedBox(width: Dimensions.paddingSizeSmall,),
-
-
-            Expanded(
-              child: Container(
-                height: Dimensions.paddingSizeLarge * 6,
-                width: Dimensions.paddingSizeExtraLarge * 8,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(Dimensions.paddingSizeDefault),
-                  color: Theme.of(context).hintColor.withValues(alpha:0.2),
-                ),
-                child: Column(mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  crossAxisAlignment: CrossAxisAlignment.start, children: [
-
-
-                    Padding(padding: const EdgeInsets.only(
-                        top: Dimensions.paddingSizeSmall,
-                        left: Dimensions.paddingSizeSmall
-                    ),
-                      child: Row(children: [
-
-
-                        Container(
-                          height: Dimensions.paddingSizeExtraLarge + Dimensions.paddingSizeSmall,
-                          width: Dimensions.paddingSizeExtraLarge + Dimensions.paddingSizeSmall,
-                          decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                        ),),
-                        const SizedBox(width: Dimensions.paddingSizeDefault),
-
-
-                        Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-
-
-                          Container(
-                            height: Dimensions.paddingSizeSmall,
-                            width: Dimensions.paddingSizeExtraLarge * 3,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                            ),
-                          ),
-                          const SizedBox(height: Dimensions.paddingSizeSmall),
-
-
-                          Container(
-                            height: Dimensions.paddingSizeSmall,
-                            width: Dimensions.paddingSizeExtraLarge * 3,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                            ),
-                          ),
-
-
-                        ],),
-
-
-                      ],),
-                    ),
-
-
-                    Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-
-
-                      Column(children: [
-
-
-                        Container(
-                            height: Dimensions.paddingSizeExtraSmall,
-                            width: Dimensions.paddingSizeLarge * 2,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                        )),
-                        const SizedBox(height: Dimensions.paddingSizeSmall),
-
-
-                        Container(
-                            height: Dimensions.paddingSizeExtraSmall,
-                            width: Dimensions.paddingSizeLarge * 3,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                        )),
-
-
-                        ],),
-
-
-                      Column(children: [
-
-
-                          Container(
-                            height: Dimensions.paddingSizeExtraSmall,
-                            width: Dimensions.paddingSizeLarge * 2,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                            ),
-                          ),
-                          const SizedBox(height: Dimensions.paddingSizeSmall),
-
-
-                          Container(
-                            height: Dimensions.paddingSizeExtraSmall,
-                            width: Dimensions.paddingSizeLarge * 3,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                            ),
-                          ),
-
-
-                        ],),
-
-
-                      Column(children: [
-
-
-                          Container(
-                            height: Dimensions.paddingSizeExtraSmall,
-                            width: Dimensions.paddingSizeLarge * 2,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                            ),
-                          ),
-                          const SizedBox(height: Dimensions.paddingSizeSmall),
-
-
-                          Container(
-                            height: Dimensions.paddingSizeExtraSmall,
-                            width: Dimensions.paddingSizeLarge * 3,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                            ),
-                          ),
-
-
-                        ],),
-
-
-                    ],)
-
-
-                  ],),
-
-
-                ),
-              ),
-
-
-            ],),),
-          const SizedBox(height: Dimensions.paddingSizeSmall),
-
+          Row(children: [
+            Expanded(child: _tileSkeleton()),
+            const SizedBox(width: 12),
+            Expanded(child: _tileSkeleton()),
+          ]),
+          const SizedBox(height: 12),
 
           Container(
             height: 320,
             width: double.infinity,
-            color: Theme.of(context).hintColor.withValues(alpha:0.2),
+            decoration: _cardDecoration,
+            padding: const EdgeInsets.all(16),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-
-
-              Padding(padding: const EdgeInsets.only(
-                  left: Dimensions.paddingSizeSmall,
-                  top: Dimensions.paddingSizeSmall
-              ),
-                child: Row(children: [
-
-
-                  Container(
-                    height: Dimensions.paddingSizeLarge,
-                    width: Dimensions.paddingSizeLarge,
-                    decoration : BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                    ),
-                  ),
-                  const SizedBox(width: Dimensions.paddingSizeSmall,),
-
-
-                  Container(
-                    height: Dimensions.paddingSizeDefault,
-                    width: Dimensions.paddingSizeExtraLarge * 4,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                    ),
-                  ),
-
-
-              ],),),
-              const SizedBox(height: Dimensions.paddingSizeDefault),
-
-
-              Row(mainAxisAlignment: MainAxisAlignment.center,children: [
-
-
-                Row(children: [
-
-
-                  Container(
-                    height: Dimensions.paddingSizeSmall,
-                    width: Dimensions.paddingSizeSmall,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                    ),
-                  ),
-                  const SizedBox(width: Dimensions.paddingSizeSmall,),
-
-
-                  Container(
-                    height: Dimensions.paddingSizeSmall,
-                    width: Dimensions.paddingSizeLarge * 2,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                    ),
-                  ),
-
-
-                ],),
-                const SizedBox(width: Dimensions.paddingSizeLarge,),
-
-
-                Row(children: [
-
-
-                  Container(
-                    height: Dimensions.paddingSizeSmall,
-                    width: Dimensions.paddingSizeSmall,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                    ),
-                  ),
-                  const SizedBox(width: Dimensions.paddingSizeSmall,),
-
-
-                  Container(
-                    height: Dimensions.paddingSizeSmall,
-                    width: Dimensions.paddingSizeLarge * 2,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                    ),
-                  ),
-
-
-                ],),
-
-
-              ],),
-              const SizedBox(height: Dimensions.paddingSizeDefault),
-
-
-              Padding(
-                padding: const EdgeInsets.only(
-                  left: Dimensions.paddingSizeSmall,
-                  top: Dimensions.paddingSizeSmall
-                ),
-                child: SizedBox(
-                  height: Dimensions.paddingSizeExtraLarge * 8,
-                  child: Row(children: [
-
-
-                    Column(mainAxisAlignment: MainAxisAlignment.spaceAround, crossAxisAlignment: CrossAxisAlignment.start, children: [
-
-
-                      Container(
-                        height: Dimensions.paddingSizeSmall,
-                        width: Dimensions.paddingSizeExtraLarge,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                          color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                      ),),
-
-
-                      Container(
-                        height: Dimensions.paddingSizeSmall,
-                        width: Dimensions.paddingSizeExtraLarge,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                          color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                        ),),
-
-
-                      Container(
-                        height: Dimensions.paddingSizeSmall,
-                        width: Dimensions.paddingSizeExtraLarge,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                          color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                        ),),
-
-
-                      Container(
-                        height: Dimensions.paddingSizeSmall,
-                        width: Dimensions.paddingSizeExtraLarge,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                          color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                        ),),
-
-
-                    ],),
-                    const SizedBox(width: Dimensions.paddingSizeSmall),
-
-
-                    Container(
-                      height: Dimensions.paddingSizeExtraLarge * 8,
-                      width: 2,
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                    ),
-
-
-                    SizedBox(
-                      height: Dimensions.paddingSizeExtraLarge * 8,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-
-                        Container(height: 2, width: 350,
-                          color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                        ),
-
-                      ],),
-                    ),
-
-
-                  ]),
+              Row(children: [
+                _circle(34),
+                const SizedBox(width: 12),
+                _bar(width: 140, height: 12),
+              ]),
+              const SizedBox(height: 20),
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                _circle(10),
+                const SizedBox(width: 8),
+                _bar(width: 56, height: 10),
+                const SizedBox(width: 24),
+                _circle(10),
+                const SizedBox(width: 8),
+                _bar(width: 56, height: 10),
+              ]),
+              const SizedBox(height: 24),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _bar(width: 14, height: 90),
+                    _bar(width: 14, height: 130),
+                    _bar(width: 14, height: 70),
+                    _bar(width: 14, height: 150),
+                    _bar(width: 14, height: 110),
+                    _bar(width: 14, height: 60),
+                  ],
                 ),
               ),
-
-              Padding(
-                padding: const EdgeInsets.only(
-                  left: Dimensions.paddingSizeLarge * 2,
-                  top: Dimensions.paddingSizeSmall
-                ),
-                child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-
-
-                  Container(
-                    height: Dimensions.paddingSizeSmall,
-                    width: Dimensions.paddingSizeExtraLarge + 5,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                  ),),
-
-
-                  Container(
-                    height: Dimensions.paddingSizeSmall,
-                    width: Dimensions.paddingSizeExtraLarge + 5,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                    ),),
-
-
-                  Container(
-                    height: Dimensions.paddingSizeSmall,
-                    width: Dimensions.paddingSizeExtraLarge + 5,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                    ),),
-
-
-                  Container(
-                    height: Dimensions.paddingSizeSmall,
-                    width: Dimensions.paddingSizeExtraLarge + 5,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                    ),),
-
-
-                  Container(
-                    height: Dimensions.paddingSizeSmall,
-                    width: Dimensions.paddingSizeExtraLarge + 5,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                    ),),
-
-
-                ],),
-              ),
-              const SizedBox(height: Dimensions.paddingSizeDefault),
-
-
-            ],),
+            ]),
           ),
-          const SizedBox(height: Dimensions.paddingSizeSmall),
+          const SizedBox(height: 12),
 
-
-          ListView.separated(
-            separatorBuilder: (context, index){
-              return const SizedBox(height: Dimensions.paddingSizeSmall);
-            },
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: 5,
-            itemBuilder: (context, index) {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
-                width: double.infinity,
-                height: Dimensions.paddingSizeExtraLarge * 6,
-                decoration: BoxDecoration(
-                    color: Theme.of(context).hintColor.withValues(alpha:0.2),
-                    borderRadius: BorderRadius.circular(Dimensions.radiusDefault)
-                ),
-                child: Column(children: [
-
-
-                  ListTile(
-                    visualDensity: const VisualDensity(horizontal: 0, vertical: -4),
-                    leading: Container(
-                        height: Dimensions.paddingSizeLarge,
-                        width: Dimensions.paddingSizeSmall,
-                      decoration: BoxDecoration(
-                        borderRadius : BorderRadius.circular(Dimensions.radiusDefault),
-                        color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                      )
-                    ),
-                    horizontalTitleGap: 0,
-                    title: Container(
-                      height: Dimensions.paddingSizeExtraSmall,
-                      width: Dimensions.paddingSizeLarge,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                        color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                      ),
-                    ),
-                    trailing: const Padding(
-                        padding: EdgeInsets.only(right: Dimensions.paddingSizeLarge * 6),
-                        child: SizedBox()
-                    ),
-                  ),
-
-
-                  Padding(padding: const EdgeInsets.only(
-                      left: Dimensions.paddingSizeExtraLarge * 2,
-                      right: Dimensions.paddingSizeDefault
-                  ),
-                    child: SizedBox(height: Dimensions.paddingSizeExtraLarge * 4,
-                      child: Column(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-
-
-                        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-
-
-                          Container(
-                            height: Dimensions.paddingSizeExtraSmall,
-                            width: Dimensions.paddingSizeExtraLarge * 2,
-                            decoration: BoxDecoration(
-                              borderRadius : BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                            ),
-                          ),
-
-
-                          Container(
-                            height: Dimensions.paddingSizeExtraSmall,
-                            width: Dimensions.paddingSizeExtraLarge + 5,
-                            decoration: BoxDecoration(
-                              borderRadius : BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                            ),
-                          ),
-
-
-                          ],),
-
-
-                        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-
-
-                          Container(
-                            height: Dimensions.paddingSizeExtraSmall,
-                            width: Dimensions.paddingSizeLarge,
-                            decoration: BoxDecoration(
-                              borderRadius : BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                            ),
-                          ),
-
-
-                          Container(
-                            height: Dimensions.paddingSizeExtraSmall,
-                            width: Dimensions.paddingSizeLarge,
-                            decoration: BoxDecoration(
-                              borderRadius : BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                            ),
-                          ),
-
-
-                        ],),
-
-
-                        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-
-
-                          Container(
-                            height: Dimensions.paddingSizeExtraSmall,
-                            width: Dimensions.paddingSizeExtraLarge + Dimensions.paddingSizeSmall,
-                            decoration: BoxDecoration(
-                              borderRadius : BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                            ),
-                          ),
-
-
-                          Container(
-                            height: Dimensions.paddingSizeExtraSmall,
-                            width: Dimensions.paddingSizeExtraLarge,
-                            decoration: BoxDecoration(
-                              borderRadius : BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                            ),
-                          ),
-
-
-                        ],),
-
-
-                        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-
-
-                          Container(
-                            height: Dimensions.paddingSizeExtraSmall,
-                            width: Dimensions.paddingSizeLarge,
-                            decoration: BoxDecoration(
-                              borderRadius : BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                            ),
-                          ),
-
-
-                          Container(
-                            height: Dimensions.paddingSizeExtraSmall,
-                            width: Dimensions.paddingSizeLarge,
-                            decoration: BoxDecoration(
-                              borderRadius : BorderRadius.circular(Dimensions.radiusDefault),
-                              color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
-                            ),
-                          ),
-
-
-                        ],),
-
-
-                      ]),
-                    ),
-                  ),
-
-
-                ],),
-              );
-            }
-          ),
-
+          for (int i = 0; i < 5; i++) ...[
+            _listRowSkeleton(),
+            if (i < 4) const SizedBox(height: 12),
+          ],
 
         ]),
       ),

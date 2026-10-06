@@ -1,4 +1,4 @@
-import 'package:jdds/util/core_export.dart';
+﻿import 'package:jdds/util/core_export.dart';
 
 class SearchServiceModel {
   String? responseCode;
@@ -29,17 +29,17 @@ class SearchServiceModel {
 }
 
 class Content {
-  double? initialMinPrice;
-  double? initialMaxPrice;
+  double? inttialMinPrice;
+  double? inttialMaxPrice;
   double? filteredMinPrice;
   double? filteredMaxPrice;
   ServiceContent? servicesContent;
 
-  Content({this.initialMinPrice, this.initialMaxPrice, this.servicesContent});
+  Content({this.inttialMinPrice, this.inttialMaxPrice, this.servicesContent});
 
   Content.fromJson(Map<String, dynamic> json) {
-    initialMinPrice = double.tryParse(json['initial_min_price'].toString());
-    initialMaxPrice = double.tryParse(json['initial_max_price'].toString());
+    inttialMinPrice = double.tryParse(json['inttial_min_price'].toString());
+    inttialMaxPrice = double.tryParse(json['inttial_max_price'].toString());
     filteredMinPrice = double.tryParse(json['filter_min_price'].toString());
     filteredMaxPrice = double.tryParse(json['filter_max_price'].toString());
     servicesContent = json['services'] != null
@@ -49,12 +49,13 @@ class Content {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['min_price'] = initialMinPrice;
-    data['max_price'] = initialMaxPrice;
+    data['min_price'] = inttialMinPrice;
+    data['max_price'] = inttialMaxPrice;
     if (servicesContent != null) {
       data['services'] = servicesContent!.toJson();
     }
     return data;
   }
 }
+
 

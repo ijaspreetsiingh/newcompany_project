@@ -10,13 +10,13 @@ class AuthController extends GetxController implements GetxService {
   bool _isLoading = false;
   bool _isResendLoading = false;
   bool _acceptTerms = false;
-  bool _forgetPasswordUrlSessionExpired = false;
+  bool _forgetPasswordUrlSessionExptred = false;
   bool savedCookiesData = false;
 
   AuthController({required this.authRepo});
   bool get isLoading => _isLoading;
   bool get isResendLoading => _isResendLoading;
-  bool get forgetPasswordUrlSessionExpired => _forgetPasswordUrlSessionExpired;
+  bool get forgetPasswordUrlSessionExptred => _forgetPasswordUrlSessionExptred;
   bool get acceptTerms => _acceptTerms;
 
   String _verificationCode = '';
@@ -58,7 +58,7 @@ class AuthController extends GetxController implements GetxService {
     countryDialCode = CountryCode.fromCountryCode(Get.find<SplashController>().configModel.content != null ? Get.find<SplashController>().configModel.content!.countryCode!:"BD").dialCode!;
   }
 
-  Future<void> registration({required SignUpBody signUpBody, String? redirectUrl}) async {
+  Future<void> registration({required SignUpBody signUpBody, String? redtrectUrl}) async {
 
     _isLoading = true;
     update();
@@ -79,7 +79,7 @@ class AuthController extends GetxController implements GetxService {
                   identity: identity,identityType: identityType,
                   fromPage: config?.phoneVerification == 1 && config?.firebaseOtpVerification == 1 ? "firebase-otp" : "verification",
                   firebaseSession: type == SendOtpType.firebase ? status.message : null,
-                  redirectUrl: redirectUrl,
+                  redtrectUrl: redtrectUrl,
                 ));
               }else{
                 customSnackBar(status.message.toString().capitalizeFirst);
@@ -89,7 +89,7 @@ class AuthController extends GetxController implements GetxService {
 
         }else{
           await _saveTokenAndNavigate(
-            redirectRoute: redirectUrl ?? (Get.find<LocationController>().getUserAddress() !=null ?  RouteHelper.home : RouteHelper.pickMap),
+            redtrectRoute: redtrectUrl ?? (Get.find<LocationController>().getUserAddress() !=null ?  RouteHelper.home : RouteHelper.pickMap),
             token: response.body['content']['token'], emailPhone: "", password: "",
           );
         }
@@ -108,13 +108,13 @@ class AuthController extends GetxController implements GetxService {
     update();
   }
 
-  Future<void> login({String? redirectRoute, required String emailPhone, required String password, required String type}) async {
+  Future<void> login({String? redtrectRoute, required String emailPhone, required String password, required String type}) async {
       _isLoading = true;
       update();
       Response? response = await authRepo.login(phone: emailPhone, password: password, type: type);
       if (response!.statusCode == 200 && response.body['response_code']=="auth_login_200") {
 
-        await _saveTokenAndNavigate(redirectRoute: redirectRoute, token: response.body['content']['token'], emailPhone: emailPhone, password: password);
+        await _saveTokenAndNavigate(redtrectRoute: redtrectRoute, token: response.body['content']['token'], emailPhone: emailPhone, password: password);
 
       }else if(response.statusCode == 401 && (response.body["response_code"]=="unverified_phone_401") || response.body["response_code"]=="unverified_email_401"){
 
@@ -128,7 +128,7 @@ class AuthController extends GetxController implements GetxService {
                 identity: emailPhone,identityType: type,
                 fromPage: type == "phone" && config?.firebaseOtpVerification == 1 ? "firebase-otp" : "verification",
                 firebaseSession: sendOtpType == SendOtpType.firebase ? status.message : null,
-                redirectUrl: redirectRoute,
+                redtrectUrl: redtrectRoute,
               ));
             }else{
               customSnackBar(status.message.toString().capitalizeFirst);
@@ -158,7 +158,7 @@ class AuthController extends GetxController implements GetxService {
   }
 
   Future<void> _saveTokenAndNavigate({
-    String? redirectRoute,
+    String? redtrectRoute,
     required String token,
     String? emailPhone,
     String? password
@@ -174,12 +174,12 @@ class AuthController extends GetxController implements GetxService {
       clearUserNumberAndPassword();
     }
 
-    if (redirectRoute != null) {
+    if (redtrectRoute != null) {
       if (Get.find<LocationController>().getUserAddress() != null) {
         updateSavedLocalAddress();
       }
 
-      final routeData = RouteHelper.parseRedirectRouteToNavigate(redirectRoute);
+      final routeData = RouteHelper.parseRedtrectRouteToNavigate(redtrectRoute);
 
       // After login / OTP verification always land user on home screen instead of
       // bouncing them back to the bookings list they came from.
@@ -304,7 +304,7 @@ class AuthController extends GetxController implements GetxService {
     int checkUser = 1,
     String fromPage = "",
     bool isResend = false,
-    String? redirectUrl,
+    String? redtrectUrl,
   }) async {
     ResponseModel? responseModel;
     if(isResend) {
@@ -318,7 +318,7 @@ class AuthController extends GetxController implements GetxService {
         identityType: identityType,
         fromPage: fromPage,
         isResend: isResend,
-        redirectUrl: redirectUrl,
+        redtrectUrl: redtrectUrl,
       );
 
     } else if(type == SendOtpType.verification){
@@ -394,7 +394,7 @@ class AuthController extends GetxController implements GetxService {
     }
   }
 
-  Future<void> _sendOtpForFirebaseVerification({required String identity, required String identityType, required String fromPage, bool isResend = false, String? redirectUrl}) async {
+  Future<void> _sendOtpForFirebaseVerification({required String identity, required String identityType, required String fromPage, bool isResend = false, String? redtrectUrl}) async {
     if(!isResend) {
       _isLoading = true;
       update();
@@ -438,7 +438,7 @@ class AuthController extends GetxController implements GetxService {
           identityType : identityType,
           fromPage: fromPage == "forget-password" ? "forget-password" : "firebase-otp",
           firebaseSession: vId,
-          redirectUrl: redirectUrl,
+          redtrectUrl: redtrectUrl,
         ));
 
       },
@@ -453,7 +453,7 @@ class AuthController extends GetxController implements GetxService {
     required String identityType,
     required String otp,
     required String fromPage,
-    String? redirectUrl,
+    String? redtrectUrl,
   }) async {
     _isLoading = true;
     update();
@@ -470,7 +470,7 @@ class AuthController extends GetxController implements GetxService {
         }
       }else{
         await _saveTokenAndNavigate(
-          redirectRoute: redirectUrl ?? (Get.find<LocationController>().getUserAddress() !=null ?  RouteHelper.home : RouteHelper.pickMap),
+          redtrectRoute: redtrectUrl ?? (Get.find<LocationController>().getUserAddress() !=null ?  RouteHelper.home : RouteHelper.pickMap),
           token: response.body['content']['token'], emailPhone: "", password: "",
         );
       }
@@ -489,7 +489,7 @@ class AuthController extends GetxController implements GetxService {
     _isLoading = true;
 
     if(fromOutsideUrl){
-      _forgetPasswordUrlSessionExpired = true;
+      _forgetPasswordUrlSessionExptred = true;
     }
 
     if(shouldUpdate){
@@ -500,7 +500,7 @@ class AuthController extends GetxController implements GetxService {
 
     if (response.statusCode==200 &&  response.body['response_code'] == 'default_200') {
       _isLoading = false;
-      _forgetPasswordUrlSessionExpired = false;
+      _forgetPasswordUrlSessionExptred = false;
       update();
       return ResponseModel(true, "successfully_verified");
     }else{
@@ -520,7 +520,7 @@ class AuthController extends GetxController implements GetxService {
   }
 
 
-  Future<void>  verifyOtpForPhoneOtpLogin({required String phone, required String otp, String? redirectUrl}) async {
+  Future<void>  verifyOtpForPhoneOtpLogin({required String phone, required String otp, String? redtrectUrl}) async {
     _isLoading = true;
     update();
     Response? response = await authRepo.verifyOtpForPhoneOtpLogin(phone: phone, otp: otp);
@@ -529,12 +529,12 @@ class AuthController extends GetxController implements GetxService {
 
       if(response.body['content']['token'] !=null){
        await _saveTokenAndNavigate(
-         redirectRoute : redirectUrl ?? RouteHelper.getMainRoute("home"),
+         redtrectRoute : redtrectUrl ?? RouteHelper.getMainRoute("home"),
          token: response.body['content']['token'],
          emailPhone: phone, password: "",
        );
       } else if(response.body['content']['temporary_token'] !=null){
-        Get.offNamed(RouteHelper.getUpdateProfileRoute(phone: phone, redirectUrl: redirectUrl));
+        Get.offNamed(RouteHelper.getUpdateProfileRoute(phone: phone, redtrectUrl: redtrectUrl));
       }
 
     } else {
@@ -546,7 +546,7 @@ class AuthController extends GetxController implements GetxService {
   }
 
 
-  Future<void>  verifyOtpForFirebaseOtp({String? session, String? phone, String? code , required String fromPage, String? redirectUrl}) async {
+  Future<void>  verifyOtpForFirebaseOtp({String? session, String? phone, String? code , required String fromPage, String? redtrectUrl}) async {
     _isLoading = true;
     update();
     Response? response = await authRepo.verifyOtpForFirebaseOtpLogin(session: session, phone: phone, code: code);
@@ -559,12 +559,12 @@ class AuthController extends GetxController implements GetxService {
           otp: code,
           fromUrl: 0,
           isFirebaseOtp: 1
-        ), redirectUrl: redirectUrl));
+        ), redtrectUrl: redtrectUrl));
       }else{
         if(response.body['content']['token'] !=null){
-          await _saveTokenAndNavigate(redirectRoute: redirectUrl ?? (Get.find<LocationController>().getUserAddress() !=null ?  RouteHelper.home : RouteHelper.pickMap), token: response.body['content']['token'], emailPhone: phone);
+          await _saveTokenAndNavigate(redtrectRoute: redtrectUrl ?? (Get.find<LocationController>().getUserAddress() !=null ?  RouteHelper.home : RouteHelper.pickMap), token: response.body['content']['token'], emailPhone: phone);
         } else if(response.body['content']['temporary_token'] !=null){
-          Get.offNamed(RouteHelper.getUpdateProfileRoute(phone: phone ??"", redirectUrl: redirectUrl));
+          Get.offNamed(RouteHelper.getUpdateProfileRoute(phone: phone ??"", redtrectUrl: redtrectUrl));
         }
       }
 
@@ -577,7 +577,7 @@ class AuthController extends GetxController implements GetxService {
   }
 
 
-  Future<void>  updateNewUserProfileAndLogin({String? firstName, String? lastName, String? phone, String? email, String? redirectUrl}) async {
+  Future<void>  updateNewUserProfileAndLogin({String? firstName, String? lastName, String? phone, String? email, String? redtrectUrl}) async {
     _isLoading = true;
     update();
 
@@ -586,7 +586,7 @@ class AuthController extends GetxController implements GetxService {
     if (response.statusCode == 200) {
       if(response.body['content']['token'] !=null){
         await _saveTokenAndNavigate(
-          redirectRoute: redirectUrl
+          redtrectRoute: redtrectUrl
               ?? ( Get.find<LocationController>().getUserAddress() !=null
                   ?  RouteHelper.home : RouteHelper.pickMap),
           token: response.body['content']['token'], emailPhone: phone, password: "",
@@ -600,7 +600,7 @@ class AuthController extends GetxController implements GetxService {
     update();
   }
 
-  Future<void> registerWithSocialMedia({String? firstName, String? lastName, String? phone, String? email, String? redirectUrl}) async{
+  Future<void> registerWithSocialMedia({String? firstName, String? lastName, String? phone, String? email, String? redtrectUrl}) async{
     _isLoading = true;
     update();
     Response response = await authRepo.registerWithSocialMedia(firstName: firstName, lastName: lastName, phone: phone, email: email);
@@ -608,7 +608,7 @@ class AuthController extends GetxController implements GetxService {
     if (response.statusCode == 200) {
       if(response.body['content']['token'] !=null){
         await _saveTokenAndNavigate(
-          redirectRoute: redirectUrl ?? (Get.find<LocationController>().getUserAddress() !=null ?  RouteHelper.home : RouteHelper.pickMap),
+          redtrectRoute: redtrectUrl ?? (Get.find<LocationController>().getUserAddress() !=null ?  RouteHelper.home : RouteHelper.pickMap),
           token: response.body['content']['token'], emailPhone: "", password: "",
         );
       }
@@ -623,7 +623,7 @@ class AuthController extends GetxController implements GetxService {
                 identity: phone,identityType: "phone",
                 fromPage: type == SendOtpType.firebase ? "firebase-otp" : "otp-login",
                 firebaseSession: type == SendOtpType.firebase ? status.message : null,
-                redirectUrl: redirectUrl,
+                redtrectUrl: redtrectUrl,
               ));
             }else{
               customSnackBar(status.message.toString().capitalizeFirst);
@@ -639,20 +639,20 @@ class AuthController extends GetxController implements GetxService {
   }
 
 
-  Future<void> existingAccountCheck({String? email, required int userResponse, required String medium, String? redirectUrl}) async{
+  Future<void> existingAccountCheck({String? email, required int userResponse, required String medium, String? redtrectUrl}) async{
     _isLoading = true;
     update();
     Response response = await authRepo.existingAccountCheck(email: email ?? "", userResponse: userResponse, medium: medium);
     if (response.statusCode == 200) {
 
       if(response.body['content']['token'] !=null){
-       await _saveTokenAndNavigate(redirectRoute: redirectUrl ?? (Get.find<LocationController>().getUserAddress() !=null ?  RouteHelper.home : RouteHelper.pickMap), token: response.body['content']['token']);
+       await _saveTokenAndNavigate(redtrectRoute: redtrectUrl ?? (Get.find<LocationController>().getUserAddress() !=null ?  RouteHelper.home : RouteHelper.pickMap), token: response.body['content']['token']);
       }else if(response.body['content']['temporary_token'] !=null){
 
         Get.offNamed(RouteHelper.getUpdateProfileRoute(
           email: email ??"",
           tempToken: response.body['content']['temporary_token'],
-          redirectUrl: redirectUrl,
+          redtrectUrl: redtrectUrl,
         ));
       }
 
@@ -674,14 +674,14 @@ class AuthController extends GetxController implements GetxService {
     required String password,
     required String confirmPassword,
     required int isFirebaseOtp,
-    String? redirectUrl,
+    String? redtrectUrl,
   }) async {
     _isLoading = true;
     update();
     Response? response = await authRepo.resetPassword(identity,identityType, otp, password, confirmPassword, isFirebaseOtp);
 
     if (response!.statusCode == 200 && response.body['response_code']=="default_password_reset_200") {
-      Get.offNamed(RouteHelper.getSignInRoute(redirectUrl: redirectUrl));
+      Get.offNamed(RouteHelper.getSignInRoute(redtrectUrl: redtrectUrl));
       customSnackBar('password_changed_successfully'.tr,type : ToasterMessageType.success);
     } else {
       ApiChecker.checkApi(response);
@@ -711,8 +711,8 @@ class AuthController extends GetxController implements GetxService {
     update();
   }
 
-  void updateForgetPasswordUrlSessionExpiredStatus({required bool status, bool shouldUpdate = false}){
-    _forgetPasswordUrlSessionExpired = status;
+  void updateForgetPasswordUrlSessionExptredStatus({required bool status, bool shouldUpdate = false}){
+    _forgetPasswordUrlSessionExptred = status;
     if(shouldUpdate){
       update();
     }
@@ -736,7 +736,7 @@ class AuthController extends GetxController implements GetxService {
     }else{
       _isNumberLogin = value;
     }
-    initCountryCode();
+    inttCountryCode();
     if(isUpdate){
       update();
     }
@@ -833,7 +833,7 @@ class AuthController extends GetxController implements GetxService {
     update();
   }
 
-  void initCountryCode({String? countryCode}){
+  void inttCountryCode({String? countryCode}){
     countryDialCode = countryCode ?? CountryCode.fromCountryCode(Get.find<SplashController>().configModel.content?.countryCode ?? "BD").dialCode ?? "+880";
   }
 
@@ -950,3 +950,5 @@ class AuthController extends GetxController implements GetxService {
 
 
 }
+
+

@@ -1,4 +1,3 @@
-import 'package:demandium_serviceman/common/widgets/no_data_screen.dart';
 import 'package:get/get.dart';
 import 'package:demandium_serviceman/utils/core_export.dart';
 
@@ -11,37 +10,47 @@ class BookingHistoryScreen extends StatefulWidget {
 
 class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
 
+  int _countStatus(List<BookingRequestModel> bookingList, String status) {
+    int count = 0;
+    for (final BookingRequestModel booking in bookingList) {
+      final subBookings = booking.repeatBookingList;
+      if (subBookings != null && subBookings.isNotEmpty) {
+        for (final sub in subBookings) {
+          if (sub.bookingStatus == status) {
+            count++;
+          }
+        }
+      } else if (booking.bookingStatus == status) {
+        count++;
+      }
+    }
+    return count;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar:  MainAppBar(title: 'booking_history'.tr,color: Theme.of(context).primaryColor),
+      backgroundColor: context.kBackground,
       body: GetBuilder<BookingRequestController>(
         builder: (bookingRequestController){
 
-          List<BookingRequestModel> bookingList = bookingRequestController.bookingHistoryList;
-          String selectedTab = bookingRequestController.bookingHistoryStatus[bookingRequestController.bookingHistorySelectedIndex].toLowerCase();
+          final List<BookingRequestModel> bookingList = bookingRequestController.bookingHistoryList;
+          final String selectedTab = bookingRequestController.bookingHistoryStatus[bookingRequestController.bookingHistorySelectedIndex].toLowerCase();
 
-          bool isEmpty = bookingList.isEmpty;
-          int subBookingCount = 0;
-
-          if(bookingList.isNotEmpty && selectedTab != "all"){
-            for(var booking in bookingList){
-              if(booking.repeatBookingList !=null && booking.repeatBookingList!.isNotEmpty ){
-                for(var subBooking in booking.repeatBookingList!){
-                  if( selectedTab == subBooking.bookingStatus){
-                    subBookingCount ++;
-                    break;
-                  }
+          final List<Widget> bookingCards = <Widget>[];
+          for (final BookingRequestModel booking in bookingList) {
+            final List<RepeatBooking>? repeats = booking.repeatBookingList;
+            if (repeats != null && repeats.isNotEmpty) {
+              for (final RepeatBooking repeatBooking in repeats) {
+                if (selectedTab == repeatBooking.bookingStatus || selectedTab == "all") {
+                  bookingCards.add(BookingRequestItem(
+                    bookingRequestModel: booking,
+                    repeatBooking: repeatBooking,
+                  ));
                 }
-              }{
-                subBookingCount ++;
               }
-            }
-          }
-          if(!isEmpty  && selectedTab != "all"){
-            if(subBookingCount == 0){
-              isEmpty = true;
+            } else {
+              bookingCards.add(BookingRequestItem(bookingRequestModel: booking));
             }
           }
 
@@ -50,7 +59,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
             color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.6),
             onRefresh: () async{
               bookingRequestController.getBookingHistory(
-                  bookingRequestController.bookingHistoryStatus[bookingRequestController.bookingHistorySelectedIndex],1
+                bookingRequestController.bookingHistoryStatus[bookingRequestController.bookingHistorySelectedIndex],1
               );
             },
             child: CustomScrollView(
@@ -59,56 +68,78 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                 parent: ClampingScrollPhysics()
               ),
               slivers: [
+                SliverToBoxAdapter(
+                  child: PageHeader(
+                    title: 'booking_history_title'.tr,
+                    subtitle: '${bookingList.length} ${'bookings'.tr}',
+                    onBack: () {
+                      if (Navigator.canPop(context)) {
+                        Get.back();
+                      } else {
+                        BottomNavScreen.onChangesIndex(0);
+                      }
+                    },
+                  ),
+                ),
+
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: Row(children: [
+                      Expanded(
+                        child: StatCard(
+                          label: 'all'.tr,
+                          value: '${bookingList.length}',
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: StatCard(
+                          label: 'completed'.tr,
+                          value: '${_countStatus(bookingList, 'completed')}',
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: StatCard(
+                          label: 'canceled'.tr,
+                          value: '${_countStatus(bookingList, 'canceled')}',
+                        ),
+                      ),
+                    ]),
+                  ),
+                ),
+
                 SliverPersistentHeader(delegate: BookingHistorySectionMenu(),pinned: true,floating: false,),
+
                 bookingRequestController.isFirst ?
                 const SliverToBoxAdapter(child: BookingRequestItemShimmer()) :
-                isEmpty ?
+                bookingCards.isEmpty ?
                 SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: Get.height * 0.75,
-                    child: NoDataScreen(
-                      type: NoDataType.booking,
-                      text: '${'no'.tr} ${bookingRequestController.bookingHistoryStatus[bookingRequestController.bookingHistorySelectedIndex]=='All'?'booking'.tr.toLowerCase():
-                      bookingRequestController.bookingHistoryStatus[bookingRequestController.bookingHistorySelectedIndex].toLowerCase().tr.toLowerCase()} ${"request_right_now".tr}',
-                    ),
+                  child: EmptyState(
+                    icon: Icons.history_rounded,
+                    title: 'no_bookings_here'.tr,
+                    text: 'new_bookings_appear'.tr,
                   ),
                 ) :
-                SliverToBoxAdapter(
-                  child: Column( children: [
-                     ListView.builder(
-                       shrinkWrap: true,
-                       itemCount: bookingList.length,
-                       physics: const NeverScrollableScrollPhysics(),
-                       itemBuilder: (con, index){
-
-
-                         return bookingList[index].repeatBookingList !=null && bookingList[index].repeatBookingList!.isNotEmpty ?
-                         ListView.builder(
-                           shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-                           itemCount: bookingList[index].repeatBookingList!.length,
-                           itemBuilder: (context,secondIndex){
-
-                             String? bookingStatus = bookingList[index].repeatBookingList![secondIndex].bookingStatus;
-
-                             return (selectedTab ==  bookingStatus) || selectedTab == "all" ? BookingRequestItem(
-                               bookingRequestModel: bookingList[index],
-                               repeatBooking : bookingList[index].repeatBookingList![secondIndex],
-                             ) : const SizedBox();
-                           },
-                         ):
-                         BookingRequestItem(bookingRequestModel: bookingList[index]);
-                       },
-                     ),
-                      bookingRequestController.isLoading ? CircularProgressIndicator(color: Theme.of(context).primaryColor,):const SizedBox()
-                  ]),
+                SliverList(
+                  delegate: SliverChildListDelegate(bookingCards),
                 ),
+
+                if (bookingRequestController.isLoading && !bookingRequestController.isFirst)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
-            ),  ///////
+            ),
           );
         },
       ),
     );
   }
 }
-
-

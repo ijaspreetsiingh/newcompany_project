@@ -1,4 +1,4 @@
-import 'package:jdds/api/remote/client_api.dart';
+﻿import 'package:jdds/api/remote/client_api.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/app_constants.dart';
 
@@ -14,3 +14,4 @@ class ScheduleRepo extends GetxService {
     });
   }
 }
+

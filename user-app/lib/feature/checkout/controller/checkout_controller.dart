@@ -44,8 +44,12 @@ class CheckOutController extends GetxController implements GetxService{
  List<PaymentMethodButton> _othersPaymentList = [];
  List<PaymentMethodButton> get othersPaymentList => _othersPaymentList;
 
- List<OfflinePaymentModel>  _offlinePaymentModelList = [];
- List<OfflinePaymentModel>  get offlinePaymentModelList => _offlinePaymentModelList;
+  List<OfflinePaymentModel>  _offlinePaymentModelList = [];
+  List<OfflinePaymentModel>  get offlinePaymentModelList => _offlinePaymentModelList;
+
+  Map<String, dynamic>? _providerPaymentConfig;
+  Map<String, dynamic>? get providerPaymentConfig => _providerPaymentConfig;
+  String? _providerPaymentConfigFor;
 
 
 
@@ -154,11 +158,20 @@ class CheckOutController extends GetxController implements GetxService{
 
  Future<void> placeBookingRequest({
    required String paymentMethod,String? schedule, int isPartial = 0, required AddressModel address,
-   String? offlinePaymentId, String? customerInformation, double? bookingAmount, int? selectedOfflinePaymentIndex
+   String? offlinePaymentId, String? customerInformation, double? bookingAmount, int? selectedOfflinePaymentIndex,
+   bool fromNewFlow = false
  })async{
 
-   String zoneId = Get.find<LocationController>().getUserAddress()!.zoneId.toString();
-   var scheduleController = Get.find<ScheduleController>();
+    // Zone: booking address (friend/dusra location) ka zone — backend usi
+    // zone ke hisaab se service/price resolve kare.
+    final String addressZone = (address.zoneId?.isNotEmpty ?? false) &&
+            address.zoneId != 'null'
+        ? address.zoneId.toString()
+        : '';
+    String zoneId = addressZone.isNotEmpty
+        ? addressZone
+        : (Get.find<LocationController>().getUserAddress()?.zoneId ?? '').toString();
+    var scheduleController = Get.find<ScheduleController>();
 
    ServiceType serviceType = scheduleController.selectedServiceType;
    RepeatBookingType repeatBookingType = scheduleController.selectedRepeatBookingType;
@@ -190,7 +203,9 @@ class CheckOutController extends GetxController implements GetxService{
         bookingType: repeatBookingType.name,
         dates: repeatBookingDates,
         newUserInfo: newUserInfo,
-        serviceLocation: Get.find<LocationController>().selectedServiceLocationType.name
+        serviceLocation: Get.find<FriendLocationController>().isBookingForOther
+            ? ServiceLocationType.customer.name
+            : Get.find<LocationController>().selectedServiceLocationType.name
       );
       if(response.statusCode == 200 && response.body["response_code"] == "booking_place_success_200"){
         _isPlacedOrderSuccessfully = true;
@@ -209,7 +224,12 @@ class CheckOutController extends GetxController implements GetxService{
           try {
             placedBookingId = response.body['content']['booking_id'][0].toString();
           } catch (_) {}
-          Get.offNamed(RouteHelper.getOrderSuccessRoute('success', bookingId: placedBookingId));
+          if(fromNewFlow){
+            // New design flow: confirmation final screen (real booking id ke sath)
+            Get.offNamed(RouteHelper.getConfirmationFinalRoute());
+          }else{
+            Get.offNamed(RouteHelper.getOrderSuccessRoute('success', bookingId: placedBookingId));
+          }
         }
 
         customSnackBar('${response.body['message']}'.tr,type : ToasterMessageType.success,margin: 55);
@@ -543,8 +563,107 @@ class CheckOutController extends GetxController implements GetxService{
         ));
       }
     }
+
+    _applyProviderPaymentRestrictions();
+
+    final String? cartProviderId = _currentCartProviderId();
+    if (_providerPaymentConfig == null || _providerPaymentConfigFor != cartProviderId) {
+      fetchProviderPaymentConfig(cartProviderId);
+    }
+
     if(shouldUpdate){
       update();
+    }
+  }
+
+  String? _currentCartProviderId() {
+    try {
+      final List<CartModel> cartList = Get.find<CartController>().cartList;
+      if (cartList.isNotEmpty) {
+        return cartList.first.provider?.id;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Per-provider payment config (allowed gateways + cash/wallet/offline +
+  /// booking fee). Fetch hone par list/selection dobara restrict hoti hai;
+  /// fail hone par global behaviour (config == null) rehta hai.
+  Future<void> fetchProviderPaymentConfig(String? providerId, {bool force = false}) async {
+    if (!force &&
+        _providerPaymentConfig != null &&
+        _providerPaymentConfigFor == providerId) {
+      return;
+    }
+
+    try {
+      final Response response = await checkoutRepo.getProviderPaymentConfig(providerId);
+      if (response.statusCode == 200 && response.body['response_code'] == 'default_200') {
+        final dynamic content = response.body['content'];
+        _providerPaymentConfig = content is Map ? Map<String, dynamic>.from(content) : null;
+      } else {
+        _providerPaymentConfig = null;
+      }
+    } catch (_) {
+      _providerPaymentConfig = null;
+    }
+    _providerPaymentConfigFor = providerId;
+
+    _applyProviderPaymentRestrictions();
+    update();
+  }
+
+  void _applyProviderPaymentRestrictions() {
+    final Map<String, dynamic>? config = _providerPaymentConfig;
+    if (config == null) return;
+
+    bool flag(dynamic value) => value == 1 || value == '1' || value == true;
+
+    final bool cashOk = flag(config['cash_after_service']);
+    final bool walletOk = flag(config['wallet_payment']);
+    final bool offlineOk = flag(config['offline_payment']);
+    final bool digitalOk = flag(config['digital_payment']);
+    final Set<String> allowedGateways = <String>{
+      for (final dynamic gateway in (config['payment_gateways'] as List? ?? []))
+        if (gateway is Map) '${gateway['gateway']}',
+    };
+
+    _othersPaymentList.removeWhere((PaymentMethodButton button) =>
+        (button.paymentMethodName == PaymentMethodName.cos && !cashOk) ||
+        (button.paymentMethodName == PaymentMethodName.walletMoney && !walletOk));
+
+    if (!digitalOk) {
+      _digitalPaymentList = [];
+    } else {
+      _digitalPaymentList.removeWhere((DigitalPaymentMethod method) {
+        final String gateway = method.gateway ?? '';
+        if (gateway == 'offline') return !offlineOk;
+        return !allowedGateways.contains(gateway);
+      });
+    }
+
+    if (selectedPaymentMethod == PaymentMethodName.cos && !cashOk) {
+      selectedPaymentMethod = PaymentMethodName.none;
+    }
+    if (selectedPaymentMethod == PaymentMethodName.walletMoney && !walletOk) {
+      selectedPaymentMethod = PaymentMethodName.none;
+    }
+    if (selectedPaymentMethod == PaymentMethodName.offline && !offlineOk) {
+      selectedPaymentMethod = PaymentMethodName.none;
+      _selectedOfflineMethod = null;
+    }
+    if (selectedPaymentMethod == PaymentMethodName.digitalPayment) {
+      final String gateway = _selectedDigitalPaymentMethod?.gateway ?? '';
+      final bool stillAllowed = gateway == 'offline'
+          ? offlineOk
+          : allowedGateways.contains(gateway);
+      if (!stillAllowed) {
+        selectedPaymentMethod = PaymentMethodName.none;
+        _selectedDigitalPaymentMethod = null;
+      }
+    }
+    if (selectedPaymentMethod == PaymentMethodName.none) {
+      _autoSelectPaymentMethod();
     }
   }
 
@@ -626,3 +745,5 @@ class CheckOutController extends GetxController implements GetxService{
 
 
 }
+
+

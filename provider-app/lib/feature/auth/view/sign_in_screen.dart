@@ -49,7 +49,7 @@ class SignInScreenState extends State<SignInScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: InkColors.background,
         body: GetBuilder<SplashController>(
           builder: (splashController) {
             return GetBuilder<AuthController>(
@@ -62,9 +62,9 @@ class SignInScreenState extends State<SignInScreen> {
                       alignment: Alignment.centerLeft,
                       child: IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.arrow_back_ios_new_rounded,
-                          color: Color(0xff101828),
+                          color: InkColors.foreground,
                           size: 20,
                         ),
                       ),
@@ -85,7 +85,7 @@ class SignInScreenState extends State<SignInScreen> {
                                 "Let's Sign You In",
                                 style: robotoBold.copyWith(
                                   fontSize: 28,
-                                  color: const Color(0xff101828),
+                                  color: InkColors.foreground,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -93,7 +93,7 @@ class SignInScreenState extends State<SignInScreen> {
                                 "Welcome back, you've been missed!",
                                 style: robotoRegular.copyWith(
                                   fontSize: 15,
-                                  color: const Color(0xff98A2B3),
+                                  color: InkColors.mutedForeground,
                                 ),
                               ),
                               const SizedBox(height: 40),
@@ -173,13 +173,13 @@ class SignInScreenState extends State<SignInScreen> {
                                 children: [
                                   Expanded(
                                     child: CheckboxListTile(
-                                      checkColor: Colors.white,
-                                      activeColor: const Color(0xFF2563EB),
+                                      activeColor: Get.isDarkMode ? const Color(0xFFEDEDED) : const Color(0xFF111111),
+                                      checkColor: Get.isDarkMode ? const Color(0xFF0A0A0A) : Colors.white,
                                       contentPadding: const EdgeInsets.all(0),
                                       title: Text(
                                         'remember_me'.tr,
                                         style: robotoRegular.copyWith(
-                                          color: const Color(0xff475467),
+                                          color: Theme.of(context).hintColor,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -194,7 +194,7 @@ class SignInScreenState extends State<SignInScreen> {
                                   TextButton(
                                     style: TextButton.styleFrom(
                                       minimumSize: const Size(1, 40),
-                                      backgroundColor: Colors.white,
+                                      backgroundColor: InkColors.card,
                                     ),
                                     onPressed: () {
                                       if (Get.find<SplashController>()
@@ -222,7 +222,7 @@ class SignInScreenState extends State<SignInScreen> {
                                       'forgot_password?'.tr,
                                       style: robotoSemiBold.copyWith(
                                         fontSize: 14,
-                                        color: const Color(0xFF2563EB),
+                                        color: Theme.of(context).colorScheme.primary,
                                       ),
                                     ),
                                   ),
@@ -233,8 +233,8 @@ class SignInScreenState extends State<SignInScreen> {
                               CustomButton(
                                 btnTxt: 'sign_in'.tr,
                                 isLoading: authController.isLoading ?? false,
-                                color: const Color(0xFF2563EB),
-                                textColor: Colors.white,
+                                color: Theme.of(context).colorScheme.primary,
+                                textColor: Get.isDarkMode ? const Color(0xFF0A0A0A) : Colors.white,
                                 onPressed: () => _login(authController),
                               ),
 
@@ -250,7 +250,7 @@ class SignInScreenState extends State<SignInScreen> {
                                     Expanded(
                                       child: Container(
                                         height: 1,
-                                        color: const Color(0xffD0D5DD),
+                                        color: InkColors.border,
                                       ),
                                     ),
                                     Padding(
@@ -260,7 +260,7 @@ class SignInScreenState extends State<SignInScreen> {
                                       child: Text(
                                         'or'.tr,
                                         style: robotoSemiBold.copyWith(
-                                          color: const Color(0xff98A2B3),
+                                          color: InkColors.mutedForeground,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -268,7 +268,7 @@ class SignInScreenState extends State<SignInScreen> {
                                     Expanded(
                                       child: Container(
                                         height: 1,
-                                        color: const Color(0xffD0D5DD),
+                                        color: InkColors.border,
                                       ),
                                     ),
                                   ],
@@ -282,8 +282,8 @@ class SignInScreenState extends State<SignInScreen> {
                                       text: TextSpan(
                                         text:
                                             '${'do_not_have_an_account'.tr}  ',
-                                        style: const TextStyle(
-                                          color: Color(0xff646464),
+                                        style: TextStyle(
+                                          color: InkColors.mutedForeground,
                                           fontSize: 14,
                                         ),
                                         children: [
@@ -297,7 +297,7 @@ class SignInScreenState extends State<SignInScreen> {
                                             text: 'register_here'.tr,
                                             style: robotoSemiBold.copyWith(
                                               fontSize: 14,
-                                              color: const Color(0xFF2563EB),
+                                              color: Theme.of(context).colorScheme.primary,
                                             ),
                                           ),
                                         ],
@@ -329,7 +329,7 @@ class SignInScreenState extends State<SignInScreen> {
       child: Text(
         text,
         style: robotoSemiBold.copyWith(
-          color: const Color(0xff344054),
+          color: InkColors.foreground,
           fontSize: 14,
         ),
       ),

@@ -27,8 +27,9 @@ class _ProductBottomSheetState extends State<ServiceCenterDialog> {
         width:ResponsiveHelper.isDesktop(context)? Dimensions.webMaxWidth/2:Dimensions.webMaxWidth,
         padding: const EdgeInsets.all(Dimensions.paddingSizeLarge),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(Dimensions.radiusExtraLarge)),
+          color: context.kCard,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(kRadiusLg)),
+          border: Border(top: BorderSide(color: context.kBorder, width: 1)),
         ),
         child:  Column(mainAxisSize: MainAxisSize.min, children: [
           Row(
@@ -44,24 +45,22 @@ class _ProductBottomSheetState extends State<ServiceCenterDialog> {
                 ),
               ),
               Container( height: 40, width: 40, alignment: Alignment.center,
-                decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white70.withValues(alpha:0.6),
-                    boxShadow:Get.isDarkMode ? null : [BoxShadow(color: Colors.grey[300]!, blurRadius: 2, spreadRadius: 1,)]
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: context.kMuted),
                 child: InkWell( onTap: () => Get.back(),
-                  child: const Icon(Icons.close, color: Colors.black54,),
+                  child: Icon(Icons.close_rounded, color: context.kForeground,),
                 ),
               )
             ],
           ),
 
           Padding(padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
-            child: Text( widget.service?.name??"", style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault), textAlign: TextAlign.center, maxLines: 2,),
+            child: Text( widget.service?.name??"", style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault, color: context.kForeground), textAlign: TextAlign.center, maxLines: 2,),
           ),
 
 
           Text(
             "${widget.service?.variations?.length??"0"} ${'variation_available'.tr}",
-            style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:.5)),
+            style: robotoRegular.copyWith(color: context.kMutedForeground),
           ),
 
           ConstrainedBox(
@@ -77,80 +76,85 @@ class _ProductBottomSheetState extends State<ServiceCenterDialog> {
                   return Padding(
                     padding:  const EdgeInsets.symmetric(vertical:Dimensions.paddingSizeSmall),
                     child: Container(
-                      padding: const EdgeInsets.fromLTRB(Dimensions.paddingSizeDefault,Dimensions.paddingSizeExtraSmall,0,Dimensions.paddingSizeExtraSmall),
-                      decoration: BoxDecoration(color: Theme.of(context).cardColor, boxShadow: Get.find<ThemeController>().darkTheme ? null : shadow,
-                        borderRadius: const BorderRadius.all(Radius.circular(Dimensions.paddingSizeDefault),),
+                      padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+                      decoration: BoxDecoration(
+                        color: context.kCard,
+                        borderRadius: const BorderRadius.all(Radius.circular(kRadiusMd),),
+                        border: Border.all(color: context.kBorder, width: 1),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text("${widget.service?.variations?[index].variantKey.toString().capitalizeFirst}".replaceAll('-', ' '), style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall),
-                                  maxLines: 2, overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
-                                Directionality(
-                                  textDirection: TextDirection.ltr,
-                                  child: Text( PriceConverter.convertPrice(widget.service?.variations?[index].price,isShowLongPrice:true),
-                                      style: robotoMedium.copyWith(color:  Get.isDarkMode? Theme.of(context).primaryColorLight: Theme.of(context).primaryColor, fontSize: Dimensions.fontSizeSmall)),
-                                ),
-                              ],
-                            ),
+                      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text("${widget.service?.variations?[index].variantKey.toString().capitalizeFirst}".replaceAll('-', ' '), style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall, color: context.kForeground),
+                                maxLines: 2, overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
+                              Directionality(
+                                textDirection: TextDirection.ltr,
+                                child: Text( PriceConverter.convertPrice(widget.service?.variations?[index].price,isShowLongPrice:true),
+                                    style: robotoMedium.copyWith(color: context.kForeground, fontSize: Dimensions.fontSizeSmall)),
+                              ),
+                            ],
                           ),
+                        ),
 
-                          Expanded( flex:1,
-                            child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                              widget.service!.variations![index].quantity > 0 ? InkWell(
-                                onTap: (){
-                                  bookingEditController.updatedVariationQuantity(widget.selectedServiceIndex, index, increment: false);
-                                },
-                                child: Container(
-                                  height: 30, width: 30,
-                                  margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
-                                  decoration: BoxDecoration(shape: BoxShape.circle, color:  Theme.of(context).colorScheme.secondary),
-                                  alignment: Alignment.center,
-                                  child: Icon(Icons.remove , size: 15, color:Theme.of(context).cardColor,),
+                        Expanded( flex:1,
+                          child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                            widget.service!.variations![index].quantity > 0 ? InkWell(
+                              onTap: (){
+                                bookingEditController.updatedVariationQuantity(widget.selectedServiceIndex, index, increment: false);
+                              },
+                              child: Container(
+                                height: 30, width: 30,
+                                margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: context.kCard,
+                                    border: Border.all(color: context.kInputBorder, width: 1)
                                 ),
-                              ) : const SizedBox(),
+                                alignment: Alignment.center,
+                                child: Icon(Icons.remove_rounded , size: 15, color: context.kForeground,),
+                              ),
+                            ) : const SizedBox(),
 
-                              widget.service!.variations![index].quantity > 0 ? Text(
-                                widget.service!.variations![index].quantity.toString(),
-                              ) : const SizedBox(),
+                            widget.service!.variations![index].quantity > 0 ? Text(
+                              widget.service!.variations![index].quantity.toString(),
+                              style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault, color: context.kForeground),
+                            ) : const SizedBox(),
 
-                              GestureDetector(
-                                onTap: (){
-                                  bookingEditController.updatedVariationQuantity(widget.selectedServiceIndex, index, increment: true);
-                                },
-                                child: Container(
-                                  height: 30, width: 30,
-                                  margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
-                                  decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color:  Theme.of(context).colorScheme.secondary
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Icon(
-                                    Icons.add ,
-                                    size: 15,
-                                    color:Theme.of(context).cardColor,
-                                  ),
+                            GestureDetector(
+                              onTap: (){
+                                bookingEditController.updatedVariationQuantity(widget.selectedServiceIndex, index, increment: true);
+                              },
+                              child: Container(
+                                height: 30, width: 30,
+                                margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: context.kCard,
+                                    border: Border.all(color: context.kInputBorder, width: 1)
                                 ),
-                              )
-                            ]),
-                          ),
-                        ]),
-                      ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.add_rounded ,
+                                  size: 15,
+                                  color: context.kForeground,
+                                ),
+                              ),
+                            )
+                          ]),
+                        ),
+                      ]),
                     ),
                   );
                 }),
           ),
 
           CustomButton(
-            height: ResponsiveHelper.isDesktop(context) ? 55 : 45,
+            height: 48,
             onPressed: bookingEditController.isCartButtonActive? () async {
               await bookingEditController.addMultipleCartItem(widget.selectedServiceIndex);
               Get.back();
@@ -164,4 +168,3 @@ class _ProductBottomSheetState extends State<ServiceCenterDialog> {
     });
   }
 }
-

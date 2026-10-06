@@ -8,13 +8,19 @@ use Modules\CategoryManagement\Http\Controllers\Api\V1\Admin\SubCategoryControll
 use Modules\CategoryManagement\Http\Controllers\Api\V1\Provider\CategoryController as ProviderCategoryController;
 
 Route::group(['prefix' => 'admin', 'as'=>'admin.', 'namespace' => 'Api\V1\Admin', 'middleware'=>['auth:api']], function () {
-//    Route::resource('category', 'CategoryController', ['only' => ['index', 'store', 'edit', 'update']]);
+    Route::post('category/store', [AdminCategoryController::class, 'store']);
+    Route::get('category/edit/{id}', [AdminCategoryController::class, 'edit']);
+    Route::put('category/update/{id}', [AdminCategoryController::class, 'update']);
+    Route::get('category/index', [AdminCategoryController::class, 'index']);
     Route::put('category/status/update', [AdminCategoryController::class, 'status_update']);
     Route::delete('category/delete', [AdminCategoryController::class, 'destroy']);
     Route::get('category/search', [AdminCategoryController::class, 'search']);
     Route::get('category/childes', [AdminCategoryController::class, 'childes']);
 
-//    Route::resource('sub-category', 'SubCategoryController', ['only' => ['index', 'store', 'edit', 'update']]);
+    Route::post('sub-category/store', [AdminSubCategoryController::class, 'store']);
+    Route::get('sub-category/edit/{id}', [AdminSubCategoryController::class, 'edit']);
+    Route::put('sub-category/update/{id}', [AdminSubCategoryController::class, 'update']);
+    Route::get('sub-category/index', [AdminSubCategoryController::class, 'index']);
     Route::put('sub-category/status/update', [AdminSubCategoryController::class, 'status_update']);
     Route::delete('sub-category/delete', [AdminSubCategoryController::class, 'destroy']);
 });

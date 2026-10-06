@@ -1,4 +1,4 @@
-
+﻿
 class Invoice {
   final InvoiceInfo info;
   final Provider provider;
@@ -92,3 +92,4 @@ class ServicemanInvoice{
     required this.phone,
   });
 }
+

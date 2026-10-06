@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\CategoryManagement\Entities\Category;
 use Modules\ServiceManagement\Entities\Service;
 use Modules\ZoneManagement\Entities\Zone;
+use Modules\ProviderManagement\Entities\Provider;
 
 class DiscountType extends Model
 {
@@ -27,6 +28,11 @@ class DiscountType extends Model
     public function zone(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Zone::class, 'type_wise_id');
+    }
+
+    public function provider(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Provider::class, 'type_wise_id');
     }
 
     public function discount(): \Illuminate\Database\Eloquent\Relations\BelongsTo

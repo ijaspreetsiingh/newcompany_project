@@ -17,6 +17,7 @@ use Modules\ReviewModule\Entities\Review;
 use Modules\ServiceManagement\Entities\FavoriteService;
 use Modules\ServiceManagement\Entities\Service;
 use Modules\ServiceManagement\Entities\Variation;
+use Modules\ZoneManagement\Entities\Zone;
 
 class ProviderController extends Controller
 {
@@ -59,25 +60,50 @@ class ProviderController extends Controller
             'sort_by' => 'in:asc,desc,default,popular',
             'service_availability' => 'in:0,1',
             'category_ids' => 'array',
-            'category_ids.*' => 'uuid',
+            'category_ids.*' => 'exists:categories,id',
             'rating' => '',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         if ($validator->fails()) {
             return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
         }
 
-        $providersIds =  $this->provider->ofStatus(1)->pluck('id');
+        $searchLat = $request['latitude'] ?? $request['lat'] ?? null;
+        $searchLng = $request['longitude'] ?? $request['lng'] ?? null;
+        $hasGeoLocation = $searchLat !== null && $searchLng !== null && $searchLat !== '' && $searchLng !== '';
+        $geoContext = $hasGeoLocation ? search_geo_context() : null;
 
-        $eligibleProviderIds = $providersIds->filter(function ($id) {
-            return nextBookingEligibility($id);
-        })->values()->all();
+        // N+1 fix: ek hi query me sab providers ka subscription_required laao,
+        // phir eligibility filter karo (pehle har provider ke liye alag query jaati thi)
+        $activeProviders = $this->provider->ofStatus(1)->get(['id', 'subscription_required']);
+
+        $eligibleProviderIds = $activeProviders->filter(function ($activeProvider) {
+            return nextBookingEligibility($activeProvider->id, $activeProvider);
+        })->pluck('id')->values()->all();
 
 
-        $providersQuery = $this->provider->with(['owner', 'subscribed_services.sub_category' => function ($query) {
-            $query->withoutGlobalScopes();
-        }])
-            ->where('zone_id', Config::get('zone_id'))
+        $providersQuery = $this->provider->with([
+            'owner',
+            'storage',
+            'subscribed_services.sub_category' => function ($query) {
+                $query->withoutGlobalScopes();
+            },
+            'subscribed_services.sub_category.translations',
+            'subscribed_services.sub_category.storage',
+        ])
+            ->when($geoContext === null, function ($query) {
+                $query->where('zone_id', Config::get('zone_id'));
+            })
+            ->when($geoContext !== null, function ($query) use ($geoContext) {
+                $radiusIds = radius_provider_ids($geoContext['lat'], $geoContext['lng'], $geoContext['radius']);
+                if (empty($radiusIds)) {
+                    $query->whereRaw('1 = 0');
+                } else {
+                    $query->whereIn('providers.id', $radiusIds);
+                }
+            })
             ->whereIn('id', $eligibleProviderIds)
             ->ofStatus(1)
             ->withCount(['bookings as total_service_served' => function ($query) {
@@ -106,13 +132,31 @@ class ProviderController extends Controller
             })
             ->where('is_suspended', 0);
 
-        $providers = $providersQuery->paginate($request['limit'], ['*'], 'page', $request['offset'])->withPath('');
+        if ($hasGeoLocation) {
+            $providers = $providersQuery->get();
+            $providers = $this->sortByDistanceWithinRadius($providers, (float) $searchLat, (float) $searchLng);
+
+            $page = max(1, (int) $request['offset']);
+            $providers = new \Illuminate\Pagination\LengthAwarePaginator(
+                $providers->forPage($page, (int) $request['limit'])->values(),
+                $providers->count(),
+                (int) $request['limit'],
+                $page,
+                ['path' => '']
+            );
+        } else {
+            $providers = $providersQuery->paginate($request['limit'], ['*'], 'page', $request['offset'])->withPath('');
+        }
+
+        // N+1 fix: ek query me saare favourites (pehle har provider ke liye alag query)
+        $favoriteIds = $this->favoriteProvider
+            ->where('customer_user_id', $this->customer_user_id)
+            ->whereIn('provider_id', $providers->pluck('id'))
+            ->pluck('provider_id')
+            ->flip();
 
         foreach ($providers as $provider) {
-            $provider['is_favorite'] = $this->favoriteProvider
-                ->where('customer_user_id', $this->customer_user_id)
-                ->where('provider_id', $provider->id)
-                ->exists() ? 1 : 0;
+            $provider['is_favorite'] = $favoriteIds->has($provider->id) ? 1 : 0;
         }
 
         return response()->json(response_formatter(DEFAULT_200, $providers), 200);
@@ -164,8 +208,8 @@ class ProviderController extends Controller
         $provider['weekends'] = $weekEnds ?? [];
 
 
-        $provider['nextBookingEligibility'] = nextBookingEligibility($provider->id);
-        $provider['scheduleBookingEligibility'] = scheduleBookingEligibility($provider->id);
+        $provider['nextBookingEligibility'] = nextBookingEligibility($provider->id, $provider);
+        $provider['scheduleBookingEligibility'] = scheduleBookingEligibility($provider->id, $provider);
 
 
         $limitStatus = provider_warning_amount_calculate($provider?->owner?->account->account_payable, $provider?->owner?->account->account_receivable);
@@ -242,8 +286,23 @@ class ProviderController extends Controller
      */
     public function getProviderListBySubCategory(Request $request): JsonResponse
     {
+        $searchLat = $request['latitude'] ?? $request['lat'] ?? null;
+        $searchLng = $request['longitude'] ?? $request['lng'] ?? null;
+        $hasGeoLocation = $searchLat !== null && $searchLng !== null && $searchLat !== '' && $searchLng !== '';
+        $geoContext = $hasGeoLocation ? search_geo_context() : null;
+
         $providers = $this->provider->with(['owner'])
-            ->where('zone_id', Config::get('zone_id'))
+            ->when($geoContext === null, function ($query) {
+                $query->where('zone_id', Config::get('zone_id'));
+            })
+            ->when($geoContext !== null, function ($query) use ($geoContext) {
+                $radiusIds = radius_provider_ids($geoContext['lat'], $geoContext['lng'], $geoContext['radius']);
+                if (empty($radiusIds)) {
+                    $query->whereRaw('1 = 0');
+                } else {
+                    $query->whereIn('providers.id', $radiusIds);
+                }
+            })
             ->whereHas('subscribed_services', function ($query) use ($request) {
                 $query->where('sub_category_id', $request['sub_category_id']);
             })
@@ -273,7 +332,48 @@ class ProviderController extends Controller
             $eligibleProviders[] = $provider;
         }
 
+        if ($hasGeoLocation) {
+            $eligibleProviders = $this->sortByDistanceWithinRadius(collect($eligibleProviders), (float) $searchLat, (float) $searchLng)->values();
+        }
+
         return response()->json(response_formatter(DEFAULT_200, $eligibleProviders), 200);
+    }
+
+    /**
+     * Zone ka initial + maximum search radius (app ke progressive-radius popup flow ke liye).
+     * Zone na ho to defaults: initial 5 km, max 15 km.
+     */
+    public function searchRadius(): JsonResponse
+    {
+        $zoneId = Config::get('zone_id');
+        $zone = !empty($zoneId) ? Zone::query()->find($zoneId) : null;
+
+        return response()->json(response_formatter(DEFAULT_200, [
+            'initial_radius' => (float) ($zone?->provider_search_radius ?? 5),
+            'max_radius' => (float) ($zone?->max_search_radius ?? 15),
+            'zone_id' => $zone?->id,
+        ]), 200);
+    }
+
+    /**
+     * Customer coordinates ke hisab se providers ko distance se sort karo.
+     * Radius filter query-level ho chuka hai (radius_provider_ids — provider ki
+     * location ya uske serviceman ki live location, dono count hote hain),
+     * isliye yahan sirf distance attach + nearest-first sort.
+     * Jiske paas coordinates nahi wo last (distance null).
+     */
+    private function sortByDistanceWithinRadius($providers, float $lat, float $lng)
+    {
+        $providers = $providers->map(function ($provider) use ($lat, $lng) {
+            [$providerLat, $providerLng] = getProviderCoordinates($provider);
+            $provider->distance = ($providerLat !== null && $providerLng !== null)
+                ? round(calculateDistance($lat, $lng, $providerLat, $providerLng), 2)
+                : null;
+
+            return $provider;
+        });
+
+        return $providers->sortBy(fn ($provider) => $provider->distance ?? PHP_FLOAT_MAX)->values();
     }
 
     private function variationMapper($services)
@@ -350,7 +450,7 @@ class ProviderController extends Controller
             'limit' => 'required|numeric|min:1|max:200',
             'offset' => 'required|numeric|min:1|max:100000',
             'service_ids' => 'array',
-            'service_ids.*' => 'uuid',
+            'service_ids.*' => 'exists:services,id',
         ]);
 
         if ($validator->fails()) {

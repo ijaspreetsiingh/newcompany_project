@@ -21,3 +21,4 @@ class PagerDot extends StatelessWidget {
     );
   }
 }
+

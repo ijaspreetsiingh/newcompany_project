@@ -101,6 +101,7 @@
                                         <th>{{translate('coupon_code')}}</th>
                                         <th>{{translate('discount_type')}}</th>
                                         <th>{{translate('zones')}}</th>
+                                        <th>{{translate('providers')}}</th>
                                         <th>{{translate('Limit_per_user')}}</th>
                                         @can('coupon_manage_status')
                                             <th>{{translate('status')}}</th>
@@ -122,6 +123,15 @@
                                                 @foreach($item->discount->zone_types as $type)
                                                     {{$type->zone?$type->zone->name.',':''}}
                                                 @endforeach
+                                            </td>
+                                            <td>
+                                                @if($item->discount->provider_types->isEmpty())
+                                                    {{translate('all')}}
+                                                @else
+                                                    @foreach($item->discount->provider_types as $type)
+                                                        {{$type->provider?$type->provider->company_name.',':''}}
+                                                    @endforeach
+                                                @endif
                                             </td>
                                             <td>{{$item->discount?->limit_per_user}}</td>
                                             @can('coupon_manage_status')

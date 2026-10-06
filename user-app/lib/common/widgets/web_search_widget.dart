@@ -89,3 +89,5 @@ class SearchWidgetWeb extends GetView<AllSearchController> {
     );
   }
 }
+
+

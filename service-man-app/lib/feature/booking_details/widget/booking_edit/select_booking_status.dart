@@ -8,38 +8,37 @@ class BookingStatusDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return  GetBuilder<BookingEditController>(builder: (bookingEditController){
       return Container(width: Get.width,
-        padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeLarge),
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
         margin: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
         decoration: BoxDecoration(
-            color: Theme.of(context).cardColor.withValues(alpha:0.1),
-            borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
-            border: Border.all(color: Theme.of(context).disabledColor,width: 1)
+            color: context.kCard,
+            borderRadius: BorderRadius.circular(kRadiusMd),
+            border: Border.all(color: context.kInputBorder, width: 1)
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton(
-              dropdownColor: Theme.of(context).cardColor,
-              borderRadius: BorderRadius.circular(5),
+              dropdownColor: context.kCard,
+              borderRadius: BorderRadius.circular(kRadiusSm),
               elevation: 2,
               hint: Text(bookingEditController.selectedBookingStatus ==''?
-              "select_identity_type".tr : "${'booking_status'.tr} : ${bookingEditController.selectedBookingStatus.tr}",
+              "select_identity_type".tr : bookingEditController.selectedBookingStatus.tr,
                 style: robotoRegular.copyWith(
+                    fontSize: 14,
                     color: bookingEditController.selectedBookingStatus ==''?
-                    Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.6):
-                    Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8)
+                    context.kMutedForeground :
+                    context.kForeground
                 ),
               ),
-              icon: const Icon(Icons.keyboard_arrow_down),
+              icon: Icon(Icons.keyboard_arrow_down_rounded, color: context.kMutedForeground, size: 20,),
               items: bookingEditController.statusTypeList.map((String items) {
                 return DropdownMenuItem(
                   value: items,
-                  child: Row(
-                    children: [
-                      Text(items.tr,
-                        style: robotoRegular.copyWith(
-                          color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                        ),
-                      ),
-                    ],
+                  child: Text(items.tr,
+                    style: robotoRegular.copyWith(
+                      fontSize: 14,
+                      color: context.kForeground,
+                    ),
                   ),
                 );
               }).toList(),

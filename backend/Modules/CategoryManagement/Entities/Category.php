@@ -47,6 +47,63 @@ class Category extends Model
         $query->where(['position' => $value]);
     }
 
+    /**
+     * Provider ki category assignment (subscribed_services).
+     */
+    public function subscribed_services(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\Modules\ProviderManagement\Entities\SubscribedService::class, 'category_id');
+    }
+
+    /**
+     * Provider ki sub-category level assignment (subscribed_services.sub_category_id).
+     * Note: sub-level rows me category_id PARENT category ka hota hai, isliye
+     * sub_category_id wala alag relation zaroori hai.
+     */
+    public function sub_category_assignments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\Modules\ProviderManagement\Entities\SubscribedService::class, 'sub_category_id');
+    }
+
+    /**
+     * Customer visibility: sirf wo category/sub-category dikhegi jiske liye current zone me
+     * koi serviceable (active/approved/non-suspended) provider assigned ho.
+     * Rules: subcategory assignment ki priority > category assignment (complete) fallback.
+     * Zone header na ho to filter skip (splash/fresh-install safe).
+     */
+    public function scopeVisibleInCurrentZone($query)
+    {
+        $zoneId = Config::get('zone_id');
+        if (empty($zoneId) && search_geo_context() === null) {
+            return $query;
+        }
+
+        $eligible = subscribed_assignment_query($zoneId);
+
+        return $query->where(function ($q) use ($eligible) {
+            // 1) Category-level: subscribed_services.category_id = categories.id
+            //    (sub-level rows bhi parent ke against count hote hain → parent visible)
+            $q->whereHas('subscribed_services', $eligible)
+
+                // 2) Sub-category-level priority: subscribed_services.sub_category_id = categories.id
+                ->orWhereHas('sub_category_assignments', $eligible)
+
+                // 3) Fallback: is sub-category ka koi active sub-assignment nahi,
+                //    aur parent category 'complete' basis par assigned hai
+                ->orWhere(function ($qq) use ($eligible) {
+                    $qq->whereDoesntHave('sub_category_assignments', function ($subQuery) {
+                            $subQuery->ofStatus(1);
+                        })
+                        ->whereHas('parent_unfiltered', function ($parentQuery) use ($eligible) {
+                            $parentQuery->whereHas('subscribed_services', function ($catQuery) use ($eligible) {
+                                $eligible($catQuery);
+                                $catQuery->where('assign_type', 'complete');
+                            });
+                        });
+                });
+        });
+    }
+
     public function zones(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Zone::class, 'category_zone');
@@ -92,6 +149,15 @@ class Category extends Model
     public function parent(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Category::class, 'parent_id');
+    }
+
+    /**
+     * Global scopes (zone_wise_data/translate) ke bina parent — sirf serviceability
+     * fallback check ke liye, taaki parent lookup pivot/zone scope se affect na ho.
+     */
+    public function parent_unfiltered(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'parent_id')->withoutGlobalScopes();
     }
 
     public function services(): \Illuminate\Database\Eloquent\Relations\HasMany

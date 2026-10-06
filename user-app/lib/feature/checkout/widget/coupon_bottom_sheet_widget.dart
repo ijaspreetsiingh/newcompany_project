@@ -18,10 +18,10 @@ class CouponBottomSheetWidget extends StatefulWidget {
   final double orderAmount;
   const CouponBottomSheetWidget({super.key, required this.orderAmount});
   @override
-  State<CouponBottomSheetWidget> createState() => _CouponBottomSheetWidgetState();
+  State<CouponBottomSheetWidget> createState() => _CouponBottomSheetwidgetstate();
 }
 
-class _CouponBottomSheetWidgetState extends State<CouponBottomSheetWidget> {
+class _CouponBottomSheetwidgetstate extends State<CouponBottomSheetWidget> {
 
   TextEditingController couponTextController = TextEditingController();
 
@@ -222,3 +222,6 @@ class _CouponBottomSheetWidgetState extends State<CouponBottomSheetWidget> {
     );
   }
 }
+
+
+

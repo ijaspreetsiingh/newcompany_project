@@ -168,10 +168,10 @@ class AdvertisementVideoPromotionWidget extends StatefulWidget {
   const AdvertisementVideoPromotionWidget({super.key, required this.advertisement});
 
   @override
-  State<AdvertisementVideoPromotionWidget> createState() => _AdvertisementVideoPromotionWidgetState();
+  State<AdvertisementVideoPromotionWidget> createState() => _AdvertisementVideoPromotionwidgetstate();
 }
 
-class _AdvertisementVideoPromotionWidgetState extends State<AdvertisementVideoPromotionWidget> {
+class _AdvertisementVideoPromotionwidgetstate extends State<AdvertisementVideoPromotionWidget> {
 
 
   late VideoPlayerController videoPlayerController;
@@ -253,7 +253,7 @@ class _AdvertisementVideoPromotionWidgetState extends State<AdvertisementVideoPr
                       decoration: BoxDecoration(
                         gradient: LinearGradient(colors: [
                           Get.isDarkMode ? Colors.grey.shade700 : Colors.white, // Color at the beginning
-                          Get.isDarkMode ? Theme.of(context).cardColor : Colors.cyan.shade50, // Color in the middle
+                          Get.isDarkMode ? Theme.of(context).cardColor : Theme.of(context).primaryColorLight, // Color in the middle
                           Get.isDarkMode ? Colors.grey.shade800 : Colors.white,
                         ]),
                         borderRadius: const BorderRadius.only(
@@ -654,5 +654,8 @@ class AdvertisementIndicator extends StatelessWidget {
     );
   }
 }
+
+
+
 
 

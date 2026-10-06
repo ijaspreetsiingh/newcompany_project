@@ -1,72 +1,48 @@
-import 'package:demandium_provider/feature/reporting/widgets/booking_report/booking_amount_widget.dart';
-import 'package:demandium_provider/feature/reporting/widgets/booking_report/booking_count_widget.dart';
+import 'package:demandium_provider/feature/reporting/view/report_search_filter.dart';
+import 'package:demandium_provider/feature/reporting/widgets/report_panels.dart';
 import 'package:demandium_provider/util/core_export.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
-class BookingReport extends StatefulWidget {
+class BookingReport extends StatelessWidget {
   const BookingReport({super.key});
-  @override
-  State<BookingReport> createState() => _BookingReportState();
-}
 
-class _BookingReportState extends State<BookingReport> {
-
-  @override
-  void initState() {
-    super.initState();
-    Get.find<BookingReportController>().getBookingReportData(1);
+  String _dateLabel(BookingReportController controller) {
+    if (controller.dateRange == "custom_date" && controller.startDate != null && controller.endDate != null) {
+      final DateFormat format = DateFormat('dd MMM yyyy');
+      return "${format.format(controller.startDate!)} – ${format.format(controller.endDate!)}";
+    }
+    return (controller.dateRange ?? "all_time").tr;
   }
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: InkColors.background,
+      body: SafeArea(
+        child: GetBuilder<BookingReportController>(
+          initState: (_) => Get.find<BookingReportController>().getBookingReportData(1),
+          builder: (bookingReportController) {
+            return Column(children: [
 
-    JustTheController dueTooltipController = JustTheController();
-    JustTheController settledTooltipController = JustTheController();
-
-    return GetBuilder<BookingReportController>(builder: (bookingReportController){
-      return Scaffold(
-        backgroundColor: Theme.of(context).cardColor.withValues(alpha:0.97),
-        appBar: ReportAppBarView(title: 'booking_report'.tr, fromPage: 'booking', isFiltered: bookingReportController.isFiltered,),
-        body:  bookingReportController.bookingReportModel !=null ? CustomScrollView(
-          controller: bookingReportController.scrollController,
-          slivers: [
-
-            bookingReportController.isFiltered ? const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(Dimensions.paddingSizeDefault),
-                child: BookingReportFilteredWidget(),
+              InkTopBar(
+                title: 'booking_report'.tr,
+                subtitle: _dateLabel(bookingReportController),
+                onBack: () => Get.back(),
+                right: InkIconButton(
+                  icon: Icons.filter_alt_outlined,
+                  onTap: () => Get.to(() => const ReportSearchFilter(fromPage: "booking")),
+                ),
               ),
-            ) : const SliverToBoxAdapter(child: SizedBox()),
 
-            SliverToBoxAdapter(
-              child: BookingCountWidget(
-                totalBookings: bookingReportController.bookingReportModel?.content?.bookingsCount?.totalBookings.toString() ?? "",
-                ongoing: bookingReportController.bookingReportModel?.content?.bookingsCount?.ongoing.toString() ?? "",
-                completed: bookingReportController.bookingReportModel?.content?.bookingsCount?.completed.toString() ?? "",
-                canceled: bookingReportController.bookingReportModel?.content?.bookingsCount?.canceled.toString() ?? "",
-              ),
-            ),
+              const SizedBox(height: 20),
 
-            SliverToBoxAdapter(
-              child: BookingAmountWidget(
-                totalBookingAmount: bookingReportController.bookingReportModel?.content?.bookingAmount?.totalBookingAmount.toString() ?? "",
-                dueAmount: bookingReportController.bookingReportModel?.content?.bookingAmount?.totalUnpaidBookingAmount.toString() ?? "",
-                settledAmount: bookingReportController.bookingReportModel?.content?.bookingAmount?.totalPaidBookingAmount.toString() ?? "",
-                dueTooltipController: dueTooltipController,
-                settledTooltipController: settledTooltipController,
-              ),
-            ),
+              const Expanded(child: BookingReportPanel()),
 
-
-            const SliverToBoxAdapter(child: BookingReportBarChart()),
-
-            SliverToBoxAdapter(child: BookingReportListView(
-              bookingFilterData: bookingReportController.bookingReportFilterData,
-            ))
-          ],
-        )  : const BookingReportShimmer()
-      );
-    });
+            ]);
+          },
+        ),
+      ),
+    );
   }
 }
-

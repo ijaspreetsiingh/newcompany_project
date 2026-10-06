@@ -73,3 +73,4 @@ class LoyaltyPointTopCard extends StatelessWidget {
     });
   }
 }
+

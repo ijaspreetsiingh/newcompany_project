@@ -8,75 +8,151 @@ class EditProfileScreen extends StatefulWidget {
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> with SingleTickerProviderStateMixin {
+class _EditProfileScreenState extends State<EditProfileScreen>
+    with SingleTickerProviderStateMixin {
   TabController? tabController;
 
   @override
   void initState() {
     super.initState();
     tabController = TabController(vsync: this, length: 2);
-    Get.find<UserController>().pickImage(removePickedProfileImage: true, shouldUpdate: false);
+    tabController!.addListener(() {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+    Get.find<UserController>()
+        .pickImage(removePickedProfileImage: true, shouldUpdate: false);
+  }
+
+  @override
+  void dispose() {
+    tabController?.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: CustomAppBar(title: "edit_profile".tr),
-      body: GetBuilder<UserController>(
-        builder: (userController) {
-          return Column(
-            children: [
-              const SizedBox(height: 4),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.04),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TabBar(
-                  controller: tabController,
-                  indicator: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  indicatorPadding: const EdgeInsets.all(4),
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.5),
-                  labelStyle: robotoMedium.copyWith(fontSize: 13),
-                  unselectedLabelStyle: robotoMedium.copyWith(fontSize: 13),
-                  labelPadding: EdgeInsets.zero,
-                  dividerColor: Colors.transparent,
-                  tabs: [
-                    Tab(text: "general_info".tr),
-                    Tab(text: "account_info".tr),
+      backgroundColor: context.kBackground,
+      body: Column(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: PageHeader(
+              title: "edit_profile_title".tr,
+              subtitle: "keep_details_updated".tr,
+              onBack: () {
+                if (Navigator.canPop(context)) {
+                  Get.back();
+                } else {
+                  Get.offAllNamed(RouteHelper.getInitialRoute());
+                }
+              },
+            ),
+          ),
+          Expanded(
+            child: GetBuilder<UserController>(
+              builder: (userController) {
+                return Column(
+                  children: [
+                    _buildTabStrip(context, userController),
+                    Expanded(
+                      child: TabBarView(
+                        controller: tabController,
+                        children: const [
+                          EditProfileGeneralInfo(),
+                          EditProfileAccountInfo(),
+                        ],
+                      ),
+                    ),
                   ],
-                  onTap: (int index) {
-                    switch (index) {
-                      case 0:
-                        userController.updatePageCurrentState(EditProfileTabControllerState.generalInfo);
-                        break;
-                      case 1:
-                        userController.updatePageCurrentState(EditProfileTabControllerState.accountIno);
-                        break;
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: TabBarView(
-                  controller: tabController,
-                  children: const [
-                    EditProfileGeneralInfo(),
-                    EditProfileAccountInfo(),
-                  ],
-                ),
-              ),
-            ],
-          );
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabStrip(BuildContext context, UserController userController) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: context.kBorder, width: 1),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          _buildTab(
+            context,
+            userController,
+            index: 0,
+            label: "general_info".tr,
+          ),
+          _buildTab(
+            context,
+            userController,
+            index: 1,
+            label: "account_info".tr,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTab(
+    BuildContext context,
+    UserController userController, {
+    required int index,
+    required String label,
+  }) {
+    final bool isActive = (tabController?.index ?? 0) == index;
+
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          tabController?.animateTo(index);
+          switch (index) {
+            case 0:
+              userController
+                  .updatePageCurrentState(EditProfileTabControllerState.generalInfo);
+              break;
+            case 1:
+              userController
+                  .updatePageCurrentState(EditProfileTabControllerState.accountIno);
+              break;
+          }
         },
+        child: Container(
+          height: 48,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: isActive ? context.kForeground : Colors.transparent,
+                width: 2,
+              ),
+            ),
+          ),
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: isActive
+                ? robotoMedium.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: context.kForeground,
+                  )
+                : robotoMedium.copyWith(
+                    fontSize: 14,
+                    color: context.kMutedForeground,
+                  ),
+          ),
+        ),
       ),
     );
   }

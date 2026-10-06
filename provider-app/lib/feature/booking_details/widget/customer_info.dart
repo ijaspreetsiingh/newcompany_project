@@ -1,3 +1,4 @@
+import 'package:demandium_provider/helper/booking_helper.dart';
 import 'package:demandium_provider/helper/extension_helper.dart';
 import 'package:get/get.dart';
 import 'package:demandium_provider/util/core_export.dart';
@@ -30,7 +31,10 @@ class BookingDetailsCustomerInfo extends StatelessWidget {
             name: bookingDetails.serviceAddress?.contactPersonName ??  bookingDetails.subBooking?.serviceAddress?.contactPersonName ?? "${ bookingDetails.customer?.firstName??""} ${bookingDetails.customer?.lastName??""}",
             phone:  bookingDetails.serviceAddress?.contactPersonNumber?? bookingDetails.subBooking?.serviceAddress?.contactPersonNumber ?? bookingDetails.customer?.phone?? bookingDetails.customer?.email??"",
             image: bookingDetails.customer?.profileImageFullPath ?? bookingDetails.subBooking?.customer?.profileImageFullPath ?? "",
-            address: bookingDetails.serviceAddress?.address ?? bookingDetails.subBooking?.serviceAddress?.address ?? 'address_not_found'.tr,
+            address: BookingHelper.composeServiceAddress(
+              bookingDetails.serviceAddress ?? bookingDetails.subBooking?.serviceAddress,
+              fallback: 'address_not_found'.tr,
+            ),
           )
 
         ]),

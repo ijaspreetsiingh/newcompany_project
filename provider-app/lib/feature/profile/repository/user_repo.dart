@@ -87,6 +87,6 @@ class UserRepo {
 
   Future<Response> getBookingRequestData(String requestType, int offset) async {
     return await apiClient.postData(AppConstants.bookingListUrl,
-        {"limit" : Get.find<SplashController>().configModel.content?.paginationLimit, "offset" : offset, "booking_status" : requestType});
+        {"limit" : Get.find<SplashController>().configModel.content?.paginationLimit, "offset" : offset, "booking_status" : requestType, "service_type" : "all"});
   }
 }

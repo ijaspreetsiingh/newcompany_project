@@ -37,60 +37,104 @@ class ServiceController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'sub_category_id' => 'required|array',
-            'sub_category_id.*' => 'uuid',
+            'sub_category_id.*' => 'exists:categories,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
         }
 
-        $packageSubscriber = $this->packageSubscriber->where('provider_id', $request->user()->provider->id)->first();
-        $limit = $this->packageSubscriberLimit
-            ->where('provider_id', $request->user()->provider->id)
-            ->where('subscription_package_id', $packageSubscriber?->subscription_package_id)
-            ->where('key', 'category')
-            ->first();
+        $providerModel = $request->user()->provider;
+        $providerId = $providerModel->id;
+        $zoneId = $providerModel->zone_id;
+        $subscriptionRequired = (int) ($providerModel->subscription_required ?? 1);
+
+        $packageSubscriber = null;
+        $limit = null;
+
+        // Provider Subscribe OFF -> package limit queries skip (fast)
+        if ($subscriptionRequired !== 0) {
+            $packageSubscriber = $this->packageSubscriber->where('provider_id', $providerId)->first();
+            $limit = $this->packageSubscriberLimit
+                ->where('provider_id', $providerId)
+                ->where('subscription_package_id', $packageSubscriber?->subscription_package_id)
+                ->where('key', 'category')
+                ->first();
+        }
 
         $packageSubscriberLimit = $limit?->limit_count;
         $isLimit = $limit?->is_limited;
-        $startDate = $packageSubscriber?->package_start_date;
         $endDate = $packageSubscriber?->package_end_date;
-        $providerId = $packageSubscriber?->provider_id;
-        $currentDate = Carbon::now()->subDays();
         $packageEndDate = $endDate ? Carbon::parse($endDate)->endOfDay() : null;
-        $isPackageEnded = $packageEndDate ? $currentDate->diffInDays($packageEndDate, false) : null;
+        $isPackageEnded = $packageEndDate ? Carbon::now()->subDays()->diffInDays($packageEndDate, false) : null;
 
-        $categoryCount = $this->subscribedService->where('provider_id', $providerId)->where('is_subscribed', 1)
-            ->count();
+        foreach (array_unique($request['sub_category_id']) as $id) {
+            $subCategory = $this->category->find($id);
+            if (!$subCategory) {
+                continue;
+            }
 
-        foreach ($request['sub_category_id'] as $id) {
-            $subscribedService = $this->subscribedService::where('sub_category_id', $id)->where('provider_id', $request->user()->provider->id)->first();
-            if (!$subscribedService) {
-                if ($packageSubscriberLimit <= $categoryCount && $packageSubscriber && $isLimit && $isPackageEnded) {
+            $existing = $this->subscribedService
+                ->where('provider_id', $providerId)
+                ->where('sub_category_id', $id)
+                ->when($zoneId, function ($query) use ($zoneId) {
+                    $query->where('zone_id', $zoneId);
+                })
+                ->first();
+
+            // Already assigned -> toggle OFF (row delete, taaki unique index slot free ho)
+            if ($existing) {
+                $existing->delete();
+                continue;
+            }
+
+            // Package limit (sirf jab subscription required ho)
+            if ($subscriptionRequired !== 0 && $packageSubscriber && $isLimit && $isPackageEnded) {
+                $categoryCount = $this->subscribedService
+                    ->where('provider_id', $providerId)
+                    ->where('is_subscribed', 1)
+                    ->count();
+
+                if ($packageSubscriberLimit <= $categoryCount) {
                     return response()->json(response_formatter(CATEGORY_LIMIT_END), 400);
                 }
+            }
 
-                $subscribedService = new $this->subscribedService;
-                $subscribedService->is_subscribed = 1;
+            // Exclusivity: ek zone me ek sub-category sirf ek provider ko
+            if ($zoneId) {
+                $taken = $this->subscribedService
+                    ->where('zone_id', $zoneId)
+                    ->where('sub_category_id', $id)
+                    ->where('provider_id', '!=', $providerId)
+                    ->with('provider:id,company_name,contact_person_name', 'sub_category:id,name')
+                    ->first();
 
-            } elseif($subscribedService) {
-                if ($subscribedService->is_subscribed == 0){
-                    if ($packageSubscriberLimit <= $categoryCount && $packageSubscriber && $isLimit && $isPackageEnded) {
-                        return response()->json(response_formatter(CATEGORY_LIMIT_END), 400);
-                    }
+                if ($taken) {
+                    $owner = $taken->provider;
+                    $ownerName = $owner?->contact_person_name ?: $owner?->company_name ?: translate('another provider');
+                    $subName = $taken->sub_category?->name ?: '';
+                    $message = translate('This sub-category is already assigned to')
+                        . ' "' . $ownerName . '"'
+                        . ($subName ? ' (' . $subName . ')' : '')
+                        . ' ' . translate('in the same zone') . '.';
+
+                    return response()->json([
+                        'response_code' => DEFAULT_400['response_code'],
+                        'message' => $message,
+                        'content' => null,
+                        'errors' => [['error_code' => 'sub_category_id', 'message' => $message]],
+                    ], 400);
                 }
-
-                $subscribedService->is_subscribed = !$subscribedService->is_subscribed;
-            }
-            $subscribedService->provider_id = $request->user()->provider->id;
-            $subscribedService->sub_category_id = $id;
-
-            $parent = $this->category->where('id', $id)->first();
-            if ($parent) {
-                $subscribedService->category_id = $parent->parent_id;
             }
 
-            $subscribedService->save();
+            $this->subscribedService->create([
+                'provider_id' => $providerId,
+                'sub_category_id' => $id,
+                'category_id' => $subCategory->parent_id,
+                'zone_id' => $zoneId,
+                'assign_type' => 'specific',
+                'is_subscribed' => 1,
+            ]);
         }
 
         return response()->json(response_formatter(DEFAULT_200), 200);

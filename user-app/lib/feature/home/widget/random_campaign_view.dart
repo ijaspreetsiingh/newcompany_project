@@ -86,3 +86,4 @@ class RandomCampaignView extends StatelessWidget {
         });
   }
 }
+

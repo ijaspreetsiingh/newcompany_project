@@ -109,7 +109,7 @@ class _ProductBottomSheetState extends State<CreateChannelDialog> {
                               padding:  const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall,horizontal: Dimensions.paddingSizeLarge ),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Dimensions.radiusLarge)),
                             ),
-                            child: Text('provider'.tr, textAlign: TextAlign.center, style: robotoBold.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color),),
+                            child: Text('zone_admin'.tr, textAlign: TextAlign.center, style: robotoBold.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color),),
                           ),
                         const SizedBox(width: Dimensions.paddingSizeLarge),
                         if(serviceman != null)
@@ -144,3 +144,6 @@ class _ProductBottomSheetState extends State<CreateChannelDialog> {
     );
   }
 }
+
+
+

@@ -1,4 +1,4 @@
-import 'package:jdds/util/core_export.dart';
+﻿import 'package:jdds/util/core_export.dart';
 import 'package:jdds/feature/conversation/widgets/empty_conversation_widget.dart';
 import 'package:get/get.dart';
 
@@ -33,3 +33,5 @@ class ConversationListView extends StatelessWidget {
     });
   }
 }
+
+

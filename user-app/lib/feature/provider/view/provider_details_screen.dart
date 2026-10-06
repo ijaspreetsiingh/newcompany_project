@@ -206,3 +206,6 @@ class AnimatedCustomAppBar extends StatelessWidget implements PreferredSizeWidge
   @override
   Size get preferredSize => Size.fromHeight(height);
 }
+
+
+

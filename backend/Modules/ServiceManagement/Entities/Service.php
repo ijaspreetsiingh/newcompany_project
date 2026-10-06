@@ -66,9 +66,58 @@ class Service extends Model
         return $this->belongsTo(\Modules\ProviderManagement\Entities\Provider::class, 'single_provider_id', 'id');
     }
 
+    public function parentService(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_service_id', 'id')->withoutGlobalScopes();
+    }
+
+    public function ownerProvider(): BelongsTo
+    {
+        return $this->belongsTo(\Modules\ProviderManagement\Entities\Provider::class, 'provider_id', 'id');
+    }
+
+    public function providerClones(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_service_id', 'id')->withoutGlobalScopes();
+    }
+
     public function subCategory(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'sub_category_id', 'id')->withoutGlobalScopes();
+    }
+
+    /**
+     * Customer visibility: service tabhi dikhegi jab uski sub-category current zone me
+     * serviceable provider ko assigned ho.
+     * Rule: subcategory assignment ki priority > category assignment (complete) fallback.
+     * Zone header na ho to filter skip (splash/fresh-install safe).
+     */
+    public function scopeVisibleInCurrentZone($query)
+    {
+        $zoneId = Config::get('zone_id');
+        if (empty($zoneId) && search_geo_context() === null) {
+            return $query;
+        }
+
+        $eligible = subscribed_assignment_query($zoneId);
+
+        return $query->where(function ($q) use ($eligible) {
+            // 1) Priority: sub-category assignment (eligible provider ke saath)
+            //    Note: sub-level rows me category_id parent ka hota hai — isliye
+            //    sub_category_id wala sub_category_assignments relation use hota hai.
+            $q->whereHas('subCategory.sub_category_assignments', $eligible)
+                // 2) Fallback: sub-category ka koi active assignment hi nahi
+                //    → category-level (complete main category) assignment chalega
+                ->orWhere(function ($q2) use ($eligible) {
+                    $q2->whereDoesntHave('subCategory.sub_category_assignments', function ($subQuery) {
+                            $subQuery->ofStatus(1);
+                        })
+                        ->whereHas('category.subscribed_services', function ($catQuery) use ($eligible) {
+                            $eligible($catQuery);
+                            $catQuery->where('assign_type', 'complete');
+                        });
+                });
+        });
     }
 
     public function service_discount(): HasMany
@@ -272,7 +321,7 @@ class Service extends Model
         return $paths;
     }
 
-    protected static function generateUniqueSlug($name, $ignoreId = null)
+    public static function generateUniqueSlug($name, $ignoreId = null)
     {
         $slug = Str::slug($name);
         $original = $slug;
@@ -309,6 +358,59 @@ class Service extends Model
                                 ->orWhere('single_provider_id', $providerId);
                         })
                         ->with(['service_discount', 'campaign_discount']);
+                }
+            }
+        });
+
+        /*
+         * Provider managed services:
+         *  - services.provider_id IS NULL          -> admin ka service (sab zones)
+         *  - services.provider_id = X              -> provider X ka apna banaya service (sirf uski zone me)
+         *  - services.parent_service_id = <base>    -> provider ka edited clone (sirf uski zone me)
+         * Customer: base tab tak dikhta hai jab tak us zone me approved clone na ho.
+         * Provider: apna clone ho toh base nahi dikhta (duplicate avoid).
+         */
+        static::addGlobalScope('provider_service_visibility', function (Builder $builder) {
+            $zoneId = Config::get('zone_id');
+
+            if (request()->is('api/*/client*') || request()->is('api/*/customer*')) {
+                $builder->where(function (Builder $query) use ($zoneId) {
+                    $query->where(function (Builder $q) use ($zoneId) {
+                        $q->whereNull('services.provider_id');
+                        if ($zoneId) {
+                            $q->whereNotExists(function ($q2) use ($zoneId) {
+                                $q2->selectRaw('1')
+                                    ->from('services as provider_service_clones')
+                                    ->whereColumn('provider_service_clones.parent_service_id', 'services.id')
+                                    ->whereNull('provider_service_clones.deleted_at')
+                                    ->where('provider_service_clones.zone_id', $zoneId)
+                                    ->where('provider_service_clones.approval_status', 'approved');
+                            });
+                        }
+                    })->orWhere(function (Builder $q) use ($zoneId) {
+                        $q->whereNotNull('services.provider_id')
+                            ->where('services.approval_status', 'approved')
+                            ->where('services.zone_id', $zoneId);
+                    });
+                });
+            } elseif (request()->is('api/*/partner*') || request()->is('api/*/provider*')) {
+                if (auth()->check() && request()->user()?->provider) {
+                    $providerId = request()->user()->provider->id;
+                    $providerZoneId = request()->user()->provider->zone_id;
+                    $builder->where(function (Builder $query) use ($providerId, $providerZoneId) {
+                        $query->whereNull('services.provider_id')
+                            ->when($providerZoneId, function ($q) use ($providerId, $providerZoneId) {
+                                $q->whereNotExists(function ($q2) use ($providerId, $providerZoneId) {
+                                    $q2->selectRaw('1')
+                                        ->from('services as my_service_clones')
+                                        ->whereColumn('my_service_clones.parent_service_id', 'services.id')
+                                        ->whereNull('my_service_clones.deleted_at')
+                                        ->where('my_service_clones.provider_id', $providerId)
+                                        ->where('my_service_clones.zone_id', $providerZoneId);
+                                });
+                            })
+                            ->orWhere('services.provider_id', $providerId);
+                    });
                 }
             }
         });

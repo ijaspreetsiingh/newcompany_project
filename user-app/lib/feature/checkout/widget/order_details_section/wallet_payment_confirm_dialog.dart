@@ -60,7 +60,7 @@ class WalletPaymentConfirmDialog extends StatelessWidget {
             Text('can_be_paid_via_wallet'.tr, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.5)), textAlign: TextAlign.center
             ):
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Text('remaining_wallet_balance'.tr, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6)), textAlign: TextAlign.center),
+              Text('remaintng_wallet_balance'.tr, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6)), textAlign: TextAlign.center),
               Text(PriceConverter.convertPrice(walletBalance-bookingAmount),style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6))),
 
             ],),
@@ -102,5 +102,7 @@ class WalletPaymentConfirmDialog extends StatelessWidget {
     });
   }
 }
+
+
 
 

@@ -1,4 +1,4 @@
-import 'package:demandium_provider/helper/extension_helper.dart';
+﻿import 'package:demandium_provider/helper/extension_helper.dart';
 import 'package:demandium_provider/util/core_export.dart';
 import 'package:demandium_provider/feature/reporting/model/transaction_report_model.dart';
 import 'package:get/get.dart';
@@ -18,7 +18,7 @@ class TransactionReportStatistics extends StatelessWidget {
     double providerBalance = accountInfo.totalWithdrawn! + accountInfo.receivedBalance!;
 
     itemsTitle = ['provider_balance'.tr, 'pending_balance'.tr, 'commission_given'.tr, 'account_payable'.tr,'account_receivable'.tr];
-    bg = ['0xFF286FC6', '0xFF5ABD88', '0xFFD0517F', '0xFF2BA361', '0xFFFF6D6D'];
+    bg = ['0xFF111111', '0xFF52525B', '0xFF8A8A8A', '0xFFB8B8B8', '0xFFDC2626'];
     infoText =['provider_balance_info','pending_balance_info','already_withdrawn_info','account_payable_info','account_receivable_info'];
     itemsAmount =[
       providerBalance.toString(),accountInfo.balancePending.toString(),accountInfo.totalWithdrawn.toString(),

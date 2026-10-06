@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Modules\BookingModule\Entities\Booking;
 use Modules\BookingModule\Entities\BookingRepeat;
+use Modules\BookingModule\Entities\BookingServiceman;
 use Modules\BookingModule\Entities\SubscriptionSubscriberBooking;
 use Modules\BusinessSettingsModule\Entities\NotificationSetup;
 use Modules\BusinessSettingsModule\Entities\PackageSubscriber;
@@ -258,6 +259,23 @@ if (!function_exists('file_uploader')) {
 
             imagedestroy($gdImage);
             $gdImage = $temp;
+        }
+
+        /**
+         *  imagewebp()/imagepng() on a palette (indexed) source throws
+         *  "Palette image not supported by webp" -> promote to truecolor first.
+         */
+        if (!imageistruecolor($gdImage)) {
+            $pw = imagesx($gdImage);
+            $ph = imagesy($gdImage);
+
+            $trueColor = imagecreatetruecolor($pw, $ph);
+            imagealphablending($trueColor, false);
+            imagesavealpha($trueColor, true);
+            imagecopy($trueColor, $gdImage, 0, 0, 0, 0, $pw, $ph);
+
+            imagedestroy($gdImage);
+            $gdImage = $trueColor;
         }
 
         /**
@@ -972,8 +990,17 @@ if (!function_exists('getPaymentGatewayImageFullPath')) {
 
 
 if (!function_exists('nextBookingEligibility')) {
-    function nextBookingEligibility($providerId): bool
+    function nextBookingEligibility($providerId, $provider = null): bool
     {
+        // Provider Subscribe OFF -> koi payment/subscription check nahi
+        // $provider (loaded model) pass karne par extra DB query skip hoti hai
+        $subscriptionRequired = $provider instanceof \Modules\ProviderManagement\Entities\Provider
+            ? ($provider->subscription_required ?? 1)
+            : \Modules\ProviderManagement\Entities\Provider::where('id', $providerId)->value('subscription_required');
+        if ((int) $subscriptionRequired === 0) {
+            return true;
+        }
+
         $now = \Carbon\Carbon::now()->subDay();
         $packageSubscriber = PackageSubscriber::where('provider_id', $providerId)->first();
         $packageSubscriberLogId = $packageSubscriber?->package_subscriber_log_id;
@@ -1024,8 +1051,16 @@ if (!function_exists('nextBookingEligibility')) {
 }
 
 if (!function_exists('scheduleBookingEligibility')) {
-    function scheduleBookingEligibility($providerId): bool
+    function scheduleBookingEligibility($providerId, $provider = null): bool
     {
+        // Provider Subscribe OFF -> subscription feature checks skip (pehle, taaki wasted query na ho)
+        $subscriptionRequired = $provider instanceof \Modules\ProviderManagement\Entities\Provider
+            ? ($provider->subscription_required ?? 1)
+            : \Modules\ProviderManagement\Entities\Provider::where('id', $providerId)->value('subscription_required');
+        if ((int) $subscriptionRequired === 0) {
+            return true;
+        }
+
         $now = \Carbon\Carbon::now();
         $packageSubscriber = PackageSubscriber::where('provider_id', $providerId)->first();
 
@@ -1063,6 +1098,11 @@ if (!function_exists('scheduleBookingEligibility')) {
 if (!function_exists('chatEligibility')) {
     function chatEligibility($providerId): bool
     {
+        $subscriptionRequired = \Modules\ProviderManagement\Entities\Provider::where('id', $providerId)->value('subscription_required');
+        if ((int) $subscriptionRequired === 0) {
+            return true;
+        }
+
         $now = \Carbon\Carbon::now();
         $packageSubscriber = PackageSubscriber::where('provider_id', $providerId)->first();
 
@@ -1100,6 +1140,11 @@ if (!function_exists('chatEligibility')) {
 if (!function_exists('advertisementsEligibility')) {
     function advertisementsEligibility($providerId): bool
     {
+        $subscriptionRequired = \Modules\ProviderManagement\Entities\Provider::where('id', $providerId)->value('subscription_required');
+        if ((int) $subscriptionRequired === 0) {
+            return true;
+        }
+
         $now = \Carbon\Carbon::now();
         $packageSubscriber = PackageSubscriber::where('provider_id', $providerId)->first();
 
@@ -1131,6 +1176,246 @@ if (!function_exists('advertisementsEligibility')) {
         }
 
         return true;
+    }
+}
+
+if (!function_exists('providerCommissionPercentage')) {
+    /**
+     * Effective admin/system commission % for a provider.
+     * Independent Mode ON -> admin_commission_percent, else custom/default commission.
+     */
+    function providerCommissionPercentage($provider): float
+    {
+        if ((int) ($provider->independent_mode ?? 0) === 1) {
+            return (float) ($provider->admin_commission_percent ?? 0);
+        }
+
+        return (float) ($provider->commission_status == 1
+            ? $provider->commission_percentage
+            : (business_config('default_commission', 'business_information'))?->live_values ?? 0);
+    }
+}
+
+if (!function_exists('providerAdminCommission')) {
+    /**
+     * Admin/system commission amount for independent mode providers.
+     * Independent Mode: base * admin% + flat platform fee.
+     * Default mode: base * (custom/default %).
+     * Promotional cost adjustment stays with the caller.
+     */
+    function providerAdminCommission($provider, float $baseAmount): float
+    {
+        if ((int) ($provider->independent_mode ?? 0) === 1) {
+            return ($baseAmount * (float) ($provider->admin_commission_percent ?? 0)) / 100
+                + (float) ($provider->platform_fee_amount ?? 0);
+        }
+
+        return ($baseAmount * providerCommissionPercentage($provider)) / 100;
+    }
+}
+
+if (!function_exists('providerIsIndependent')) {
+    /**
+     * Provider runs on per-provider payment settings (wizard Step 4 ON).
+     */
+    function providerIsIndependent($provider): bool
+    {
+        return !empty($provider) && (int) ($provider->independent_mode ?? 0) === 1;
+    }
+}
+
+if (!function_exists('providerAllowedPaymentMethods')) {
+    /**
+     * Allowed payment methods for this provider as array of keys.
+     * NULL = no restriction (default mode / nothing configured).
+     */
+    function providerAllowedPaymentMethods($provider): ?array
+    {
+        if (!providerIsIndependent($provider)) {
+            return null;
+        }
+        $raw = $provider->allowed_payment_methods ?? null;
+        if (empty($raw)) {
+            return null;
+        }
+        $decoded = is_array($raw) ? $raw : json_decode($raw, true);
+        if (!is_array($decoded)) {
+            return null;
+        }
+        $decoded = array_values(array_filter($decoded, function ($item) {
+            return is_string($item) && $item !== '';
+        }));
+        return count($decoded) > 0 ? $decoded : null;
+    }
+}
+
+if (!function_exists('providerAllowsPaymentMethod')) {
+    /**
+     * Is this payment method allowed for the provider at checkout?
+     */
+    function providerAllowsPaymentMethod($provider, string $method): bool
+    {
+        $allowed = providerAllowedPaymentMethods($provider);
+        if ($allowed === null) {
+            return true;
+        }
+        return in_array($method, $allowed, true);
+    }
+}
+
+if (!function_exists('providerEffectiveTaxPercent')) {
+    /**
+     * Tax % for a cart/service line of this provider.
+     * Independent provider with tax_percent set -> override service tax.
+     * Otherwise -> service's own tax (existing behaviour, nothing changes).
+     */
+    function providerEffectiveTaxPercent($provider, float $serviceTax): float
+    {
+        if (providerIsIndependent($provider)
+            && $provider->tax_percent !== null
+            && $provider->tax_percent !== '') {
+            return (float) $provider->tax_percent;
+        }
+        return $serviceTax;
+    }
+}
+
+if (!function_exists('providerBookingFee')) {
+    /**
+     * Customer-facing booking fee for this provider.
+     * null = use the global booking_additional_charge flow (nothing changes).
+     */
+    function providerBookingFee($provider): ?float
+    {
+        if (!providerIsIndependent($provider)) {
+            return null;
+        }
+        $fee = (float) ($provider->booking_fee ?? 0);
+        return $fee > 0 ? $fee : null;
+    }
+}
+
+if (!function_exists('bookingExtraFee')) {
+    /**
+     * Customer-facing booking extra fee (flat charge added to booking total).
+     * Independent provider with booking_fee > 0 -> that fee, else global config
+     * (identical to the legacy behaviour).
+     */
+    function bookingExtraFee($provider): float
+    {
+        $providerFee = providerBookingFee($provider);
+        if ($providerFee !== null) {
+            return $providerFee;
+        }
+
+        if (business_config('booking_additional_charge', 'booking_setup')?->live_values) {
+            return (float) (business_config('additional_charge_fee_amount', 'booking_setup')?->live_values ?? 0);
+        }
+        return 0;
+    }
+}
+
+if (!function_exists('providerTaxForBooking')) {
+    /**
+     * Effective tax % for a booking/repeat-booking edit (provider resolved via
+     * booking->provider_id, memoised per request).
+     */
+    function providerTaxForBooking($booking, float $serviceTax): float
+    {
+        if (empty($booking) || empty($booking->provider_id)) {
+            return $serviceTax;
+        }
+        static $providerCache = [];
+        $providerId = (string) $booking->provider_id;
+        if (!array_key_exists($providerId, $providerCache)) {
+            $providerCache[$providerId] = \Modules\ProviderManagement\Entities\Provider::find($providerId);
+        }
+        return providerEffectiveTaxPercent($providerCache[$providerId], $serviceTax);
+    }
+}
+
+if (!function_exists('paymentGatewayOptions')) {
+    /**
+     * Payment method options (base methods + active digital gateways).
+     * Used by admin provider wizard (Step 4 gateway checkboxes) and client
+     * payment-config endpoint.
+     */
+    function paymentGatewayOptions(): array
+    {
+        $base = [
+            ['key' => 'cash_after_service', 'label' => 'Cash after service'],
+            ['key' => 'wallet_payment', 'label' => 'Wallet'],
+            ['key' => 'offline_payment', 'label' => 'Offline payment'],
+        ];
+
+        $digital = [];
+        try {
+            $rows = \DB::table('addon_settings')->where('settings_type', 'payment_config')->get();
+            foreach ($rows as $row) {
+                $additional = $row->additional_data ?? null;
+                if (is_string($additional)) {
+                    $additional = json_decode($additional, true);
+                }
+                $title = is_array($additional) ? ($additional['gateway_title'] ?? null) : null;
+                $digital[] = [
+                    'key' => $row->key_name,
+                    'label' => $title ?: ucwords(str_replace('_', ' ', $row->key_name)),
+                ];
+            }
+        } catch (\Throwable $e) {
+            $digital = [];
+        }
+
+        if (empty($digital)) {
+            foreach (PAYMENT_METHODS as $method) {
+                if (!in_array($method['key'], ['cash_after_service', 'wallet_payment', 'offline_payment'])) {
+                    $digital[] = ['key' => $method['key'], 'label' => ucwords(str_replace('_', ' ', $method['key']))];
+                }
+            }
+        }
+
+        return array_merge($base, $digital);
+    }
+}
+
+if (!function_exists('filterPaymentGatewaysForProvider')) {
+    /**
+     * Filter a client gateway list (each item has 'gateway' key) by provider's
+     * allowed payment methods. No restriction -> list unchanged.
+     */
+    function filterPaymentGatewaysForProvider($gateways, $provider)
+    {
+        $allowed = providerAllowedPaymentMethods($provider);
+        if ($allowed === null || !is_array($gateways)) {
+            return $gateways;
+        }
+        return collect($gateways)->filter(function ($gateway) use ($allowed) {
+            return in_array($gateway['gateway'] ?? '', $allowed, true);
+        })->values();
+    }
+}
+
+if (!function_exists('providerRejectsPaymentMethod')) {
+    /**
+     * true = ye payment method is provider ke liye allowed nahi (400 response
+     * bhejo). false = allowed (default mode me hamesha false).
+     *
+     * @return array|null [provider_id, method] jab reject karna ho, warna null
+     */
+    function providerRejectsPaymentMethod($providerId, string $method): ?array
+    {
+        if (empty($providerId) || empty($method)) {
+            return null;
+        }
+        static $providerCache = [];
+        $key = (string) $providerId;
+        if (!array_key_exists($key, $providerCache)) {
+            $providerCache[$key] = \Modules\ProviderManagement\Entities\Provider::find($providerId);
+        }
+        if (!providerAllowsPaymentMethod($providerCache[$key], $method)) {
+            return [(string) $providerId, $method];
+        }
+        return null;
     }
 }
 
@@ -1885,13 +2170,12 @@ if (!function_exists('getBookingCoordinates')) {
 
         if (is_array($address)) {
             $lat = $address['latitude'] ?? $address['lat'] ?? null;
-            $lng = $address['longitude'] ?? $address['lng'] ?? null;
+            $lng = $address['longitude'] ?? $address['lng'] ?? $address['lon'] ?? null;
         }
 
         return [$lat !== null ? (float)$lat : null, $lng !== null ? (float)$lng : null];
     }
 }
-
 if (!function_exists('getProviderCoordinates')) {
     function getProviderCoordinates($provider): array
     {
@@ -1899,6 +2183,7 @@ if (!function_exists('getProviderCoordinates')) {
         if (is_string($coordinates)) {
             $coordinates = json_decode($coordinates, true);
         }
+
         $lat = $coordinates['latitude'] ?? $coordinates['lat'] ?? null;
         $lng = $coordinates['longitude'] ?? $coordinates['lng'] ?? null;
 
@@ -1906,27 +2191,383 @@ if (!function_exists('getProviderCoordinates')) {
     }
 }
 
+/*
+|--------------------------------------------------------------------------
+| SERVICEABILITY (customer visibility + booking gate) — SINGLE SOURCE
+|--------------------------------------------------------------------------
+| Rules:
+|  1. Status/eligibility logic EXISTING scopes se reuse hoti hai
+|     (SubscribedService::ofStatus, Provider::ofStatus/ofApproval, nextBookingEligibility)
+|     — yahan koi duplicate status logic nahi.
+|  2. Subcategory assignment ki PRIORITY > category assignment.
+|     Category-level fallback sirf tab jab subcategory ka koi assignment hi na ho
+|     (category fallback = assign_type 'complete' i.e. admin ne pura main category diya).
+|  3. Ye DONO sirf customer visibility aur final booking gate me use hoti hain.
+|     Serviceman radius/assignment pe koi asar nahi.
+*/
+
+if (!function_exists('search_geo_context')) {
+    /**
+     * Current request ka geo search context (customer ki location + effective radius).
+     * Returns ['lat'=>float, 'lng'=>float, 'radius'=>float] ya null jab tak lat/lng na ho.
+     * Radius: explicit `radius` input > zone ka provider_search_radius > default 5.
+     * (Koi static cache nahi — config per request hota hai, zone lookup PK query hai.)
+     */
+    function search_geo_context(): ?array
+    {
+        $lat = config('search_lat');
+        $lng = config('search_lng');
+        if ($lat === null || $lng === null) {
+            return null;
+        }
+
+        $radius = config('search_radius');
+        if (empty($radius)) {
+            $zoneId = config('zone_id');
+            if (!empty($zoneId)) {
+                $zone = \Modules\ZoneManagement\Entities\Zone::query()->find($zoneId);
+                $radius = $zone?->provider_search_radius;
+            }
+        }
+        if (empty($radius)) {
+            $radius = 5;
+        }
+
+        return ['lat' => (float) $lat, 'lng' => (float) $lng, 'radius' => (float) $radius];
+    }
+}
+
+if (!function_exists('radius_provider_ids')) {
+    /**
+     * Radius (km) ke andar ke provider ids, customer location se:
+     *  (a) provider ki khud ki location (providers.coordinates), ya
+     *  (b) uske kisi ACTIVE serviceman ki live location (users.current_lat/lng).
+     * Per-request cache. Serviceman assignment/booking radius ko ye touch nahi karta.
+     *
+     * @return array<int, string> provider ids (UUID strings)
+     */
+    function radius_provider_ids(float $lat, float $lng, float $radius): array
+    {
+        static $cache = [];
+        $key = round($lat, 5) . '|' . round($lng, 5) . '|' . round($radius, 2);
+        if (isset($cache[$key])) {
+            return $cache[$key];
+        }
+
+        $within = function (?float $targetLat, ?float $targetLng) use ($lat, $lng, $radius): bool {
+            if ($targetLat === null || $targetLng === null) {
+                return false;
+            }
+            return calculateDistance($lat, $lng, $targetLat, $targetLng) <= $radius;
+        };
+
+        $ids = [];
+
+        // (a) Providers apni coordinates par
+        foreach (\Modules\ProviderManagement\Entities\Provider::query()->get(['id', 'coordinates']) as $provider) {
+            [$providerLat, $providerLng] = getProviderCoordinates($provider);
+            if ($within($providerLat, $providerLng)) {
+                $ids[] = (string) $provider->id;
+            }
+        }
+
+        // (b) Servicemen ki live location (servicemen table me status column nahi —
+        //     user active aur location set honi chahiye)
+        $servicemen = \Modules\UserManagement\Entities\Serviceman::query()
+            ->whereHas('user', function ($userQuery) {
+                $userQuery->where('is_active', 1)
+                    ->whereNotNull('current_lat')
+                    ->whereNotNull('current_lng');
+            })
+            ->with('user:id,current_lat,current_lng')
+            ->get(['id', 'provider_id', 'user_id']);
+
+        foreach ($servicemen as $serviceman) {
+            $user = $serviceman->user;
+            if (!$user || empty($serviceman->provider_id)) {
+                continue;
+            }
+            $userLat = is_numeric($user->current_lat) ? (float) $user->current_lat : null;
+            $userLng = is_numeric($user->current_lng) ? (float) $user->current_lng : null;
+            if ($within($userLat, $userLng)) {
+                $ids[] = (string) $serviceman->provider_id;
+            }
+        }
+
+        return $cache[$key] = array_values(array_unique($ids));
+    }
+}
+
+if (!function_exists('subscribed_assignment_query')) {
+    /**
+     * subscribed_services ke upar location-scoped serviceability constraint.
+     * Row eligible tab uska provider serviceable ho:
+     *  - Geo context (lat/lng) ho to → provider/radius ke andar hona chahiye
+     *    (provider ki location YA uske serviceman ki live location, kisi bhi zone se)
+     *  - Geo na ho to → provider current zone me hona chahiye (pehle jaisa).
+     *
+     * @param string|null $zoneId
+     * @return \Closure
+     */
+    function subscribed_assignment_query(?string $zoneId): \Closure
+    {
+        return function ($query) use ($zoneId) {
+            $query->ofStatus(1)
+                ->whereHas('provider', function ($provider) use ($zoneId) {
+                    $provider->ofStatus(1)
+                        ->ofApproval(1)
+                        ->where('is_suspended', 0);
+
+                    $geo = search_geo_context();
+                    if ($geo !== null) {
+                        $radiusIds = radius_provider_ids($geo['lat'], $geo['lng'], $geo['radius']);
+                        if (empty($radiusIds)) {
+                            $provider->whereRaw('1 = 0');
+                        } else {
+                            $provider->whereIn('providers.id', $radiusIds);
+                        }
+                    } elseif (!empty($zoneId)) {
+                        $provider->where('zone_id', $zoneId);
+                    }
+                });
+        };
+    }
+}
+
+if (!function_exists('subcategory_has_serviceable_provider')) {
+    /**
+     * Zone me is sub-category (ya category) ke liye serviceable provider hai ya nahi.
+     * Priority: subcategory assignment → fallback: category assignment (complete).
+     *
+     * @param string|null $subCategoryId
+     * @param string|null $categoryId
+     * @param string      $zoneId
+     * @param string|null $providerId  optional — sirf ye specific provider check karo
+     */
+    function subcategory_has_serviceable_provider(?string $subCategoryId, ?string $categoryId, string $zoneId, ?string $providerId = null): bool
+    {
+        $eligible = subscribed_assignment_query($zoneId);
+
+        // 1) Priority: subcategory-level assignment
+        if (!empty($subCategoryId)) {
+            $subQuery = \Modules\ProviderManagement\Entities\SubscribedService::query()
+                ->where('sub_category_id', $subCategoryId);
+            $eligible($subQuery);
+            if (!empty($providerId)) {
+                $subQuery->where('provider_id', $providerId);
+            }
+            if ($subQuery->exists()) {
+                return true;
+            }
+
+            // Subcategory ka assignment maujood hai (kisi bhi zone me) par eligible nahi
+            // → fallback nahi (sub-assignment exists hi nahi tabhi fallback milega).
+            $subAssignmentExists = \Modules\ProviderManagement\Entities\SubscribedService::query()
+                ->where('sub_category_id', $subCategoryId)
+                ->ofStatus(1)
+                ->exists();
+            if ($subAssignmentExists) {
+                return false;
+            }
+        }
+
+        // 2) Fallback: category-level assignment (admin ne complete main category assign ki)
+        if (empty($categoryId)) {
+            return false;
+        }
+
+        $categoryQuery = \Modules\ProviderManagement\Entities\SubscribedService::query()
+            ->where('category_id', $categoryId)
+            ->where('assign_type', 'complete');
+        $eligible($categoryQuery);
+        if (!empty($providerId)) {
+            $categoryQuery->where('provider_id', $providerId);
+        }
+
+        return $categoryQuery->exists();
+    }
+}
+
+if (!function_exists('is_booking_serviceable')) {
+    /**
+     * FINAL server-side serviceability gate — booking create se pehle mandatory.
+     * UI/API visibility par trust nahi kiya jata; yahan wahi assignment rules chalte hain:
+     *  - Chosen provider: provider zone+status+assignment (priority rules) + nextBookingEligibility
+     *  - Auto-assign path: EXISTING findNearestProviders() — system sach me assign kar payega?
+     *
+     * @param string|null $subCategoryId
+     * @param string|null $categoryId
+     * @param string|null $zoneId
+     * @param string|null $providerId
+     * @param float|null  $bookingLat
+     * @param float|null  $bookingLng
+     */
+    function is_booking_serviceable(?string $subCategoryId, ?string $categoryId, ?string $zoneId, ?string $providerId = null, ?float $bookingLat = null, ?float $bookingLng = null): bool
+    {
+        if (empty($zoneId)) {
+            return false;
+        }
+
+        if (!empty($providerId)) {
+            $providerQuery = \Modules\ProviderManagement\Entities\Provider::query()
+                ->ofStatus(1)
+                ->ofApproval(1)
+                ->where('is_suspended', 0);
+
+            $geo = search_geo_context();
+            if ($geo !== null) {
+                $radiusIds = radius_provider_ids($geo['lat'], $geo['lng'], $geo['radius']);
+                if (empty($radiusIds)) {
+                    return false;
+                }
+                $providerQuery->whereIn('providers.id', $radiusIds);
+            } else {
+                $providerQuery->where('zone_id', $zoneId);
+            }
+
+            $provider = $providerQuery->find($providerId);
+
+            if (!$provider) {
+                return false;
+            }
+
+            if (!subcategory_has_serviceable_provider($subCategoryId, $categoryId, $zoneId, $provider->id)) {
+                return false;
+            }
+
+            try {
+                return nextBookingEligibility($provider->id, $provider);
+            } catch (\Throwable $e) {
+                return true;
+            }
+        }
+
+        // Auto-assign path: jo provider system actually assign karega wahi allowed hai
+        return findNearestProviders($zoneId, $subCategoryId, [], 20, $bookingLat, $bookingLng)->isNotEmpty();
+    }
+}
+
 if (!function_exists('findNearestProviders')) {
     /**
      * Zone + sub-category ke eligible providers ko distance ke hisab se sort karke return karo
+     * NEW LOGIC: Sirf EK provider per zone per sub_category (admin ne assign kiya hoga)
+     * CATEGORY ASSIGNMENT MODES:
+     * - Complete Main Category: Provider gets all sub-categories of a main category (zone + category unique)
+     * - Sub-Category Only: Provider gets specific sub-categories (zone + sub_category unique)
+     * CROSS-ZONE FALLBACK: Agar zone me provider nahi hai aur admin toggle ON hai,
+     *                    to nearest zone ke provider ko assign karo (distance limit ke andar)
+     * Eligibility: active/approved/not-suspended/availability + subscribed service +
+     *              package & payment limits (nextBookingEligibility) + location set
      */
     function findNearestProviders($zoneId, $subCategoryId, array $excludeProviderIds = [], int $limit = 20, ?float $bookingLat = null, ?float $bookingLng = null)
     {
+        // First check: Zone + Sub Category ke liye assigned provider (single provider per zone per category)
+        $assignedProvider = Provider::query()
+            ->where('zone_id', $zoneId)
+            ->where('is_active', 1)
+            ->where('is_approved', 1)
+            ->where('is_suspended', 0)
+            ->where('service_availability', 1)
+            ->whereHas('subscribed_services', function ($query) use ($zoneId, $subCategoryId) {
+                $query->where('zone_id', $zoneId)
+                    ->where('sub_category_id', $subCategoryId)
+                    ->where('is_subscribed', 1);
+            })
+            ->when(count($excludeProviderIds) > 0, function ($query) use ($excludeProviderIds) {
+                $query->whereNotIn('id', $excludeProviderIds);
+            })
+            ->with('owner:id,fcm_token,current_language_key')
+            ->first();
+
+        if ($assignedProvider) {
+            return collect([$assignedProvider]);
+        }
+
+        // Fallback: Agar assigned provider nahi hai to nearest eligible providers (backward compatibility)
         $providers = Provider::query()
             ->where('zone_id', $zoneId)
             ->where('is_active', 1)
             ->where('is_approved', 1)
             ->where('is_suspended', 0)
             ->where('service_availability', 1)
-            ->whereDoesntHave('ignores')
             ->whereHas('subscribed_services', function ($query) use ($subCategoryId) {
-                $query->where('sub_category_id', $subCategoryId);
+                $query->where('sub_category_id', $subCategoryId)
+                    ->where('is_subscribed', 1);
             })
             ->when(count($excludeProviderIds) > 0, function ($query) use ($excludeProviderIds) {
                 $query->whereNotIn('id', $excludeProviderIds);
             })
             ->with('owner:id,fcm_token,current_language_key')
             ->get();
+
+        if ($providers->isEmpty()) {
+            // CROSS-ZONE FALLBACK: Agar zone me provider nahi hai aur admin toggle ON hai
+                $crossZoneEnabled = (int) (business_config('cross_zone_fallback_enabled', 'booking_setup')?->live_values ?? 0) === 1;
+
+            if ($crossZoneEnabled && $bookingLat !== null && $bookingLng !== null) {
+                $distanceLimit = (int) (business_config('cross_zone_distance_limit', 'booking_setup')?->live_values ?? 50) ?: 50;
+                
+                // Sabhi zones ke providers dhundo (zone restriction remove)
+                $crossZoneProviders = Provider::query()
+                    ->where('is_active', 1)
+                    ->where('is_approved', 1)
+                    ->where('is_suspended', 0)
+                    ->where('service_availability', 1)
+                    ->whereHas('subscribed_services', function ($query) use ($subCategoryId) {
+                        $query->where('sub_category_id', $subCategoryId)
+                            ->where('is_subscribed', 1);
+                    })
+                    ->when(count($excludeProviderIds) > 0, function ($query) use ($excludeProviderIds) {
+                        $query->whereNotIn('id', $excludeProviderIds);
+                    })
+                    ->with('owner:id,fcm_token,current_language_key')
+                    ->get();
+
+                if (!$crossZoneProviders->isEmpty()) {
+                    // Distance calculate karo aur filter karo (distance limit ke andar)
+                    $crossZoneProviders = $crossZoneProviders
+                        ->filter(function ($provider) {
+                            [$lat, $lng] = getProviderCoordinates($provider);
+                            return $lat !== null && $lng !== null;
+                        })
+                        ->map(function ($provider) use ($bookingLat, $bookingLng) {
+                            [$providerLat, $providerLng] = getProviderCoordinates($provider);
+                            $provider->distance_km = calculateDistance($bookingLat, $bookingLng, $providerLat, $providerLng);
+                            return $provider;
+                        })
+                        ->filter(function ($provider) use ($distanceLimit) {
+                            return $provider->distance_km !== null && $provider->distance_km <= $distanceLimit;
+                        })
+                        ->sortBy(function ($provider) {
+                            return $provider->distance_km ?? PHP_FLOAT_MAX;
+                        })
+                        ->filter(function ($provider) {
+                            try {
+                                return nextBookingEligibility($provider->id, $provider);
+                            } catch (\Throwable $e) {
+                                return true;
+                            }
+                        })
+                        ->values();
+
+                    if (!$crossZoneProviders->isEmpty()) {
+                        return $crossZoneProviders;
+                    }
+                }
+            }
+            
+            return collect();
+        }
+
+        // expired/limit-exhausted plan wale provider ko booking do nahi
+        // (warna booking unke pending list me aayegi hi nahi — stuck ho jayegi)
+        $providers = $providers->filter(function ($provider) {
+            try {
+                return nextBookingEligibility($provider->id, $provider);
+            } catch (\Throwable $e) {
+                return true;
+            }
+        });
 
         if ($providers->isEmpty()) {
             return collect();
@@ -1955,64 +2596,233 @@ if (!function_exists('findNearestProviders')) {
 
 if (!function_exists('autoAssignBooking')) {
     /**
-     * Naye booking ke liye auto-assign start karo:
-     *  - pehle check karo kisi provider ne auto_assign_mode ON kiya hai
-     *  - warna nearest providers ko round-robin timers ke through try karo
+     * Naye booking ka auto-assign entry point:
+     *  1. zone ka provider dhundo (spec: ek zone = ek provider; multiple mile to nearest)
+     *     - single-provider exclusive lock ho to sirf wahi
+     *  2. booking ko us provider par lock karo (pending list me dikhega)
+     *  3. provider ke toggle ke hisab se:
+     *     - ON  -> provider decision window (push + screen, serviceman WAIT karega)
+     *     - OFF -> nearest serviceman ko seedha request (silent)
      */
     function autoAssignBooking($booking): void
     {
         try {
+            $excludeProviderIds = getIgnoredProviderIds($booking);
+            $provider = null;
+
             // Single-provider exclusive service: sirf locked provider ko hi assign karo
             $lockedProviderId = getBookingSingleProviderLockId($booking);
             if ($lockedProviderId) {
-                $lockedProvider = Provider::where('id', $lockedProviderId)
+                $provider = Provider::where('id', $lockedProviderId)
                     ->where('zone_id', $booking->zone_id)
                     ->where('is_active', 1)
                     ->where('is_approved', 1)
                     ->where('is_suspended', 0)
                     ->where('service_availability', 1)
-                    ->whereDoesntHave('ignores', function ($query) use ($booking) {
+                    ->whereDoesntHave('ignoredBookings', function ($query) use ($booking) {
                         $query->where('booking_id', $booking->id);
                     })
                     ->with('owner:id,fcm_token,current_language_key')
                     ->first();
 
-                if ($lockedProvider) {
-                    assignBookingToProvider($booking, $lockedProvider);
-                }
                 // Locked provider available nahi -> booking pending (kisi aur ko nahi dena)
-                return;
+                if (!$provider) {
+                    return;
+                }
+            } else {
+                // Zone ke eligible providers (ek zone = ek provider; fallback = nearest)
+                [$bookingLat, $bookingLng] = getBookingCoordinates($booking);
+                $providers = findNearestProviders($booking->zone_id, $booking->sub_category_id, $excludeProviderIds, 20, $bookingLat, $bookingLng);
+
+                if ($providers->isEmpty()) {
+                    return; // koi eligible provider nahi -> booking pending
+                }
+                $provider = $providers->first();
             }
 
-            $autoAssignProvider = Provider::where('zone_id', $booking->zone_id)
-                ->where('auto_assign_mode', 1)
-                ->where('is_active', 1)
-                ->where('is_approved', 1)
-                ->where('is_suspended', 0)
-                ->where('service_availability', 1)
-                ->whereHas('subscribed_services', function ($query) use ($booking) {
-                    $query->where('sub_category_id', $booking->sub_category_id);
-                })
-                ->whereDoesntHave('ignores', function ($query) use ($booking) {
-                    $query->where('booking_id', $booking->id);
-                })
-                ->first();
+            // Booking ko zone ke is provider par lock karo
+            $booking->provider_id = $provider->id;
+            $booking->auto_assigned = 0;
+            $booking->auto_assign_expires_at = null;
+            $booking->save();
 
-            if ($autoAssignProvider) {
-                // Provider ne toggle ON kiya hai -> seedha usko bhejo
-                assignBookingToProvider($booking, $autoAssignProvider);
-                return;
-            }
-
-            $excludeProviderIds = getIgnoredProviderIds($booking);
-            [$bookingLat, $bookingLng] = getBookingCoordinates($booking);
-            $providers = findNearestProviders($booking->zone_id, $booking->sub_category_id, $excludeProviderIds, 20, $bookingLat, $bookingLng);
-
-            if ($providers->isNotEmpty()) {
-                assignBookingToProvider($booking, $providers->first());
-            }
+            startWithinProviderAssignment($booking);
         } catch (\Throwable $e) {
             Log::error('autoAssignBooking failed: ' . $e->getMessage());
+        }
+    }
+}
+
+if (!function_exists('startWithinProviderAssignment')) {
+    /**
+     * Booking already provider ke paas hai (zone pick ya customer ne khud chuna)
+     * — ab provider ke auto-assign toggle ke hisab se aage ka flow:
+     *  - toggle ON  -> provider decision window (wait time countdown)
+     *  - toggle OFF -> nearest serviceman request (automatic)
+     */
+    function startWithinProviderAssignment($booking): void
+    {
+        try {
+            $booking->refresh();
+
+            if ($booking->booking_status !== 'pending' || !$booking->provider_id) {
+                return;
+            }
+
+            $provider = Provider::with('owner:id,fcm_token,current_language_key')
+                ->where('id', $booking->provider_id)
+                ->first();
+            if (!$provider) {
+                return;
+            }
+
+            if ((int) $provider->auto_assign_mode === 1) {
+                startProviderDecisionWindow($booking, $provider);
+            } else {
+                $booking->assignment_mode = 'auto';
+                $booking->auto_assigned = 0;
+                $booking->auto_assign_expires_at = null;
+                $booking->save();
+
+                dispatchNearestServicemanRequest($booking);
+            }
+        } catch (\Throwable $e) {
+            Log::error('startWithinProviderAssignment failed: ' . $e->getMessage());
+        }
+    }
+}
+
+if (!function_exists('startProviderDecisionWindow')) {
+    /**
+     * Toggle ON: provider ko push + countdown (wait time) — wo decide karega
+     * kaunsa serviceman / team assign karna hai. Window expire hone par system
+     * khud nearest serviceman ko auto-assign kar dega.
+     */
+    function startProviderDecisionWindow($booking, $provider): void
+    {
+        $waitTime = max(30, (int) ($provider->auto_assign_wait_time ?: 60));
+
+        $booking->assignment_mode = 'provider_manual';
+        $booking->auto_assigned = 1;
+        $booking->auto_assign_expires_at = now()->addSeconds($waitTime);
+        $booking->save();
+
+        ProviderBookingTimer::updateOrCreate(
+            ['booking_id' => $booking->id, 'provider_id' => $provider->id],
+            ['status' => 'pending', 'expires_at' => $booking->auto_assign_expires_at]
+        );
+
+        // Provider ko notification bhejo (app side me full-screen popup khulta hai)
+        // Notification message: "AI-assigned booking - nearest service man available"
+        try {
+            $fcmToken = $provider?->owner?->fcm_token ?? null;
+            $languageKey = $provider?->owner?->current_language_key;
+            $title = get_push_notification_message('new_service_request_arrived', 'provider_notification', $languageKey)
+                ?? 'New Booking Request! AI-assigned - nearest serviceman available';
+
+            if (!is_null($fcmToken)) {
+                $notification = isNotificationActive($provider->id, 'booking', 'notification', 'provider');
+                if ($notification && sendDeviceNotificationPermission($provider->id)) {
+                    device_notification(
+                        $fcmToken,
+                        $title,
+                        'A new booking request is waiting for you. Assign servicemen before the timer ends.',
+                        null,
+                        $booking->id,
+                        'new_booking_request',
+                        null, null, null, null,
+                        $booking->is_repeated ? 'repeat' : 'regular'
+                    );
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error('startProviderDecisionWindow notification failed: ' . $e->getMessage());
+        }
+    }
+}
+
+if (!function_exists('dispatchNearestServicemanRequest')) {
+    /**
+     * Toggle OFF (automatic): provider ke sabse NEAREST serviceman (customer
+     * location se distance, live location ke hisab se) ko request bhejo.
+     * Accept nahi hua -> timer expiry pe agla nearest (loop).
+     * Sabne mana -> provider ko "manually assign karo" push.
+     */
+    function dispatchNearestServicemanRequest($booking): void
+    {
+        try {
+            if ($booking->booking_status !== 'pending' || !$booking->provider_id) {
+                return;
+            }
+
+            // team ka koi live pending slot hai to already assignment chal rahi hai
+            $hasLiveSlot = BookingServiceman::where('booking_id', $booking->id)
+                ->where('status', BookingServiceman::STATUS_PENDING)
+                ->where('expires_at', '>', now())
+                ->exists();
+            if ($hasLiveSlot) {
+                return;
+            }
+
+            $provider = Provider::with('owner:id,fcm_token,current_language_key')
+                ->where('id', $booking->provider_id)
+                ->first();
+            if (!$provider) {
+                return;
+            }
+
+            $waitTime = max(30, (int) ($provider->auto_assign_wait_time ?: 60));
+            $alreadyTried = getTriedServicemanIds($booking);
+            $candidates = findNearestServicemen($booking, $provider->id, $alreadyTried);
+
+            if ($candidates->isEmpty()) {
+                // sab reject/expire ho chuke (ya koi hai hi nahi) — provider manually assign kare
+                notifyProviderToAssignManually($provider, $booking);
+                return;
+            }
+
+            assignBookingToServiceman($booking, $candidates->first(), $waitTime);
+        } catch (\Throwable $e) {
+            Log::error('dispatchNearestServicemanRequest failed: ' . $e->getMessage());
+        }
+    }
+}
+
+if (!function_exists('getTriedServicemanIds')) {
+    /**
+     * Is booking me already bheje ja chuke servicemen (koi bhi status) —
+     * taaki unhe dubara request na jaaye
+     */
+    function getTriedServicemanIds($booking): array
+    {
+        return BookingServiceman::where('booking_id', $booking->id)->pluck('serviceman_id')->toArray();
+    }
+}
+
+if (!function_exists('notifyProviderToAssignManually')) {
+    /**
+     * Automatic assignment fail (koi available serviceman nahi) — provider ko push
+     */
+    function notifyProviderToAssignManually($provider, $booking): void
+    {
+        try {
+            $fcmToken = $provider?->owner?->fcm_token ?? null;
+            if (is_null($fcmToken)) {
+                return;
+            }
+            $notification = isNotificationActive($provider->id, 'booking', 'notification', 'provider');
+            if ($notification && sendDeviceNotificationPermission($provider->id)) {
+                device_notification(
+                    $fcmToken,
+                    'No serviceman available — please assign manually',
+                    'status',
+                    null,
+                    $booking->id,
+                    'booking'
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::error('notifyProviderToAssignManually failed: ' . $e->getMessage());
         }
     }
 }
@@ -2188,7 +2998,9 @@ if (!function_exists('moveBookingToNextProvider')) {
 
 if (!function_exists('processExpiredAutoAssign')) {
     /**
-     * Scheduled job se call hota hai — expired timers process karo
+     * Scheduled job se call hota hai — expired provider decision timers process karo
+     *  - provider_manual (ON) window expire -> system khud nearest serviceman assign kare
+     *  - legacy provider timers -> next provider (fallback)
      */
     function processExpiredAutoAssign(): void
     {
@@ -2207,6 +3019,17 @@ if (!function_exists('processExpiredAutoAssign')) {
                     ->where('expires_at', '<=', now())
                     ->update(['status' => 'expired']);
 
+                if ($booking->assignment_mode === 'provider_manual' && $booking->provider_id) {
+                    // Provider ne time par decide nahi kiya -> system auto-assign kare
+                    $booking->auto_assigned = 0;
+                    $booking->auto_assign_expires_at = null;
+                    $booking->assignment_mode = 'auto';
+                    $booking->save();
+
+                    dispatchNearestServicemanRequest($booking);
+                    return;
+                }
+
                 moveBookingToNextProvider($booking);
             });
         }
@@ -2215,32 +3038,74 @@ if (!function_exists('processExpiredAutoAssign')) {
 
 if (!function_exists('findNearestServicemen')) {
     /**
-     * Provider ke servicemen me se pehle available (assigned nahi) serviceman dhundo
+     * Provider ke servicemen — customer location se DISTANCE ke hisab sort.
+     *  - live location (users.current_lat/lng) recent (7 din) ho to distance-wise
+     *  - location na ho / stale ho -> list ke end me
+     *  - already tried (rejected/expired/assigned) exclude
+     *  - inactive user exclude
      */
     function findNearestServicemen($booking, $providerId, array $excludeServicemanIds = [])
     {
-        return Serviceman::where('provider_id', $providerId)
+        [$bookingLat, $bookingLng] = getBookingCoordinates($booking);
+
+        $servicemen = Serviceman::where('provider_id', $providerId)
             ->whereNotIn('id', $excludeServicemanIds)
-            ->with('user:id,fcm_token,current_language_key,first_name,last_name,image')
+            ->whereHas('user', function ($query) {
+                $query->where('is_active', 1);
+            })
+            ->with('user:id,fcm_token,current_language_key,first_name,last_name,profile_image,current_lat,current_lng,last_location_updated_at')
             ->get();
+
+        return $servicemen
+            ->map(function ($serviceman) use ($bookingLat, $bookingLng) {
+                $lat = $serviceman->user?->current_lat;
+                $lng = $serviceman->user?->current_lng;
+
+                // location fresh honi chahiye (7 din andar update hui) — warna distance nahi
+                $isFresh = $serviceman->user?->last_location_updated_at
+                    ? Carbon::parse($serviceman->user->last_location_updated_at)->gt(now()->subDays(7))
+                    : false;
+
+                $serviceman->distance_km = ($bookingLat !== null && $bookingLng !== null
+                    && $lat !== null && $lng !== null && $isFresh)
+                    ? calculateDistance($bookingLat, $bookingLng, (float) $lat, (float) $lng)
+                    : null;
+
+                return $serviceman;
+            })
+            ->sortBy(function ($serviceman) {
+                return $serviceman->distance_km ?? PHP_FLOAT_MAX;
+            })
+            ->values();
     }
 }
 
 if (!function_exists('assignBookingToServiceman')) {
     /**
-     * Booking serviceman ko assign karo + 30 sec timer + notification
+     * Booking ek (ya team ke) serviceman ko assign karo:
+     *  - booking_servicemen pivot row (status pending + accept deadline)
+     *  - bookings.serviceman_id = lead (jo pehle assign hua)
+     *  - serviceman_assign_expires_at = accept deadline
+     *  - serviceman ko push notification
      */
     function assignBookingToServiceman($booking, $serviceman, int $waitTime = 30): void
     {
-        $booking->serviceman_id = $serviceman->id;
-        $booking->serviceman_assign_expires_at = now()->addSeconds($waitTime);
+        $expiresAt = now()->addSeconds($waitTime);
+
+        BookingServiceman::updateOrCreate(
+            ['booking_id' => $booking->id, 'serviceman_id' => $serviceman->id],
+            ['status' => BookingServiceman::STATUS_PENDING, 'expires_at' => $expiresAt]
+        );
+
+        $booking->serviceman_id = $booking->serviceman_id ?: $serviceman->id;
+        $booking->serviceman_assign_expires_at = $expiresAt;
         $booking->save();
 
         try {
             $fcmToken = $serviceman?->user?->fcm_token ?? null;
             if (!is_null($fcmToken)) {
                 $title = 'New Service Assignment';
-                device_notification($fcmToken, $title, 'auto_assign', null, $booking->id, 'new_booking_request');
+                device_notification($fcmToken, $title, 'You have been assigned a new service. Accept before the timer ends.', null, $booking->id, 'new_booking_request');
             }
         } catch (\Throwable $e) {
             Log::error('assignBookingToServiceman notification failed: ' . $e->getMessage());
@@ -2250,27 +3115,35 @@ if (!function_exists('assignBookingToServiceman')) {
 
 if (!function_exists('processExpiredServicemanAssign')) {
     /**
-     * Expired serviceman timers — agle serviceman ko bhejo ya booking pending rakho
+     * Scheduled job — serviceman accept deadline expire:
+     *  - slot expired mark
+     *  - booking abhi bhi pending hai (kisi ne accept nahi kiya) -> agla nearest
+     *  - sab try ho chuke -> provider ko manual-assign push
      */
     function processExpiredServicemanAssign(): void
     {
-        $expiredBookings = Booking::where('booking_status', 'pending')
-            ->whereNotNull('serviceman_id')
-            ->whereNotNull('serviceman_assign_expires_at')
-            ->where('serviceman_assign_expires_at', '<=', now())
+        $expiredSlots = BookingServiceman::where('status', BookingServiceman::STATUS_PENDING)
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<=', now())
             ->limit(50)
             ->get();
 
-        foreach ($expiredBookings as $booking) {
-            DB::transaction(function () use ($booking) {
-                $expiredServicemanId = $booking->serviceman_id;
-                $booking->serviceman_id = null;
-                $booking->serviceman_assign_expires_at = null;
-                $booking->save();
+        foreach ($expiredSlots as $slot) {
+            DB::transaction(function () use ($slot) {
+                $slot->status = BookingServiceman::STATUS_EXPIRED;
+                $slot->save();
 
-                $nextServiceman = findNextServiceman($booking, $expiredServicemanId ? [$expiredServicemanId] : []);
-                if ($nextServiceman) {
-                    assignBookingToServiceman($booking, $nextServiceman);
+                $booking = Booking::find($slot->booking_id);
+                if (!$booking || $booking->booking_status !== 'pending') {
+                    return; // koi accept kar chuka — loop ki zaroorat nahi
+                }
+
+                if ($booking->serviceman_id === $slot->serviceman_id) {
+                    $booking->serviceman_id = null;
+                    $booking->serviceman_assign_expires_at = null;
+                    $booking->save();
+
+                    dispatchNearestServicemanRequest($booking);
                 }
             });
         }
@@ -2278,12 +3151,12 @@ if (!function_exists('processExpiredServicemanAssign')) {
 }
 
 if (!function_exists('findNextServiceman')) {
+    /**
+     * Agla nearest serviceman (distance-sorted, already-tried exclude)
+     */
     function findNextServiceman($booking, array $excludeServicemanIds = [])
     {
-        return Serviceman::where('provider_id', $booking->provider_id)
-            ->whereNotIn('id', $excludeServicemanIds)
-            ->with('user:id,fcm_token,current_language_key')
-            ->first();
+        return findNearestServicemen($booking, $booking->provider_id, $excludeServicemanIds)->first();
     }
 }
 

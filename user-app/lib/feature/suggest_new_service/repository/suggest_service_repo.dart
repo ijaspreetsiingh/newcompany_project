@@ -1,4 +1,4 @@
-import 'package:jdds/api/remote/client_api.dart';
+﻿import 'package:jdds/api/remote/client_api.dart';
 import 'package:jdds/util/app_constants.dart';
 import 'package:get/get.dart';
 
@@ -8,7 +8,8 @@ class SuggestServiceRepo{
   SuggestServiceRepo({required this.apiClient});
 
   Future<Response> getCategoryList() async {
-    return await apiClient.getData('${AppConstants.categoryUrl}&limit=100&offset=1');
+    // categoryUrl already carries a limit; avoid conflicting duplicate query params.
+    return await apiClient.getData('/api/v1/client/group?limit=100&offset=1');
   }
 
   Future<Response> getSuggestedServiceList(int offset) async {
@@ -19,3 +20,4 @@ class SuggestServiceRepo{
     return await apiClient.postData(AppConstants.submitNewServiceRequest,body);
   }
 }
+

@@ -4,7 +4,7 @@
 
     if ($provider) {
         $providerId = $provider->id;
-        $commission = $provider->commission_status == 1 ? $provider->commission_percentage : business_config('default_commission', 'business_information')->live_values;
+        $commission = providerCommissionPercentage($provider);
 
         $subscriptionPackages = Modules\BusinessSettingsModule\Entities\SubscriptionPackage::with('subscriptionPackageFeature', 'subscriptionPackageLimit')
             ->OfStatus(1)->get();

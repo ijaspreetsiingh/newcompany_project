@@ -10,10 +10,18 @@ class NotificationSettingScreen extends StatefulWidget{
 
 class _NotificationSettingScreenState extends State<NotificationSettingScreen> {
 
+  final FocusNode _searchFocusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _searchFocusNode.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -28,60 +36,73 @@ class _NotificationSettingScreenState extends State<NotificationSettingScreen> {
   Widget build(BuildContext context) {
 
     return GetBuilder<NotificationSetupController>(builder: (businessSettingController){
-      return Scaffold( backgroundColor: Theme.of(context).colorScheme.surface,
-        appBar: CustomAppBar(title: "notification_channel_setup".tr),
+      return Scaffold( backgroundColor: InkColors.background,
 
-        body:  Column(children: [
+        body: SafeArea(
+          bottom: false,
+          child: Column(children: [
 
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-            decoration: const BoxDecoration(
-              border: Border(
-                  bottom: BorderSide(
-                      color: Colors.blue
-                  )
+            InkTopBar(
+              title: "notification_channel_setup".tr,
+              onBack: () => Get.back(),
+              right: InkIconButton(
+                icon: Icons.search_rounded,
+                onTap: () => _searchFocusNode.requestFocus(),
               ),
             ),
-            child: TabBar(
-              unselectedLabelColor:Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha:0.5),
-              indicatorColor: Theme.of(context).primaryColor,
-              labelColor: Theme.of(context).primaryColorLight,
-              labelStyle:  robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge),
-              labelPadding: EdgeInsets.zero,
-              controller: businessSettingController.tabController,
-              tabs:  [
-                SizedBox(
-                  height: 40,
-                  width: MediaQuery.of(context).size.width* .5,
-                  child:Center(
-                    child: Text("notification_for_you".tr),
-                  ),
-                ),
-                SizedBox(
-                  height: 40,
-                  width: MediaQuery.of(context).size.width*.4,
-                  child:  Center(
-                    child: Text("serviceman".tr),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: Dimensions.paddingSizeDefault,),
-          NotificationSetupSearchWidget(tabController: businessSettingController.tabController,),
 
-          const SizedBox(height: Dimensions.paddingSizeSmall,),
+            const SizedBox(height: 16),
 
-          Expanded(
-            child: TabBarView(
-              controller: businessSettingController.tabController,
-              children: const [
-                ProviderNotificationSetup(),
-                ServicemanNotificationSetup(),
-              ],
+            Container(
+              height: 45,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration:  BoxDecoration(
+                border: Border(
+                    bottom: BorderSide(
+                        color: InkColors.border,
+                        width: 1,
+                    )
+                ),
+              ),
+              child: TabBar(
+                unselectedLabelColor: InkColors.mutedForeground,
+                indicatorColor: InkColors.foreground,
+                indicatorWeight: 2,
+                labelColor: InkColors.foreground,
+                labelStyle:  robotoSemiBold.copyWith(fontSize: Dimensions.fontSizeLarge),
+                labelPadding: EdgeInsets.zero,
+                controller: businessSettingController.tabController,
+                tabs:  [
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width* .5,
+                    child:Tab(text: "notification_for_you".tr),
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width*.4,
+                    child: Tab(text: "serviceman".tr),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ]),
+            const SizedBox(height: 12,),
+            NotificationSetupSearchWidget(
+              tabController: businessSettingController.tabController,
+              focusNode: _searchFocusNode,
+            ),
+
+            const SizedBox(height: 12,),
+
+            Expanded(
+              child: TabBarView(
+                controller: businessSettingController.tabController,
+                children: const [
+                  ProviderNotificationSetup(),
+                  ServicemanNotificationSetup(),
+                ],
+              ),
+            ),
+          ]),
+        ),
       );
     });
   }
@@ -100,15 +121,17 @@ class SwitchButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),
-      padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault,vertical: Dimensions.paddingSizeSmall),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-        border: showOutSideBorder ? Border.all(color: Theme.of(context).primaryColor) : null
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: showOutSideBorder
+          ? BoxDecoration(
+              color: InkColors.card,
+              borderRadius: BorderRadius.circular(19),
+              border: Border.all(color: InkColors.border),
+            )
+          : null,
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,children: [ Row(children: [
 
-        Text( titleText.tr, style: titleTextStyle ?? robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault),),
+        Text( titleText.tr, style: titleTextStyle ?? robotoSemiBold.copyWith(fontSize: 14, height: 1.3, color: InkColors.foreground),),
         const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
 
         if(tooltipController !=null)
@@ -118,17 +141,16 @@ class SwitchButton extends StatelessWidget {
             child:  Text(tootTipText.tr, style: robotoRegular.copyWith(color: Colors.white,)),
           ),
           child:  InkWell( onTap: ()=> tooltipController?.showTooltip(),
-            child: Icon(Icons.info_outline_rounded, color: Theme.of(context).colorScheme.primary, size: 18,),
+            child: Icon(Icons.info_outline_rounded, color: InkColors.mutedForeground, size: 18,),
           )
         )]),
 
-        FlutterSwitch(
-          width: 40, height: 22, valueFontSize: Dimensions.fontSizeExtraSmall, showOnOff: true,
-          activeText: "", inactiveText: "", activeColor: Theme.of(context).primaryColor,
-          value: value == 1 ?  true : false,
-          padding: 1.5,
-          toggleSize: 19,
-          onToggle: (value) => onTap(value),
+        Switch.adaptive(
+          value: value == 1,
+          activeTrackColor: InkColors.foreground,
+          inactiveTrackColor: InkColors.accent,
+          thumbColor: const WidgetStatePropertyAll<Color>(Colors.white),
+          onChanged: (bool newValue) => onTap(newValue),
         ),
       ],),
     );

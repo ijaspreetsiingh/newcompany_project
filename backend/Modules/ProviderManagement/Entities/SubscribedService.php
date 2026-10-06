@@ -20,7 +20,7 @@ class SubscribedService extends Model
         'is_subscribed' => 'integer'
     ];
 
-    protected $fillable = ['provider_id', 'category_id', 'sub_category_id'];
+    protected $fillable = ['provider_id', 'category_id', 'sub_category_id', 'zone_id', 'assign_type', 'is_subscribed'];
 
     public function scopeOfStatus($query, $status)
     {
@@ -30,6 +30,11 @@ class SubscribedService extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    public function provider(): BelongsTo
+    {
+        return $this->belongsTo(\Modules\ProviderManagement\Entities\Provider::class, 'provider_id');
     }
 
     public function sub_category(): BelongsTo

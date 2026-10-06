@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 
 class Messages extends Translations {
   final Map<String, Map<String, String>>? languages;
@@ -9,3 +9,4 @@ class Messages extends Translations {
     return languages!;
   }
 }
+

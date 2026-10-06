@@ -44,7 +44,7 @@ class TimelineTheme extends StatelessWidget {
   /// build context.
   ///
   /// When the [TimelineTheme] is actually created in the same `build` function
-  /// (possibly indirectly, e.g. as part of a [Timeline]), the `context`
+  /// (possibly indtrectly, e.g. as part of a [Timeline]), the `context`
   /// argument to the `build` function can't be used to find the [TimelineTheme]
   /// (since it's "above" the widget being returned). In such cases, the
   /// following technique with a [Builder] can be used to provide a new scope
@@ -249,3 +249,6 @@ class TimelineThemeData with Diagnosticable {
 
 
 }
+
+
+

@@ -7,25 +7,35 @@ class PaymentStatusButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<BookingEditController>(builder: (bookingEditController){
-      return Container(
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-            border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha:0.2))
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault,vertical: Dimensions.paddingSizeExtraSmall+2),
-        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,children: [
-          Text("payment_status".tr, style: robotoRegular.copyWith(),),
 
-          FlutterSwitch(
-            width: 75, height: 32, valueFontSize: Dimensions.fontSizeExtraSmall, showOnOff: true,
-            activeText: 'paid'.tr, inactiveText: 'unpaid'.tr, activeColor: Theme.of(context).primaryColor,
-            value: bookingEditController.paymentStatusPaid,
-            padding: 4,
-            onToggle: (bool isActive) async {
-              bookingEditController.togglePaymentStatus();
-            },
+      final BookingDetailsContent? bookingDetails = Get.find<BookingDetailsController>().bookingDetails?.bookingContent?.bookingDetailsContent;
+      final String method = bookingDetails?.paymentMethod?.tr ?? '';
+      final String state = bookingEditController.paymentStatusPaid ? 'paid'.tr : 'unpaid'.tr;
+      final String subtitle = method.isNotEmpty ? '$method · $state' : state;
+
+      return KCard(
+        padding: const EdgeInsets.all(16),
+        child: Row(children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text("payment_status".tr.trimRight(),
+                style: robotoMedium.copyWith(fontSize: 14, fontWeight: FontWeight.w600, color: context.kForeground),
+              ),
+              const SizedBox(height: 2),
+              Text(subtitle,
+                style: robotoRegular.copyWith(fontSize: 12, color: context.kMutedForeground),
+              ),
+            ]),
           ),
-        ],),
+          const SizedBox(width: 12),
+          KButton(
+            label: bookingEditController.paymentStatusPaid ? 'paid'.tr : 'mark_paid'.tr,
+            outline: true,
+            height: 32,
+            expanded: false,
+            onTap: () => bookingEditController.togglePaymentStatus(),
+          ),
+        ]),
       );
     });
   }

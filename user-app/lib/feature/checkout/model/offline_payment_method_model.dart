@@ -1,4 +1,4 @@
-class OfflinePaymentModel {
+﻿class OfflinePaymentModel {
   String? id;
   String? methodName;
   List<PaymentInformation>? paymentInformation;
@@ -66,16 +66,16 @@ class CustomerInformation {
   String? paymentNote;
   String? fieldName;
   String? placeholder;
-  int? isRequired;
+  int? isrequired;
 
   CustomerInformation(
-      {this.paymentNote, this.fieldName, this.placeholder, this.isRequired});
+      {this.paymentNote, this.fieldName, this.placeholder, this.isrequired});
 
   CustomerInformation.fromJson(Map<String, dynamic> json) {
     paymentNote = json['payment_note'];
     fieldName = json['field_name'];
     placeholder = json['placeholder'];
-    isRequired = int.tryParse(json['is_required'].toString());
+    isrequired = int.tryParse(json['is_required'].toString());
   }
 
   Map<String, dynamic> toJson() {
@@ -83,7 +83,9 @@ class CustomerInformation {
     data['payment_note'] = paymentNote;
     data['field_name'] = fieldName;
     data['placeholder'] = placeholder;
-    data['is_required'] = isRequired;
+    data['is_required'] = isrequired;
     return data;
   }
 }
+
+

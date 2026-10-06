@@ -2,7 +2,7 @@
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 
-void customCouponSnackBar(String? title, { String? subtitle,bool isError = true, double margin = Dimensions.paddingSizeSmall,int duration =2, Color? backgroundColor, Widget? customWidget, double borderRadius = Dimensions.radiusSmall}) {
+void customCouponSnackBar(String? title, { String? subtitle,bool isError = true, double margin = Dimensions.paddingSizeSmall,int duration =2, Color? backgroundColor, Widget? CustomWidget, double borderRadius = Dimensions.radiusSmall}) {
   if(title != null && title.isNotEmpty) {
     final width = MediaQuery.of(Get.context!).size.width;
 
@@ -30,7 +30,7 @@ void customCouponSnackBar(String? title, { String? subtitle,bool isError = true,
           height: Dimensions.paddingSizeLarge * 2
       ),
       shouldIconPulse: false,
-      leftBarIndicatorColor: isError ? Colors.red : Colors.green,
+      leftBarIndicatorColor: isError ? Theme.of(Get.context!).colorScheme.error : Theme.of(Get.context!).colorScheme.primary,
       maxWidth: Dimensions.webMaxWidth,
       snackStyle: SnackStyle.FLOATING,
       margin: ResponsiveHelper.isDesktop(Get.context!) ? EdgeInsets.only(left : width * 0.5, bottom: Dimensions.paddingSizeExtraSmall,
@@ -42,3 +42,4 @@ void customCouponSnackBar(String? title, { String? subtitle,bool isError = true,
     );
   }
 }
+

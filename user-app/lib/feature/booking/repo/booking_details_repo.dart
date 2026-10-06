@@ -1,4 +1,4 @@
-import 'package:jdds/util/core_export.dart';
+﻿import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 
 
@@ -26,11 +26,28 @@ class BookingDetailsRepo{
   Future<Response> bookingCancel({required String bookingID}) async {
     return await apiClient.postData('${AppConstants.bookingCancel}/$bookingID', {
       "booking_status" :"canceled",
-      "_method" : "put"});
+      "_method" : "put"}, timeout: 30);
   }
 
   Future<Response> subBookingCancel({required String bookingID}) async {
-    return await apiClient.postData('${AppConstants.subBookingCancel}/$bookingID', {});
+    return await apiClient.postData(
+      '${AppConstants.subBookingCancel}/$bookingID',
+      {},
+      timeout: 30,
+    );
+  }
+
+  /// Completed booking ko rechecking me dalna (15 din ka window).
+  Future<Response> requestRecheck({required String bookingID, String reason = ''}) async {
+    return await apiClient.postData(
+      '${AppConstants.recheckRequest}/$bookingID',
+      {'reason': reason},
+      timeout: 30,
+    );
+  }
+
+  Future<Response> getRecheckStatus({required String bookingID}) async {
+    return await apiClient.getData('${AppConstants.recheckStatus}/$bookingID');
   }
 
   Future<void>  setLastIncompleteOfflineBookingId(String bookingId) async {
@@ -42,3 +59,4 @@ class BookingDetailsRepo{
   }
 
 }
+

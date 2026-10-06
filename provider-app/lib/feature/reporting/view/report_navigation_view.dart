@@ -1,109 +1,103 @@
-import 'package:demandium_provider/feature/reporting/view/booking_report.dart';
-import 'package:demandium_provider/helper/extension_helper.dart';
+import 'package:demandium_provider/feature/reporting/view/report_search_filter.dart';
+import 'package:demandium_provider/feature/reporting/widgets/report_panels.dart';
 import 'package:demandium_provider/util/core_export.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
-class ReportNavigationView extends StatelessWidget {
+/// Reports hub — single screen with Booking / Business / Transaction pills
+/// (design: design/src/routes/_tabs.reports.tsx).
+class ReportNavigationView extends StatefulWidget {
   const ReportNavigationView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-
-    return Scaffold(
-      appBar: CustomAppBar(title: "reports".tr),
-      
-      body:  Column(
-        children: [
-         GetBuilder<TransactionReportController>(builder: (controller){
-           return  ReportItem(
-             icon: Images.reportOverview1,
-             title: 'transactions_report',
-             onTap: (){
-               controller.resetFilterValue();
-               Get.to(()=> const TransactionReport());
-             },
-           );
-         }),
-
-          ReportItem(
-            icon: Images.reportOverview2,
-            title: 'business_report',
-            onTap: (){
-              Get.find<BusinessReportController>().resetValue();
-              Get.to(()=> const BusinessReport());
-            },
-          ),
-
-          ReportItem(
-            icon: Images.reportOverview3,
-            title: 'booking_report',
-            onTap: (){
-              Get.find<BookingReportController>().resetValue();
-              Get.to(()=> const BookingReport());
-            },
-          ),
-        ],
-      ),
-    );
-  }
-  
+  State<ReportNavigationView> createState() => _ReportNavigationViewState();
 }
 
-class ReportItem extends StatelessWidget {
-  final Function() onTap;
-  final String title;
-  final String icon;
-  const ReportItem({
-    super.key,
-    required this.onTap,
-    required this.title,
-    required this.icon
-  });
+class _ReportNavigationViewState extends State<ReportNavigationView> {
+  int _tabIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final BookingReportController bookingReportController = Get.find<BookingReportController>();
+    bookingReportController.resetValue();
+    bookingReportController.getBookingReportData(1);
+
+    final TransactionReportController transactionReportController = Get.find<TransactionReportController>();
+    transactionReportController.resetFilterValue(updateTabControllerValue: false);
+    transactionReportController.getAllTransactionReportData(1);
+  }
+
+  String _dateLabel(String? dateRange, DateTime? startDate, DateTime? endDate) {
+    if (dateRange == "custom_date" && startDate != null && endDate != null) {
+      final DateFormat format = DateFormat('dd MMM yyyy');
+      return "${format.format(startDate)} – ${format.format(endDate)}";
+    }
+    return (dateRange ?? "all_time").tr;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          margin: const EdgeInsets.symmetric(
-            vertical: Dimensions.paddingSizeSmall,
-            horizontal: Dimensions.paddingSizeDefault
-          ),
-          width: MediaQuery.of(context).size.width,
-          padding: const EdgeInsets.symmetric(
-            horizontal: Dimensions.paddingSizeDefault,
-            vertical: Dimensions.paddingSizeExtraLarge,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: Get.isDarkMode?Theme.of(context).hintColor.withValues(alpha: 0.5) : Theme.of(context).cardColor,
-            boxShadow: context.customThemeColors.lightShadow
-          ),
-          child: Column(
-            children: [
-              Image.asset(icon,width: 40,),
-              const SizedBox(height: Dimensions.paddingSizeSmall,),
-              Text(
-                title.tr,
-                style: robotoBold.copyWith(
-                  fontSize: Dimensions.fontSizeLarge,
-                  color: Theme.of(context).primaryColorLight
+
+    final List<String> tabs = ['booking'.tr, 'business'.tr, 'transaction'.tr];
+
+    return Scaffold(
+      backgroundColor: InkColors.background,
+      body: SafeArea(
+        child: GetBuilder<BookingReportController>(builder: (bookingReportController) {
+          return GetBuilder<TransactionReportController>(builder: (transactionReportController) {
+
+            final String subtitle = _tabIndex == 2 ?
+            _dateLabel(transactionReportController.dateRange, transactionReportController.startDate, transactionReportController.endDate) :
+            _dateLabel(bookingReportController.dateRange, bookingReportController.startDate, bookingReportController.endDate);
+
+            return Column(children: [
+
+              InkTopBar(
+                title: 'reports'.tr,
+                subtitle: subtitle,
+                onBack: (){
+                  if(Navigator.canPop(context)){
+                    Get.back();
+                  }else{
+                    Get.offNamed(RouteHelper.initial);
+                  }
+                },
+                right: InkIconButton(
+                  icon: Icons.filter_alt_outlined,
+                  onTap: () => Get.to(() => ReportSearchFilter(fromPage: _tabIndex == 2 ? "transaction" : "booking")),
                 ),
               ),
-            ],
-          ),
-        ),
 
-        Positioned.fill(child: Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: Dimensions.paddingSizeSmall,
-            horizontal: Dimensions.paddingSizeDefault,
-          ),
-          child: CustomInkWell(
-            onTap: onTap,
-          ),
-        )),
-      ],
+              const SizedBox(height: 20),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: InkPills(
+                  items: tabs,
+                  value: tabs[_tabIndex],
+                  onChanged: (value) => setState(() => _tabIndex = tabs.indexOf(value)),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              Expanded(
+                child: IndexedStack(
+                  index: _tabIndex,
+                  children: const [
+                    BookingReportPanel(),
+                    BusinessReportPanel(),
+                    TransactionReportPanel(),
+                  ],
+                ),
+              ),
+
+            ]);
+          });
+        }),
+      ),
     );
   }
 }

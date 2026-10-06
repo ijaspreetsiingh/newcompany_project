@@ -65,8 +65,6 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
       imagePathList.add(element.storedFileNameFullPath ??"");
     }
 
-    String imageWithPath = '${widget.conversationData.user!.userType=="super-admin" ? "${Get.find<SplashController>().configModel.content?.faviconFullPath}" : widget.conversationData.user?.profileImageFullPath}';
-
     return GetBuilder<ConversationController>(
         builder: (conversationController) {
 
@@ -78,6 +76,11 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
           bool isSameUserWithNextMessage = conversationController.isSameUserWithNextMessage(widget.conversationData, widget.nextConversationData);
           String previousMessageHasChatTime = widget.previousConversationData != null? conversationController.getChatTime(widget.previousConversationData!.createdAt!, widget.conversationData.createdAt) : "";
 
+          final Color messageColor = widget.isRightMessage ? InkColors.background : InkColors.foreground;
+          final Color timestampColor = widget.isRightMessage ? InkColors.background.withValues(alpha: 0.6) : InkColors.mutedForeground;
+          final String messageTime = DateConverter.convertDateTimeToTime(
+              DateConverter.isoUtcStringToLocalDate(widget.conversationData.createdAt ?? ""));
+
           return Column(crossAxisAlignment: widget.isRightMessage ? CrossAxisAlignment.end : CrossAxisAlignment.start, children: [
 
 
@@ -85,6 +88,7 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
             Align(alignment: Alignment.center,
               child: Padding(padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeDefault, top: 5),
                 child: Text(conversationController.getChatTime(widget.conversationData.createdAt!, widget.nextConversationData?.createdAt),
+                  style:  TextStyle(fontSize: 11, height: 1.2, color: InkColors.mutedForeground),
                 ),
               ),
             ),
@@ -99,19 +103,6 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
 
                 Row(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.max, mainAxisAlignment: widget.isRightMessage ? MainAxisAlignment.end : MainAxisAlignment.start, children: [
 
-                  (!widget.isRightMessage && !isSameUserWithPreviousMessage)
-                      || ( (!widget.isRightMessage && isSameUserWithPreviousMessage) &&
-                      conversationController.getChatTimeWithPrevious(widget.conversationData, widget.previousConversationData).isNotEmpty)
-                      ?  ClipRRect(
-                    borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraLarge * 2),
-                    child: CustomImage(height: Dimensions.paddingSizeExtraLarge + 5,
-                      width: Dimensions.paddingSizeExtraLarge + 5,
-                      image: imageWithPath,
-                      placeholder:  widget.conversationData.user!.userType=="super-admin" ? Images.adminPlaceHolder : Images.userPlaceHolder,
-                    ),
-                  ) : !widget.isRightMessage ? const SizedBox(width: Dimensions.paddingSizeExtraLarge + 5,) : const SizedBox(),
-                  const SizedBox(width: Dimensions.paddingSizeSmall,),
-
                   Flexible(child: Column(crossAxisAlignment: widget.isRightMessage? CrossAxisAlignment.end:CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
 
                     if(widget.conversationData.message != null) Flexible(child: InkWell(
@@ -120,30 +111,38 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
                         widget.conversationData.id!);
                       },
                       child: Container(
+                        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
                         decoration: BoxDecoration(
-                          color: widget.isRightMessage
-                              ? Theme.of(context).primaryColor
-                              : Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                          color: widget.isRightMessage ? InkColors.foreground : InkColors.card,
+                          border: widget.isRightMessage ? null : Border.all(color: InkColors.border),
 
                           borderRadius: widget.isRightMessage && (isSameUserWithNextMessage || isSameUserWithPreviousMessage) ? BorderRadius.only(
-                            topRight: Radius.circular(isSameUserWithNextMessage && isLTR && chatTime =="" ? Dimensions.radiusSmall : Dimensions.radiusExtraLarge + 5),
-                            bottomRight: Radius.circular(isSameUserWithPreviousMessage && isLTR && previousMessageHasChatTime =="" ? Dimensions.radiusSmall : Dimensions.radiusExtraLarge + 5),
-                            topLeft: Radius.circular(isSameUserWithNextMessage && !isLTR && chatTime ==""? Dimensions.radiusSmall : Dimensions.radiusExtraLarge + 5),
-                            bottomLeft: Radius.circular(isSameUserWithPreviousMessage && !isLTR && previousMessageHasChatTime ==""? Dimensions.radiusSmall :Dimensions.radiusExtraLarge + 5),
+                            topRight: Radius.circular(isSameUserWithNextMessage && isLTR && chatTime =="" ? Dimensions.radiusSmall : 18),
+                            bottomRight: Radius.circular(isSameUserWithPreviousMessage && isLTR && previousMessageHasChatTime =="" ? Dimensions.radiusSmall : 18),
+                            topLeft: Radius.circular(isSameUserWithNextMessage && !isLTR && chatTime ==""? Dimensions.radiusSmall : 18),
+                            bottomLeft: Radius.circular(isSameUserWithPreviousMessage && !isLTR && previousMessageHasChatTime ==""? Dimensions.radiusSmall : 18),
 
                           ) : !widget.isRightMessage && (isSameUserWithNextMessage || isSameUserWithPreviousMessage) ? BorderRadius.only(
-                            topLeft: Radius.circular(isSameUserWithNextMessage && isLTR && chatTime ==""? Dimensions.radiusSmall : Dimensions.radiusExtraLarge + 5),
-                            bottomLeft: Radius.circular( isSameUserWithPreviousMessage && isLTR && previousMessageHasChatTime =="" ? Dimensions.radiusSmall : Dimensions.radiusExtraLarge + 5),
-                            topRight: Radius.circular(isSameUserWithNextMessage && !isLTR && chatTime ==""? Dimensions.radiusSmall : Dimensions.radiusExtraLarge + 5),
-                            bottomRight: Radius.circular(isSameUserWithPreviousMessage && !isLTR && previousMessageHasChatTime ==""? Dimensions.radiusSmall :Dimensions.radiusExtraLarge + 5),
+                            topLeft: Radius.circular(isSameUserWithNextMessage && isLTR && chatTime ==""? Dimensions.radiusSmall : 18),
+                            bottomLeft: Radius.circular( isSameUserWithPreviousMessage && isLTR && previousMessageHasChatTime =="" ? Dimensions.radiusSmall : 18),
+                            topRight: Radius.circular(isSameUserWithNextMessage && !isLTR && chatTime ==""? Dimensions.radiusSmall : 18),
+                            bottomRight: Radius.circular(isSameUserWithPreviousMessage && !isLTR && previousMessageHasChatTime ==""? Dimensions.radiusSmall : 18),
 
-                          ) : BorderRadius.circular(Dimensions.radiusExtraLarge + 5),
+                          ) : BorderRadius.circular(18),
                         ),
 
-                        padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeLarge, vertical: 10),
-                        child: Text(widget.conversationData.message??'', style: robotoRegular.copyWith(
-                            color: !Get.isDarkMode && !widget.isRightMessage? Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.8)  : Colors.white.withValues(alpha:0.8)
-                        )),
+                        padding: const EdgeInsets.fromLTRB(14, 9, 14, 7),
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
+                          Text(widget.conversationData.message??'', style: robotoRegular.copyWith(
+                            fontSize: 13, height: 1.4, color: messageColor,
+                          )),
+
+                          const SizedBox(height: 4),
+
+                          Text(messageTime, style: TextStyle(
+                            fontSize: 10, height: 1.2, color: timestampColor,
+                          )),
+                        ]),
 
                       ),
                     )),
@@ -205,7 +204,7 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
                                     imageList: imagePathList,
                                     index: index,
                                     appbarSubtitle:  DateConverter.dateMonthYearTime(DateConverter.isoUtcStringToLocalDate(widget.conversationData.createdAt!)),
-                                    appbarTitle: widget.conversationData.user!.userType=="super-admin" ? 'admin'.tr : widget.conversationData.user!.userType=="provider-admin"? "you".tr :
+                                    appbarTitle: widget.conversationData.user!.userType=="super-admin" ? 'technical_support_team'.tr : widget.conversationData.user!.userType=="provider-admin"? "you".tr :
                                     "${widget.conversationData.user?.firstName??""} ${widget.conversationData.user?.lastName??""}",
                                   ),
                                   );
@@ -253,7 +252,7 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
                                       imageList: imagePathList,
                                       index: index,
                                       appbarSubtitle:  DateConverter.dateMonthYearTime(DateConverter.isoUtcStringToLocalDate(widget.conversationData.createdAt!)),
-                                      appbarTitle: widget.conversationData.user!.userType=="super-admin" ? 'admin'.tr : widget.conversationData.user!.userType=="provider-admin"? "you".tr :
+                                      appbarTitle: widget.conversationData.user!.userType=="super-admin" ? 'technical_support_team'.tr : widget.conversationData.user!.userType=="provider-admin"? "you".tr :
                                           "${widget.conversationData.user?.firstName??""} ${widget.conversationData.user?.lastName??""}",
                                     ),
                                     );

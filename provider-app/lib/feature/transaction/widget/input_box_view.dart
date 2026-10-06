@@ -17,9 +17,8 @@ class InputBoxView extends StatefulWidget {
 class _InputBoxViewState extends State<InputBoxView> {
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-
+    isTextFieldEmpty = !(widget.inputAmountController?.text.isNotEmpty ?? false);
   }
   bool isTextFieldEmpty = true;
 
@@ -80,9 +79,7 @@ class _InputBoxViewState extends State<InputBoxView> {
                           Text(PriceConverter.getCurrency(),
                             style: robotoBold.copyWith(
                               fontSize: 20,
-                              color: isTextFieldEmpty
-                                  ?Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.5)
-                                  :Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
+                              color: isTextFieldEmpty ? InkColors.mutedForeground : InkColors.foreground,
                             ),
                           ),
                           Padding(
@@ -104,10 +101,10 @@ class _InputBoxViewState extends State<InputBoxView> {
                                   hintText: "0.0",
                                   hintStyle: robotoBold.copyWith(
                                       fontSize: 20,
-                                    color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.5)
+                                    color: InkColors.mutedForeground
                                   )
                                 ),
-                                style: robotoBold.copyWith(fontSize: 20,color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8)),
+                                style: robotoBold.copyWith(fontSize: 20,color: InkColors.foreground),
                                 onChanged: (String value){
                                   setState(() {
                                     if(value.isNotEmpty){
@@ -124,9 +121,7 @@ class _InputBoxViewState extends State<InputBoxView> {
                           Text(PriceConverter.getCurrency(),
                             style: robotoBold.copyWith(
                               fontSize: 20,
-                              color: isTextFieldEmpty ?
-                              Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.5) :
-                              Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
+                              color: isTextFieldEmpty ? InkColors.mutedForeground : InkColors.foreground,
                             ),
                           ),
 
@@ -134,14 +129,14 @@ class _InputBoxViewState extends State<InputBoxView> {
                         ],
                       ),
                       const SizedBox(height: Dimensions.paddingSizeSmall,),
-                      Divider(height: 0.5, color: Theme.of(context).hintColor,),
+                       Divider(height: 0.5, color: InkColors.border),
                       const SizedBox(height: Dimensions.paddingSizeSmall,),
                       Row(
                         children: [
-                          Text("available_balance".tr,style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.5)),),
+                          Text("available_balance".tr,style: robotoRegular.copyWith(fontSize: 12, color: InkColors.mutedForeground),),
                           const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
                           Text(PriceConverter.convertPrice(widget.amount),
-                            style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.5)),)
+                            style: robotoRegular.copyWith(fontSize: 12, color: InkColors.mutedForeground),)
                         ],
                       ),
                         if(Get.find<SplashController>().configModel.content?.minimumWithdrawAmount!=null)
@@ -149,10 +144,10 @@ class _InputBoxViewState extends State<InputBoxView> {
                         if(Get.find<SplashController>().configModel.content?.minimumWithdrawAmount!=null)
                         Row(
                           children: [
-                            Text("minimum_withdraw_amount".tr,style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.5)),),
+                            Text("minimum_withdraw_amount".tr,style: robotoRegular.copyWith(fontSize: 12, color: InkColors.mutedForeground),),
                             const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
                             Text(PriceConverter.convertPrice(Get.find<SplashController>().configModel.content?.minimumWithdrawAmount),
-                              style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.5)),)
+                              style: robotoRegular.copyWith(fontSize: 12, color: InkColors.mutedForeground),)
                           ],
                         ),
 
@@ -161,10 +156,10 @@ class _InputBoxViewState extends State<InputBoxView> {
                         if(Get.find<SplashController>().configModel.content?.maximumWithdrawAmount!=null)
                         Row(
                           children: [
-                            Text("maximum_withdraw_amount".tr,style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.5)),),
+                            Text("maximum_withdraw_amount".tr,style: robotoRegular.copyWith(fontSize: 12, color: InkColors.mutedForeground),),
                             const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
                             Text(PriceConverter.convertPrice(Get.find<SplashController>().configModel.content?.maximumWithdrawAmount),
-                              style: robotoRegular.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.5)),)
+                              style: robotoRegular.copyWith(fontSize: 12, color: InkColors.mutedForeground),)
                           ],
                         ),
                       const SizedBox(height: Dimensions.paddingSizeDefault,),
@@ -181,6 +176,7 @@ class _InputBoxViewState extends State<InputBoxView> {
                                     onTap: (){
                                       transactionController.setIndex(index, suggestInputAmountList[index].toString());
                                       widget.inputAmountController!.text = suggestInputAmountList[index].toString();
+                                      setState((){ isTextFieldEmpty = false; });
                                     },
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
@@ -192,11 +188,13 @@ class _InputBoxViewState extends State<InputBoxView> {
                                       decoration: BoxDecoration(
                                         color: Get.find<TransactionController>().selectAmount != null ?
                                         suggestInputAmountList[index].toString() == Get.find<TransactionController>().selectAmount
-                                            ? Theme.of(context).primaryColorLight
-                                            : Theme.of(context).cardColor :  Theme.of(context).cardColor,
+                                            ? InkColors.foreground
+                                            : InkColors.card :  InkColors.card,
 
                                         borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-                                        border: Border.all(width: 0.5,color: Theme.of(context).primaryColorLight),
+                                        border: Border.all(width: 0.5, color: Get.find<TransactionController>().selectAmount != null &&
+                                        suggestInputAmountList[index].toString() == Get.find<TransactionController>().selectAmount
+                                            ? Colors.transparent : InkColors.border),
                                       ),
 
                                       child: Padding(
@@ -209,8 +207,8 @@ class _InputBoxViewState extends State<InputBoxView> {
                                           style: robotoRegular.copyWith(
                                               fontSize: Dimensions.fontSizeDefault,
                                               color: suggestInputAmountList[index].toString() == transactionController.selectAmount
-                                                  ? Theme.of(context).cardColor
-                                                  : Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.7)
+                                                  ? InkColors.background
+                                                  : InkColors.mutedForeground
                                           ),
                                         ),
                                       ),

@@ -44,3 +44,4 @@ class MyMarker extends StatelessWidget {
     );
   }
 }
+

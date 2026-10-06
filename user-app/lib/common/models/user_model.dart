@@ -7,7 +7,7 @@ class User {
   String? identificationNumber;
   String? identificationType;
   List<String>? identificationImage;
-  String? dateOfBirth;
+  String? dateOfBtrth;
   String? gender;
   String? profileImage;
   String? profileImageFullPath;
@@ -32,7 +32,7 @@ class User {
         this.identificationNumber,
         this.identificationType,
         this.identificationImage,
-        this.dateOfBirth,
+        this.dateOfBtrth,
         this.gender,
         this.profileImage,
         this.profileImageFullPath,
@@ -56,7 +56,7 @@ class User {
     phone = json['phone'];
     identificationNumber = json['identification_number'];
     identificationType = json['identification_type'];
-    dateOfBirth = json['date_of_birth'];
+    dateOfBtrth = json['date_of_btrth'];
     gender = json['gender'];
     profileImage = json['profile_image'];
     profileImageFullPath = json['profile_image_full_path'];
@@ -83,7 +83,7 @@ class User {
     data['identification_number'] = identificationNumber;
     data['identification_type'] = identificationType;
     data['identification_image'] = identificationImage;
-    data['date_of_birth'] = dateOfBirth;
+    data['date_of_btrth'] = dateOfBtrth;
     data['gender'] = gender;
     data['profile_image'] = profileImage;
     data['profile_image_full_path'] = profileImageFullPath;

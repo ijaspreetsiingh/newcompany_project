@@ -127,7 +127,7 @@ class DigitalPaymentMethodView extends StatelessWidget {
                       Container(
                         height: Dimensions.paddingSizeLarge, width: Dimensions.paddingSizeLarge,
                         decoration: BoxDecoration(
-                            shape: BoxShape.circle, color: isSelected ? Colors.green: Theme.of(context).cardColor,
+                            shape: BoxShape.circle, color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).cardColor,
                             border: Border.all(color: Theme.of(context).disabledColor)
                         ),
                         child: Icon(Icons.check, color: isSelected ? Colors.white : Colors.transparent, size: 16),
@@ -158,7 +158,7 @@ class DigitalPaymentMethodView extends StatelessWidget {
                           const SizedBox(height: Dimensions.paddingSizeSmall,),
                           Column(mainAxisSize: MainAxisSize.min ,crossAxisAlignment: CrossAxisAlignment.start, children: offlinePaymentTooltipTextList.map((element) => Padding(
                             padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeExtraSmall),
-                            child: Text( "●  ${element.tr}",
+                            child: Text( "â—  ${element.tr}",
                                 style: robotoRegular.copyWith(color: Colors.white70),
                               ),
                           ),).toList(),
@@ -210,4 +210,7 @@ class DigitalPaymentMethodView extends StatelessWidget {
     });
   }
 }
+
+
+
 

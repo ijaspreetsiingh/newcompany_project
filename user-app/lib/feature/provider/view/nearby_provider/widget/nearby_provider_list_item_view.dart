@@ -99,7 +99,7 @@ class NearbyProviderListItemView extends StatelessWidget {
                           Directionality(
                             textDirection: TextDirection.ltr,
                             child: Flexible(
-                              child: Text("${providerData.distance!.toStringAsFixed(2)} ${'km_away_from_you'.tr}",
+                              child: Text("${providerData.distance?.toStringAsFixed(2) ?? '--'} ${'km_away_from_you'.tr}",
                                 style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -133,3 +133,4 @@ class NearbyProviderListItemView extends StatelessWidget {
     });
   }
 }
+

@@ -1,4 +1,4 @@
-import 'package:jdds/util/core_export.dart';
+﻿import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 
 class SubmitReviewRepo{
@@ -14,3 +14,4 @@ class SubmitReviewRepo{
     return await apiClient.getData('${AppConstants.bookingReviewList}?booking_id=$bookingId');
   }
 }
+

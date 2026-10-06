@@ -1,9 +1,9 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 
 /// AUTO-ASSIGN: booking place hone ke baad ye controller har 3 seconds me
 /// booking status poll karta hai. Jab provider accept kar leta hai toh
-/// callback fire hota hai (UI "Provider Found!" dikhane ke liye).
+/// callback ftre hota hai (UI "Provider Found!" dikhane ke liye).
 class BookingStatusPollingController extends GetxController implements GetxService {
   final BookingDetailsRepo bookingDetailsRepo;
   BookingStatusPollingController({required this.bookingDetailsRepo});
@@ -75,3 +75,6 @@ class BookingStatusPollingController extends GetxController implements GetxServi
     super.onClose();
   }
 }
+
+
+

@@ -314,8 +314,10 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
                                     right: 2,
                                     child: Container(
                                       padding: const EdgeInsets.all(3),
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFF2563EB),
+                                      decoration: BoxDecoration(
+                                        color: isDark
+                                            ? const Color(0xFFEDEDED)
+                                            : const Color(0xFF111111),
                                         shape: BoxShape.circle,
                                       ),
                                       child: Text(
@@ -323,7 +325,9 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
                                             .toString(),
                                         style: robotoBold.copyWith(
                                           fontSize: 8,
-                                          color: Colors.white,
+                                          color: isDark
+                                              ? const Color(0xFF0A0A0A)
+                                              : Colors.white,
                                         ),
                                       ),
                                     ),

@@ -131,7 +131,9 @@ class _CustomExpansionTileState extends State<CustomExpansionTile> with SingleTi
         ListTileTheme.merge(
           iconColor: _iconColor.value ?? expansionTileTheme.iconColor,
           textColor: _headerColor.value,
-          child: ListTile(
+          child: Material(
+            type: MaterialType.transparency,
+            child: ListTile(
 
             //tileColor: Colors.blue,
             onTap: _handleTap,
@@ -159,6 +161,7 @@ class _CustomExpansionTileState extends State<CustomExpansionTile> with SingleTi
             ),
             //title: widget.title,
             subtitle: widget.subtitle,
+            ),
           ),
         ),
         ClipRect(

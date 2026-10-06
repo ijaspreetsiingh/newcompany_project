@@ -4,6 +4,7 @@ import 'package:jdds/util/core_export.dart';
 import 'package:jdds/feature/booking/widget/booking_item_card.dart';
 import 'package:jdds/feature/booking/widget/booking_status_tabs.dart';
 import 'package:jdds/common/widgets/address_selection_drawer.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class BookingListScreen extends StatefulWidget {
   final bool isFromMenu;
@@ -17,33 +18,53 @@ class _BookingListScreenState extends State<BookingListScreen> {
 
   @override
   void initState() {
-    Get.find<ServiceBookingController>().getAllBookingService(
-      offset: 1,bookingStatus: "all", isFromPagination:false,
-      serviceType: "all",
-    );
-    Get.find<ServiceBookingController>().updateBookingStatusTabs(BookingStatusTabs.all, firstTimeCall: false);
-    Get.find<ServiceBookingController>().updateSelectedServiceType();
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.find<ServiceBookingController>().getAllBookingService(
+        offset: 1,bookingStatus: "all", isFromPagination:false,
+        serviceType: "all",
+      );
+      Get.find<ServiceBookingController>().updateBookingStatusTabs(BookingStatusTabs.all, firstTimeCall: false);
+      Get.find<ServiceBookingController>().updateSelectedServiceType();
+    });
   }
   @override
   Widget build(BuildContext context) {
     final ScrollController bookingScreenScrollController = ScrollController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final bgColor = isDark ? const Color(0xFF0D0D0D) : Colors.white;
+
     return CustomPopWidget(
       child: Scaffold(
+        backgroundColor: bgColor,
         drawer: ResponsiveHelper.isDesktop(context) ? const AddressSelectionDrawer() : null,
 
         endDrawer:ResponsiveHelper.isDesktop(context) ? const MenuDrawer():null,
-        appBar: CustomAppBar(
-          isBackButtonExist: widget.isFromMenu? true : false,
-          onBackPressed: () {
-            if (Navigator.canPop(context)) {
-              Get.back();
-            } else {
-              Get.offAllNamed(RouteHelper.getMainRoute('home'));
-            }
-          },
-          title: "my_bookings".tr,
-          actionWidget: const FilterPopUpMenuWidget(),
+        appBar: AppBar(
+          automaticallyImplyLeading: widget.isFromMenu,
+          leading: widget.isFromMenu ? IconButton(
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: primaryColor),
+            onPressed: () {
+              if (Navigator.canPop(context)) {
+                Get.back();
+              } else {
+                Get.offAllNamed(RouteHelper.getMainRoute('home'));
+              }
+            },
+          ) : null,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: Text("bookings".tr,
+            style: GoogleFonts.manrope(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: primaryColor,
+            ),
+          ),
+          actions: const [
+            FilterPopUpMenuWidget(),
+          ],
         ),
         body: GetBuilder<ServiceBookingController>(
           builder: (serviceBookingController){
@@ -52,7 +73,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
               onRefresh: () async {
                 await serviceBookingController.getAllBookingService(
                   offset: 1,
-                  bookingStatus: serviceBookingController.selectedBookingStatus.name.toLowerCase(),
+                  bookingStatus: serviceBookingController.selectedBookingStatusApiValue,
                   isFromPagination:false,
                   serviceType: serviceBookingController.selectedServiceType.name,
                 );
@@ -79,7 +100,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
                         totalSize: serviceBookingController.bookingContent!.total!,
                         onPaginate: (int offset) async => await serviceBookingController.getAllBookingService(
                           offset: offset,
-                          bookingStatus: serviceBookingController.selectedBookingStatus.name.toLowerCase(),
+                          bookingStatus: serviceBookingController.selectedBookingStatusApiValue,
                           isFromPagination: true,
                           serviceType: serviceBookingController.selectedServiceType.name
                         ),
@@ -274,11 +295,11 @@ class FilterPopUpMenuWidget extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: 12),
                 child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(option.tr, style: robotoRegular.copyWith(color: Get.isDarkMode ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).colorScheme.primary)),
+                    Text(option.tr, style: GoogleFonts.dmSans(color: Get.isDarkMode ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).colorScheme.primary)),
                   ],
                 ),
               ) : Padding(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-                child: Text(option.tr, style: robotoRegular.copyWith(color: Get.isDarkMode ? Theme.of(context).hintColor : Theme.of(context).textTheme.bodyLarge?.color)),
+                child: Text(option.tr, style: GoogleFonts.dmSans(color: Get.isDarkMode ? Theme.of(context).hintColor : Theme.of(context).textTheme.bodyLarge?.color)),
               ),
               onTap: (){
                 Get.find<ServiceBookingController>().updateSelectedServiceType(
@@ -315,4 +336,6 @@ class FilterPopUpMenuWidget extends StatelessWidget {
     });
   }
 }
+
+
 

@@ -14,59 +14,103 @@ class _UpdateScreenState extends State<UpdateScreen> {
 
   bool _canExit = GetPlatform.isWeb ? true : false;
 
+  void _onBackInvoked() {
+    if(_canExit) {
+      SystemNavigator.pop();
+    }else {
+      showCustomSnackBar('back_press_again_to_exit'.tr, type : ToasterMessageType.info);
+      _canExit = true;
+      Timer(const Duration(seconds: 2), () {
+        _canExit = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomPopScopeWidget(
       onPopInvoked: (){
-        if(_canExit) {
-          SystemNavigator.pop();
-        }else {
-          showCustomSnackBar('back_press_again_to_exit'.tr, type : ToasterMessageType.info);
-          _canExit = true;
-          Timer(const Duration(seconds: 2), () {
-            _canExit = false;
-          });
-        }
+        _onBackInvoked();
       },
       child: Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(Dimensions.paddingSizeLarge),
-            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        backgroundColor: context.kBackground,
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(Dimensions.paddingSizeLarge),
+              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
 
-              Image.asset(widget.isUpdate! ? Images.update : Images.maintenance,
-                width: MediaQuery.of(context).size.height * 0.4,
-                height: MediaQuery.of(context).size.height * 0.4,
-              ),
-              SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-              const SizedBox(height: Dimensions.paddingSizeLarge,),
-              Text(widget.isUpdate! ? 'update_is_available'.tr : 'we_are_under_maintenance'.tr,
-                style: robotoBold.copyWith(fontSize: MediaQuery.of(context).size.height * 0.023, color: Theme.of(context).primaryColor),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+                Container(
+                  width: 112,
+                  height: 112,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: widget.isUpdate! ? context.kPrimary : context.kMuted,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    widget.isUpdate! ? Icons.download_outlined : Icons.build_outlined,
+                    size: 46,
+                    color: widget.isUpdate! ? context.kPrimaryForeground : context.kMutedForeground,
+                  ),
+                ),
+                const SizedBox(height: 28),
 
-              Text(widget.isUpdate! ? 'your_app_needs_to_update'.tr : 'we_will_be_right_back'.tr,
-                style: robotoRegular.copyWith(fontSize: MediaQuery.of(context).size.height * 0.0175, color: Theme.of(context).disabledColor),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: widget.isUpdate! ? MediaQuery.of(context).size.height * 0.04 : 0),
+                Text(widget.isUpdate! ? 'update_is_available'.tr : 'we_are_under_maintenance'.tr,
+                  textAlign: TextAlign.center,
+                  style: robotoBold.copyWith(
+                    fontSize: 30,
+                    color: context.kForeground,
+                  ),
+                ),
+                const SizedBox(height: 12),
 
-              widget.isUpdate! ? CustomButton(
-                btnTxt: 'update_now'.tr,
-                onPressed: () async {
-                  String appUrl = 'https://google.com';
-                  if (GetPlatform.isAndroid) {
-                    appUrl = Get.find<SplashController>().configModel?.content?.appUrlAndroid ?? "https://play.google.com/store/apps";
-                  }
-                  else if (GetPlatform.isIOS) {
-                    appUrl = Get.find<SplashController>().configModel?.content?.appUrlIos ?? "https://www.apple.com/app-store/";
-                  }
-                  _launchUrl(Uri.parse(appUrl));
+                Text(widget.isUpdate! ? 'your_app_needs_to_update'.tr : 'we_will_be_right_back'.tr,
+                  textAlign: TextAlign.center,
+                  style: robotoRegular.copyWith(
+                    fontSize: 14,
+                    height: 1.7,
+                    color: context.kMutedForeground,
+                  ),
+                ),
 
-              },) : const SizedBox(),
+                if(widget.isUpdate!) ...[
 
-            ]),
+                  const SizedBox(height: 28),
+
+                  KButton(
+                    label: 'update_now'.tr,
+                    onTap: () async {
+                      String appUrl = 'https://google.com';
+                      if (GetPlatform.isAndroid) {
+                        appUrl = Get.find<SplashController>().configModel?.content?.appUrlAndroid ?? "https://play.google.com/store/apps";
+                      }
+                      else if (GetPlatform.isIOS) {
+                        appUrl = Get.find<SplashController>().configModel?.content?.appUrlIos ?? "https://www.apple.com/app-store/";
+                      }
+                      _launchUrl(Uri.parse(appUrl));
+                    },
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  InkWell(
+                    onTap: _onBackInvoked,
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Text('maybe_later'.tr,
+                        textAlign: TextAlign.center,
+                        style: robotoRegular.copyWith(
+                          fontSize: 14,
+                          color: context.kMutedForeground,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+
+              ]),
+            ),
           ),
         ),
       ),

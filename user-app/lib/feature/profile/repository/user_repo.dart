@@ -7,12 +7,13 @@ import 'package:jdds/util/core_export.dart';
 class UserRepo extends DataSyncRepo{
   UserRepo({required super.apiClient, required SharedPreferences super.sharedPreferences});
 
-  Future<ApiResponseModel<T>> getUserInfo<T> ({required DataSourceEnum source}) async {
+  Future<AptresponseModel<T>> getUserInfo<T> ({required DataSourceEnum source}) async {
     return await fetchData<T>(AppConstants.customerInfoUri, source);
   }
 
-  Future<ApiResponseModel<T>> getCategoryList<T>({required DataSourceEnum source}) async {
-    return await fetchData<T>('${AppConstants.categoryUrl}&limit=100&offset=1', source);
+  Future<AptresponseModel<T>> getCategoryList<T>({required DataSourceEnum source}) async {
+    // categoryUrl already carries a limit; avoid conflicting duplicate query params.
+    return await fetchData<T>('/api/v1/client/group?limit=100&offset=1', source);
   }
 
   Future<Response> updateProfile(UserInfoModel userInfoModel, XFile? data) async {
@@ -39,3 +40,4 @@ class UserRepo extends DataSyncRepo{
   }
 
 }
+

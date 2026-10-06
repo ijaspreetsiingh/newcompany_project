@@ -1,4 +1,4 @@
-import 'package:jdds/common/models/api_response_model.dart';
+﻿import 'package:jdds/common/models/api_response_model.dart';
 import 'package:jdds/common/repo/data_sync_repo.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
@@ -10,7 +10,7 @@ class CartRepo extends DataSyncRepo{
     return await apiClient.postData(AppConstants.addToCart, cartModel.toJson());
   }
 
-  Future<ApiResponseModel<T>> getCartListFromServer<T>({required DataSourceEnum source}) async {
+  Future<AptresponseModel<T>> getCartListFromServer<T>({required DataSourceEnum source}) async {
     return await fetchData<T>("${AppConstants.getCartList}&&guest_id=${Get.find<SplashController>().getGuestId()}", source);
   }
 
@@ -45,8 +45,25 @@ class CartRepo extends DataSyncRepo{
       });
   }
 
-  Future<Response> getProviderBasedOnSubcategory(String subcategoryId) async {
-    return await apiClient.getData("${AppConstants.getProviderBasedOnSubcategory}?sub_category_id=$subcategoryId");
+  /// [latitude]/[longitude] diye ho to un par provider search (friend/other
+  /// location booking), warna user ke saved address coordinates.
+  Future<Response> getProviderBasedOnSubcategory(
+    String subcategoryId, {
+    double? latitude,
+    double? longitude,
+  }) async {
+    double? lat = latitude;
+    double? lng = longitude;
+    if (lat == null || lng == null) {
+      final userAddress = Get.find<LocationController>().getUserAddress();
+      lat = double.tryParse(userAddress?.latitude ?? "");
+      lng = double.tryParse(userAddress?.longitude ?? "");
+    }
+    String geoQuery = "";
+    if (lat != null && lng != null) {
+      geoQuery = "&latitude=$lat&longitude=$lng";
+    }
+    return await apiClient.getData("${AppConstants.getProviderBasedOnSubcategory}?sub_category_id=$subcategoryId$geoQuery");
   }
 
   Future<Response> addRebookToServer(String bookingId) async {
@@ -55,3 +72,4 @@ class CartRepo extends DataSyncRepo{
 
 
 }
+

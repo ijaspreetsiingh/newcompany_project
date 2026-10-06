@@ -33,6 +33,7 @@ Future<void> main() async {
 
 
   Map<String, Map<String, String>> languages = await di.init();
+  await WorkStatusService.init();
   NotificationBody? body;
 
   try {

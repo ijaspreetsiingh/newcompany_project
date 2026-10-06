@@ -65,7 +65,7 @@ class NextServiceWidget extends StatelessWidget {
                 Text(
                   booking.isPaid == 1 ?"paid".tr : "unpaid".tr,
                   style: robotoMedium.copyWith(
-                    color:  booking.isPaid == 1 ? Colors.green : Theme.of(context).colorScheme.error,
+                    color:  booking.isPaid == 1 ? Theme.of(Get.context!).colorScheme.primary : Theme.of(context).colorScheme.error,
                     fontSize: Dimensions.fontSizeSmall + 1
                   ),
                 ),
@@ -99,3 +99,5 @@ class NextServiceWidget extends StatelessWidget {
     );
   }
 }
+
+

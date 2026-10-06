@@ -33,7 +33,7 @@ class CustomRepeatBookingSchedule extends StatelessWidget {
 
               InkWell(
                 onTap: () async {
-                  scheduleController.initCustomSelectedSchedule();
+                  scheduleController.inttCustomSelectedSchedule();
                   if(ResponsiveHelper.isDesktop(context)){
                     Get.dialog(const _SelectDateTimeWidget(), barrierDismissible: true);
                   }else{
@@ -166,7 +166,7 @@ class CustomRepeatBookingSchedule extends StatelessWidget {
                         Row(children: [
                           IconButton(
                             onPressed: (){
-                              scheduleController.initCustomSelectedSchedule();
+                              scheduleController.inttCustomSelectedSchedule();
                               showModalBottomSheet(
                                 backgroundColor: Colors.transparent, context: context, isScrollControlled: true, useSafeArea: true,
                                 builder: (context) => _SelectDateTimeWidget(editIndex: index,),
@@ -320,19 +320,19 @@ class _CalenderWidget extends StatelessWidget {
           onSelectionChanged: (DateRangePickerSelectionChangedArgs args){
             if(args.value !=null){
 
-              List<DateTime> oldList = scheduleController.pickedInitialCustomRepeatBookingDateTimeList;
+              List<DateTime> oldList = scheduleController.pickedinttialCustomRepeatBookingDateTimeList;
               List<DateTime> newList = List<DateTime>.from(args.value);
 
               Map<String, DateTime?> result  =  traceDateChange(oldList,newList);
-              TimeOfDay initialPickedTime  = oldList.isNotEmpty ? DateConverter.convertDateTimeToTimeOfDay(oldList.first) : TimeOfDay.now();
+              TimeOfDay inttialPickedTime  = oldList.isNotEmpty ? DateConverter.convertDateTimeToTimeOfDay(oldList.first) : TimeOfDay.now();
 
               if (result['added'] != null) {
                 DateTime date = result['added']!;
-                scheduleController.pickedInitialCustomRepeatBookingDateTimeList.add(DateConverter.combineDateTimeAndTimeOfDay(date: date, time: initialPickedTime));
+                scheduleController.pickedinttialCustomRepeatBookingDateTimeList.add(DateConverter.combineDateTimeAndTimeOfDay(date: date, time: inttialPickedTime));
               }
               if (result['removed'] != null) {
                 DateTime date = result['removed']!;
-                scheduleController.pickedInitialCustomRepeatBookingDateTimeList.remove(DateConverter.combineDateTimeAndTimeOfDay(date: date, time: initialPickedTime));
+                scheduleController.pickedinttialCustomRepeatBookingDateTimeList.remove(DateConverter.combineDateTimeAndTimeOfDay(date: date, time: inttialPickedTime));
               }
               scheduleController.update();
 
@@ -388,7 +388,7 @@ class _ScheduleListWidget extends StatelessWidget {
             Text("scheduled_list".tr, style: robotoMedium,),
             const SizedBox(height: Dimensions.paddingSizeSmall,),
 
-            scheduleController.pickedInitialCustomRepeatBookingDateTimeList.isNotEmpty ? Expanded(
+            scheduleController.pickedinttialCustomRepeatBookingDateTimeList.isNotEmpty ? Expanded(
               child: ListView.builder(
                 itemBuilder: (context, index){
 
@@ -402,7 +402,7 @@ class _ScheduleListWidget extends StatelessWidget {
                     child: scheduleItem(context, scheduleController, index, dateRangeController),
                   ) : scheduleItem(context, scheduleController, index, dateRangeController);
                 },
-                itemCount: scheduleController.pickedInitialCustomRepeatBookingDateTimeList.length,
+                itemCount: scheduleController.pickedinttialCustomRepeatBookingDateTimeList.length,
                 padding: EdgeInsets.zero,
                 shrinkWrap: true,
               ),
@@ -426,14 +426,14 @@ class _ScheduleListWidget extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
           child: Text(
-            DateConverter.dateStringMonthYear(scheduleController.pickedInitialCustomRepeatBookingDateTimeList[index]),
+            DateConverter.dateStringMonthYear(scheduleController.pickedinttialCustomRepeatBookingDateTimeList[index]),
             style: robotoRegular,
           ),
         ),
 
         CustomTimePicker(
           onTimeChanged: (TimeOfDay time) {
-            DateTime dateTime  = DateConverter.combineDateTimeAndTimeOfDay(date: scheduleController.pickedInitialCustomRepeatBookingDateTimeList[index],
+            DateTime dateTime  = DateConverter.combineDateTimeAndTimeOfDay(date: scheduleController.pickedinttialCustomRepeatBookingDateTimeList[index],
               time: time,
             );
 
@@ -441,14 +441,14 @@ class _ScheduleListWidget extends StatelessWidget {
 
           },
           isExpandedRow: false,
-          time: DateConverter.convertDateTimeToTimeOfDay(scheduleController.pickedInitialCustomRepeatBookingDateTimeList[index]),
+          time: DateConverter.convertDateTimeToTimeOfDay(scheduleController.pickedinttialCustomRepeatBookingDateTimeList[index]),
         ),
 
 
         IconButton(
           onPressed: (){
-            scheduleController.removeInitialPickedCustomRepeatBookingDate(index: index);
-            dateRangeController.selectedDates = scheduleController.pickedInitialCustomRepeatBookingDateTimeList;
+            scheduleController.removeinttialPickedCustomRepeatBookingDate(index: index);
+            dateRangeController.selectedDates = scheduleController.pickedinttialCustomRepeatBookingDateTimeList;
             scheduleController.update();
           },
           icon:  Icon(Icons.cancel_outlined, color: Theme.of(context).colorScheme.error, size: 20,),
@@ -522,10 +522,10 @@ class _BottomButtonWidget extends StatelessWidget {
   }
 
   void _onSaveTap(){
-    if(scheduleController.pickedInitialCustomRepeatBookingDateTimeList.isEmpty){
+    if(scheduleController.pickedinttialCustomRepeatBookingDateTimeList.isEmpty){
       customSnackBar("select_your_service_booking_date".tr, type: ToasterMessageType.info, showDefaultSnackBar: false);
     }else{
-      scheduleController.initCustomSelectedSchedule(isFirst: false);
+      scheduleController.inttCustomSelectedSchedule(isFirst: false);
       scheduleController.calculateScheduleCountDays(repeatBookingType: RepeatBookingType.custom);
       Get.back();
     }
@@ -557,3 +557,5 @@ Map<String, DateTime?> traceDateChange(List<DateTime> oldList, List<DateTime> ne
 String _dateToDayString(DateTime date) {
   return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 }
+
+

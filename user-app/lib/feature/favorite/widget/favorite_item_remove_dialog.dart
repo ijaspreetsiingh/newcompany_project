@@ -115,3 +115,4 @@ class _ProductBottomSheetState extends State<FavoriteItemRemoveDialog> {
     );
   }
 }
+

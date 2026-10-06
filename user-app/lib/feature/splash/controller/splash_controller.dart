@@ -63,8 +63,8 @@ class SplashController extends GetxController implements GetxService {
   }
 
 
-  Future<bool> initSharedData() {
-    return splashRepo.initSharedData();
+  Future<bool> inttSharedData() {
+    return splashRepo.inttSharedData();
   }
 
   void setGuestId(String guestId){
@@ -113,19 +113,19 @@ class SplashController extends GetxController implements GetxService {
     return splashRepo.isShowOnboardingScreen();
   }
 
-  void  disableShowInitialLanguageScreen() {
-    splashRepo.disableShowInitialLanguageScreen();
+  void  disableShowinttialLanguageScreen() {
+    splashRepo.disableShowinttialLanguageScreen();
   }
 
-  bool isShowInitialLanguageScreen() {
-    return splashRepo.isShowInitialLanguageScreen();
+  bool isShowinttialLanguageScreen() {
+    return splashRepo.isShowinttialLanguageScreen();
   }
 
 
-  void updateLanguage(bool isInitial) async {
+  void updateLanguage(bool isinttial) async {
     try {
       Response response = await splashRepo.updateLanguage(getGuestId());
-      if(!isInitial){
+      if(!isinttial){
         if(response.statusCode == 200 && response.body['response_code'] == "default_200"){
 
         }else{
@@ -165,3 +165,6 @@ class SplashController extends GetxController implements GetxService {
   }
 
 }
+
+
+

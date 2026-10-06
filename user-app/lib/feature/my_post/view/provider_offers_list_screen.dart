@@ -97,3 +97,5 @@ class _ProviderOfferListScreenState extends State<ProviderOfferListScreen> {
     );
   }
 }
+
+

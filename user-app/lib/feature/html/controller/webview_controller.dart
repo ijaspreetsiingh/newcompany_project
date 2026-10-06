@@ -1,4 +1,4 @@
-import 'package:jdds/feature/html/model/page_details_model.dart';
+﻿import 'package:jdds/feature/html/model/page_details_model.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 
@@ -21,3 +21,5 @@ class HtmlViewController extends GetxController implements GetxService{
     update();
   }
 }
+
+

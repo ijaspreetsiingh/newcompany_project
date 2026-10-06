@@ -235,3 +235,4 @@ class FromUser {
     return data;
   }
 }
+

@@ -1,105 +1,144 @@
+import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 
+/// nest. style skeleton loader (Services tab / See All screen)
+/// Layout new list se exactly match karta hai :
+/// chips â†’ count line â†’ filter buttons â†’ bordered service rows
 class SearchShimmerWidget extends StatelessWidget {
   const SearchShimmerWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final Color base = Theme.of(context).shadowColor;
+    final bool isDark = Get.isDarkMode;
+
     return Center(
       child: SizedBox(
         width: Dimensions.webMaxWidth,
-        child: Column(children: [
+        child: Shimmer(
+          duration: const Duration(seconds: 2),
+          enabled: true,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-          Padding(padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
-            child: Shimmer(
-              duration: const Duration(seconds: 2),
-              enabled: true,
-              child: Row(mainAxisAlignment: MainAxisAlignment.center, mainAxisSize: MainAxisSize.min, children: [
-                Container(height: 20, width: 30, decoration: BoxDecoration(
-                  color:  Theme.of(context).shadowColor,
+            /// â”€â”€ Category chips skeleton â”€â”€
+            SizedBox(
+              height: 62,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Dimensions.paddingSizeDefault,
+                  vertical: Dimensions.paddingSizeSmall,
+                ),
+                itemCount: 5,
+                itemBuilder: (context, index) {
+                  final double width = index == 0 ? 70 : (index % 2 == 0 ? 110 : 95);
+                  return Container(
+                    height: 38,
+                    width: width,
+                    margin: const EdgeInsetsDirectional.only(end: Dimensions.paddingSizeSmall),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white.withValues(alpha: 0.08) : base,
+                      borderRadius: BorderRadius.circular(Dimensions.radiusExtraMoreLarge),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            /// â”€â”€ Count line skeleton â”€â”€
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Dimensions.paddingSizeDefault, Dimensions.paddingSizeSmall,
+                Dimensions.paddingSizeDefault, Dimensions.paddingSizeSmall,
+              ),
+              child: Container(
+                height: 12, width: 100,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white.withValues(alpha: 0.08) : base,
                   borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                ),),
+                ),
+              ),
+            ),
+
+            /// â”€â”€ Sort / Filter buttons skeleton â”€â”€
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Dimensions.paddingSizeDefault, 0,
+                Dimensions.paddingSizeDefault, Dimensions.paddingSizeSmall,
+              ),
+              child: Row(children: [
+                _box(context, 40, 40, base, isDark, radius: Dimensions.radiusDefault),
                 const SizedBox(width: Dimensions.paddingSizeSmall),
-                Container(height: 20, width: 90,  decoration: BoxDecoration(
-                  color:  Theme.of(context).shadowColor,
-                  borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                ),),
+                _box(context, 40, 40, base, isDark, radius: Dimensions.radiusDefault),
               ]),
             ),
-          ),
 
-          const SizedBox(height: Dimensions.paddingSizeDefault,),
-
-          Padding(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Row(
-                children: [
-                  Shimmer(
-                    duration: const Duration(seconds: 2),
-                    enabled: true,
-                    child: Container(height: 25, width: 80, decoration: BoxDecoration(
-                      color:  Theme.of(context).shadowColor,
-                      borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                    ),),
+            /// â”€â”€ Service rows skeleton (nest. bordered rows jaisa) â”€â”€
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+              child: Column(children: List.generate(6, (index) => Container(
+                height: 96,
+                margin: const EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),
+                padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
+                  border: Border.all(
+                    color: Theme.of(context).primaryColorLight.withValues(alpha: isDark ? 0.4 : 1),
                   ),
+                ),
+                child: Row(children: [
 
-                  if(ResponsiveHelper.isDesktop(context)) Padding(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-                    child: Shimmer(
-                      duration: const Duration(seconds: 2),
-                      enabled: true,
-                      child: Container(height: 20, width: 100, decoration: BoxDecoration(
-                        color:  Theme.of(context).shadowColor,
-                        borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                      ),),
+                  /// Image placeholder
+                  Container(
+                    height: 72, width: 72,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white.withValues(alpha: 0.08) : base,
+                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
                     ),
                   ),
-                ],
-              ),
+                  const SizedBox(width: Dimensions.paddingSizeDefault),
 
-              Row(children: [
-                Shimmer(
-                  duration: const Duration(seconds: 2),
-                  enabled: true,
-                  child: Container(
-                    height: 40, width: ResponsiveHelper.isDesktop(context)? 100 : 40, decoration: BoxDecoration(
-                    color:  Theme.of(context).shadowColor,
-                    borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                  ),),
-                ),
+                  /// Text lines placeholder (name, rating, price)
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Container(height: 13, width: 160,
+                        color: isDark ? Colors.white.withValues(alpha: 0.08) : base),
+                      const SizedBox(height: 9),
+                      Container(height: 10, width: 100,
+                        color: isDark ? Colors.white.withValues(alpha: 0.08) : base),
+                      const SizedBox(height: 9),
+                      Container(height: 10, width: 70,
+                        color: isDark ? Colors.white.withValues(alpha: 0.08) : base),
+                    ]),
+                  ),
 
-                const SizedBox(width: Dimensions.paddingSizeDefault,),
-
-                Shimmer(
-                  duration: const Duration(seconds: 2),
-                  enabled: true,
-                  child: Container(
-                    height: 40, width: ResponsiveHelper.isDesktop(context)? 100 : 40, decoration: BoxDecoration(
-                    color:  Theme.of(context).shadowColor,
-                    borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                  ),),
-                ),
-
-              ],)
-            ],),
-          ),
-
-          GridView.builder(
-            key: UniqueKey(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisSpacing: Dimensions.paddingSizeDefault,
-              mainAxisSpacing:  Dimensions.paddingSizeDefault,
-              mainAxisExtent: ResponsiveHelper.isDesktop(context) ?  270 : 240 ,
-              crossAxisCount: ResponsiveHelper.isDesktop(context) ? 5 : ResponsiveHelper.isTab(context) ? 3 : 2,
+                  /// Chevron placeholder
+                  Container(
+                    height: 16, width: 16,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isDark ? Colors.white.withValues(alpha: 0.08) : base,
+                    ),
+                  ),
+                ]),
+              ))),
             ),
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap:  true, itemCount: 15,
-            padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-            itemBuilder: (context, index) {
-              return const ServiceShimmer(isEnabled: true, hasDivider: true,);
-            },
-          )
-        ],),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _box(BuildContext context, double height, double width, Color base, bool isDark, {double radius = Dimensions.radiusSmall}) {
+    return Container(
+      height: height, width: width,
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.08) : base,
+        borderRadius: BorderRadius.circular(radius),
       ),
     );
   }
 }
+

@@ -41,8 +41,8 @@ class _WalletPaymentView extends StatelessWidget {
 
       bool isPartialPayment = CheckoutHelper.checkPartialPayment(walletBalance: walletBalance ?? 0, bookingAmount: bookingAmount ?? 0);
       double paidAmount =  CheckoutHelper.calculatePaidAmount(walletBalance: walletBalance ?? 0, bookingAmount: bookingAmount ?? 0);
-      double remainingWalletBalance = CheckoutHelper.calculateRemainingWalletBalance(walletBalance: walletBalance ?? 0, bookingAmount: bookingAmount ?? 0);
-      double remainingBill = (bookingAmount ?? 0) - paidAmount;
+      double remaintngWalletBalance = CheckoutHelper.calculateRemaintngWalletBalance(walletBalance: walletBalance ?? 0, bookingAmount: bookingAmount ?? 0);
+      double remaintngBill = (bookingAmount ?? 0) - paidAmount;
 
       return Opacity(
         opacity: ((walletBalance ?? 0) <= 0) ? 0.5 : 1,
@@ -50,9 +50,9 @@ class _WalletPaymentView extends StatelessWidget {
           ! isDesktopView ?
 
           Column( children: [
-            walletCartWidget(context, walletPaymentStatus, remainingWalletBalance, walletBalance, cartController, isDesktopView, isPartialPayment),
+            walletCartWidget(context, walletPaymentStatus, remaintngWalletBalance, walletBalance, cartController, isDesktopView, isPartialPayment),
             if(walletPaymentStatus) const SizedBox(height: Dimensions.paddingSizeDefault),
-            if(walletPaymentStatus) remainingBalanceWidget(walletPaymentStatus, context, isPartialPayment, paidAmount, remainingBill),
+            if(walletPaymentStatus) remaintngBalanceWidget(walletPaymentStatus, context, isPartialPayment, paidAmount, remaintngBill),
             if(isPartialPayment && walletPaymentStatus) Padding(
               padding: const EdgeInsets.only(top: Dimensions.paddingSizeSmall, left: 20, right: 20),
               child: Text("pay_the_rest_amount_hint".tr,
@@ -65,9 +65,9 @@ class _WalletPaymentView extends StatelessWidget {
           Column( children: [
             IntrinsicHeight(
               child: Row(children: [
-                Expanded(child: walletCartWidget(context, walletPaymentStatus, remainingWalletBalance, walletBalance, cartController, isDesktopView, isPartialPayment)),
+                Expanded(child: walletCartWidget(context, walletPaymentStatus, remaintngWalletBalance, walletBalance, cartController, isDesktopView, isPartialPayment)),
                 if(walletPaymentStatus) const SizedBox(width: Dimensions.paddingSizeDefault,),
-                if(walletPaymentStatus) Expanded(child: remainingBalanceWidget(walletPaymentStatus, context, isPartialPayment, paidAmount, remainingBill))
+                if(walletPaymentStatus) Expanded(child: remaintngBalanceWidget(walletPaymentStatus, context, isPartialPayment, paidAmount, remaintngBill))
               ]),
             ),
 
@@ -93,7 +93,7 @@ class _WalletPaymentView extends StatelessWidget {
     });
   }
 
-  Widget remainingBalanceWidget(bool walletPaymentStatus, BuildContext context, bool isPartialPayment, double paidAmount, double remainingBill) {
+  Widget remaintngBalanceWidget(bool walletPaymentStatus, BuildContext context, bool isPartialPayment, double paidAmount, double remaintngBill) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical : Dimensions.paddingSizeDefault, horizontal: Dimensions.paddingSizeDefault),
       decoration: BoxDecoration(
@@ -118,8 +118,8 @@ class _WalletPaymentView extends StatelessWidget {
         if(isPartialPayment) const SizedBox(height: Dimensions.paddingSizeSmall,),
 
         if(isPartialPayment) Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text('remaining_bill'.tr, style: robotoMedium,),
-          Text( PriceConverter.convertPrice(remainingBill),
+          Text('remaintng_bill'.tr, style: robotoMedium,),
+          Text( PriceConverter.convertPrice(remaintngBill),
             style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge),
           ),
         ]),
@@ -128,7 +128,7 @@ class _WalletPaymentView extends StatelessWidget {
     );
   }
 
-  GestureDetector walletCartWidget(BuildContext context, bool walletPaymentStatus, double remainingWalletBalance, double? walletBalance, CartController cartController, bool isDesktopView, bool isPartialPayment) {
+  GestureDetector walletCartWidget(BuildContext context, bool walletPaymentStatus, double remaintngWalletBalance, double? walletBalance, CartController cartController, bool isDesktopView, bool isPartialPayment) {
     return GestureDetector(
       onTap:(){
         if(paymentMethodName == PaymentMethodName.walletMoney){
@@ -151,12 +151,12 @@ class _WalletPaymentView extends StatelessWidget {
             if(isDesktopView) const SizedBox(width: Dimensions.paddingSizeDefault),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text(walletPaymentStatus ? "wallet_remaining_balance".tr : "wallet_balance".tr, style: robotoRegular.copyWith(
+                Text(walletPaymentStatus ? "wallet_remaintng_balance".tr : "wallet_balance".tr, style: robotoRegular.copyWith(
                   overflow: TextOverflow.ellipsis, fontSize: Dimensions.fontSizeDefault-1,
                   color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.6),
                 )),
                 const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
-                Text(PriceConverter.convertPrice(walletPaymentStatus ? remainingWalletBalance : walletBalance), style: robotoMedium.copyWith(
+                Text(PriceConverter.convertPrice(walletPaymentStatus ? remaintngWalletBalance : walletBalance), style: robotoMedium.copyWith(
                   overflow: TextOverflow.ellipsis, fontSize: Dimensions.fontSizeExtraLarge,
                 )),
               ]),
@@ -246,7 +246,7 @@ class _CashPaymentView extends StatelessWidget {
               Container(
                 height: Dimensions.paddingSizeLarge, width: Dimensions.paddingSizeLarge,
                 decoration: BoxDecoration(
-                    shape: BoxShape.circle, color: controller.selectedPaymentMethod == paymentMethodName ? Colors.green : Theme.of(context).cardColor,
+                    shape: BoxShape.circle, color: controller.selectedPaymentMethod == paymentMethodName ? Theme.of(context).colorScheme.primary : Theme.of(context).cardColor,
                     border: Border.all(color: Theme.of(context).disabledColor)
                 ),
                 child: Icon(Icons.check, color: controller.selectedPaymentMethod == paymentMethodName? Colors.white : Colors.transparent, size: 16),
@@ -262,4 +262,7 @@ class _CashPaymentView extends StatelessWidget {
     ]);
   }
 }
+
+
+
 

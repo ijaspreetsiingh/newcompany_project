@@ -20,6 +20,7 @@ use Modules\ProviderManagement\Entities\Provider;
 use Modules\ReviewModule\Entities\Review;
 use Modules\ReviewModule\Entities\ReviewReply;
 use Modules\ServiceManagement\Entities\Faq;
+use Modules\ServiceManagement\Entities\ProviderServiceRequest;
 use Modules\ServiceManagement\Entities\Service;
 use Modules\ServiceManagement\Entities\Tag;
 use Modules\ServiceManagement\Entities\Variation;
@@ -692,6 +693,82 @@ class ServiceController extends Controller
         $this->service->where('id', $id)->update(['is_active' => !$service->is_active]);
 
         return response()->json(response_formatter(DEFAULT_STATUS_UPDATE_200), 200);
+    }
+
+    /**
+     * Provider ne khud banaye gaye / admin service ki updates (approval queue).
+     * GET admin/service/provider-services?tab=create|update
+     *   tab=create -> "New Services" tab
+     *   tab=update -> "Service Updates" tab
+     */
+    public function providerServices(Request $request): View|Factory|Application
+    {
+        $this->authorize('service_view');
+
+        $tab = in_array($request['tab'], ['create', 'update']) ? $request['tab'] : 'create';
+        $status = in_array($request['status'], ['pending', 'approved', 'denied', 'all']) ? $request['status'] : 'pending';
+        $search = $request['search'];
+
+        $requests = ProviderServiceRequest::query()
+            ->with([
+                'service:id,name,short_description,approval_status,parent_service_id,category_id,sub_category_id,cover_image,zone_id',
+                'service.variations',
+                'service.category:id,name,parent_id',
+                'service.subCategory:id,name',
+                'provider:id,company_name,contact_person_name',
+            ])
+            ->where('request_type', $tab)
+            ->when($status != 'all', function ($query) use ($status) {
+                $query->where('status', $status);
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->whereHas('service', function ($subQuery) use ($search) {
+                    $subQuery->where('name', 'LIKE', '%' . $search . '%');
+                });
+            })
+            ->latest()
+            ->paginate(pagination_limit());
+
+        $tabCounts = [
+            'create' => ProviderServiceRequest::where('request_type', 'create')->count(),
+            'update' => ProviderServiceRequest::where('request_type', 'update')->count(),
+        ];
+
+        return view('servicemanagement::admin.service.provider-services', compact('requests', 'status', 'search', 'tab', 'tabCounts'));
+    }
+
+    /**
+     * Provider service approve / deny (create ya update request).
+     * POST admin/service/provider-service-update
+     */
+    public function providerServiceStatusUpdate(Request $request): RedirectResponse
+    {
+        $this->authorize('service_manage_status');
+
+        $service = $this->service->where('id', $request['service_id'])->first();
+
+        if (!$service || !$service->provider_id) {
+            Toastr::error(translate('Service not found'));
+            return back();
+        }
+
+        $approved = $request['status'] == 'approve';
+        $service->approval_status = $approved ? 'approved' : 'denied';
+        $service->save();
+
+        $pending = ProviderServiceRequest::where('service_id', $service->id)
+            ->where('status', 'pending')
+            ->first();
+
+        if ($pending) {
+            $pending->update([
+                'status' => $approved ? 'approved' : 'denied',
+                'admin_note' => $request['admin_note'] ?? null,
+            ]);
+        }
+
+        Toastr::success(translate(DEFAULT_STATUS_UPDATE_200['message']));
+        return back();
     }
 
     /**

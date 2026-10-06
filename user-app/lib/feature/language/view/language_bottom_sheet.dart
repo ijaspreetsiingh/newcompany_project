@@ -78,7 +78,7 @@ class ChooseLanguageBottomSheet extends StatelessWidget {
                         buttonText: 'select'.tr,
                         margin: const EdgeInsets.all(Dimensions.paddingSizeDefault),
                         onPressed: () {
-                          Get.find<SplashController>().disableShowInitialLanguageScreen();
+                          Get.find<SplashController>().disableShowinttialLanguageScreen();
                           if(localizationController.languages.isNotEmpty && localizationController.selectedIndex != -1) {
                             localizationController.setLanguage(
                                 Locale(
@@ -109,3 +109,5 @@ class ChooseLanguageBottomSheet extends StatelessWidget {
     );
   }
 }
+
+

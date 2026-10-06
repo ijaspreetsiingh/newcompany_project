@@ -1,6 +1,7 @@
 import 'package:jdds/helper/booking_helper.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class BookingSummeryWidget extends StatelessWidget{
   final BookingDetailsContent bookingDetails;
@@ -8,6 +9,13 @@ class BookingSummeryWidget extends StatelessWidget{
 
   @override
   Widget build(BuildContext context){
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
+    final bgColor = isDark ? const Color(0xFF171717) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF333333) : const Color(0xFFE5E5E5);
+    final iconBgColor = isDark ? const Color(0xFF262626) : const Color(0xFFF6F6F6);
+
     double paidAmount = 0;
 
     double totalBookingAmount = bookingDetails.totalBookingAmount ?? 0;
@@ -25,38 +33,57 @@ class BookingSummeryWidget extends StatelessWidget{
     double additionalCharge = isPartialPayment ? totalBookingAmount - paidAmount : bookingDetails.additionalCharge ?? 0;
 
     return Container(
-      decoration: BoxDecoration(color: Theme.of(context).cardColor , borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-          boxShadow: Get.find<ThemeController>().darkTheme ? null : searchBoxShadow
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
       ),
       child: Column( crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-        Gaps.verticalGapOf(Dimensions.paddingSizeSmall),
-        Padding(padding: ResponsiveHelper.isDesktop(context) ? const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeLarge) : const EdgeInsets.symmetric(horizontal:Dimensions.paddingSizeDefault),
-            child: Text( 'booking_summery'.tr,
-                style:robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color))
-        ),
-        Gaps.verticalGapOf(Dimensions.paddingSizeSmall),
+        const SizedBox(height: 16),
+        Padding(padding: ResponsiveHelper.isDesktop(context) ? const EdgeInsets.symmetric(horizontal: 24) : const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(children: [
+              Container(
+                height: 32, width: 32,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: iconBgColor,
+                ),
+                child: Icon(Icons.receipt_long_rounded, size: 16, color: primaryColor),
+              ),
+              const SizedBox(width: 10),
+              Text( 'booking_summery'.tr,
+                  style: GoogleFonts.manrope(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: primaryColor,
+                  )),
+            ])),
+        const SizedBox(height: 16),
 
         Container(
-          padding: ResponsiveHelper.isDesktop(context) ? const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeLarge) : const EdgeInsets.symmetric(horizontal:Dimensions.paddingSizeDefault),
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.07),
+          padding: ResponsiveHelper.isDesktop(context) ? const EdgeInsets.symmetric(horizontal: 24) : const EdgeInsets.symmetric(horizontal: 16),
+          color: iconBgColor,
           child: SizedBox(
-            height: 40,
-            child:  Row( mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text('service_info'.tr, style:robotoBold.copyWith(
-                fontSize: Dimensions.fontSizeSmall,
-                color: Theme.of(context).textTheme.bodyLarge!.color!,decoration: TextDecoration.none,
+            height: 36,
+            child: Row( mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Text('service_info'.tr, style: GoogleFonts.dmSans(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: primaryColor,
               )),
-              Text('price'.tr,style:robotoBold.copyWith(
-                fontSize: Dimensions.fontSizeSmall,
-                color: Theme.of(context).textTheme.bodyLarge!.color!,decoration: TextDecoration.none,
+              Text('price'.tr, style: GoogleFonts.dmSans(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: primaryColor,
               )),
             ]),
           ),
         ),
 
         Padding(
-          padding:  ResponsiveHelper.isDesktop(context) ?  const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall) :  EdgeInsets.zero,
+          padding: ResponsiveHelper.isDesktop(context) ? const EdgeInsets.symmetric(horizontal: 8) : EdgeInsets.zero,
           child: Column(children: [
             ListView.builder(itemBuilder: (context, index){
               return _ServiceInfoItem(
@@ -70,126 +97,172 @@ class BookingSummeryWidget extends StatelessWidget{
               shrinkWrap: true,
             ),
 
-            Gaps.verticalGapOf(Dimensions.paddingSizeSmall),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-              child: Divider(height: 2, color: Colors.grey,),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Divider(height: 1, color: borderColor),
             ),
-            Gaps.verticalGapOf(Dimensions.paddingSizeSmall),
+            const SizedBox(height: 8),
 
-            Padding(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+            Padding(padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 Text('sub_total'.tr,
-                  style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w400,
+                    color: mutedColor,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Directionality(
                   textDirection: TextDirection.ltr,
                   child: Text(
                     PriceConverter.convertPrice(subTotal,isShowLongPrice: true),
-                    style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
+                    style: GoogleFonts.dmSans(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w400,
+                      color: primaryColor,
+                    ),
                   ),
                 ),
               ]),
             ),
 
-
-            Gaps.verticalGapOf(Dimensions.paddingSizeSmall),
+            const SizedBox(height: 8),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                       'service_discount'.tr,
-                      style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
+                      style: GoogleFonts.dmSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w400,
+                        color: mutedColor,
+                      ),
                       overflow: TextOverflow.ellipsis
                   ),
                   Directionality(
                     textDirection: TextDirection.ltr,
                     child: Text(
                         "(-) ${PriceConverter.convertPrice(bookingDetails.totalDiscountAmount ?? 0)}",
-                        style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color)),
+                        style: GoogleFonts.dmSans(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w400,
+                          color: primaryColor,
+                        )),
                   ),
                 ],
               ),
             ),
-            Gaps.verticalGapOf(Dimensions.paddingSizeSmall),
+            const SizedBox(height: 8),
 
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'coupon_discount'.tr,
-                    style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color!),
+                    style: GoogleFonts.dmSans(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w400,
+                      color: mutedColor,
+                    ),
                     overflow: TextOverflow.ellipsis,),
                   Directionality(
                     textDirection: TextDirection.ltr,
                     child: Text('(-) ${PriceConverter.convertPrice(bookingDetails.totalCouponDiscountAmount ?? 0)}',
-                      style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color!),),
+                      style: GoogleFonts.dmSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w400,
+                        color: primaryColor,
+                      )),
                   ),
                 ],
               ),
             ),
 
-            Gaps.verticalGapOf(Dimensions.paddingSizeSmall),
+            const SizedBox(height: 8),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'campaign_discount'.tr,
-                    style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
+                    style: GoogleFonts.dmSans(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w400,
+                      color: mutedColor,
+                    ),
                     overflow: TextOverflow.ellipsis,),
                   Directionality(
                     textDirection: TextDirection.ltr,
                     child: Text('(-) ${PriceConverter.convertPrice(bookingDetails.totalCampaignDiscountAmount ?? 0)}',
-                        style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color!)),
+                        style: GoogleFonts.dmSans(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w400,
+                          color: primaryColor,
+                        )),
                   ),
                 ],
               ),
             ),
 
             if(bookingDetails.totalReferralDiscountAmount != null && bookingDetails.totalReferralDiscountAmount! > 0)
-              Gaps.verticalGapOf(Dimensions.paddingSizeSmall),
+              const SizedBox(height: 8),
 
             if(bookingDetails.totalReferralDiscountAmount != null && bookingDetails.totalReferralDiscountAmount! > 0)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       'referral_discount'.tr,
-                      style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
+                      style: GoogleFonts.dmSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w400,
+                        color: mutedColor,
+                      ),
                       overflow: TextOverflow.ellipsis,),
                     Directionality(
                       textDirection: TextDirection.ltr,
                       child: Text('(-) ${PriceConverter.convertPrice(bookingDetails.totalReferralDiscountAmount ?? 0)}',
-                          style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color!)),
+                          style: GoogleFonts.dmSans(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w400,
+                            color: primaryColor,
+                          )),
                     ),
                   ],
                 ),
               ),
 
-            Gaps.verticalGapOf(Dimensions.paddingSizeSmall),
+            const SizedBox(height: 8),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'service_vat'.tr,
-                    style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color!),
+                    style: GoogleFonts.dmSans(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w400,
+                      color: mutedColor,
+                    ),
                     overflow: TextOverflow.ellipsis,),
                   Directionality(
                     textDirection: TextDirection.ltr,
                     child: Text('(+) ${PriceConverter.convertPrice(bookingDetails.totalTaxAmount!.toDouble(),isShowLongPrice: true)}',
-                        style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,
-                            color: Theme.of(context).textTheme.bodyLarge!.color)),
+                        style: GoogleFonts.dmSans(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w400,
+                          color: primaryColor,
+                        )),
                   ),
                 ],
               ),
@@ -197,17 +270,23 @@ class BookingSummeryWidget extends StatelessWidget{
 
             if(bookingDetails.extraFee != null && bookingDetails.extraFee! > 0)
               Padding(
-                padding: const EdgeInsets.only(left : Dimensions.paddingSizeDefault , right: Dimensions.paddingSizeDefault, top: Dimensions.paddingSizeSmall),
+                padding: const EdgeInsets.only(left: 16, right: 16, top: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text( Get.find<SplashController>().configModel.content?.additionalChargeLabelName ?? "",style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,
-                        color: Theme.of(context).textTheme.bodyLarge?.color),overflow: TextOverflow.ellipsis,
+                    Text(Get.find<SplashController>().configModel.content?.additionalChargeLabelName ?? "",
+                      style: GoogleFonts.dmSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w400,
+                        color: mutedColor,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    Text("(+) ${PriceConverter.convertPrice(bookingDetails.extraFee ?? 0,
-                        isShowLongPrice:true)}",
-                      style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,
-                          color: Theme.of(context).textTheme.bodyLarge!.color
+                    Text("(+) ${PriceConverter.convertPrice(bookingDetails.extraFee ?? 0, isShowLongPrice: true)}",
+                      style: GoogleFonts.dmSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w400,
+                        color: primaryColor,
                       ),
                     ),
                   ],
@@ -216,97 +295,114 @@ class BookingSummeryWidget extends StatelessWidget{
 
             if(bookingDetails.additionalCharge != null && additionalCharge < 0 && (bookingDetails.paymentMethod != "cash_after_service" || bookingDetails.partialPayments!.isNotEmpty ))
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeSmall),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("refund".tr,style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,
-                        color: Theme.of(context).textTheme.bodyLarge?.color),overflow: TextOverflow.ellipsis,
+                    Text("refund".tr,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w400,
+                        color: mutedColor,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    Text(PriceConverter.convertPrice(additionalCharge, isShowLongPrice:true),
-                      style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,
-                          color: Theme.of(context).textTheme.bodyLarge!.color
+                    Text(PriceConverter.convertPrice(additionalCharge, isShowLongPrice: true),
+                      style: GoogleFonts.dmSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w400,
+                        color: primaryColor,
                       ),
                     ),
                   ],
                 ),
               ),
 
-            Gaps.verticalGapOf(Dimensions.paddingSizeSmall),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-              child: Divider(height: 2, color: Colors.grey,),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Divider(height: 1, color: borderColor),
             ),
-            Gaps.verticalGapOf(Dimensions.paddingSizeExtraSmall),
+            const SizedBox(height: 8),
 
-            !isPartialPayment && bookingDetails.paymentMethod != "wallet_payment" ? (additionalCharge == 0) ||  bookingDetails.paymentMethod == "cash_after_service" ?
-            Padding( padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+            !isPartialPayment && bookingDetails.paymentMethod != "wallet_payment" ? (additionalCharge == 0) || bookingDetails.paymentMethod == "cash_after_service" ?
+            Padding(padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 Text('grand_total'.tr,
-                  style: robotoBold.copyWith(fontSize: Dimensions.fontSizeSmall, color: Get.isDarkMode ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).colorScheme.primary),
+                  style: GoogleFonts.manrope(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: primaryColor,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Directionality(
                   textDirection: TextDirection.ltr,
                   child: Text(
                     PriceConverter.convertPrice(bookingDetails.totalBookingAmount!.toDouble(),isShowLongPrice: true),
-                    style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault, color: Get.isDarkMode ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).colorScheme.primary),),
+                    style: GoogleFonts.manrope(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: primaryColor,
+                    )),
                 ),
               ],),
-            ) : Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+            ) : Padding(padding: const EdgeInsets.all(8),
               child: DottedBorder(
                 options: RoundedRectDottedBorderOptions(
                   dashPattern: const [8, 4],
                   strokeWidth: 1.1,
-                  color: Theme.of(context).colorScheme.primary,
-                  radius: const Radius.circular(Dimensions.radiusDefault),
+                  color: primaryColor,
+                  radius: const Radius.circular(16),
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.02),
+                    color: primaryColor.withValues(alpha: 0.02),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal : Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeSmall),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Column(
                     children: [
-
                       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                         Text('grand_total'.tr,
-                          style: robotoBold.copyWith(fontSize: Dimensions.fontSizeSmall, color: Get.isDarkMode ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).colorScheme.primary,),
+                          style: GoogleFonts.manrope(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: primaryColor,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                         Directionality(
                           textDirection: TextDirection.ltr,
                           child: Text(
-                            PriceConverter.convertPrice( totalBookingAmount ,isShowLongPrice: true),
-                            style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault, color : Get.isDarkMode ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).colorScheme.primary,),),
+                            PriceConverter.convertPrice(totalBookingAmount, isShowLongPrice: true),
+                            style: GoogleFonts.manrope(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: primaryColor,
+                            )),
                         ),
                       ],),
 
-                      const SizedBox(height: Dimensions.paddingSizeSmall,),
-
-                      // Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                      //   Text("${"paid_amount".tr} (${bookingDetailsContent.paymentMethod.toString().tr})",
-                      //     style: ubuntuRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
-                      //     overflow: TextOverflow.ellipsis,),
-                      //   Directionality(
-                      //     textDirection: TextDirection.ltr,
-                      //     child: Text( PriceConverter.convertPrice( paidAmount, isShowLongPrice: true),
-                      //       style: ubuntuRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color),),
-                      //   )]
-                      // ),
-                      //
-                      // SizedBox(height: additionalCharge > 0 ? Dimensions.paddingSizeSmall : 0),
+                      const SizedBox(height: 8),
 
                       additionalCharge > 0 ?
                       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                        Text("${(bookingDetails.bookingStatus == "pending"  || bookingDetails.bookingStatus == "accepted" || bookingDetails.bookingStatus == "ongoing")
+                        Text("${(bookingDetails.bookingStatus == "pending" || bookingDetails.bookingStatus == "accepted" || bookingDetails.bookingStatus == "ongoing")
                             ? "due_amount".tr : "paid_amount".tr} (${"cash_after_service".tr})",
-                          style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
+                          style: GoogleFonts.dmSans(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w400,
+                            color: mutedColor,
+                          ),
                           overflow: TextOverflow.ellipsis,),
                         Directionality(
                           textDirection: TextDirection.ltr,
-                          child: Text( PriceConverter.convertPrice (additionalCharge, isShowLongPrice: true),
-                            style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color),),
+                          child: Text(PriceConverter.convertPrice(additionalCharge, isShowLongPrice: true),
+                            style: GoogleFonts.dmSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: primaryColor,
+                            )),
                         )]
                       ): const SizedBox()
                     ],
@@ -316,74 +412,101 @@ class BookingSummeryWidget extends StatelessWidget{
             ) :
 
             !isPartialPayment && bookingDetails.paymentMethod == "wallet_payment" ?
-            Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-              child: Column( children: [
+            Padding(padding: const EdgeInsets.all(8),
+              child: Column(children: [
 
                 Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                   Text('grand_total'.tr,
-                    style: robotoBold.copyWith(fontSize: Dimensions.fontSizeSmall, color: Get.isDarkMode ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).colorScheme.primary,),
+                    style: GoogleFonts.manrope(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: primaryColor,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                   Directionality(
                     textDirection: TextDirection.ltr,
                     child: Text(
                         PriceConverter.convertPrice(bookingDetails.totalBookingAmount!.toDouble(),isShowLongPrice: true),
-                        style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault, color: Get.isDarkMode ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).colorScheme.primary,)),
+                        style: GoogleFonts.manrope(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: primaryColor,
+                        )),
                   ),
                 ],),
 
-                const SizedBox(height: Dimensions.paddingSizeSmall,),
+                const SizedBox(height: 8),
 
                 DottedBorder(
                   options: RoundedRectDottedBorderOptions(
                     dashPattern: const [8, 4],
                     strokeWidth: 1.1,
-                    color: Theme.of(context).colorScheme.primary,
-                    radius: const Radius.circular(Dimensions.radiusDefault),
+                    color: primaryColor,
+                    radius: const Radius.circular(16),
                   ),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.02),
+                      color: primaryColor.withValues(alpha: 0.02),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal : Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeSmall),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start ,children: [
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-                      Text( (bookingDetails.additionalCharge! <= 0) ? 'total_order_amount_has_been_paid_by_customer'.tr : "has_been_paid_by_customer".tr,
-                        style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).colorScheme.primary,),
+                      Text((bookingDetails.additionalCharge! <= 0) ? 'total_order_amount_has_been_paid_by_customer'.tr : "has_been_paid_by_customer".tr,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: primaryColor,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
 
-                      const SizedBox(height: Dimensions.paddingSizeSmall,),
+                      const SizedBox(height: 8),
 
                       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                         Row(children: [
-
-                          Image.asset(Images.walletSmall,width: 17,),
-                          const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
-                          Text( 'via_wallet'.tr,
-                            style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
+                          Image.asset(Images.walletSmall, width: 17),
+                          const SizedBox(width: 4),
+                          Text('via_wallet'.tr,
+                            style: GoogleFonts.dmSans(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w400,
+                              color: mutedColor,
+                            ),
                             overflow: TextOverflow.ellipsis,),
                         ],),
                         Directionality(
                           textDirection: TextDirection.ltr,
                           child: Text(
-                            PriceConverter.convertPrice( paidAmount ,isShowLongPrice: true),
-                            style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color),),
+                            PriceConverter.convertPrice(paidAmount, isShowLongPrice: true),
+                            style: GoogleFonts.dmSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: primaryColor,
+                            )),
                         )]
                       ),
 
-                      if(additionalCharge > 0 )
-                        Padding( padding: const EdgeInsets.only(top : 8.0),
+                      if(additionalCharge > 0)
+                        Padding(padding: const EdgeInsets.only(top: 8),
                           child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                            Text("${(bookingDetails.bookingStatus == "pending"  || bookingDetails.bookingStatus == "accepted" || bookingDetails.bookingStatus == "ongoing")
+                            Text("${(bookingDetails.bookingStatus == "pending" || bookingDetails.bookingStatus == "accepted" || bookingDetails.bookingStatus == "ongoing")
                                 ? "due_amount".tr : "paid_amount".tr} (${"cash_after_service".tr})",
-                              style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
+                              style: GoogleFonts.dmSans(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w400,
+                                color: mutedColor,
+                              ),
                               overflow: TextOverflow.ellipsis,),
                             Directionality(
                               textDirection: TextDirection.ltr,
                               child: Text(
-                                PriceConverter.convertPrice( additionalCharge, isShowLongPrice: true),
-                                style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color),),
+                                PriceConverter.convertPrice(additionalCharge, isShowLongPrice: true),
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                  color: primaryColor,
+                                )),
                             )]
                           ),
                         )
@@ -392,60 +515,73 @@ class BookingSummeryWidget extends StatelessWidget{
                   ),
                 ),
               ]),
-            )  :
+            ) :
 
             isPartialPayment ?
-            Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+            Padding(padding: const EdgeInsets.all(8),
               child: DottedBorder(
                 options: RoundedRectDottedBorderOptions(
                   dashPattern: const [8, 4],
                   strokeWidth: 1.1,
-                  color: Theme.of(context).colorScheme.primary,
-                  radius: const Radius.circular(Dimensions.radiusDefault),
+                  color: primaryColor,
+                  radius: const Radius.circular(16),
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.02),
+                    color: primaryColor.withValues(alpha: 0.02),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal : Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeSmall),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Column(
                     children: [
 
                       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                         Text('grand_total'.tr,
-                          style: robotoBold.copyWith(fontSize: Dimensions.fontSizeSmall, color: Get.isDarkMode ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).colorScheme.primary,),
+                          style: GoogleFonts.manrope(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: primaryColor,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                         Directionality(
                           textDirection: TextDirection.ltr,
                           child: Text(
-                            PriceConverter.convertPrice( totalBookingAmount, isShowLongPrice: true),
-                            style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault, color : Get.isDarkMode ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).colorScheme.primary,),),
+                            PriceConverter.convertPrice(totalBookingAmount, isShowLongPrice: true),
+                            style: GoogleFonts.manrope(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: primaryColor,
+                            )),
                         ),
                       ],),
 
-                      const SizedBox(height: Dimensions.paddingSizeSmall,),
+                      const SizedBox(height: 8),
 
                       ListView.builder(itemBuilder: (context, index){
                         String payWith = bookingDetails.partialPayments?[index].paidWith ?? "";
 
-                        return  Padding(padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeExtraSmall),
+                        return Padding(padding: const EdgeInsets.only(bottom: 4),
                           child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                             Row(children: [
-
-                              Image.asset(Images.walletSmall, width: 15,),
-
-                              const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
-
-                              Text( '${ payWith == "cash_after_service" ? "paid_amount".tr : payWith == "digital" && bookingDetails.paymentMethod == "offline_payment" ? ""  :'paid_by'.tr} ''${payWith == "digital" ? "${bookingDetails.paymentMethod}".tr : (payWith == "cash_after_service" ? "(${'cash_after_service'.tr})" : payWith).tr }',
-                                style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
+                              Image.asset(Images.walletSmall, width: 15),
+                              const SizedBox(width: 4),
+                              Text('${payWith == "cash_after_service" ? "paid_amount".tr : payWith == "digital" && bookingDetails.paymentMethod == "offline_payment" ? "" : 'paid_by'.tr} ''${payWith == "digital" ? "${bookingDetails.paymentMethod}".tr : (payWith == "cash_after_service" ? "(${'cash_after_service'.tr})" : payWith).tr }',
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w400,
+                                  color: mutedColor,
+                                ),
                                 overflow: TextOverflow.ellipsis,),
                             ],),
                             Directionality(
                               textDirection: TextDirection.ltr,
                               child: Text(
-                                PriceConverter.convertPrice( bookingDetails.partialPayments?[index].paidAmount ?? 0,isShowLongPrice: true),
-                                style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color),),
+                                PriceConverter.convertPrice(bookingDetails.partialPayments?[index].paidAmount ?? 0, isShowLongPrice: true),
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                  color: primaryColor,
+                                )),
                             )]),
                         );
                       },itemCount: bookingDetails.partialPayments?.length,
@@ -456,42 +592,55 @@ class BookingSummeryWidget extends StatelessWidget{
 
                       bookingDetails.partialPayments?.length == 1 && dueAmount > 0 ?
                       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                        Text("${(bookingDetails.bookingStatus == "pending"  || bookingDetails.bookingStatus == "accepted" || bookingDetails.bookingStatus == "ongoing")
+                        Text("${(bookingDetails.bookingStatus == "pending" || bookingDetails.bookingStatus == "accepted" || bookingDetails.bookingStatus == "ongoing")
                             ? "due_amount".tr : "paid_amount".tr} (${"cash_after_service".tr})",
-                          style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
+                          style: GoogleFonts.dmSans(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w400,
+                            color: mutedColor,
+                          ),
                           overflow: TextOverflow.ellipsis,),
                         Directionality(
                           textDirection: TextDirection.ltr,
                           child: Text(
-                            PriceConverter.convertPrice( dueAmount, isShowLongPrice: true),
-                            style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color),),
+                            PriceConverter.convertPrice(dueAmount, isShowLongPrice: true),
+                            style: GoogleFonts.dmSans(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: primaryColor,
+                          )),
                         )]) : const SizedBox(),
 
                     ],
                   ),
                 ),
               ),
-            ) : Padding(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+            ) : Padding(padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 Text('grand_total'.tr,
-                  style: robotoBold.copyWith(fontSize: Dimensions.fontSizeSmall, color: Get.isDarkMode ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).colorScheme.primary),
+                  style: GoogleFonts.manrope(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: primaryColor,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Directionality(
                   textDirection: TextDirection.ltr,
                   child: Text(
-                    PriceConverter.convertPrice( totalBookingAmount,isShowLongPrice: true),
-                    style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault, color: Get.isDarkMode ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).colorScheme.primary),),
+                    PriceConverter.convertPrice(totalBookingAmount, isShowLongPrice: true),
+                    style: GoogleFonts.manrope(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: primaryColor,
+                    )),
                 ),
               ]),
             )],
           ),
         ),
 
-
-
-
-        const SizedBox(height: Dimensions.paddingSizeExtraLarge),
+        const SizedBox(height: 16),
       ],
       ),
     );
@@ -501,7 +650,6 @@ class BookingSummeryWidget extends StatelessWidget{
 
 class _ServiceInfoItem extends StatelessWidget {
   final int index;
-
   final ItemService? bookingService;
   const _ServiceInfoItem({
     required this.bookingService,
@@ -509,61 +657,67 @@ class _ServiceInfoItem extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
+    final borderColor = isDark ? const Color(0xFF333333) : const Color(0xFFE5E5E5);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-        const SizedBox(height:Dimensions.paddingSizeSmall),
+        const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Expanded(
             child: Text(bookingService?.serviceName??"",
-              style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                  color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha: 0.9)
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+                color: primaryColor,
               ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: Dimensions.paddingSizeDefault,),
-          Text(PriceConverter.convertPrice(BookingHelper.getBookingServiceUnitConst(bookingService), isShowLongPrice:true,),
-            style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha: 0.9)
+          const SizedBox(width: 12),
+          Text(PriceConverter.convertPrice(BookingHelper.getBookingServiceUnitConst(bookingService), isShowLongPrice: true),
+            style: GoogleFonts.dmSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              color: primaryColor,
             ),
           ),
         ],
         ),
-        const SizedBox(height: Dimensions.paddingSizeExtraSmall-2,),
+        const SizedBox(height: 4),
         if(bookingService?.variantKey!=null)
-          Padding(padding: const EdgeInsets.only( bottom: Dimensions.paddingSizeExtraSmall),
+          Padding(padding: const EdgeInsets.only(bottom: 8),
             child: Row(children: [
-
               Text(bookingService?.variantKey?.replaceAll("-", " ").capitalizeFirst ?? "",
-                style: robotoRegular.copyWith(
-                    fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7)
+                style: GoogleFonts.dmSans(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w400,
+                  color: mutedColor,
                 ),
               ),
-
               Container(
                 height: 10, width: 0.5,
-                color: Theme.of(context).hintColor,
-                margin : const EdgeInsets.only(left : Dimensions.paddingSizeSmall, right:  Dimensions.paddingSizeSmall, top: 5),
+                color: borderColor,
+                margin: const EdgeInsets.only(left: 8, right: 8, top: 5),
               ),
-
               Row(children: [
                 Text("${"qty".tr} : ${bookingService?.quantity}",
-                  style: robotoRegular.copyWith(
-                    fontSize: Dimensions.fontSizeSmall,
-                    color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w400,
+                    color: mutedColor,
                   ),
                 ),
               ]),
-
             ]),
           ),
 
-
-        _ServiceItemText(title: "unit_price".tr, amount :bookingService?.serviceCost ?? 0, ),
+        _ServiceItemText(title: "unit_price".tr, amount: bookingService?.serviceCost ?? 0),
 
 
 
@@ -599,20 +753,32 @@ class _ServiceItemText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeExtraSmall),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
           Text("$title : ",
-            style: robotoRegular.copyWith(
-                fontSize: Dimensions.fontSizeSmall,color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7)
+            style: GoogleFonts.dmSans(
+              fontSize: 10,
+              fontWeight: FontWeight.w400,
+              color: mutedColor,
             ),
           ),
-          Text(PriceConverter.convertPrice(amount,isShowLongPrice:true),
-            style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7)),
+          Text(PriceConverter.convertPrice(amount, isShowLongPrice: true),
+            style: GoogleFonts.dmSans(
+              fontSize: 10,
+              fontWeight: FontWeight.w400,
+              color: primaryColor,
+            ),
           ),
         ],
       ),
     );
   }
 }
+
+

@@ -18,7 +18,7 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'file'),
+    'driver' => env('SESSION_DRIVER', 'redis'),
 
     /*
     |--------------------------------------------------------------------------
@@ -59,7 +59,7 @@ return [
     |
     */
 
-    'files' => env('SESSION_FILE_PATH', storage_path('framework/sessions')),
+    'files' => storage_path('framework/sessions'),
 
     /*
     |--------------------------------------------------------------------------

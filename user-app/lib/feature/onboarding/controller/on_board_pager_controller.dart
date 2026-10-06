@@ -1,8 +1,8 @@
-import 'package:jdds/util/core_export.dart';
+﻿import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 
 class OnBoardController extends GetxController implements GetxService{
-  int pageIndex = 0;
+  int pagetndex = 0;
   final PageController pageController = PageController();
 
   List<Map<String, dynamic>> onBoardPagerData = [
@@ -10,7 +10,7 @@ class OnBoardController extends GetxController implements GetxService{
       "text": "Professional\nHome Cleaning\nServices",
       "subTitle": "Get your home sparkling clean with verified and trusted cleaning experts.",
       "image": "assets/img/1.png",
-      "primaryColor": const Color(0xFFF57C21),
+      "primaryColor": primaryAccent,
       "gradientColors": const [
         Color(0xFFFCE4D6),
         Color(0xFFFFF3E0),
@@ -24,7 +24,7 @@ class OnBoardController extends GetxController implements GetxService{
         Color(0xFFFFF176),
       ],
       "badgeText": "Trusted\nProfessionals",
-      "badgeIcon": Icons.auto_awesome,
+      "badgetcon": Icons.auto_awesome,
     },
     {
       "text": "Book Your\nService in\nMinutes",
@@ -44,11 +44,11 @@ class OnBoardController extends GetxController implements GetxService{
         Color(0xFFFFF176),
       ],
       "badgeText": "Fast & Easy\nBooking",
-      "badgeIcon": Icons.flash_on_rounded,
+      "badgetcon": Icons.flash_on_rounded,
     },
     {
       "text": "Safe, Trusted\n& Reliable",
-      "subTitle": "Verified professionals, secure payments and 24/7 support — for your complete peace of mind.",
+      "subTitle": "Verified professionals, secure payments and 24/7 support â€” for your complete peace of mind.",
       "image": "assets/img/3.png",
       "primaryColor": const Color(0xFF7B1FA2),
       "gradientColors": const [
@@ -64,13 +64,14 @@ class OnBoardController extends GetxController implements GetxService{
         Color(0xFFFFF176),
       ],
       "badgeText": "Safe & Secure",
-      "badgeIcon": Icons.verified_user_rounded,
+      "badgetcon": Icons.verified_user_rounded,
     }
   ];
 
   void onPageChanged(int index){
-    pageIndex = index;
+    pagetndex = index;
     update();
   }
 
 }
+

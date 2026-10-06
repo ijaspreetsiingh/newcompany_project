@@ -1,4 +1,4 @@
-import 'package:jdds/common/widgets/custom_image.dart';
+﻿import 'package:jdds/common/widgets/custom_image.dart';
 import 'package:jdds/util/dimensions.dart';
 import 'package:jdds/util/styles.dart';
 import 'package:flutter/material.dart';
@@ -56,3 +56,5 @@ class WebMidSection extends StatelessWidget {
     );
   }
 }
+
+

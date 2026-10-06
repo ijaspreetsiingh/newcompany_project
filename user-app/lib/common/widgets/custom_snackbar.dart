@@ -1,16 +1,32 @@
 import 'package:jdds/helper/extension_helper.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
+import 'package:jdds/common/design_system/nest_screens_kit.dart';
 
 void customSnackBar(String? message,
     {ToasterMessageType type = ToasterMessageType.error,
       double margin = Dimensions.paddingSizeSmall,int duration =2,
-      Color? backgroundColor, Widget? customWidget, double borderRadius = Dimensions.radiusSmall,
+      Color? backgroundColor, Widget? CustomWidget, double borderRadius = Dimensions.radiusSmall,
       bool showDefaultSnackBar = true,
       String? icon, String? toasterTitle,
     }) {
   if(message != null && message.isNotEmpty && Get.context != null) {
     final width = MediaQuery.of(Get.context!).size.width;
+    final Color toastSurface = backgroundColor ?? (Get.isDarkMode
+        ? const Color(0xFF202020)
+        : Colors.white);
+    final BoxDecoration toastDecoration = BoxDecoration(
+      color: toastSurface,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: NestInk.border),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: Get.isDarkMode ? 0.24 : 0.09),
+          blurRadius: 18,
+          offset: const Offset(0, 7),
+        ),
+      ],
+    );
 
     if(showDefaultSnackBar){
 
@@ -23,11 +39,9 @@ void customSnackBar(String? message,
           child: Align(
             alignment: ResponsiveHelper.isDesktop(Get.context) ? Alignment.topRight : Alignment.bottomCenter,
             child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF393f47), borderRadius: BorderRadius.circular(Dimensions.radiusSeven),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              child: customWidget ?? Row(  mainAxisSize: toasterTitle != null ?  MainAxisSize.max : MainAxisSize.min, children: [
+              decoration: toastDecoration,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: CustomWidget ?? Row(  mainAxisSize: toasterTitle != null ?  MainAxisSize.max : MainAxisSize.min, children: [
                 icon !=null  ? Image.asset(icon, width: 25,) : CustomToasterIcon(type: type),
                 const SizedBox(width: Dimensions.paddingSizeSmall),
 
@@ -35,9 +49,9 @@ void customSnackBar(String? message,
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     if(toasterTitle !=null) Padding(
                       padding: const EdgeInsets.only(bottom: 2),
-                      child: Text(toasterTitle.tr, style: robotoMedium.copyWith(color : Colors.white, ), maxLines: 3, overflow: TextOverflow.ellipsis,),
+                      child: Text(toasterTitle.tr, style: robotoMedium.copyWith(color : NestInk.primary, ), maxLines: 2, overflow: TextOverflow.ellipsis,),
                     ),
-                    Text(message, style: robotoRegular.copyWith(color : Colors.white.withValues(alpha:0.8), height: toasterTitle !=null ?  1.0 : 1.2), maxLines: 3, overflow: TextOverflow.ellipsis),
+                    Text(message, style: robotoRegular.copyWith(color : NestInk.mutedText, height: toasterTitle !=null ?  1.15 : 1.25), maxLines: 3, overflow: TextOverflow.ellipsis),
                   ]),
                 ),
               ]),
@@ -62,16 +76,13 @@ void customSnackBar(String? message,
         backgroundColor: Colors.transparent,
         duration: Duration(seconds: duration),
         overlayBlur: 0.0,
-        messageText: customWidget ?? Material(
+        messageText: CustomWidget ?? Material(
           color: Colors.transparent,
           child: Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF393f47),
-                borderRadius: BorderRadius.circular(Dimensions.radiusSeven),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              decoration: toastDecoration,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               margin: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
                 icon != null  ? Image.asset(icon, width: 25,) : CustomToasterIcon(type: type),
@@ -81,9 +92,9 @@ void customSnackBar(String? message,
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     if(toasterTitle !=null) Padding(
                       padding: const EdgeInsets.only(bottom: 2),
-                      child: Text(toasterTitle.tr, style: robotoMedium.copyWith(color : Colors.white, ), maxLines: 3, overflow: TextOverflow.ellipsis,),
+                      child: Text(toasterTitle.tr, style: robotoMedium.copyWith(color : NestInk.primary, ), maxLines: 2, overflow: TextOverflow.ellipsis,),
                     ),
-                    Text(message, style: robotoRegular.copyWith(color : Colors.white.withValues(alpha:0.8), height: toasterTitle !=null ?  1.0 : 1.2), maxLines: 3, overflow: TextOverflow.ellipsis),
+                    Text(message, style: robotoRegular.copyWith(color : NestInk.mutedText, height: toasterTitle !=null ?  1.15 : 1.25), maxLines: 3, overflow: TextOverflow.ellipsis),
                   ]),
                 ),
               ]),
@@ -116,7 +127,7 @@ class CustomToasterIcon extends StatelessWidget {
   const CustomToasterIcon({
     super.key,
     required this.type,
-    this.size = Dimensions.paddingSizeLarge,
+    this.size = 34,
     this.backgroundColor,
     this.checkColor = Colors.white,
   });
@@ -143,7 +154,7 @@ class CustomToasterIcon extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         color: backgroundColor ?? data.color,
-        borderRadius: BorderRadius.circular(3),
+        shape: BoxShape.circle,
       ),
       child: Center(
         child: Icon(
@@ -155,3 +166,4 @@ class CustomToasterIcon extends StatelessWidget {
     );
   }
 }
+

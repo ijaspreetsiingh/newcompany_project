@@ -54,3 +54,5 @@ class _ZoomImageState extends State<ZoomImage> {
     );
   }
 }
+
+

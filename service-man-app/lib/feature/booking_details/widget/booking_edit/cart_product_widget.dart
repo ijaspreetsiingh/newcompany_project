@@ -17,27 +17,33 @@ class CartServiceWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<BookingEditController>(builder: (bookingEditController){
-      return Container(
-        height: 80.0, decoration: BoxDecoration(color: Theme.of(context).colorScheme.error.withValues(alpha:0.1),
-        borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-      ),
-        child: Stack(alignment: Alignment.center, clipBehavior: Clip.antiAliasWithSaveLayer, children: [
 
-          Positioned(
-            right: Get.find<LocalizationController>().isLtr ? 22 : null,
-            left: Get.find<LocalizationController>().isLtr ? null : 22,
-            child: Image.asset(Images.servicemanDelete, width: 22.0),
-          ),
-
-
-          bookingEditController.cartList.length > 1 && !isSubBooking ?
-          Dismissible(key: UniqueKey(),
-            onDismissed: (DismissDirection direction) => bookingEditController.removeCartItem(cartIndex),
-            child: CartItemView(bookingEditController: bookingEditController, cart: cart, cartIndex: cartIndex, disableQuantityButton: disableQuantityButton, isSubBooking: isSubBooking,),
-          ) : CartItemView(bookingEditController: bookingEditController, cart: cart, cartIndex: cartIndex, disableQuantityButton: disableQuantityButton, isSubBooking: isSubBooking,),
-
-        ]),
+      final Widget item = CartItemView(
+        bookingEditController: bookingEditController,
+        cart: cart,
+        cartIndex: cartIndex,
+        disableQuantityButton: disableQuantityButton,
+        isSubBooking: isSubBooking,
       );
+
+      if(bookingEditController.cartList.length > 1 && !isSubBooking){
+        final bool isLtr = Get.find<LocalizationController>().isLtr;
+        return Dismissible(
+          key: UniqueKey(),
+          onDismissed: (DismissDirection direction) => bookingEditController.removeCartItem(cartIndex),
+          background: Container(
+            alignment: isLtr ? Alignment.centerRight : Alignment.centerLeft,
+            padding: EdgeInsets.only(right: isLtr ? 20 : 0, left: isLtr ? 0 : 20),
+            decoration: BoxDecoration(
+              color: context.kDestructive.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(kRadiusMd),
+            ),
+            child: Icon(Icons.delete_outline_rounded, color: context.kDestructive, size: 22),
+          ),
+          child: item,
+        );
+      }
+      return item;
     });
   }
 }
@@ -52,94 +58,78 @@ class CartItemView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault, horizontal: Dimensions.paddingSizeSmall),
-      decoration: BoxDecoration(
-          color: Theme.of(context).cardColor, border: Border.all(color: Colors.white.withValues(alpha:.2)),
-          borderRadius: BorderRadius.circular(Dimensions.radiusSmall), boxShadow: Get.find<ThemeController>().darkTheme ? null : shadow
-      ),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [
-        Expanded(
-          child: SizedBox(
-            width: ResponsiveHelper.isMobile(context) ? Get.width / 1.8 : Get.width / 4,
-            child: Row( children: [
-              const SizedBox(width: Dimensions.paddingSizeSmall),
 
-              ClipRRect(
-                borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                child: CustomImage(
-                  image: cart?.serviceThumbnail ?? "",
-                  height: 65, width: 70, fit: BoxFit.cover,
-                ),
-              ),
-              const SizedBox(width: Dimensions.paddingSizeSmall),
-              Expanded( child: Column( crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-                Text( cart?.serviceName ?? "",
-                  style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault),
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
+    final bool canRemove = bookingEditController.cartList.length > 1 && !isSubBooking;
+    final String variant = cart?.variantKey ?? '';
+    final String price = PriceConverter.convertPrice(double.tryParse(cart?.totalCost?.toString() ?? "0"));
+    final String subtitle = variant.isNotEmpty ? '$variant · $price' : price;
 
-                if(cart?.variantKey != null)
-                  SizedBox( width: Get.width * 0.4,
-                    child: Text( cart?.variantKey ?? "",
-                      style: robotoMedium.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:.6),
-                          fontSize: Dimensions.fontSizeDefault), maxLines: 1, overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                const SizedBox(height: 5),
-                Directionality( textDirection: TextDirection.ltr,
-                  child: Text( PriceConverter.convertPrice(double.tryParse(cart?.totalCost?.toString() ?? "0")),
-                    style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:.6)),
-                  ),
-                ),
-                const SizedBox(height: 5),
-              ]),
-              ),
-            ]),
+    return KCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text( cart?.serviceName ?? "",
+          style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault, color: context.kForeground),
+          maxLines: 1, overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 4),
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Text( subtitle,
+            style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: context.kMutedForeground),
+            maxLines: 1, overflow: TextOverflow.ellipsis,
           ),
         ),
-        if(!disableQuantityButton)
-          Align(
-            alignment: Alignment.centerRight,
-            child: Row(children: [
-              if (cart!.quantity! > 1)
-                QuantityButton(
-                  onTap: () {
-                    bookingEditController.updateCartItemQuantity( cart!, cartIndex, increment: false);
-                  },
-                  isIncrement: false,
-                ),
-              if (cart!.quantity == 1 && bookingEditController.cartList.length > 1 && !isSubBooking)
-                InkWell(
-                  onTap: () {
-                    Get.dialog(
-                      ConfirmationDialog(icon: Images.servicemanDelete, description: 'are_you_sure_to_delete_this_service'.tr,
-                          isLogOut: true,
-                          onYesPressed: () {
-                            bookingEditController.removeCartItem(cartIndex);
-                            Get.back();
-                          }),
-                      useSafeArea: false,
-                    );
-                  },
-                  child: Container(
-                    height: 22, width: 22,
-                    margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
-                    child: Icon(Icons.delete_forever,color: Theme.of(context).colorScheme.error,),
-                  ),
-                ),
-              Text(cart!.quantity.toString(),
-                  style: robotoMedium.copyWith(
-                      fontSize: Dimensions.fontSizeExtraLarge)),
-              QuantityButton(
-                onTap: () {
-                  bookingEditController.updateCartItemQuantity( cart!, cartIndex, increment: true);
-                },
-                isIncrement: true,
+
+        if(!disableQuantityButton) ...[
+          const SizedBox(height: 16),
+          Row(children: [
+            QuantityButton(
+              isIncrement: false,
+              onTap: (cart?.quantity ?? 0) > 1 ? () {
+                bookingEditController.updateCartItemQuantity( cart!, cartIndex, increment: false);
+              } : null,
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 24,
+              child: Text(cart?.quantity.toString() ?? "1",
+                textAlign: TextAlign.center,
+                style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault, color: context.kForeground),
               ),
-            ]),
-          ),
+            ),
+            const SizedBox(width: 12),
+            QuantityButton(
+              isIncrement: true,
+              onTap: () {
+                bookingEditController.updateCartItemQuantity( cart!, cartIndex, increment: true);
+              },
+            ),
+            const Spacer(),
+            if (canRemove)
+              InkWell(
+                onTap: () {
+                  Get.dialog(
+                    ConfirmationDialog(icon: Images.servicemanDelete, description: 'are_you_sure_to_delete_this_service'.tr,
+                        isLogOut: true,
+                        onYesPressed: () {
+                          bookingEditController.removeCartItem(cartIndex);
+                          Get.back();
+                        }),
+                    useSafeArea: false,
+                  );
+                },
+                borderRadius: BorderRadius.circular(kRadiusSm),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(Icons.close_rounded, size: 14, color: context.kDestructive),
+                    const SizedBox(width: 4),
+                    Text('remove'.tr, style: robotoMedium.copyWith(fontSize: 12, color: context.kDestructive)),
+                  ]),
+                ),
+              ),
+          ]),
+        ],
       ]),
     );
   }

@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 
@@ -253,3 +253,5 @@ class CreatePostController extends GetxController implements GetxService{
     return providerData.nextBookingEligibility ?? false;
   }
 }
+
+

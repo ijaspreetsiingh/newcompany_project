@@ -37,6 +37,14 @@ class BookingDetailsRepo{
     return await apiClient.getData('${AppConstants.autoAssignStatusUrl}/$bookingID');
   }
 
+  Future<Response> getAssignSuggestions(String bookingID) async {
+    return await apiClient.getData('${AppConstants.assignSuggestionsUrl}/$bookingID');
+  }
+
+  Future<Response> assignServicemen(String bookingID, List<String> servicemanIds) async {
+    return await apiClient.putData('${AppConstants.assignServicemenUrl}/$bookingID', {'serviceman_ids': servicemanIds});
+  }
+
   Future<Response> cancelSubBooking(String subBookingId) async {
     return await apiClient.postData("${AppConstants.cancelSubBookingUrl}$subBookingId", {});
   }

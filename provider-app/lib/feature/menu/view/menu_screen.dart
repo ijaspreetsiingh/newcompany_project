@@ -9,20 +9,23 @@ class MenuScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     bool isLoggedIn = Get.find<AuthController>().isLoggedIn();
 
+    final bool subscriptionRequired = Get.isRegistered<UserProfileController>()
+        ? Get.find<UserProfileController>().isSubscriptionRequired
+        : true;
 
     final List<MenuModel> menuList = [
       MenuModel(icon: Images.profileIcon, title: 'profile'.tr, route: RouteHelper.getProfileRoute()),
-      MenuModel(icon: Images.mySubscriptions, title: 'mySubscription'.tr, route: RouteHelper.getMySubscriptionRoute()),
+      if (subscriptionRequired)
+        MenuModel(icon: Images.mySubscriptions, title: 'mySubscription'.tr, route: RouteHelper.getMySubscriptionRoute()),
       MenuModel(icon: Images.chatImage, title: 'chat'.tr, routeValidation: "chat",route: RouteHelper.getInboxScreenRoute()),
       MenuModel(icon: Images.settings, title: 'settings'.tr, route: RouteHelper.getLanguageBottomSheet('menu')),
       MenuModel(icon: Images.paymentInfoIcon, title: 'payment_information'.tr, route: RouteHelper.getPaymentInformationRoute()),
       MenuModel(icon: Images.notificationSetup, title: 'notification_channel'.tr, route: RouteHelper.getNotificationScreen()),
       MenuModel(icon: Images.transaction, title: 'withdraw_list'.tr, route: RouteHelper.transactions),
       MenuModel(icon: Images.reportOverview2, title: 'reports'.tr, routeValidation: "reports_&_analytics", route: RouteHelper.getReportingPageRoute('menu')),
-      MenuModel(icon: Images.menuAdvertisement, title: 'advertisements'.tr, routeValidation: "advertisement", route: RouteHelper.getAdvertisementListScreen(
-        count: Get.find<DashboardController>().additionalInfoCount?.advertisementCount ?? 0
-      )),
-      MenuModel(icon: Images.businessPlanIcon, title: 'business_plan'.tr, route: RouteHelper.getBusinessPlanScreen()),
+      if (subscriptionRequired)
+        MenuModel(icon: Images.businessPlanIcon, title: 'business_plan'.tr, route: RouteHelper.getBusinessPlanScreen()),
+      MenuModel(iconData: Icons.replay_rounded, title: 'recheck_dashboard'.tr, route: RouteHelper.getRecheckDashboardRoute()),
       MenuModel(icon: Images.helpIcon, title: 'help_&_support'.tr, route: RouteHelper.getHelpAndSupportScreen()),
 
       ...(Get.find<SplashController>()

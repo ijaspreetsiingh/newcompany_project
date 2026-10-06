@@ -4,15 +4,17 @@ import 'package:jdds/feature/auth/view/social_login_screen.dart';
 import 'package:jdds/feature/booking/view/repeat_booking_details_screen.dart';
 import 'package:jdds/feature/booking/view/new_booking_details_screen.dart';
 import 'package:jdds/feature/booking/view/booking_location_screen.dart';
+import 'package:jdds/feature/booking/view/checkout_screen_final.dart';
+import 'package:jdds/feature/booking/view/payment_screen_final.dart';
+import 'package:jdds/feature/booking/view/confirmation_and_tracking_final.dart';
 import 'package:jdds/feature/checkout/view/offline_payment_screen.dart';
-import 'package:jdds/feature/home/all_category_screen.dart';
 import 'package:jdds/feature/provider/view/nearby_provider/near_by_provider_screen.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 
 class RouteHelper {
 
-  static const String initial = '/';
+  static const String inttial = '/';
   static const String splash = '/splash';
   static const String home = '/home';
   static const String offers = '/offers';
@@ -87,10 +89,14 @@ class RouteHelper {
   static const String socialLoginScreen = '/social-login';
   static const String newBookingDetails = '/new-booking-details';
   static const String bookingLocation = '/booking-location';
+  static const String checkoutFinal = '/checkout-final';
+  static const String paymentFinal = '/payment-final';
+  static const String confirmationFinal = '/confirmation-final';
+  static const String trackingFinal = '/tracking-final';
 
 
 
-  static String getInitialRoute() => initial;
+  static String getinitialRoute() => inttial;
   static String getSplashRoute(NotificationBody? body, String? route) {
     String data = 'null';
     if(body != null) {
@@ -100,41 +106,41 @@ class RouteHelper {
     return '$splash?data=$data&route=$route';
   }
   static String getOffersRoute() => offers;
-  static String getSignInRoute({String? redirectUrl}) {
-    final existingRedirect = RedirectRouteValidator._extractRedirectFromCurrentRoute();
+  static String getSignInRoute({String? redtrectUrl}) {
+    final existingRedtrect = RedtrectRouteValidator._extractRedtrectFromCurrentRoute();
 
-    final isIgnoreRedirection = redirectUrl?.contains(RouteHelper.checkout) ?? false;
+    final isIgnoreRedirection = redtrectUrl?.contains(RouteHelper.checkout) ?? false;
 
-    // Use existing redirect if valid, otherwise use provided parameter
-    final finalRedirect = isIgnoreRedirection ? RouteHelper.home :  (existingRedirect ?? redirectUrl);
+    // Use existing redtrect if valid, otherwise use provided parameter
+    final finalRedtrect = isIgnoreRedirection ? RouteHelper.home :  (existingRedtrect ?? redtrectUrl);
 
 
-    return '$signIn?redirect_to=$finalRedirect';
+    return '$signIn?redtrect_to=$finalRedtrect';
   }
-  static String getSignUpRoute({String? redirectUrl}) => '$signUp?redirect_to=$redirectUrl';
+  static String getSignUpRoute({String? redtrectUrl}) => '$signUp?redtrect_to=$redtrectUrl';
   static String getSocialLoginRoute() => socialLoginScreen;
-  static String getSendOtpScreen({String? redirectUrl}) => '$sendOtpScreen?redirect_to=$redirectUrl';
+  static String getSendOtpScreen({String? redtrectUrl}) => '$sendOtpScreen?redtrect_to=$redtrectUrl';
 
   static String getVerificationRoute({
     required String identity,
     required String identityType,
     required String fromPage,
     String? firebaseSession,
-    String? redirectUrl,
+    String? redtrectUrl,
   }) {
     String data = Uri.encodeComponent(jsonEncode(identity));
     String session = base64Url.encode(utf8.encode(firebaseSession ?? ''));
 
-    return '$verification?identity=$data&identity_type=$identityType&redirect_to=$redirectUrl&fromPage=$fromPage&session=$session';
+    return '$verification?identity=$data&identity_type=$identityType&redtrect_to=$redtrectUrl&fromPage=$fromPage&session=$session';
   }
 
-  static String getChangePasswordRoute({ForgetPasswordBody? body, String? redirectUrl}) {
+  static String getChangePasswordRoute({ForgetPasswordBody? body, String? redtrectUrl}) {
     String data= "";
     if( body !=null ){
       List<int> encodedCBody= utf8.encode(jsonEncode(body.toJson()));
       data = base64Encode(encodedCBody);
     }
-    return '$changePassword?token=$data&redirect_to=$redirectUrl';
+    return '$changePassword?token=$data&redtrect_to=$redtrectUrl';
   }
 
   static String getAccessLocationRoute(String page) => '$accessLocation?page=$page';
@@ -207,6 +213,10 @@ class RouteHelper {
   static String getCartRoute() => cart;
   static String getNewBookingDetailsRoute() => newBookingDetails;
   static String getNewBookingLocationRoute() => bookingLocation;
+  static String getCheckoutFinalRoute() => checkoutFinal;
+  static String getPaymentFinalRoute() => paymentFinal;
+  static String getConfirmationFinalRoute() => confirmationFinal;
+  static String getTrackingFinalRoute({String? bookingId}) => '$trackingFinal?id=$bookingId';
   static String getAddAddressRoute(bool fromCheckout) => '$addAddress?page=${fromCheckout ? 'checkout' : 'address'}';
   static String getEditAddressRoute(AddressModel address,bool fromCheckout) {
     String data = base64Url.encode(utf8.encode(jsonEncode(address.toJson())));
@@ -228,7 +238,7 @@ class RouteHelper {
   static String subCategoryScreenRoute(String categoryName,String categorySlug,int subCategoryIndex) =>
       '$subCategoryScreen?categoryName=$categoryName&categorySlug=$categorySlug&subCategoryIndex=$subCategoryIndex';
   static String getLanguageScreen(String fromPage) => '$languageScreen?fromPage=$fromPage';
-  static String getNotLoggedScreen(String redirectUrl, String appbarTitle) => '$notLoggedScreen?redirect_to=$redirectUrl&appbarTitle=$appbarTitle';
+  static String getNotLoggedScreen(String redtrectUrl, String appbarTitle) => '$notLoggedScreen?redtrect_to=$redtrectUrl&appbarTitle=$appbarTitle';
   static String getMyWalletScreen({String? flag , String? token, String? fromNotification}) =>
       '$myWallet?flag=$flag&&token=$token&fromNotification=$fromNotification';
   static String getLoyaltyPointScreen({String? fromNotification}) => '$loyaltyPoint?fromNotification=$fromNotification';
@@ -270,14 +280,14 @@ class RouteHelper {
       '$zoomImage?image=$image&imagePath=$imagePath&createdAt=$createdAt';
   static String getMyFavoriteScreen() => favorite;
   static String getMaintenanceRoute() => maintenance;
-  static String getUpdateProfileRoute({String? phone, String? email, String? tempToken, String? userName, String? redirectUrl}) {
+  static String getUpdateProfileRoute({String? phone, String? email, String? tempToken, String? userName, String? redtrectUrl}) {
     final String data1= Uri.encodeComponent(jsonEncode(phone??""));
     final String data2= Uri.encodeComponent(jsonEncode(email??""));
     final String data3= Uri.encodeComponent(jsonEncode(tempToken??""));
     final String data4= Uri.encodeComponent(jsonEncode(userName??""));
-    final String decodedRedirectUrl= Uri.encodeComponent(jsonEncode(redirectUrl ?? ""));
+    final String decodedRedtrectUrl= Uri.encodeComponent(jsonEncode(redtrectUrl ?? ""));
 
-    return "$updateProfile?phone=$data1&email=$data2&temp-token=$data3&user-name=$data4&redirect_to=$decodedRedirectUrl";
+    return "$updateProfile?phone=$data1&email=$data2&temp-token=$data3&user-name=$data4&redtrect_to=$decodedRedtrectUrl";
   }
   static String getOfflinePaymentRoute({double? totalAmount, int? index, String? bookingId, String? readableId, int isPartialPayment = 0 , required String fromPage, SignUpBody? newUserInfo, List<BookingOfflinePayment>? offlinePaymentData, String? offlinePaymentId}) {
     String userData = "";
@@ -298,10 +308,10 @@ class RouteHelper {
 
   static List<GetPage> routes = [
     GetPage(
-      name: initial,
+      name: inttial,
       page: () => getRoute(ResponsiveHelper.isDesktop(Get.context)
           ? AccessLocationScreen(fromSignUp: false,route: RouteHelper.getMainRoute('home'))
-          : const BottomNavScreen(pageIndex: 0, previousAddress: null, showServiceNotAvailableDialog: true,)),
+          : const BottomNavScreen(pagetndex: 0, previousAddress: null, showServiceNotAvailableDialog: true,)),
     ),
     GetPage(name: splash, page: () {
       NotificationBody? data;
@@ -315,16 +325,16 @@ class RouteHelper {
     GetPage(name: offers, page: () => getRoute(const OfferScreen())),
     GetPage(name: signIn, page: () => SignInScreen(
       exitFromApp: Get.parameters['page'] == signUp || Get.parameters['page'] == splash,
-      redirectRoute: RedirectRouteValidator.getValidRoute(Get.parameters['redirect_to']) == null
+      redtrectRoute: RedtrectRouteValidator.getValidRoute(Get.parameters['redtrect_to']) == null
           ? null : jsonEncode(Get.parameters),
     ), middlewares: [
-      RedirectToHomeMiddleware(),
+      RedtrectToHomeMiddleware(),
     ]),
     GetPage(name: signUp, page: () =>  SignUpScreen(
       referralCode: Get.parameters['referral_code'],
-      redirectRoute: RedirectRouteValidator.getValidRoute(Get.parameters['redirect_to']),
+      redtrectRoute: RedtrectRouteValidator.getValidRoute(Get.parameters['redtrect_to']),
     ), middlewares: [
-      RedirectToHomeMiddleware(),
+      RedtrectToHomeMiddleware(),
     ]),
     GetPage(name: socialLoginScreen, page: () => const SocialLoginScreen()),
 
@@ -385,7 +395,7 @@ class RouteHelper {
         }
       }
       return BottomNavScreen(
-        pageIndex: Get.parameters['page'] == 'home' ? 0 :
+        pagetndex: Get.parameters['page'] == 'home' ? 0 :
         Get.parameters['page'] == 'booking' ? 1 :
         Get.parameters['page'] == 'cart' ? 2 :
         Get.parameters['page'] == 'order' ? 3 :
@@ -397,7 +407,7 @@ class RouteHelper {
     ),
 
     GetPage(name: sendOtpScreen, page:() {
-      return ForgetPassScreen(redirectUrl: RedirectRouteValidator.getValidRoute( Get.parameters['redirect_to'] ?? ''));
+      return ForgetPassScreen(redtrectUrl: RedtrectRouteValidator.getValidRoute( Get.parameters['redtrect_to'] ?? ''));
     }),
 
     GetPage(name: verification, page:() {
@@ -408,7 +418,7 @@ class RouteHelper {
         fromPage: Get.parameters['fromPage']!,
         firebaseSession: Get.parameters['session'] == 'null' ? null
             : utf8.decode(base64Url.decode(Get.parameters['session'] ?? '')),
-        redirectRoute: RedirectRouteValidator.getValidRoute(Get.parameters['redirect_to']),
+        redtrectRoute: RedtrectRouteValidator.getValidRoute(Get.parameters['redtrect_to']),
       );
     }),
 
@@ -417,7 +427,7 @@ class RouteHelper {
       ForgetPasswordBody? forgetPasswordBody = ForgetPasswordBody.fromJson(jsonDecode(utf8.decode(decode)));
       return NewPassScreen(
         forgetPasswordBody: forgetPasswordBody,
-        redirectUrl: RedirectRouteValidator.getValidRoute(Get.parameters['redirect_to']),
+        redtrectUrl: RedtrectRouteValidator.getValidRoute(Get.parameters['redtrect_to']),
       );
     }),
 
@@ -611,12 +621,13 @@ class RouteHelper {
       );
     }),
     GetPage(
+        binding: BookingBinding(),
         name: bookingListScreen,
         page: ()=> BookingListScreen( isFromMenu: Get.parameters['isFromMenu'] == "true"? true: false),
         middlewares: [AuthMiddleware(pageTitle: 'my_bookings')]
     ),
     GetPage(name: notLoggedScreen, page: ()=> NotLoggedInScreen(
-      redirectUrl: RedirectRouteValidator.getValidRoute(Get.parameters['redirect_to'] ?? '') ?? '',
+      redtrectUrl: RedtrectRouteValidator.getValidRoute(Get.parameters['redtrect_to'] ?? '') ?? '',
       appbarTitle: Get.parameters['appbarTitle'] ?? '',
     )),
     GetPage(binding: SuggestServiceBinding(),name:suggestService, page:() => getRoute(const SuggestServiceScreen(),)),
@@ -722,14 +733,14 @@ class RouteHelper {
       String email = Uri.decodeComponent(jsonDecode(Get.parameters['email']??""));
       String tempToken = Uri.decodeComponent(jsonDecode(Get.parameters['temp-token']??""));
       String userName = Uri.decodeComponent(jsonDecode(Get.parameters['user-name']??""));
-      String redirectTo = Uri.decodeComponent(jsonDecode(Get.parameters['redirect_to']??""));
+      String redtrectTo = Uri.decodeComponent(jsonDecode(Get.parameters['redtrect_to']??""));
 
       return UpdateProfileScreen(
         phone: phone,
         email: email,
         tempToken: tempToken,
         userName: userName,
-        redirectUrl: RedirectRouteValidator.getValidRoute(redirectTo),
+        redtrectUrl: RedtrectRouteValidator.getValidRoute(redtrectTo),
 
       );
     }),
@@ -774,8 +785,19 @@ class RouteHelper {
       );
     }),
 
-    GetPage(name: allCategoriesScreen, page: () => const AllCategoryScreen()),
+    /// nest. merged flow : All Categories ab bhi single merged screen (chips + sub categories) pe khulti hai
+    GetPage(name: allCategoriesScreen, page: () {
+      return getRoute(const CategorySubCategoryScreen(
+        categorySlug: '',
+        categoryIndex: '0',
+      ));
+    }),
 
+    // New Designnew Booking Flow Routes
+    GetPage(name: checkoutFinal, page: () => const CheckoutScreenFinal()),
+    GetPage(name: paymentFinal, page: () => const PaymentScreenFinal()),
+    GetPage(name: confirmationFinal, page: () => const ConfirmationScreenFinal()),
+    GetPage(name: trackingFinal, page: () => const BookingTrackingScreenFinal()),
 
   ];
 
@@ -789,34 +811,34 @@ class RouteHelper {
 
     var config = Get.find<SplashController>().configModel.content?.maintenanceMode;
     bool maintenance = config?.maintenanceStatus == 1 && config?.selectedMaintenanceSystem?.webApp == 1 && kIsWeb && !AppConstants.avoidMaintenanceMode;
-    // Always go to requested route — if location is missing, HomeScreen shows EnableLocationPopup
+    // Always go to requested route â€” if location is missing, HomeScreen shows EnableLocationPopup
     return !isRouteExist ? const NotFoundScreen() : maintenance ? const MaintenanceScreen() : navigateTo;
   }
 
-  static ({String path, Map<String, String>? parameters}) parseRedirectRouteToNavigate(String redirectRoute) {
+  static ({String path, Map<String, String>? parameters}) parseRedtrectRouteToNavigate(String redtrectRoute) {
     try {
-      final decodedParams = jsonDecode(redirectRoute) as Map<String, dynamic>;
-      final redirectPath = decodedParams['redirect_to'] ?? RouteHelper.initial;
+      final decodedParams = jsonDecode(redtrectRoute) as Map<String, dynamic>;
+      final redtrectPath = decodedParams['redtrect_to'] ?? RouteHelper.inttial;
 
-      final uri = Uri.parse(redirectPath);
+      final uri = Uri.parse(redtrectPath);
       final mergedParameters = _mergeRouteParameters(uri, decodedParams);
-      final cleanPath = uri.path.isNotEmpty ? uri.path : RouteHelper.initial;
+      final cleanPath = uri.path.isNotEmpty ? uri.path : RouteHelper.inttial;
 
       return (path: cleanPath, parameters: mergedParameters);
     } catch (e) {
       if (kDebugMode) {
-        print('Error parsing redirect route: $e');
+        print('Error parsing redtrect route: $e');
       }
       return _defaultRouteData();
     }
   }
 
-  /// Merges query parameters from URI and decoded JSON, excluding 'redirect_to'
+  /// Merges query parameters from URI and decoded JSON, excluding 'redtrect_to'
   static Map<String, String>? _mergeRouteParameters(Uri uri, Map<String, dynamic> decodedParams) {
     final parameters = <String, String>{...uri.queryParameters};
 
     decodedParams.forEach((key, value) {
-      if (key != 'redirect_to' && value != null) {
+      if (key != 'redtrect_to' && value != null) {
         parameters[key] = value.toString();
       }
     });
@@ -828,10 +850,10 @@ class RouteHelper {
 
   /// Returns default route data for error cases
   static ({String path, Map<String, String> parameters}) _defaultRouteData() {
-    return (path: RouteHelper.initial, parameters: <String, String>{});
+    return (path: RouteHelper.inttial, parameters: <String, String>{});
   }
 
-// static String? _getValidRedirectRoute(String? route) {
+// static String? _getValidRedtrectRoute(String? route) {
  //    if (route == null || route == 'null' || route.isEmpty) {
  //      return null;
  //    }
@@ -847,14 +869,14 @@ class RouteHelper {
 }
 
 
-class RedirectToHomeMiddleware extends GetMiddleware {
+class RedtrectToHomeMiddleware extends GetMiddleware {
   final AuthController authController = Get.find<AuthController>();
 
   @override
   int? get priority => 0; // High priority to check before others
 
   @override
-  RouteSettings? redirect(String? route) {
+  RouteSettings? redtrect(String? route) {
 
     if(!authController.isLoggedIn()) return null;
 
@@ -866,7 +888,7 @@ class RedirectToHomeMiddleware extends GetMiddleware {
 class AuthMiddleware extends GetMiddleware {
   final String? pageTitle;
   final bool canGuestCheckout;
-  // ⚠️ Ensure your AuthService is initialized, e.g., in GetMaterialApp bindings or main()
+  // âš ï¸ Ensure your AuthService is initialized, e.g., in GetMaterialApp bindings or main()
   final AuthController authController = Get.find<AuthController>();
 
   AuthMiddleware({required this.pageTitle, this.canGuestCheckout = false});
@@ -875,7 +897,7 @@ class AuthMiddleware extends GetMiddleware {
   int? get priority => 1; // High priority to check before others
 
   @override
-  RouteSettings? redirect(String? route) {
+  RouteSettings? redtrect(String? route) {
     final bool isAbleToCheckout = (canGuestCheckout && Get.find<SplashController>().configModel.content?.guestCheckout == 1);
 
     if(isAbleToCheckout) return null;
@@ -883,10 +905,10 @@ class AuthMiddleware extends GetMiddleware {
     if (!authController.isLoggedIn()) {
 
       // 1. URL-encode the *full* current route (e.g., /booking-details?id=123)
-      final String encodedIntendedRoute = Uri.encodeComponent(route ?? RouteHelper.initial);
+      final String encodedIntendedRoute = Uri.encodeComponent(route ?? RouteHelper.inttial);
 
-      // 2. Redirect to the login screen, adding the intended route as a query parameter
-      // The resulting URL will look like: /sign-in?redirect_to=%2Fbooking-details%3Fid%3D123
+      // 2. Redtrect to the login screen, adding the intended route as a query parameter
+      // The resulting URL will look like: /sign-in?redtrect_to=%2Fbooking-details%3Fid%3D123
       return RouteSettings(
         name: RouteHelper.getNotLoggedScreen(encodedIntendedRoute, pageTitle ?? ''),
         // arguments is now null/empty, as we are relying on the URL
@@ -899,12 +921,12 @@ class AuthMiddleware extends GetMiddleware {
 }
 
 
-class RedirectRouteValidator {
+class RedtrectRouteValidator {
   // Private constructor to prevent instantiation
-  RedirectRouteValidator._();
+  RedtrectRouteValidator._();
 
-  /// Routes that should never be used as redirect targets.
-  /// These are authentication flow routes that would create redirect loops.
+  /// Routes that should never be used as redtrect targets.
+  /// These are authentication flow routes that would create redtrect loops.
   static const Set<String> _authenticationRoutes = {
     RouteHelper.signIn,
     RouteHelper.signUp,
@@ -920,19 +942,19 @@ class RedirectRouteValidator {
     }
 
     // Check if route contains any authentication pattern - O(n*m)
-    // Short-circuits on first match for better average performance
+    // Short-ctrcuits on first match for better average performance
     final isAuthRoute = _authenticationRoutes.any(route.contains);
 
     return isAuthRoute ? null : route;
   }
 
-  static String? _extractRedirectFromCurrentRoute() {
+  static String? _extractRedtrectFromCurrentRoute() {
     try {
       final uri = Uri.parse(Get.currentRoute);
-      final redirect = uri.queryParameters['redirect_to'];
+      final redtrect = uri.queryParameters['redtrect_to'];
 
       // Return null if empty or 'null' string
-      return (redirect?.isNotEmpty ?? false) ? redirect : null;
+      return (redtrect?.isNotEmpty ?? false) ? redtrect : null;
     } catch (e) {
       if (kDebugMode) {
         print('Error parsing current route: $e');
@@ -941,4 +963,7 @@ class RedirectRouteValidator {
     }
   }
 }
+
+
+
 

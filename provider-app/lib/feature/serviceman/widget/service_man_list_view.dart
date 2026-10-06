@@ -1,33 +1,28 @@
-import 'package:demandium_provider/feature/serviceman/view/serviceman_details.dart';
 import 'package:demandium_provider/feature/serviceman/widget/serviceman_card_view.dart';
-import 'package:get/get.dart';
 import 'package:demandium_provider/util/core_export.dart';
+import 'package:get/get.dart';
 
 class ServiceManListview extends StatelessWidget {
-  const ServiceManListview({super.key, });
+  final List<int> visibleIndexes;
+  const ServiceManListview({super.key, this.visibleIndexes = const []});
 
   @override
   Widget build(BuildContext context) {
     return GetBuilder<ServicemanSetupController>(
       builder: (servicemanController) {
-        return servicemanController.servicemanList !=null && servicemanController.servicemanList!.isEmpty? const SizedBox() :
-        GridView.builder(shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
-          gridDelegate:  SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: ResponsiveHelper.isDesktop(context) ? 6 :
-          ResponsiveHelper.isTab(context) ? 4 : 2,
-          childAspectRatio: 1.0,
-          mainAxisSpacing: 3, crossAxisSpacing: 3),
-          itemBuilder: (context, index) {
-          return InkWell(
-            onTap: (){
-              servicemanController.updateIndex(-1);
-              Get.to(()=> ServicemanDetails(id: servicemanController.servicemanList![index].serviceman!.id!,fromDashboard: false,));
-              },
-            child: ServicemanCardView(serviceman:  servicemanController.servicemanList?[index], index: index,),
-          );},
-          itemCount: servicemanController.servicemanList?.length,
+
+        final List<ServicemanModel> servicemen = servicemanController.servicemanList ?? [];
+        final List<int> indexes = visibleIndexes.isNotEmpty ? visibleIndexes : List.generate(servicemen.length, (i) => i);
+
+        return ListView.builder(
+          controller: servicemanController.scrollController,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          itemCount: indexes.length,
+          itemBuilder: (context, i) {
+            final int index = indexes[i];
+            if(index < 0 || index >= servicemen.length) return const SizedBox();
+            return ServicemanCardView(serviceman: servicemen[index], index: index);
+          },
         );
       },
     );

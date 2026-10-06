@@ -37,7 +37,7 @@ class BookingRequestController extends GetxController  implements GetxService{
   String ? requestType;
   BooingListStatus get bookingStatusState => _bookingStatusState;
 
-  var _bookingStatusState = BooingListStatus.accepted;
+  var _bookingStatusState = BooingListStatus.all;
 
   void updateBookingStatusState(BooingListStatus booingListStatus){
       _bookingStatusState=booingListStatus;
@@ -47,7 +47,7 @@ class BookingRequestController extends GetxController  implements GetxService{
   }
   @override
   void onInit(){
-    _bookingStatusState = BooingListStatus.accepted;
+    _bookingStatusState = BooingListStatus.all;
     super.onInit();
     scrollController.addListener(() {
       if (scrollController.position.pixels == scrollController.position.maxScrollExtent) {
@@ -96,6 +96,34 @@ class BookingRequestController extends GetxController  implements GetxService{
     update();
   }
 
+
+  bool _isBookingActionInProgress = false;
+
+  Future<void> acceptBookingFromList(String? bookingId) async {
+    if (_isBookingActionInProgress || bookingId == null || bookingId.isEmpty) return;
+    _isBookingActionInProgress = true;
+    Response response = await bookingRequestRepo.acceptBooking(bookingId);
+    _isBookingActionInProgress = false;
+    if (response.statusCode == 200) {
+      showCustomSnackBar('booking_accepted_successfully'.tr, type: ToasterMessageType.success);
+      getBookingList(_bookingStatusState.name.toLowerCase(), 1);
+    } else {
+      ApiChecker.checkApi(response);
+    }
+  }
+
+  Future<void> declineBookingFromList(String? bookingId) async {
+    if (_isBookingActionInProgress || bookingId == null || bookingId.isEmpty) return;
+    _isBookingActionInProgress = true;
+    Response response = await bookingRequestRepo.rejectBooking(bookingId);
+    _isBookingActionInProgress = false;
+    if (response.statusCode == 200) {
+      showCustomSnackBar('booking_rejected'.tr, type: ToasterMessageType.success);
+      getBookingList(_bookingStatusState.name.toLowerCase(), 1);
+    } else {
+      ApiChecker.checkApi(response);
+    }
+  }
 
   Future<void> getBookingHistory(String requestType, int offset, {bool isFromPagination = false})async{
     _isLoading = true;

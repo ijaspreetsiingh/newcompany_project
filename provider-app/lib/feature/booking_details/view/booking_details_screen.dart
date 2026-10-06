@@ -43,18 +43,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
        }
      },
       child: Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        appBar: CustomAppBar(
-          title: 'booking_details'.tr,
-          onBackPressed: (){
-            if(widget.fromPage == 'fromNotification'){
-              Get.offAllNamed(RouteHelper.getInitialRoute());
-            }else{
-              Get.back();
-            }
-          },
-        ),
-
+        backgroundColor: InkColors.background,
         body: SafeArea(
           child: GetBuilder<BookingDetailsController>(
             builder: (bookingDetailsController) {
@@ -62,6 +51,22 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
               bool isSubBooking = widget.subBookingId !=null && widget.subBookingId != "null";
               BookingDetailsContent? bookingDetails = bookingDetailsController.bookingDetails?.content;
               BookingDetailsContent? subBookingDetails = bookingDetailsController.subBookingDetails?.content;
+              BookingDetailsContent? content = isSubBooking ? subBookingDetails : bookingDetails;
+
+              final String title = content?.readableId != null
+                  ? "${'booking'.tr} # ${content!.readableId}"
+                  : 'booking_details'.tr;
+              final String? subtitle = content?.details?.isNotEmpty == true
+                  ? content!.details!.first.serviceName
+                  : null;
+
+              void onBackPressed(){
+                if(widget.fromPage == 'fromNotification'){
+                  Get.offAllNamed(RouteHelper.getInitialRoute());
+                }else{
+                  Get.back();
+                }
+              }
 
               return ExpandableBottomSheet(
 
@@ -75,24 +80,28 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
 
                 persistentContentHeight: bookingDetailsController.bottomSheetHeight,
 
-                background: Scaffold( backgroundColor: Theme.of(context).colorScheme.surface,
-                  body:Column( children: [
+                background: ColoredBox(
+                  color: InkColors.background,
+                  child:Column( children: [
+
+                    InkTopBar(title: title, subtitle: subtitle, onBack: onBackPressed),
 
                     Container(
                       height: 45,
                       width: Get.width,
-                      margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-                      decoration: BoxDecoration(
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration:  BoxDecoration(
                         border:  Border(
-                          bottom: BorderSide(color: Theme.of(context).primaryColor.withValues(alpha:0.7), width: 1),
+                          bottom: BorderSide(color: InkColors.border, width: 1),
                         ),
                       ),
                       child: TabBar(
-                        unselectedLabelColor:Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha:0.5),
-                        indicatorColor: Theme.of(context).primaryColor,
+                        unselectedLabelColor: InkColors.mutedForeground,
+                        indicatorColor: InkColors.foreground,
+                        indicatorWeight: 2,
                         controller: controller,
-                        labelColor: Theme.of(context).primaryColorLight,
-                        labelStyle:  robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge),
+                        labelColor: InkColors.foreground,
+                        labelStyle:  robotoSemiBold.copyWith(fontSize: Dimensions.fontSizeLarge),
                         labelPadding: EdgeInsets.zero,
                         onTap: (int? index) {
                           switch (index) {

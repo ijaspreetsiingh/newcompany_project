@@ -35,12 +35,12 @@ class _MyFavoriteScreenState extends State<MyFavoriteScreen> with SingleTickerPr
           title: "my_favorite".tr,
           onBackPressed: () {
             if(widget.fromPage == 'fromNotification'){
-              Get.offAllNamed(RouteHelper.getInitialRoute());
+              Get.offAllNamed(RouteHelper.getinitialRoute());
             }else{
               if(Navigator.canPop(context)){
                 Get.back();
               }else{
-                Get.offAllNamed(RouteHelper.getInitialRoute());
+                Get.offAllNamed(RouteHelper.getinitialRoute());
               }
             }
           },

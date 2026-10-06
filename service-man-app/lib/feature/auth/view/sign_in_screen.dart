@@ -9,6 +9,108 @@ class SignInScreen extends StatefulWidget {
   SignInScreenState createState() => SignInScreenState();
 }
 
+/// Shared auth layout matching the reference `AuthShell` (optional back
+/// button, brand mark, display title + muted subtitle, stacked fields) with a
+/// subtle fade/slide entrance.
+class AuthShell extends StatefulWidget {
+  final String title;
+  final String subtitle;
+  final VoidCallback? onBack;
+  final List<Widget> children;
+
+  const AuthShell({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    this.onBack,
+    required this.children,
+  });
+
+  @override
+  State<AuthShell> createState() => _AuthShellState();
+}
+
+class _AuthShellState extends State<AuthShell>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 550),
+  );
+  late final Animation<double> _fade = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOut,
+  );
+  late final Animation<Offset> _slide = Tween<Offset>(
+    begin: const Offset(0, 0.03),
+    end: Offset.zero,
+  ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: context.kBackground,
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _fade,
+          child: SlideTransition(
+            position: _slide,
+            child: ListView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+              children: [
+                if (widget.onBack != null)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: KIconButton(
+                      icon: Icons.arrow_back_rounded,
+                      onTap: widget.onBack,
+                    ),
+                  ),
+                const SizedBox(height: 64),
+                Text(
+                  widget.title,
+                  style: robotoBold.copyWith(
+                    fontSize: 32,
+                    height: 1.15,
+                    letterSpacing: -0.5,
+                    color: context.kForeground,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.subtitle,
+                  style: robotoRegular.copyWith(
+                    fontSize: 14,
+                    height: 24 / 14,
+                    color: context.kMutedForeground,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                for (int i = 0; i < widget.children.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 20),
+                  widget.children[i],
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class SignInScreenState extends State<SignInScreen> {
   final TextEditingController _identityController = TextEditingController();
   final FocusNode _identityFocus = FocusNode();
@@ -47,170 +149,130 @@ class SignInScreenState extends State<SignInScreen> {
           });
         }
       },
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: GetBuilder<SplashController>(
-          builder: (splashController) {
-            return GetBuilder<AuthController>(
-              builder: (authController) {
-                return Column(
-                  children: [
-                    SizedBox(height: MediaQuery.of(context).padding.top + 10),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: IconButton(
-                        onPressed: () {
-                          if (Navigator.canPop(context)) {
-                            Navigator.pop(context);
-                          }
-                        },
-                        icon: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          color: Color(0xff101828),
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 25),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+      child: GetBuilder<SplashController>(
+        builder: (splashController) {
+          return GetBuilder<AuthController>(
+            builder: (authController) {
+              return AuthShell(
+                title: 'welcome_back'.tr,
+                subtitle: 'sign_in_subtitle'.tr,
+                children: [
+                  TextFieldTitle(title: 'email_or_phone'.tr),
+                  CustomTextField(
+                    onCountryChanged: (countryCode) =>
+                        authController.countryDialCode =
+                            countryCode.dialCode!,
+                    countryDialCode: authController.isNumberLogin
+                        ? authController.countryDialCode
+                        : null,
+                    hintText:
+                        'enter_email_address_or_phone_number'.tr,
+                    prefixIcon: authController.isNumberLogin
+                        ? Icons.phone_outlined
+                        : Icons.mail_outline_rounded,
+                    controller: _identityController,
+                    focusNode: _identityFocus,
+                    nextFocus: _passwordFocus,
+                    inputType: TextInputType.emailAddress,
+                    onChanged: (String text) {
+                      final numberRegExp = RegExp(r'^[+]?[0-9]+$');
+                      if (text.isEmpty &&
+                          authController.isNumberLogin) {
+                        authController.toggleIsNumberLogin();
+                      }
+                      if (text.startsWith(numberRegExp) &&
+                          !authController.isNumberLogin) {
+                        authController.toggleIsNumberLogin();
+                        _identityController.text = text.replaceAll(
+                          "+",
+                          "",
+                        );
+                      }
+                      if (text.contains("@") &&
+                          authController.isNumberLogin) {
+                        authController.toggleIsNumberLogin();
+                      }
+                    },
+                  ),
+                  TextFieldTitle(title: 'password'.tr),
+                  CustomTextField(
+                    hintText: '********',
+                    prefixIcon: Icons.lock_outline_rounded,
+                    controller: _passwordController,
+                    focusNode: _passwordFocus,
+                    inputType: TextInputType.visiblePassword,
+                    isPassword: true,
+                    inputAction: TextInputAction.done,
+                    onSubmit: (_) => _login(authController),
+                  ),
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: () => authController.toggleRememberMe(),
+                        borderRadius: BorderRadius.circular(4),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            const SizedBox(height: 10),
-                            Text(
-                              "welcome_to".tr,
-                              style: robotoBold.copyWith(
-                                fontSize: 28,
-                                color: const Color(0xff101828),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              "sign_in_subtitle".tr,
-                              style: robotoRegular.copyWith(
-                                fontSize: 15,
-                                color: const Color(0xff98A2B3),
-                              ),
-                            ),
-                            const SizedBox(height: 40),
-                            _buildFieldLabel('email_or_phone'.tr),
-                            CustomTextField(
-                              onCountryChanged: (countryCode) =>
-                                  authController.countryDialCode =
-                                      countryCode.dialCode!,
-                              countryDialCode: authController.isNumberLogin
-                                  ? authController.countryDialCode
-                                  : null,
-                              hintText:
-                                  'enter_email_address_or_phone_number'.tr,
-                              controller: _identityController,
-                              focusNode: _identityFocus,
-                              nextFocus: _passwordFocus,
-                              inputType: TextInputType.emailAddress,
-                              onChanged: (String text) {
-                                final numberRegExp = RegExp(r'^[+]?[0-9]+$');
-                                if (text.isEmpty &&
-                                    authController.isNumberLogin) {
-                                  authController.toggleIsNumberLogin();
-                                }
-                                if (text.startsWith(numberRegExp) &&
-                                    !authController.isNumberLogin) {
-                                  authController.toggleIsNumberLogin();
-                                  _identityController.text = text.replaceAll(
-                                    "+",
-                                    "",
-                                  );
-                                }
-                                if (text.contains("@") &&
-                                    authController.isNumberLogin) {
-                                  authController.toggleIsNumberLogin();
-                                }
+                            Checkbox(
+                              value: authController.isActiveRememberMe,
+                              onChanged: (newValue) {
+                                authController.toggleRememberMe();
                               },
+                              activeColor: context.kPrimary,
+                              checkColor: context.kPrimaryForeground,
+                              side: BorderSide(
+                                color: context.kInputBorder,
+                                width: 1.5,
+                              ),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
                             ),
-                            const SizedBox(height: 25),
-                            _buildFieldLabel('password'.tr),
-                            CustomTextField(
-                              hintText: '********',
-                              controller: _passwordController,
-                              focusNode: _passwordFocus,
-                              inputType: TextInputType.visiblePassword,
-                              isPassword: true,
-                              inputAction: TextInputAction.done,
+                            const SizedBox(width: 4),
+                            Text(
+                              'remember_me'.tr,
+                              style: robotoRegular.copyWith(
+                                fontSize: 12,
+                                color: context.kForeground,
+                              ),
                             ),
-                            const SizedBox(height: 13),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: CheckboxListTile(
-                                    checkColor: Colors.white,
-                                    activeColor: const Color(0xFF2563EB),
-                                    contentPadding: const EdgeInsets.all(0),
-                                    title: Text(
-                                      'remember_me'.tr,
-                                      style: robotoRegular.copyWith(
-                                        color: const Color(0xff475467),
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    value: authController.isActiveRememberMe,
-                                    onChanged: (newValue) {
-                                      authController.toggleRememberMe();
-                                    },
-                                    controlAffinity:
-                                        ListTileControlAffinity.leading,
-                                  ),
-                                ),
-                                TextButton(
-                                  style: TextButton.styleFrom(
-                                    minimumSize: const Size(1, 40),
-                                    backgroundColor: Colors.white,
-                                  ),
-                                  onPressed: () =>
-                                      Get.to(const ForgetPassScreen()),
-                                  child: Text(
-                                    'forgot_password?'.tr,
-                                    style: robotoMedium.copyWith(
-                                      fontSize: 14,
-                                      color: const Color(0xFF2563EB),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 13),
-                            CustomButton(
-                              btnTxt: 'sign_in'.tr,
-                              isLoading: authController.isLoading ?? false,
-                              color: const Color(0xFF2563EB),
-                              onPressed: () => _login(authController),
-                            ),
-                            const SizedBox(height: 30),
                           ],
                         ),
                       ),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFieldLabel(String text) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        text,
-        style: robotoMedium.copyWith(
-          color: const Color(0xff344054),
-          fontSize: 14,
-        ),
+                      const Spacer(),
+                      InkWell(
+                        onTap: () => Get.to(const ForgetPassScreen()),
+                        borderRadius: BorderRadius.circular(kRadiusSm),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 4),
+                          child: Text(
+                            'forgot_password'.tr,
+                            style: robotoMedium.copyWith(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: context.kForeground,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  KButton(
+                    label: (authController.isLoading ?? false)
+                        ? 'loading'.tr
+                        : 'sign_in'.tr,
+                    height: 48,
+                    onTap: (authController.isLoading ?? false)
+                        ? null
+                        : () => _login(authController),
+                  ),
+                ],
+              );
+            },
+          );
+        },
       ),
     );
   }

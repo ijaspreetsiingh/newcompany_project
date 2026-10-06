@@ -70,3 +70,4 @@ class BookingScreenShimmer extends StatelessWidget {
     );
   }
 }
+

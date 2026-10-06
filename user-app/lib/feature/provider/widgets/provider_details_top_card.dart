@@ -66,12 +66,12 @@ class ProviderDetailsTopCard extends StatelessWidget {
                                 child: Row(children: [
                                   Icon(
                                     Icons.circle, size: 10,
-                                    color: providerDetails.serviceAvailability == 1 ? Colors.green : Theme.of(context).colorScheme.error,
+                                    color: providerDetails.serviceAvailability == 1 ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.error,
                                   ),
                                   const SizedBox(width: Dimensions.paddingSizeTine),
 
                                   Text(providerDetails.serviceAvailability == 1 ? "available".tr : "unavailable".tr, style: robotoMedium.copyWith(
-                                    color: providerDetails.serviceAvailability == 1 ? Colors.green : Theme.of(context).colorScheme.error,
+                                    color: providerDetails.serviceAvailability == 1 ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.error,
                                     fontSize: Dimensions.fontSizeSmall- 2,
                                   ))
                                 ]),
@@ -269,4 +269,6 @@ class _ReviewInfoCard extends StatelessWidget {
     );
   }
 }
+
+
 

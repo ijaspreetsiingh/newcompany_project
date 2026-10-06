@@ -34,6 +34,11 @@
                                     {{translate('Social_login')}}
                                 </button>
                             </li>
+                            <li class="nav-item">
+                                <button data-bs-toggle="tab" data-bs-target="#location-search" class="nav-link">
+                                    {{translate('Location_Search')}}
+                                </button>
+                            </li>
                         </ul>
                     </div>
 
@@ -246,6 +251,10 @@
                                 </div>
                             </div>
                         </div>
+                    <div class="tab-content">
+                        <div class="tab-pane fade" id="location-search">
+                            @include('businesssettingsmodule::admin.partials.location-search-settings')
+                        </div>
                     </div>
                 </div>
             </div>
@@ -375,4 +384,5 @@
             })
         }
     </script>
-@endpush
+    @endpush
+

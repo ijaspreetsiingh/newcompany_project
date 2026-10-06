@@ -16,7 +16,9 @@ trait BookingScopes
     }
     public function scopeOfRepeatBookingStatus($query, $status): void
     {
-        $query->where('is_repeated', '=', $status);
+        if ($status !== null) {
+            $query->where('is_repeated', '=', $status);
+        }
     }
 
     public function scopeSearch($query, $keywords, array $searchColumns): mixed

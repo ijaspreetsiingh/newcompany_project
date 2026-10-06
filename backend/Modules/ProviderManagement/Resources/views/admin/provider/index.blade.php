@@ -48,6 +48,21 @@
                 </div>
             </div>
 
+            @if($pendingCategoryRequests->isNotEmpty())
+                <div class="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4" role="alert">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="material-icons">notifications_active</span>
+                        <span class="fw-medium">
+                            {{$pendingCategoryRequests->count()}}
+                            {{translate('category assignment request(s) are waiting for your approval')}}
+                        </span>
+                    </div>
+                    <button type="button" class="btn btn--primary btn-sm" data-bs-toggle="modal" data-bs-target="#categoryRequestModal">
+                        {{translate('Review Requests')}}
+                    </button>
+                </div>
+            @endif
+
             <div
                 class="d-flex flex-wrap justify-content-between align-items-center border-bottom mx-lg-4 mb-10 gap-3">
                 <ul class="nav nav--tabs">
@@ -206,6 +221,24 @@
                                             @canany(['provider_delete', 'provider_update'])
                                                 <td>
                                                     <div class="d-flex gap-2">
+                                                        @if(isset($pendingCategoryRequestMap[$provider->id]))
+                                                            <button type="button"
+                                                                    class="action-btn category-request-btn"
+                                                                    style="--size: 30px; background: #fff3cd; border: 1px solid #ffc107; color: #997404"
+                                                                    title="{{translate('Category assignment request pending')}}"
+                                                                    data-bs-toggle="modal" data-bs-target="#categoryRequestModal">
+                                                                <span class="material-icons">rule</span>
+                                                            </button>
+                                                        @endif
+                                                        @can('provider_view')
+                                                            <button type="button"
+                                                                    class="action-btn btn--light-primary provider-view-stats"
+                                                                    style="--size: 30px"
+                                                                    title="{{translate('View')}}"
+                                                                    data-url="{{route('admin.provider.view_stats', [$provider->id])}}">
+                                                                <span class="material-icons">visibility</span>
+                                                            </button>
+                                                        @endcan
                                                         @can('provider_update')
                                                             <a href="{{route('admin.provider.edit',[$provider->id])}}"
                                                                class="action-btn btn--light-primary"
@@ -293,6 +326,108 @@
         </div>
     </div>
 
+    @if($pendingCategoryRequests->isNotEmpty())
+        <div class="modal fade" id="categoryRequestModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{translate('Category Assignment Requests')}}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        @foreach($pendingCategoryRequests as $categoryRequest)
+                            @php
+                                $currentSubs = (array) $categoryRequest->current_sub_category_ids;
+                                $requestedSubs = (array) $categoryRequest->requested_sub_category_ids;
+                                $removedSubs = array_values(array_diff($currentSubs, $requestedSubs));
+                                $addedSubs = array_values(array_diff($requestedSubs, $currentSubs));
+                            @endphp
+                            <div class="card mb-3 border">
+                                <div class="card-body">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                                        <div>
+                                            <h5 class="mb-1">{{$categoryRequest->provider?->company_name ?? '-'}}</h5>
+                                            <span class="fs-12 text-muted">{{$categoryRequest->provider?->contact_person_name ?? ''}}</span>
+                                        </div>
+                                        <span class="badge badge-pill {{$categoryRequest->request_type == 'cancel' ? 'badge-danger' : 'badge-warning'}}">
+                                            {{translate($categoryRequest->request_type == 'cancel' ? 'Cancel assignment' : 'Replace / change')}}
+                                        </span>
+                                    </div>
+
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <div class="p-3 rounded bg-body-secondary h-100">
+                                                <div class="fw-medium mb-2">{{translate('Currently assigned')}}</div>
+                                                @forelse($currentSubs as $subId)
+                                                    <span class="badge {{$categoryRequest->request_type == 'cancel' || in_array($subId, $removedSubs) ? 'bg-danger' : 'bg-secondary'}} mb-1">
+                                                        {{$categoryNames[$subId] ?? $subId}}
+                                                    </span>
+                                                @empty
+                                                    <span class="fs-12 text-muted">{{translate('None')}}</span>
+                                                @endforelse
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="p-3 rounded bg-body-secondary h-100">
+                                                <div class="fw-medium mb-2">{{translate('Provider requested')}}</div>
+                                                @if($categoryRequest->request_type == 'cancel')
+                                                    <span class="fs-12 text-muted">{{translate('Provider wants to cancel all assignments')}}</span>
+                                                @else
+                                                    @forelse($requestedSubs as $subId)
+                                                        <span class="badge {{in_array($subId, $addedSubs) ? 'bg-success' : 'bg-secondary'}} mb-1">
+                                                            {{$categoryNames[$subId] ?? $subId}}
+                                                        </span>
+                                                    @empty
+                                                        <span class="fs-12 text-muted">{{translate('None')}}</span>
+                                                    @endforelse
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if(!empty($categoryRequest->note))
+                                        <p class="fs-12 mb-3"><b>{{translate('Note')}}:</b> {{\Illuminate\Support\Str::limit($categoryRequest->note, 300)}}</p>
+                                    @endif
+
+                                    @can('provider_update')
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <form action="{{route('admin.provider.category_request_update')}}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="request_id" value="{{$categoryRequest->id}}">
+                                                <input type="hidden" name="status" value="approve">
+                                                <button type="submit" class="btn btn--success btn-sm">{{translate('Approve')}}</button>
+                                            </form>
+                                            <form action="{{route('admin.provider.category_request_update')}}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="request_id" value="{{$categoryRequest->id}}">
+                                                <input type="hidden" name="status" value="deny">
+                                                <button type="submit" class="btn btn--danger btn-sm">{{translate('Deny')}}</button>
+                                            </form>
+                                        </div>
+                                    @endcan
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <div class="modal fade" id="providerStatsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{translate('Provider Details')}}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center text-muted">
+                    <div class="py-4">{{translate('Loading...')}}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @push('script')
@@ -324,6 +459,19 @@
         $('#exampleModal').on('show.bs.modal', function (event) {
             let url = $(this).data('url');
             $('#bookingRequestLink').attr('href', url);
+        });
+
+        $('.provider-view-stats').on('click', function () {
+            let url = $(this).data('url');
+            let body = $('#providerStatsModal .modal-body');
+            body.html('<div class="py-4 text-center text-muted">{{ translate("Loading...") }}</div>');
+            let modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('providerStatsModal'));
+            modal.show();
+            $.get(url, function (html) {
+                body.html(html);
+            }).fail(function () {
+                body.html('<div class="py-4 text-center text-danger">{{ translate("something_went_wrong") }}</div>');
+            });
         });
 
     </script>

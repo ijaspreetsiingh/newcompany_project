@@ -10,6 +10,13 @@ class BottomNavScreen extends StatefulWidget {
   static void onChangesIndex(int index) =>
       bottomNavKey.currentState?._setPage(index);
 
+  /// Opens the reference "More" sheet (menu screen).
+  static void openMenu() => Get.bottomSheet(
+    const MenuScreen(),
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+  );
+
   @override
   BottomNavScreenState createState() => BottomNavScreenState();
 }
@@ -29,7 +36,7 @@ class BottomNavScreenState extends State<BottomNavScreen>
       DateConverter.stringYear(DateTime.now()),
     );
     Get.find<BookingRequestController>().updateBookingStatusState(
-      BooingListStatus.accepted,
+      BooingListStatus.all,
     );
     Get.find<BookingRequestController>().getBookingHistory('all', 1);
     Get.find<BookingRequestController>().updateBookingHistorySelectedIndex(0);
@@ -46,7 +53,7 @@ class BottomNavScreenState extends State<BottomNavScreen>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 3,
+      length: 4,
       vsync: this,
       initialIndex: widget.pageIndex,
     );
@@ -93,71 +100,22 @@ class BottomNavScreenState extends State<BottomNavScreen>
       child: Scaffold(
         extendBody: true,
         bottomNavigationBar: Container(
-          color: Colors.transparent,
+          decoration: BoxDecoration(
+            color: context.kBackground.withValues(alpha: 0.95),
+            border: Border(top: BorderSide(color: context.kBorder, width: 1)),
+          ),
           child: SafeArea(
             top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                /// Floating pill nav bar
-                Container(
-                  margin: const EdgeInsets.fromLTRB(
-                    Dimensions.paddingSizeDefault,
-                    0,
-                    Dimensions.paddingSizeDefault,
-                    Dimensions.paddingSizeSmall,
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: Dimensions.paddingSizeExtraSmall,
-                    vertical: Dimensions.paddingSizeExtraSmall,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Get.isDarkMode
-                        ? Theme.of(context).cardColor
-                        : Colors.white,
-                    borderRadius: BorderRadius.circular(
-                      Dimensions.radiusExtraLarge + 6,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(
-                          alpha: Get.isDarkMode ? 0.35 : 0.10,
-                        ),
-                        blurRadius: 24,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: SizedBox(
-                    height: 56,
-                    child: Row(
-                      children: [
-                        _buildNavItem(0, Icons.home_rounded, 'dashboard'.tr),
-                        _buildNavItem(
-                          1,
-                          Icons.calendar_today_rounded,
-                          'bookings'.tr,
-                        ),
-                        _buildNavItem(2, Icons.history_rounded, 'history'.tr),
-                        _buildNavItem(3, Icons.menu_rounded, 'more'.tr),
-                      ],
-                    ),
-                  ),
-                ),
-
-                /// Home indicator line
-                Container(
-                  height: 4,
-                  width: 110,
-                  margin: const EdgeInsets.only(
-                    bottom: Dimensions.paddingSizeExtraSmall + 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).hintColor.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+              child: Row(
+                children: [
+                  _buildNavItem(0, Icons.access_time_rounded, 'dashboard'.tr),
+                  _buildNavItem(1, Icons.work_outline_rounded, 'bookings'.tr),
+                  _buildNavItem(2, Icons.mail_outline_rounded, 'inbox'.tr),
+                  _buildNavItem(3, Icons.account_circle_outlined, 'profile'.tr),
+                ],
+              ),
             ),
           ),
         ),
@@ -167,7 +125,8 @@ class BottomNavScreenState extends State<BottomNavScreen>
           children: const [
             DashBoardScreen(),
             BookingListScreen(),
-            BookingHistoryScreen(),
+            InboxScreen(),
+            ProfileScreen(),
           ],
         ),
       ),
@@ -175,94 +134,52 @@ class BottomNavScreenState extends State<BottomNavScreen>
   }
 
   void _setPage(int pageIndex) {
-    if (pageIndex == 3) {
-      Get.bottomSheet(
-        const MenuScreen(),
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-      );
-    } else {
-      _tabController!.animateTo(pageIndex);
-      setState(() {
-        _currentIndex = pageIndex;
-      });
-    }
+    _tabController!.animateTo(pageIndex);
+    setState(() {
+      _currentIndex = pageIndex;
+    });
   }
 
   Widget _buildNavItem(int index, IconData icon, String label) {
     final bool isActive = _currentIndex == index;
-    final Color primary = Theme.of(context).colorScheme.primary;
-    final Color inactive = Get.isDarkMode
-        ? Theme.of(context).hintColor
-        : const Color(0xFF9AA3B2);
+    final Color activeFg = context.kPrimaryForeground;
+    final Color inactive = context.kMutedForeground;
 
     return Expanded(
       child: InkWell(
         onTap: () => _setPage(index),
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
-        borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-        child: Center(
-          child: isActive
-              /// Active gradient chip
-              ? Container(
-                  height: 50,
-                  width: 72,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        primary,
-                        Color.lerp(primary, const Color(0xFF1E40AF), 0.45)!,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-                    boxShadow: [
-                      BoxShadow(
-                        color: primary.withValues(alpha: 0.35),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(icon, size: 20, color: Colors.white),
-                      const SizedBox(height: 2),
-                      Text(
-                        label,
-                        style: robotoBold.copyWith(
-                          fontSize: 9,
-                          color: Colors.white,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                )
-              /// Inactive item
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(icon, size: 22, color: inactive),
-                    const SizedBox(height: 4),
-                    Text(
-                      label,
-                      style: robotoMedium.copyWith(
-                        fontSize: Dimensions.fontSizeExtraSmall,
-                        color: inactive,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+        borderRadius: BorderRadius.circular(kRadiusMd),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          height: 56,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isActive ? context.kPrimary : Colors.transparent,
+            borderRadius: BorderRadius.circular(kRadiusMd),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isActive ? activeFg : inactive,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: robotoMedium.copyWith(
+                  fontSize: 10,
+                  color: isActive ? activeFg : inactive,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );

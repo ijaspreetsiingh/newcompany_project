@@ -5,183 +5,66 @@ import 'package:jdds/util/core_export.dart';
 class CartServiceWidget extends StatelessWidget {
   final CartModel cart;
   final int cartIndex;
-
-  const CartServiceWidget({super.key, 
-    required this.cart,
-    required this.cartIndex,
-  });
+  const CartServiceWidget({super.key, required this.cart, required this.cartIndex});
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final ink = dark ? const Color(0xFFF1F1F1) : const Color(0xFF111111);
+    final muted = dark ? const Color(0xFFB3B3B3) : const Color(0xFF777777);
+    final line = dark ? const Color(0xFF333333) : const Color(0xFFE2E2E2);
     return Padding(
-      padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeDefault,left: Dimensions.paddingSizeExtraSmall,right: Dimensions.paddingSizeExtraSmall),
-      child: Container(
-        height: 90.0,
-        decoration: BoxDecoration(
-            color: Theme.of(context).hoverColor,
-            borderRadius: BorderRadius.circular(Dimensions.radiusSmall)),
-        child: Stack(
-            alignment: Alignment.center,
-            clipBehavior: Clip.antiAliasWithSaveLayer,
-            children: [
-
-              Slidable(
-                key: const ValueKey(1),
-                closeOnScroll: false,
-                endActionPane: ActionPane(
-                  motion: const ScrollMotion(),
-                  dismissible: null,
-                  extentRatio: 0.3,
-                  children: [
-                    CustomSlidableAction(
-                      padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
-                      flex: 1,
-                      onPressed: (context) async {
-                        Get.dialog(const CustomLoader(), barrierDismissible: false,);
-                        await Get.find<CartController>().removeCartFromServer(cart);
-                        Get.back();
-                      },
-                      backgroundColor: Theme.of(context).colorScheme.error.withValues(alpha: 0.12),
-                      foregroundColor: Colors.white,
-                      borderRadius: const BorderRadius.only(
-                          topRight: Radius.circular(Dimensions.radiusSmall),
-                          bottomRight:  Radius.circular(Dimensions.radiusSmall)),
-                      child: Container(
-                        padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).cardColor.withValues(alpha: 0.8),
-                            borderRadius: BorderRadius.circular(Dimensions.paddingSizeDefault),
-                          ),
-                          child: Image.asset(Images.cartDeleteVariation,
-                              height: Dimensions.paddingSizeLarge,
-                              width: Dimensions.paddingSizeLarge
-                          ),
-                      ),
-                    ),
-                  ],
-                ),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault, horizontal: Dimensions.paddingSizeSmall),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    border: Border.all(color: Colors.white.withValues(alpha: .2)),
-                    borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                    boxShadow:Get.isDarkMode ? null:[
-                      BoxShadow(
-                        color: Colors.grey[Get.isDarkMode ? 800 : 200]!,
-                        blurRadius: 5,
-                        spreadRadius: 1,
-                      )
-                    ],
-                  ),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: InkWell(
-                            onTap: (){
-                              if(cart.service?.slug != null) {
-                                Get.toNamed(RouteHelper.getServiceRoute(cart.service!.slug!));
-                              }
-                            },
-                            child: SizedBox(
-                              width:ResponsiveHelper.isMobile(context)? Get.width / 1.8 : Get.width / 4,
-                              child: Row(
-                                children: [
-                                  const SizedBox(width: Dimensions.paddingSizeSmall),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                                    child: CustomImage(
-                                       image: cart.service?.thumbnailFullPath ?? '',
-                                      height: 65,
-                                      width: 70,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  const SizedBox(width: Dimensions.paddingSizeSmall),
-                                  Expanded(
-                                    child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            cart.service?.name ?? '',
-                                            style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
-                                          SizedBox(
-                                            width: Get.width * 0.4,
-                                            child: Text(
-                                              cart.variantKey,
-                                              style: robotoMedium.copyWith(color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: .6), fontSize: Dimensions.fontSizeDefault),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 5),
-                                          Directionality(
-                                            textDirection: TextDirection.ltr,
-                                            child: Text(
-                                              PriceConverter.convertPrice(cart.totalCost.toDouble()),
-                                              style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: .6)),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 5),
-                                        ]),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Row(children: [
-                            if (cart.quantity > 1)
-                              QuantityButton(
-                                onTap: () {
-                                  Get.find<CartController>().updateCartQuantityToApi(cart.id,cart.quantity - 1);
-
-                                },
-                                isIncrement: false,
-                              ),
-                            if (cart.quantity == 1)
-                              InkWell(
-                                onTap: () {
-                                  Get.dialog(ConfirmationDialog(
-                                      icon: Images.deleteProfile,
-                                      description: 'are_you_sure_to_delete_this_service'.tr,
-                                      onYesPressed: () async {
-                                        Get.back();
-                                        Get.dialog(const CustomLoader(), barrierDismissible: false,);
-                                        await Get.find<CartController>().removeCartFromServer(cart);
-                                        Get.back();
-                                      }), useSafeArea: false);
-
-                                },
-                                child: Container(
-                                    height: 22,
-                                    width: 22,
-                                    margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
-                                    child: Image.asset(Images.cartDeleteVariation)),
-                              ),
-                            Text(cart.quantity.toString(), style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeExtraLarge)),
-                            QuantityButton(
-                              onTap: () {
-                                Get.find<CartController>().updateCartQuantityToApi(cart.id,cart.quantity + 1);
-                              },
-                              isIncrement: true,
-                            ),
-                          ]),
-                        ),
-                      ]),
-              ),),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      child: Slidable(
+        key: ValueKey(cart.id),
+        endActionPane: ActionPane(motion: const ScrollMotion(), extentRatio: .22, children: [
+          CustomSlidableAction(
+            onPressed: (_) async => Get.find<CartController>().removeCartFromServer(cart),
+            backgroundColor: Colors.transparent,
+            child: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
+          ),
         ]),
+        child: Container(
+          height: 148,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: dark ? const Color(0xFF171717) : Colors.white,
+            border: Border.all(color: line), borderRadius: BorderRadius.circular(20)),
+          child: Row(children: [
+            ClipRRect(borderRadius: BorderRadius.circular(14), child: CustomImage(
+              image: cart.service?.thumbnailFullPath ?? '', width: 104, height: 124,
+              fit: BoxFit.cover, placeholder: Images.placeholder)),
+            const SizedBox(width: 14),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Text(cart.service?.category?.name ?? '', maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: muted, fontSize: 11)),
+              Text(cart.service?.name ?? '', maxLines: 2, overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: ink, fontSize: 15, fontWeight: FontWeight.w700)),
+              Text(cart.variantKey.replaceAll('-', ' '), maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: muted, fontSize: 11)),
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                Text(PriceConverter.convertPrice(cart.totalCost.toDouble()),
+                  style: TextStyle(color: ink, fontSize: 15, fontWeight: FontWeight.w800)),
+                Container(decoration: BoxDecoration(border: Border.all(color: line), borderRadius: BorderRadius.circular(30)),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    _quantityButton(context, Icons.remove, () {
+                      if (cart.quantity <= 1) { Get.find<CartController>().removeCartFromServer(cart); }
+                      else { Get.find<CartController>().updateCartQuantityToApi(cart.id, cart.quantity - 1); }
+                    }),
+                    Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text('${cart.quantity}', style: TextStyle(color: ink, fontWeight: FontWeight.w600))),
+                    _quantityButton(context, Icons.add, () => Get.find<CartController>().updateCartQuantityToApi(cart.id, cart.quantity + 1)),
+                  ])),
+              ]),
+            ])),
+          ]),
+        ),
       ),
     );
   }
+
+  Widget _quantityButton(BuildContext context, IconData icon, VoidCallback action) => InkWell(
+    onTap: action, borderRadius: BorderRadius.circular(24),
+    child: SizedBox(width: 32, height: 32, child: Icon(icon, size: 17, color: Theme.of(context).textTheme.bodyLarge?.color)));
 }
+
+

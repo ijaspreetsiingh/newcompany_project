@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
+import 'package:jdds/common/design_system/nest_screens_kit.dart';
 import 'package:jdds/common/widgets/custom_pop_widget.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
@@ -9,13 +10,19 @@ class AccessLocationScreen extends StatefulWidget {
   final bool? fromSignUp;
   final bool fromHome;
   final String? route;
-  const AccessLocationScreen({super.key, required this.fromSignUp, required this.route, this.fromHome = false});
+  const AccessLocationScreen({
+    super.key,
+    required this.fromSignUp,
+    required this.route,
+    this.fromHome = false,
+  });
 
   @override
   State<AccessLocationScreen> createState() => _AccessLocationScreenState();
 }
 
-class _AccessLocationScreenState extends State<AccessLocationScreen> with TickerProviderStateMixin {
+class _AccessLocationScreenState extends State<AccessLocationScreen>
+    with TickerProviderStateMixin {
   bool isLoggedIn = false;
   late AnimationController _blobController;
   late AnimationController _iconController;
@@ -30,8 +37,14 @@ class _AccessLocationScreenState extends State<AccessLocationScreen> with Ticker
       Get.find<LocationController>().getAddressList();
     }
 
-    _blobController = AnimationController(vsync: this, duration: const Duration(seconds: 20))..repeat();
-    _iconController = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
+    _blobController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+    _iconController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
     _iconScale = Tween<double>(begin: 0.5, end: 1.0).animate(
       CurvedAnimation(parent: _iconController, curve: Curves.elasticOut),
     );
@@ -49,62 +62,99 @@ class _AccessLocationScreenState extends State<AccessLocationScreen> with Ticker
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     return CustomPopWidget(
       isExit: true,
       child: Scaffold(
-        drawer: ResponsiveHelper.isDesktop(context) ? const AddressSelectionDrawer() : null,
-        endDrawer: ResponsiveHelper.isDesktop(context) ? const MenuDrawer() : null,
+        backgroundColor: NestInk.background,
+        drawer: ResponsiveHelper.isDesktop(context)
+            ? const AddressSelectionDrawer()
+            : null,
+        endDrawer: ResponsiveHelper.isDesktop(context)
+            ? const MenuDrawer()
+            : null,
         body: Stack(
           children: [
             AnimatedBuilder(
               animation: _blobController,
               builder: (context, _) {
                 return CustomPaint(
-                  painter: _LiquidBlobPainter(animation: _blobController),
+                  painter: _LiquidBlobPainter(
+                    animation: _blobController,
+                    background: NestInk.background,
+                    foreground: NestInk.primary,
+                  ),
                   size: MediaQuery.of(context).size,
                 );
               },
             ),
             SafeArea(
-              child: GetBuilder<LocationController>(builder: (locationController) {
-                return (ResponsiveHelper.isDesktop(context)) && !widget.fromHome
-                    ? WebLandingPage(fromSignUp: widget.fromSignUp, route: widget.route, shakeKey: shakeKey)
-                    : Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            child: Row(
-                              children: [
-                                Container(
-                                  height: 40,
-                                  width: 40,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.7),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+              child: GetBuilder<LocationController>(
+                builder: (locationController) {
+                  return (ResponsiveHelper.isDesktop(context)) &&
+                          !widget.fromHome
+                      ? WebLandingPage(
+                          fromSignUp: widget.fromSignUp,
+                          route: widget.route,
+                          shakeKey: shakeKey,
+                        )
+                      : Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    height: 40,
+                                    width: 40,
+                                    decoration: BoxDecoration(
+                                      color: NestInk.card,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: NestInk.border),
+                                    ),
+                                    child: IconButton(
+                                      onPressed: () =>
+                                          Navigator.maybePop(context),
+                                      icon: Icon(
+                                        Icons.arrow_back_rounded,
+                                        size: 18,
+                                        color: NestInk.primary,
+                                      ),
+                                    ),
                                   ),
-                                  child: const Center(child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Color(0xff101828))),
-                                ),
-                                const Spacer(),
-                                Text(
-                                  'Set Location',
-                                  style: robotoBold.copyWith(fontSize: 17, color: const Color(0xff101828)),
-                                ),
-                                const Spacer(),
-                                const SizedBox(width: 40),
-                              ],
+                                  const Spacer(),
+                                  Text(
+                                    'Set Location',
+                                    style: NestInk.display(
+                                      size: 17,
+                                      weight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  const SizedBox(width: 40),
+                                ],
+                              ),
                             ),
-                          ),
-                          Expanded(
-                            child: isLoggedIn && locationController.addressList != null && locationController.addressList!.isNotEmpty
-                                ? _buildAddressList(locationController)
-                                : _buildLocationPrompt(context, locationController),
-                          ),
-                          if (!ResponsiveHelper.isDesktop(context))
-                            _buildBottomButtons(context, locationController),
-                        ],
-                      );
-              }),
+                            Expanded(
+                              child:
+                                  isLoggedIn &&
+                                      locationController.addressList != null &&
+                                      locationController.addressList!.isNotEmpty
+                                  ? _buildAddressList(locationController)
+                                  : _buildLocationPrompt(
+                                      context,
+                                      locationController,
+                                    ),
+                            ),
+                            if (!ResponsiveHelper.isDesktop(context))
+                              _buildBottomButtons(context, locationController),
+                          ],
+                        );
+                },
+              ),
             ),
           ],
         ),
@@ -126,8 +176,17 @@ class _AccessLocationScreenState extends State<AccessLocationScreen> with Ticker
             onTap: () async {
               Get.dialog(const CustomLoader(), barrierDismissible: false);
               AddressModel address = locationController.addressList![index];
-              await locationController.setAddressIndex(address, fromAddressScreen: false);
-              locationController.saveAddressAndNavigate(address, widget.fromSignUp!, widget.route, widget.route != null, true);
+              await locationController.setAddressIndex(
+                address,
+                fromAddressScreen: false,
+              );
+              locationController.saveAddressAndNavigate(
+                address,
+                widget.fromSignUp!,
+                widget.route,
+                widget.route != null,
+                true,
+              );
             },
             selectedUserAddressId: locationController.getUserAddress()?.id,
           ),
@@ -136,7 +195,10 @@ class _AccessLocationScreenState extends State<AccessLocationScreen> with Ticker
     );
   }
 
-  Widget _buildLocationPrompt(BuildContext context, LocationController locationController) {
+  Widget _buildLocationPrompt(
+    BuildContext context,
+    LocationController locationController,
+  ) {
     return Center(
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -154,10 +216,11 @@ class _AccessLocationScreenState extends State<AccessLocationScreen> with Ticker
                     width: 200,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: NestInk.card,
+                      border: Border.all(color: NestInk.border),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xffFF6B2C).withValues(alpha: 0.1),
+                          color: NestInk.primary.withValues(alpha: 0.08),
                           blurRadius: 40,
                           spreadRadius: 5,
                         ),
@@ -169,7 +232,7 @@ class _AccessLocationScreenState extends State<AccessLocationScreen> with Ticker
                         child: Container(
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 2),
+                            border: Border.all(color: NestInk.border, width: 2),
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(100),
@@ -190,7 +253,7 @@ class _AccessLocationScreenState extends State<AccessLocationScreen> with Ticker
             Text(
               'Find Services Near You',
               textAlign: TextAlign.center,
-              style: robotoBold.copyWith(fontSize: 22, color: const Color(0xff101828)),
+              style: NestInk.display(size: 22, weight: FontWeight.w800),
             ),
             const SizedBox(height: 12),
             Text(
@@ -199,7 +262,7 @@ class _AccessLocationScreenState extends State<AccessLocationScreen> with Ticker
               style: robotoRegular.copyWith(
                 fontSize: 14,
                 height: 1.5,
-                color: const Color(0xff667085),
+                color: NestInk.mutedText,
               ),
             ),
           ],
@@ -208,7 +271,10 @@ class _AccessLocationScreenState extends State<AccessLocationScreen> with Ticker
     );
   }
 
-  Widget _buildBottomButtons(BuildContext context, LocationController locationController) {
+  Widget _buildBottomButtons(
+    BuildContext context,
+    LocationController locationController,
+  ) {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 25),
       child: Column(
@@ -217,35 +283,34 @@ class _AccessLocationScreenState extends State<AccessLocationScreen> with Ticker
             height: 52,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: const Color(0xffFF6B2C),
+              color: Theme.of(context).colorScheme.primary,
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xffFF6B2C).withValues(alpha: 0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.15),
                   blurRadius: 15,
                   offset: const Offset(0, 6),
                 ),
               ],
             ),
             child: TextButton.icon(
-              onPressed: () async {
+              onPressed: () {
                 if (isRedundentClick(DateTime.now())) return;
-                _checkPermission(() async {
-                  Get.dialog(const CustomLoader(), barrierDismissible: false);
-                  AddressModel address = await locationController.getCurrentLocation(true, deviceCurrentLocation: true);
-                  ZoneResponseModel response = await locationController.getZone(address.latitude!, address.longitude!, false);
-                  if (response.isSuccess) {
-                    locationController.saveAddressAndNavigate(address, widget.fromSignUp ?? false, widget.route != null ? widget.route! : '', widget.route != null, true);
-                  } else {
-                    Get.back();
-                    customSnackBar(response.message);
-                  }
-                });
+                _checkPermission(_useCurrentLocation);
               },
-              icon: const Icon(Icons.my_location, color: Colors.white, size: 20),
+              icon: Icon(
+                Icons.my_location,
+                color: Theme.of(context).colorScheme.onPrimary,
+                size: 20,
+              ),
               label: Text(
                 'Use Current Location',
-                style: robotoSemiBold.copyWith(color: Colors.white, fontSize: 15),
+                style: robotoSemiBold.copyWith(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  fontSize: 15,
+                ),
               ),
             ),
           ),
@@ -254,9 +319,9 @@ class _AccessLocationScreenState extends State<AccessLocationScreen> with Ticker
             height: 52,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.7),
+              color: NestInk.card,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xffFF6B2C).withValues(alpha: 0.4), width: 1.5),
+              border: Border.all(color: NestInk.border, width: 1),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(13),
@@ -265,22 +330,31 @@ class _AccessLocationScreenState extends State<AccessLocationScreen> with Ticker
                 child: TextButton.icon(
                   onPressed: () async {
                     if (isRedundentClick(DateTime.now())) return;
-                    Get.toNamed(RouteHelper.getPickMapRoute(
-                      widget.route == null
-                          ? (widget.fromSignUp ?? false)
-                              ? RouteHelper.signUp
-                              : RouteHelper.accessLocation
-                          : widget.route!,
-                      widget.route != null,
-                      'false',
-                      null,
-                      Get.find<LocationController>().getUserAddress(),
-                    ));
+                    Get.toNamed(
+                      RouteHelper.getPickMapRoute(
+                        widget.route == null
+                            ? (widget.fromSignUp ?? false)
+                                  ? RouteHelper.signUp
+                                  : RouteHelper.accessLocation
+                            : widget.route!,
+                        widget.route != null,
+                        'false',
+                        null,
+                        Get.find<LocationController>().getUserAddress(),
+                      ),
+                    );
                   },
-                  icon: const Icon(Icons.location_pin, color: Color(0xffFF6B2C), size: 20),
+                  icon: Icon(
+                    Icons.location_pin,
+                    color: NestInk.primary,
+                    size: 20,
+                  ),
                   label: Text(
                     'Set From Map',
-                    style: robotoSemiBold.copyWith(color: const Color(0xffFF6B2C), fontSize: 15),
+                    style: robotoSemiBold.copyWith(
+                      color: NestInk.primary,
+                      fontSize: 15,
+                    ),
                   ),
                 ),
               ),
@@ -304,32 +378,121 @@ class _AccessLocationScreenState extends State<AccessLocationScreen> with Ticker
       onTap();
     }
   }
+
+  Future<void> _useCurrentLocation() async {
+    Get.dialog(const CustomLoader(), barrierDismissible: false);
+    try {
+      final LocationController locationController =
+          Get.find<LocationController>();
+      final AddressModel address = await locationController.getCurrentLocation(
+        true,
+        deviceCurrentLocation: true,
+      );
+      if (address.zoneId?.isNotEmpty ?? false) {
+        await locationController.saveAddressAndNavigate(
+          address,
+          widget.fromSignUp ?? false,
+          widget.route ?? '',
+          widget.route != null,
+          true,
+          zoneAlreadyValidated: true,
+        );
+      } else {
+        Get.back();
+        customSnackBar('service_not_available_in_this_area'.tr);
+      }
+    } catch (_) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      customSnackBar('failed_to_get_location'.tr);
+    }
+  }
 }
 
 class _LiquidBlobPainter extends CustomPainter {
   final Animation<double> animation;
-  _LiquidBlobPainter({required this.animation}) : super(repaint: animation);
+  final Color background;
+  final Color foreground;
+  _LiquidBlobPainter({
+    required this.animation,
+    required this.background,
+    required this.foreground,
+  }) : super(repaint: animation);
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
     final time = animation.value * 2 * math.pi;
 
-    final bgPaint = Paint()..shader = ui.Gradient.linear(
-      Offset(0, 0),
-      Offset(size.width * 0.5, size.height),
-      [const Color(0xffFFF8F3), const Color(0xffFFF0E5)],
-    );
+    final bgPaint = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(0, 0),
+        Offset(size.width * 0.5, size.height),
+        [background, background],
+      );
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
 
-    _drawBlob(canvas, paint, time, 0, size.width * 0.78, size.height * 0.04, size.width * 0.5, const Color(0xffFF6B2C).withValues(alpha: 0.15));
-    _drawBlob(canvas, paint, time, 1, -size.width * 0.12, size.height * 0.35, size.width * 0.45, const Color(0xffFF8F5C).withValues(alpha: 0.12));
-    _drawBlob(canvas, paint, time, 2, size.width * 0.9, size.height * 0.8, size.width * 0.35, const Color(0xffFF5722).withValues(alpha: 0.10));
-    _drawBlob(canvas, paint, time, 3, size.width * 0.35, size.height * 0.95, size.width * 0.3, const Color(0xffFFB88C).withValues(alpha: 0.08));
-    _drawBlob(canvas, paint, time, 4, size.width * 0.5, -size.height * 0.06, size.width * 0.28, const Color(0xffFF7043).withValues(alpha: 0.07));
+    _drawBlob(
+      canvas,
+      paint,
+      time,
+      0,
+      size.width * 0.78,
+      size.height * 0.04,
+      size.width * 0.5,
+      foreground.withValues(alpha: 0.035),
+    );
+    _drawBlob(
+      canvas,
+      paint,
+      time,
+      1,
+      -size.width * 0.12,
+      size.height * 0.35,
+      size.width * 0.45,
+      foreground.withValues(alpha: 0.025),
+    );
+    _drawBlob(
+      canvas,
+      paint,
+      time,
+      2,
+      size.width * 0.9,
+      size.height * 0.8,
+      size.width * 0.35,
+      foreground.withValues(alpha: 0.02),
+    );
+    _drawBlob(
+      canvas,
+      paint,
+      time,
+      3,
+      size.width * 0.35,
+      size.height * 0.95,
+      size.width * 0.3,
+      foreground.withValues(alpha: 0.018),
+    );
+    _drawBlob(
+      canvas,
+      paint,
+      time,
+      4,
+      size.width * 0.5,
+      -size.height * 0.06,
+      size.width * 0.28,
+      foreground.withValues(alpha: 0.015),
+    );
   }
 
-  void _drawBlob(Canvas canvas, Paint paint, double time, int index, double baseX, double baseY, double radius, Color color) {
+  void _drawBlob(
+    Canvas canvas,
+    Paint paint,
+    double time,
+    int index,
+    double baseX,
+    double baseY,
+    double radius,
+    Color color,
+  ) {
     final offset = index * 1.5;
     final dx = baseX + math.sin(time * 0.4 + offset) * radius * 0.35;
     final dy = baseY + math.cos(time * 0.3 + offset) * radius * 0.3;
@@ -344,17 +507,25 @@ class _LiquidBlobPainter extends CustomPainter {
     final segments = 10;
     for (int i = 0; i <= segments; i++) {
       final angle = (i / segments) * 2 * math.pi;
-      final wobble = 1.0 + 0.2 * math.sin(time * 0.6 + angle * 3 + offset) + 0.1 * math.cos(time * 0.4 + angle * 5 + offset);
+      final wobble =
+          1.0 +
+          0.2 * math.sin(time * 0.6 + angle * 3 + offset) +
+          0.1 * math.cos(time * 0.4 + angle * 5 + offset);
       final px = dx + r * wobble * math.cos(angle);
       final py = dy + r * wobble * math.sin(angle);
       if (i == 0) {
         path.moveTo(px, py);
       } else {
         final prevAngle = ((i - 1) / segments) * 2 * math.pi;
-        final prevWobble = 1.0 + 0.2 * math.sin(time * 0.6 + prevAngle * 3 + offset) + 0.1 * math.cos(time * 0.4 + prevAngle * 5 + offset);
+        final prevWobble =
+            1.0 +
+            0.2 * math.sin(time * 0.6 + prevAngle * 3 + offset) +
+            0.1 * math.cos(time * 0.4 + prevAngle * 5 + offset);
         final midAngle = (angle + prevAngle) / 2;
-        final cp1x = dx + r * (wobble + prevWobble) * 0.5 * math.cos(midAngle) * 1.12;
-        final cp1y = dy + r * (wobble + prevWobble) * 0.5 * math.sin(midAngle) * 1.12;
+        final cp1x =
+            dx + r * (wobble + prevWobble) * 0.5 * math.cos(midAngle) * 1.12;
+        final cp1y =
+            dy + r * (wobble + prevWobble) * 0.5 * math.sin(midAngle) * 1.12;
         path.quadraticBezierTo(cp1x, cp1y, px, py);
       }
     }

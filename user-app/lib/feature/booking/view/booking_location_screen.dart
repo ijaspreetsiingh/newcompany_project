@@ -65,7 +65,7 @@ class _BookingLocationScreenState extends State<BookingLocationScreen> {
                         Icon(
                           Icons.location_on,
                           size: 50,
-                          color: const Color(0xFFF57C21).withValues(alpha: 0.5),
+                          color: primaryAccent.withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -83,11 +83,11 @@ class _BookingLocationScreenState extends State<BookingLocationScreen> {
                     top: MediaQuery.of(context).size.height * 0.15,
                     left: 0,
                     right: 0,
-                    child: const Center(
+                    child: Center(
                       child: Icon(
                         Icons.location_on,
                         size: 40,
-                        color: Color(0xFFF57C21),
+                        color: primaryAccent,
                       ),
                     ),
                   ),
@@ -174,16 +174,16 @@ class _BookingLocationScreenState extends State<BookingLocationScreen> {
                       onPressed: () {
                         _getCurrentLocation();
                       },
-                      icon: const Icon(Icons.my_location, color: Color(0xFFF57C21)),
+                      icon: Icon(Icons.my_location, color: primaryAccent),
                       label: Text(
                         'use_current_location'.tr,
                         style: robotoMedium.copyWith(
                           fontSize: Dimensions.fontSizeDefault,
-                          color: const Color(0xFFF57C21),
+                          color: primaryAccent,
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFF57C21)),
+                        side: BorderSide(color: primaryAccent),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
                         ),
@@ -201,13 +201,14 @@ class _BookingLocationScreenState extends State<BookingLocationScreen> {
                       onPressed: () {
                         if (_addressController.text.isNotEmpty) {
                           _bookingController.setAddress(_addressController.text);
-                          Get.toNamed(RouteHelper.getCheckoutRoute('cart', 'orderDetails', 'null'));
+                          // New design flow: address -> checkout final (address & schedule) -> payment -> confirmation
+                          Get.toNamed(RouteHelper.getCheckoutFinalRoute());
                         } else {
                           customSnackBar('please_enter_address'.tr);
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF57C21),
+                        backgroundColor: primaryAccent,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
                         ),
@@ -236,3 +237,5 @@ class _BookingLocationScreenState extends State<BookingLocationScreen> {
     customSnackBar('location_fetching'.tr);
   }
 }
+
+

@@ -18,6 +18,7 @@ class CustomTextField extends StatefulWidget {
   final Function(String text)? onChanged;
   final String? countryDialCode;
   final Function(CountryCode countryCode)? onCountryChanged;
+  final IconData? prefixIcon;
 
   const CustomTextField({
     super.key,
@@ -36,6 +37,7 @@ class CustomTextField extends StatefulWidget {
     this.onCountryChanged,
     this.onChanged,
     this.title = '',
+    this.prefixIcon,
   });
 
   @override
@@ -52,9 +54,8 @@ class CustomTextFieldState extends State<CustomTextField> {
       controller: widget.controller,
       focusNode: widget.focusNode,
       style: robotoRegular.copyWith(
-        color: Theme.of(
-          context,
-        ).textTheme.bodyLarge!.color!.withValues(alpha: 0.8),
+        color: Theme.of(context).textTheme.bodyMedium?.color,
+        fontSize: Dimensions.fontSizeDefault,
       ),
       textInputAction: widget.inputAction,
       keyboardType: widget.inputType,
@@ -86,27 +87,27 @@ class CustomTextFieldState extends State<CustomTextField> {
         filled: true,
         fillColor: Ios27Tokens.fieldFill(context),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
+          horizontal: 14,
           vertical: 15,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(Ios27Tokens.radiusSm),
-          borderSide: BorderSide(color: Ios27Tokens.rim(context), width: 0.5),
+          borderSide: BorderSide(color: _inputBorder(context), width: 1),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(Ios27Tokens.radiusSm),
-          borderSide: BorderSide(color: Ios27Tokens.rim(context), width: 0.5),
+          borderSide: BorderSide(color: _inputBorder(context), width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(Ios27Tokens.radiusSm),
           borderSide: BorderSide(
-            color: Theme.of(context).primaryColor,
+            color: Theme.of(context).colorScheme.onSurface,
             width: 1,
           ),
         ),
         hintText: widget.hintText,
         hintStyle: robotoRegular.copyWith(
-          color: Theme.of(context).hintColor.withValues(alpha: 0.5),
+          color: Theme.of(context).hintColor,
           fontSize: Dimensions.fontSizeDefault,
         ),
         prefixIcon: widget.countryDialCode != null
@@ -130,7 +131,13 @@ class CustomTextFieldState extends State<CustomTextField> {
                 ),
               )
             : (widget.title == null || widget.title!.isEmpty)
-            ? null
+            ? (widget.prefixIcon != null
+                ? Icon(
+                    widget.prefixIcon,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  )
+                : null)
             : SizedBox(
                 width: 120,
                 child: Align(
@@ -140,7 +147,7 @@ class CustomTextFieldState extends State<CustomTextField> {
                   child: Text(
                     widget.title!,
                     style: robotoMedium.copyWith(
-                      color: Theme.of(context).primaryColor,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: Dimensions.fontSizeDefault,
                     ),
                   ),
@@ -150,7 +157,7 @@ class CustomTextFieldState extends State<CustomTextField> {
             ? IconButton(
                 icon: Icon(
                   _obscureText ? Icons.visibility_off : Icons.visibility,
-                  color: Theme.of(context).primaryColor,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 onPressed: _toggle,
               )
@@ -163,6 +170,12 @@ class CustomTextFieldState extends State<CustomTextField> {
           : null,
       onChanged: widget.onChanged,
     );
+  }
+
+  Color _inputBorder(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? const Color(0x26FFFFFF)
+        : const Color(0xFFDEDEDE);
   }
 
   void _toggle() {

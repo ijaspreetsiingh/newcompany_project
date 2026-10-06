@@ -21,8 +21,9 @@ class _OtpVerificationBottomSheetState extends State<OtpVerificationBottomSheet>
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        color: context.kCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(kRadiusLg)),
+        border: Border(top: BorderSide(color: context.kBorder, width: 1)),
       ),
       child: GetBuilder<BookingDetailsController>(builder: (bookingDetailsController) {
         return Padding(
@@ -32,8 +33,8 @@ class _OtpVerificationBottomSheetState extends State<OtpVerificationBottomSheet>
             Container(
               height: 5, width: 50,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-                color: Theme.of(context).disabledColor.withValues(alpha:0.5),
+                borderRadius: BorderRadius.circular(kRadiusMd),
+                color: context.kMuted,
               ),
             ),
 
@@ -42,14 +43,14 @@ class _OtpVerificationBottomSheetState extends State<OtpVerificationBottomSheet>
 
               Text('otp_verification'.tr,
                 style: robotoBold.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.9),
+                  color: context.kForeground,
                   fontSize: Dimensions.fontSizeLarge ,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: Dimensions.paddingSizeLarge),
 
-              Text('enter_otp_number'.tr, style: robotoRegular.copyWith(color: Theme.of(context).disabledColor), textAlign: TextAlign.center),
+              Text('enter_otp_number'.tr, style: robotoRegular.copyWith(color: context.kMutedForeground), textAlign: TextAlign.center),
               const SizedBox(height: Dimensions.paddingSizeLarge),
 
               SizedBox(
@@ -65,12 +66,12 @@ class _OtpVerificationBottomSheetState extends State<OtpVerificationBottomSheet>
                     fieldWidth: 30,
                     borderWidth: 2,
                     borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                    selectedColor: bookingDetailsController.isWrongOtpSubmitted ? Theme.of(context).colorScheme.error : Theme.of(context).primaryColor,
-                    selectedFillColor: Theme.of(context).cardColor,
-                    inactiveFillColor: Theme.of(context).cardColor,
-                    inactiveColor: Theme.of(context).primaryColor.withValues(alpha:0.2),
-                    activeColor: bookingDetailsController.isWrongOtpSubmitted ? Theme.of(context).colorScheme.error : Theme.of(context).primaryColor.withValues(alpha:0.7),
-                    activeFillColor: Theme.of(context).cardColor,
+                    selectedColor: bookingDetailsController.isWrongOtpSubmitted ? context.kDestructive : context.kPrimary,
+                    selectedFillColor: context.kCard,
+                    inactiveFillColor: context.kCard,
+                    inactiveColor: context.kInputBorder,
+                    activeColor: bookingDetailsController.isWrongOtpSubmitted ? context.kDestructive : context.kPrimary.withValues(alpha:0.7),
+                    activeFillColor: context.kCard,
                   ),
                   animationDuration: const Duration(milliseconds: 300),
                   backgroundColor: Colors.transparent,
@@ -82,8 +83,8 @@ class _OtpVerificationBottomSheetState extends State<OtpVerificationBottomSheet>
               const SizedBox(height: Dimensions.paddingSizeSmall),
 
               bookingDetailsController.isWrongOtpSubmitted ?
-              Text('wrong_otp_number'.tr, style: robotoRegular.copyWith(color: Theme.of(context).colorScheme.error), textAlign: TextAlign.center) :
-              !bookingDetailsController.isWrongOtpSubmitted  && !bookingDetailsController.isUpdate ? Text('collect_otp_from_customer'.tr, style: robotoRegular, textAlign: TextAlign.center):
+              Text('wrong_otp_number'.tr, style: robotoRegular.copyWith(color: context.kDestructive), textAlign: TextAlign.center) :
+              !bookingDetailsController.isWrongOtpSubmitted  && !bookingDetailsController.isUpdate ? Text('collect_otp_from_customer'.tr, style: robotoRegular.copyWith(color: context.kMutedForeground), textAlign: TextAlign.center):
               const Text(""),
               const SizedBox(height: Dimensions.paddingSizeLarge),
 
@@ -102,7 +103,7 @@ class _OtpVerificationBottomSheetState extends State<OtpVerificationBottomSheet>
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               Text(
                 'did_not_get_any_OTP'.tr,
-                style: robotoRegular.copyWith(color: Theme.of(context).hintColor, fontSize: Dimensions.fontSizeDefault),
+                style: robotoRegular.copyWith(color: context.kMutedForeground, fontSize: Dimensions.fontSizeDefault),
               ),
               bookingDetailsController.hideResendButton ?  Padding(
                 padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeLarge),
@@ -119,7 +120,7 @@ class _OtpVerificationBottomSheetState extends State<OtpVerificationBottomSheet>
                 },
                 child: Text(
                   'resend_it'.tr,
-                  style: robotoMedium.copyWith(color: Theme.of(context).primaryColor, fontSize: Dimensions.fontSizeDefault),
+                  style: robotoMedium.copyWith(color: context.kPrimary, fontSize: Dimensions.fontSizeDefault),
                 ),
               )
             ]),

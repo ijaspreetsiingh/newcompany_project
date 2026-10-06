@@ -25,7 +25,7 @@ class _AdvertisementVideoPreviewDialogState extends State<AdvertisementVideoPrev
             decoration: BoxDecoration(
               gradient: LinearGradient(colors: [
                 Get.isDarkMode ? Colors.grey : Colors.white, // Color at the beginning
-                Get.isDarkMode ? Colors.cyan.shade100 : Colors.cyan.shade50, // Color in the middle
+                Get.isDarkMode ? Theme.of(Get.context!).primaryColorLight : Theme.of(Get.context!).primaryColorLight, // Color in the middle
                 Get.isDarkMode ? Colors.grey : Colors.white,
               ]),
               borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
@@ -50,3 +50,5 @@ class _AdvertisementVideoPreviewDialogState extends State<AdvertisementVideoPrev
     );
   }
 }
+
+

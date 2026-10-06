@@ -13,18 +13,24 @@ class ConversationListView extends StatelessWidget {
       return channelList.isEmpty ?  EmptyConversationWidget(fromSearch:  conversationController.isActiveSuffixIcon && conversationController.isSearchComplete,
       ) : RefreshIndicator(
 
-        color: Theme.of(context).primaryColorLight,
-        backgroundColor: Theme.of(context).cardColor,
+        color: context.kPrimary,
+        backgroundColor: context.kCard,
         onRefresh: () async {
           conversationController.getChannelList(1,type: tabIndex == 0 ? "customer": "provider");
         },
-        child: ListView.builder(
+        child: ListView.separated(
           controller: tabIndex == 0 ? Get.find<ConversationController>().channelScrollController1 : Get.find<ConversationController>().channelScrollController2,
           shrinkWrap: true,
           physics: const ClampingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
           itemCount: channelList.length,
+          separatorBuilder: (context, index) => Divider(
+            height: 1,
+            thickness: 1,
+            color: context.kBorder,
+          ),
           itemBuilder: (context,index){
 
             return  ChannelItem(

@@ -39,10 +39,10 @@ class CustomHighlightAnimationWidget extends StatefulWidget {
   });
 
   @override
-  State<CustomHighlightAnimationWidget> createState() => _CustomHighlightAnimationWidgetState();
+  State<CustomHighlightAnimationWidget> createState() => _CustomHighlightAnimationwidgetstate();
 }
 
-class _CustomHighlightAnimationWidgetState extends State<CustomHighlightAnimationWidget> 
+class _CustomHighlightAnimationwidgetstate extends State<CustomHighlightAnimationWidget> 
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _pulseAnimation;
@@ -169,3 +169,6 @@ extension HighlightAnimationContext on BuildContext {
     return Color.lerp(baseColor ?? Colors.grey.withValues(alpha: 0.2), target, provider.animationValue);
   }
 }
+
+
+

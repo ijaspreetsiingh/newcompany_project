@@ -7,7 +7,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: "my_profile".tr),
+      backgroundColor: context.kBackground,
       body: GetBuilder<UserController>(
         builder: (userController) {
           return userController.isLoading
@@ -15,12 +15,24 @@ class ProfileScreen extends StatelessWidget {
               : SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 20),
-                      _buildProfileHeader(context, userController),
-                      const SizedBox(height: 24),
-                      _buildMenuSection(context, userController),
-                      const SizedBox(height: 20),
+                      _buildHeader(context, userController),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 112),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildAvailabilityCard(context),
+                            const SizedBox(height: 20),
+                            _buildSettingsSection(context),
+                            const SizedBox(height: 20),
+                            _buildSupportSection(context),
+                            const SizedBox(height: 20),
+                            _buildLogoutButton(context),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -29,256 +41,288 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context, UserController controller) {
+  Widget _buildHeader(BuildContext context, UserController controller) {
+    final String name =
+        "${controller.userInfo.firstName ?? ""} ${controller.userInfo.lastName ?? ""}"
+            .trim();
+    final String subtitle = controller.userInfo.email ?? "";
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).dividerColor.withValues(alpha: 0.08),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(30),
-            child: CustomImage(
-              image: controller.userInfo.profileImageFullPath ?? "",
-              height: 80,
-              width: 80,
-              placeholder: Images.userPlaceHolder,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            "${controller.userInfo.firstName ?? ""} ${controller.userInfo.lastName ?? ""}",
-            style: robotoBold.copyWith(
-              fontSize: 18,
-              color: Theme.of(context).textTheme.bodyLarge!.color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            controller.userInfo.email ?? "",
-            style: robotoRegular.copyWith(
-              fontSize: 12,
-              color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: 0.5),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Container(
-            height: 1,
-            color: Theme.of(context).dividerColor.withValues(alpha: 0.08),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      width: double.infinity,
+      color: context.kPrimary,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          child: Column(
             children: [
-              _buildStatItem(
-                context,
-                value: "${controller.totalDays}",
-                label: "since_joined".tr,
+              Row(
+                children: [
+                  KIconButton(
+                    icon: Icons.menu_rounded,
+                    color: context.kPrimaryForeground,
+                    onTap: BottomNavScreen.openMenu,
+                  ),
+                  const Spacer(),
+                  KIconButton(
+                    icon: Icons.edit_outlined,
+                    color: context.kPrimaryForeground,
+                    onTap: () => Get.toNamed(RouteHelper.profileInformation),
+                  ),
+                ],
               ),
-              Container(
-                width: 1,
-                height: 36,
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
-              ),
-              _buildStatItem(
-                context,
-                value: "${controller.contents?.completedBookingsCount ?? 0}",
-                label: "completed".tr,
-              ),
-              Container(
-                width: 1,
-                height: 36,
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
-              ),
-              _buildStatItem(
-                context,
-                value: "${controller.contents?.bookingsCount ?? 0}",
-                label: "total".tr,
+              const SizedBox(height: 8),
+              Column(
+                children: [
+                  ValueListenableBuilder<bool>(
+                    valueListenable: WorkStatusService.online,
+                    builder: (context, online, _) => UserAvatar(
+                      large: true,
+                      imageUrl: controller.userInfo.profileImageFullPath,
+                      name: controller.userInfo.firstName ?? "",
+                      online: online,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: robotoBold.copyWith(
+                      fontSize: 24,
+                      color: context.kPrimaryForeground,
+                    ),
+                  ),
+                  Text(
+                    subtitle.isNotEmpty ? subtitle : 'service_man'.tr,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: robotoRegular.copyWith(
+                      fontSize: 14,
+                      color: context.kPrimaryForeground.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.kPrimaryForeground.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'service_professional'.tr,
+                      style: robotoBold.copyWith(
+                        fontSize: 10,
+                        color: context.kPrimaryForeground,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildStatsRow(context, controller),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildStatItem(BuildContext context, {required String value, required String label}) {
-    return Column(
+  Widget _buildStatsRow(BuildContext context, UserController controller) {
+    return Row(
       children: [
-        Text(
-          value,
-          style: robotoBold.copyWith(
-            fontSize: 18,
-            color: Theme.of(context).primaryColor,
+        Expanded(
+          child: _miniStat(
+            context,
+            value: "${controller.totalDays ?? 0}",
+            label: 'days_joined'.tr,
           ),
         ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: robotoRegular.copyWith(
-            fontSize: 11,
-            color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: 0.5),
+        _statDivider(context),
+        Expanded(
+          child: _miniStat(
+            context,
+            value: "${controller.contents?.completedBookingsCount ?? 0}",
+            label: 'completed'.tr,
+          ),
+        ),
+        _statDivider(context),
+        Expanded(
+          child: _miniStat(
+            context,
+            value: "${controller.contents?.bookingsCount ?? 0}",
+            label: 'total_jobs'.tr,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildMenuSection(BuildContext context, UserController controller) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).dividerColor.withValues(alpha: 0.08),
+  Widget _miniStat(
+    BuildContext context, {
+    required String value,
+    required String label,
+  }) {
+    return Column(
+      children: [
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: robotoBold.copyWith(
+            fontSize: 18,
+            color: context.kPrimaryForeground,
+            height: 1,
+          ),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: robotoRegular.copyWith(
+            fontSize: 10,
+            color: context.kPrimaryForeground.withValues(alpha: 0.55),
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildMenuItem(
-            context,
-            icon: Icons.dark_mode_outlined,
-            title: "dark_mode".tr,
-            trailing: Switch.adaptive(
-              value: Get.isDarkMode,
-              onChanged: (val) => Get.find<ThemeController>().toggleTheme(),
-              activeColor: Theme.of(context).primaryColor,
-            ),
-          ),
-          _buildDivider(context),
-          _buildMenuItem(
-            context,
-            icon: Icons.edit_outlined,
-            title: "edit_profile".tr,
-            onTap: () => Get.toNamed(RouteHelper.profileInformation),
-          ),
-          _buildDivider(context),
-          _buildMenuItem(
-            context,
-            icon: Icons.notifications_outlined,
-            title: "notification".tr,
-            onTap: () => Get.toNamed(RouteHelper.getNotificationRoute()),
-          ),
-          _buildDivider(context),
-          _buildMenuItem(
-            context,
-            icon: Icons.description_outlined,
-            title: "terms_conditions".tr,
-            onTap: () => Get.toNamed(RouteHelper.getHtmlRoute("terms-and-conditions")),
-          ),
-          _buildDivider(context),
-          _buildMenuItem(
-            context,
-            icon: Icons.privacy_tip_outlined,
-            title: "privacy_policy".tr,
-            onTap: () => Get.toNamed(RouteHelper.getHtmlRoute('privacy-policy')),
-          ),
-          _buildDivider(context),
-          _buildMenuItem(
-            context,
-            icon: Icons.logout_rounded,
-            title: "logout".tr,
-            isDestructive: true,
-            onTap: () => Get.dialog(
-              ConfirmationDialog(
-                icon: Images.logout,
-                title: 'are_you_sure_to_logout'.tr,
-                onNoPressed: () => Get.back(),
-                onYesPressed: () {
-                  Get.find<AuthController>().clearSharedData();
-                  Get.offAllNamed(RouteHelper.getSignInRoute(RouteHelper.splash));
-                },
-                description: '',
-              ),
-              useSafeArea: false,
-            ),
-          ),
-        ],
+        ),
+      ],
+    );
+  }
+
+  Widget _statDivider(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 34,
+      color: context.kPrimaryForeground.withValues(alpha: 0.2),
+    );
+  }
+
+  Widget _buildAvailabilityCard(BuildContext context) {
+    return KCard(
+      padding: const EdgeInsets.all(16),
+      child: ValueListenableBuilder<bool>(
+        valueListenable: WorkStatusService.online,
+        builder: (context, online, _) => ToggleRow(
+          title: 'available_for_jobs'.tr,
+          text: 'receive_new_requests'.tr,
+          value: online,
+          onChanged: (value) => WorkStatusService.setStatus(value),
+        ),
       ),
     );
   }
 
-  Widget _buildMenuItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    VoidCallback? onTap,
-    Widget? trailing,
-    bool isDestructive = false,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: isDestructive
-                    ? Theme.of(context).colorScheme.error.withValues(alpha: 0.06)
-                    : Theme.of(context).primaryColor.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(10),
+  Widget _buildSettingsSection(BuildContext context) {
+    return MenuGroup(
+      title: 'settings'.tr,
+      items: [
+        MenuGroupItem(
+          icon: Icons.person_outline_rounded,
+          label: 'edit_profile'.tr,
+          onTap: () => Get.toNamed(RouteHelper.profileInformation),
+        ),
+        MenuGroupItem(
+          icon: Icons.notifications_outlined,
+          label: 'notification'.tr,
+          onTap: () => Get.toNamed(RouteHelper.getNotificationRoute()),
+        ),
+        MenuGroupItem(
+          icon: Icons.dark_mode_outlined,
+          label: 'dark_mode'.tr,
+          onTap: () => Get.find<ThemeController>().toggleTheme(),
+        ),
+        MenuGroupItem(
+          icon: Icons.language_rounded,
+          label: 'language'.tr,
+          onTap: () => Get.bottomSheet(
+            const ChooseLanguageBottomSheet(),
+            backgroundColor: Colors.transparent,
+            isScrollControlled: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSupportSection(BuildContext context) {
+    return MenuGroup(
+      title: 'support'.tr,
+      items: [
+        MenuGroupItem(
+          icon: Icons.description_outlined,
+          label: 'terms'.tr,
+          onTap: () =>
+              Get.toNamed(RouteHelper.getHtmlRoute("terms-and-conditions")),
+        ),
+        MenuGroupItem(
+          icon: Icons.verified_user_outlined,
+          label: 'privacy_policy_title'.tr,
+          onTap: () => Get.toNamed(RouteHelper.getHtmlRoute('privacy-policy')),
+        ),
+        MenuGroupItem(
+          icon: Icons.help_outline_rounded,
+          label: 'help_support'.tr,
+          onTap: () => Get.toNamed(RouteHelper.getInboxScreenRoute()),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLogoutButton(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _showLogoutDialog,
+        borderRadius: BorderRadius.circular(kRadiusMd),
+        child: Container(
+          width: double.infinity,
+          height: 48,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(kRadiusMd),
+            border: Border.all(color: context.kInputBorder, width: 1),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.logout_rounded,
+                size: 16,
+                color: context.kDestructive,
               ),
-              child: Icon(
-                icon,
-                size: 18,
-                color: isDestructive
-                    ? Theme.of(context).colorScheme.error
-                    : Theme.of(context).primaryColor,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                title,
+              const SizedBox(width: 8),
+              Text(
+                'log_out'.tr,
                 style: robotoMedium.copyWith(
                   fontSize: 14,
-                  color: isDestructive
-                      ? Theme.of(context).colorScheme.error
-                      : Theme.of(context).textTheme.bodyLarge!.color,
+                  fontWeight: FontWeight.w600,
+                  color: context.kDestructive,
                 ),
               ),
-            ),
-            trailing ??
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 20,
-                  color: Theme.of(context).hintColor.withValues(alpha: 0.3),
-                ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildDivider(BuildContext context) {
-    return Container(
-      height: 0.5,
-      margin: const EdgeInsets.only(left: 70, right: 20),
-      color: Theme.of(context).dividerColor.withValues(alpha: 0.08),
+  void _showLogoutDialog() {
+    Get.dialog(
+      ConfirmationDialog(
+        icon: Images.logout,
+        title: 'are_you_sure_to_logout'.tr,
+        onNoPressed: () => Get.back(),
+        onYesPressed: () {
+          Get.find<AuthController>().clearSharedData();
+          Get.offAllNamed(RouteHelper.getSignInRoute(RouteHelper.splash));
+        },
+        description: '',
+      ),
+      useSafeArea: false,
     );
   }
 }

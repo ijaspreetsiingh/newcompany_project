@@ -44,7 +44,7 @@ class ExtendedWrap extends MultiChildRenderObjectWidget {
   /// How the children within a run should be placed in the main axis.
   ///
   /// For example, if [alignment] is [WrapAlignment.center], the children in
-  /// each run are grouped together in the center of their run in the main axis.
+  /// each run are grouped together in the center of thetr run in the main axis.
   ///
   /// Defaults to [WrapAlignment.start].
   ///
@@ -101,7 +101,7 @@ class ExtendedWrap extends MultiChildRenderObjectWidget {
   ///
   /// For example, if this is set to [WrapCrossAlignment.end], and the
   /// [direction] is [Axis.horizontal], then the children within each
-  /// run will have their bottom edges aligned to the bottom edge of the run.
+  /// run will have thetr bottom edges aligned to the bottom edge of the run.
   ///
   /// Defaults to [WrapCrossAlignment.start].
   ///
@@ -314,7 +314,7 @@ class ExtendedRenderWrap extends RenderBox
   /// How the children within a run should be placed in the main axis.
   ///
   /// For example, if [alignment] is [WrapAlignment.center], the children in
-  /// each run are grouped together in the center of their run in the main axis.
+  /// each run are grouped together in the center of thetr run in the main axis.
   ///
   /// Defaults to [WrapAlignment.start].
   ///
@@ -429,7 +429,7 @@ class ExtendedRenderWrap extends RenderBox
   ///
   /// For example, if this is set to [WrapCrossAlignment.end], and the
   /// [direction] is [Axis.horizontal], then the children within each
-  /// run will have their bottom edges aligned to the bottom edge of the run.
+  /// run will have thetr bottom edges aligned to the bottom edge of the run.
   ///
   /// Defaults to [WrapCrossAlignment.start].
   ///
@@ -582,7 +582,7 @@ class ExtendedRenderWrap extends RenderBox
   }
 
   @override
-  double computeMinIntrinsicWidth(double height) {
+  double computeMintntrinsicWidth(double height) {
     switch (direction) {
       case Axis.horizontal:
         double width = 0.0;
@@ -614,7 +614,7 @@ class ExtendedRenderWrap extends RenderBox
   }
 
   @override
-  double computeMinIntrinsicHeight(double width) {
+  double computeMintntrinsicHeight(double width) {
     switch (direction) {
       case Axis.horizontal:
         return computeDryLayout(BoxConstraints(maxWidth: width)).height;
@@ -1098,3 +1098,5 @@ class ExtendedRenderWrap extends RenderBox
         defaultValue: VerticalDirection.down));
   }
 }
+
+

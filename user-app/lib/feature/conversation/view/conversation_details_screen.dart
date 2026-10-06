@@ -41,7 +41,7 @@ class _ConversationDetailsScreenState extends State<ConversationDetailsScreen> {
     super.initState();
     Get.find<ConversationController>().cleanOldData();
     Get.find<ConversationController>().setChannelId(widget.channelID ?? "");
-    Get.find<ConversationController>().getConversation(widget.channelID ??"", 1,isInitial:true);
+    Get.find<ConversationController>().getConversation(widget.channelID ??"", 1,isinttial:true);
 
     if(Get.find<SplashController>().configModel.content?.phoneNumberVisibility==0 && widget.userType.contains("provider-admin")){
       phone = "";
@@ -73,6 +73,7 @@ class _ConversationDetailsScreenState extends State<ConversationDetailsScreen> {
           child: ConversationDetailsAppBar(
             fromNotification: widget.formNotification,
             name: widget.name, phone: phone, image: widget.image,
+            userType: widget.userType,
           ),
         ),
 
@@ -146,3 +147,5 @@ class _ConversationDetailsScreenState extends State<ConversationDetailsScreen> {
     );
   }
 }
+
+

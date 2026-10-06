@@ -76,7 +76,7 @@ class ProviderItemView extends StatelessWidget {
                     Image.asset(Images.distance, height:12,),
                     const SizedBox(width: Dimensions.paddingSizeExtraSmall),
                     Flexible(
-                      child: Text("${providerData.distance!.toStringAsFixed(2)} ${'km_away_from_you'.tr}",
+                      child: Text("${providerData.distance?.toStringAsFixed(2) ?? '--'} ${'km_away_from_you'.tr}",
                         style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -105,3 +105,4 @@ class ProviderItemView extends StatelessWidget {
     });
   }
 }
+

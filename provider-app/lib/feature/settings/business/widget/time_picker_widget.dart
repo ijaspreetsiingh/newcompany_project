@@ -39,22 +39,23 @@ class _TimePickerWidgetState extends State<TimePickerWidget> {
       },
       child: Container(
         alignment: Alignment.center,
-        padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-          border: Border.all(color: Theme.of(context).textTheme.bodySmall!.color!.withValues(alpha:0.2))
+          color: InkColors.card,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: InkColors.border),
         ),
         child: Row(children: [
 
           Text(
-            _myTime != null ? _myTime!: 'pick_time'.tr, style: robotoRegular,
+            _myTime != null ? _myTime!: 'pick_time'.tr,
+            style: robotoMedium.copyWith(fontSize: 13, color: InkColors.foreground),
             maxLines: 1,
           ),
 
           const SizedBox(width: Dimensions.paddingSizeSmall,),
 
-          const Icon(Icons.access_time, size: 20),
+           Icon(Icons.access_time_rounded, size: 16, color: InkColors.mutedForeground),
 
         ]),
       ),

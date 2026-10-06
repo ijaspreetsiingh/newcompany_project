@@ -7,23 +7,32 @@ class BookingStatusTabItem extends GetView<ServiceBookingController> {
 
   @override
   Widget build(BuildContext context) {
+    /// nest. chip : selected = black fill, unselected = hatrline border
+    final bool isSelected = controller.selectedBookingStatus.name == title;
     return Container(
-      height: 30,
-      margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeEight),
-      padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault,vertical: 5),
+      height: 32,
+      margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
+      padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
       decoration: BoxDecoration(
-        color: controller.selectedBookingStatus.name != title ? Colors.grey.withValues(alpha: 0.2): Theme.of(context).colorScheme.primary,
-        borderRadius: const BorderRadius.all(Radius.circular(20)),
+        color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
+        borderRadius: const BorderRadius.all(Radius.circular(30)),
+        border: isSelected ? null : Border.all(
+          color: Theme.of(context).primaryColorLight.withValues(alpha: Get.isDarkMode ? 0.6 : 1),
+        ),
       ),
       child: Row(mainAxisSize: MainAxisSize.min ,children: [
-        Image.asset(title.png, height: 25, width: 20,),
+        Image.asset(title.png, height: 20, width: 18,
+          color: isSelected
+              ? (Get.isDarkMode ? Colors.black : Colors.white)
+              : Theme.of(context).textTheme.bodyLarge!.color),
         const SizedBox(width: 5,),
         Text( title.tr,
           textAlign: TextAlign.center,
           style:robotoMedium.copyWith(
             fontSize: Dimensions.fontSizeSmall,
-            color: controller.selectedBookingStatus.name != title?
-            Theme.of(context).textTheme.bodyLarge!.color: Colors.white,
+            color: isSelected
+                ? (Get.isDarkMode ? Colors.black : Colors.white)
+                : Theme.of(context).textTheme.bodyLarge!.color,
           ),
         ),
 
@@ -35,3 +44,4 @@ class BookingStatusTabItem extends GetView<ServiceBookingController> {
 extension on String {
   String get png => 'assets/images/$this.png';
 }
+

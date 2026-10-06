@@ -215,6 +215,7 @@ class ProviderData {
     coordinates = json['coordinates'] != null
         ? Coordinates.fromJson(json['coordinates'])
         : null;
+    distance = json['distance'] != null ? double.tryParse(json['distance'].toString()) : null;
 
 
   }
@@ -482,3 +483,4 @@ class Links {
     return data;
   }
 }
+

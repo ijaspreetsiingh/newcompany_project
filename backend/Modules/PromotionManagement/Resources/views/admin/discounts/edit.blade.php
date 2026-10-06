@@ -81,6 +81,11 @@
                                             @endforeach
                                         </select>
                                     </div>
+
+                                    @include('promotionmanagement::admin.partials.provider-selector', [
+                                        'providerRoute' => route('admin.discount.get-providers'),
+                                        'selectedProviderIds' => $discount->provider_types->pluck('type_wise_id')->toArray(),
+                                    ])
                                 </div>
 
                                 <div class="discount-amount-type">

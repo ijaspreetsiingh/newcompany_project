@@ -22,11 +22,14 @@ class ProfileCardItem extends StatelessWidget {
       ),
 
       child: Center(
-        child: ListTile(
+        child: Material(
+          type: MaterialType.transparency,
+          child: ListTile(
           horizontalTitleGap: Dimensions.paddingSizeExtraSmall,
           title: Text(title.tr),
           trailing: Icon(trailingIcon,size: 15,color: Theme.of(context).primaryColor,),
           leading: Image.asset(leadingIcon,height: 20,width: 20,fit:BoxFit.cover),
+          ),
         ),
       ),
     );

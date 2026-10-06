@@ -9,6 +9,7 @@ use Modules\ServiceManagement\Http\Controllers\Api\V1\Serviceman\ServiceControll
 use Modules\ServiceManagement\Http\Controllers\Api\V1\Admin\ServiceController as AdminServiceController;
 use Modules\ServiceManagement\Http\Controllers\Api\V1\Admin\FAQController as AdminFAQController;
 use Modules\ServiceManagement\Http\Controllers\Api\V1\Provider\ServiceRequestController;
+use Modules\ServiceManagement\Http\Controllers\Api\V1\Provider\ServiceManageController;
 
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admin', 'middleware' => ['auth:api']], function () {
@@ -28,6 +29,11 @@ Route::group(['prefix' => 'partner', 'as' => 'provider.', 'namespace' => 'Api\V1
     Route::get('task/records/lookup', [ProviderServiceController::class, 'search']);
     Route::get('task/feedback/{service_id}', [ProviderServiceController::class, 'review']);
     Route::get('task/records/child-group-wise', [ProviderServiceController::class, 'servicesBySubcategory']);
+
+    Route::get('services/manage', [ServiceManageController::class, 'index']);
+    Route::post('services/manage', [ServiceManageController::class, 'store']);
+    Route::match(['put', 'post'], 'services/manage/{id}', [ServiceManageController::class, 'update']);
+    Route::delete('services/manage/{id}', [ServiceManageController::class, 'destroy']);
 
     Route::get('task-submission', [ServiceRequestController::class, 'index']);
     Route::post('task-submission', [ServiceRequestController::class, 'makeRequest']);

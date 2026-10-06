@@ -228,7 +228,7 @@ class BannerDelegate extends SliverPersistentHeaderDelegate {
       bool overlapsContent) {
     return Stack(
       children: [
-        Container(color: light.cardColor, width: Get.width, height: 120),
+        Container(color: Theme.of(context).cardColor, width: Get.width, height: 120),
 
         CustomImage(width: Get.width, height: 120,
           image: serviceDetailsController.serviceDetailsModel?.content?.coverImageFullPath ?? "",
@@ -252,7 +252,7 @@ class BannerDelegate extends SliverPersistentHeaderDelegate {
                   '', discount!.discountAmount.toString(),
                   discount!.discountAmountType.toString(),
                 ),
-                  style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,color: light.cardColor),
+                  style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,color: Colors.white),
                 ),
               ),
             ),

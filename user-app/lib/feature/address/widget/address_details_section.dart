@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 
 class AddressDetailsSection extends StatelessWidget {
@@ -69,7 +69,7 @@ class AddressDetailsSection extends StatelessWidget {
                     nextFocus: floorNode,
                     controller: houseController..text = locationController.address.house ?? "",
                     onChanged: (text) => locationController.setPlaceMark(house: text),
-                    isRequired: false,
+                    isrequired: false,
                   ),
                 ),
                 const SizedBox(width: Dimensions.paddingSizeTextFieldGap),
@@ -82,7 +82,7 @@ class AddressDetailsSection extends StatelessWidget {
                     nextFocus: cityNode,
                     controller: floorController..text = locationController.address.floor ?? "",
                     onChanged: (text) => locationController.setPlaceMark(floor: text),
-                    isRequired: false,
+                    isrequired: false,
                   ),
                 ),
               ],
@@ -100,7 +100,7 @@ class AddressDetailsSection extends StatelessWidget {
                     nextFocus: countryNode,
                     controller: cityController..text = locationController.address.city ?? "",
                     onChanged: (text) => locationController.setPlaceMark(city: text),
-                    isRequired: false,
+                    isrequired: false,
                   ),
                 ),
                 const SizedBox(width: Dimensions.paddingSizeTextFieldGap),
@@ -114,7 +114,7 @@ class AddressDetailsSection extends StatelessWidget {
                     nextFocus: zipNode,
                     controller: countryController..text = locationController.address.country ?? "",
                     onChanged: (text) => locationController.setPlaceMark(country: text),
-                    isRequired: false,
+                    isrequired: false,
                   ),
                 ),
               ],
@@ -132,7 +132,7 @@ class AddressDetailsSection extends StatelessWidget {
                     nextFocus: streetNode,
                     controller: zipController..text = locationController.address.zipCode ?? "",
                     onChanged: (text) => locationController.setPlaceMark(zipCode: text),
-                    isRequired: false,
+                    isrequired: false,
                   ),
                 ),
                 const SizedBox(width: Dimensions.paddingSizeTextFieldGap),
@@ -145,7 +145,7 @@ class AddressDetailsSection extends StatelessWidget {
                     nextFocus: nextFocus,
                     controller: streetController..text = locationController.address.street ?? "",
                     onChanged: (text) => locationController.setPlaceMark(street: text),
-                    isRequired: false,
+                    isrequired: false,
                   ),
                 ),
               ],
@@ -210,3 +210,6 @@ class AddressHeaderWidget extends StatelessWidget {
     );
   }
 }
+
+
+

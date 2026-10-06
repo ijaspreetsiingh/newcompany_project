@@ -20,16 +20,29 @@ class SplashScreenState extends State<SplashScreen> {
     Get.find<AuthController>().updateToken();
 
     bool firstTime = true;
-    _onConnectivityChanged = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> result) {
+    _onConnectivityChanged = Connectivity().onConnectivityChanged.listen((
+      List<ConnectivityResult> result,
+    ) {
       if (!firstTime) {
-        bool isNotConnected = result.first != ConnectivityResult.wifi && result.first != ConnectivityResult.mobile;
-        if(Get.context == null) return;
-        isNotConnected ? const SizedBox() : ScaffoldMessenger.of(Get.context!).hideCurrentSnackBar();
-        ScaffoldMessenger.of(Get.context!).showSnackBar(SnackBar(
-          backgroundColor: isNotConnected ? Colors.red : Colors.green,
-          duration: Duration(seconds: isNotConnected ? 6000 : 3),
-          content: Text(isNotConnected ? 'no_connection'.tr : 'connected'.tr, textAlign: TextAlign.center),
-        ));
+        bool isNotConnected =
+            result.first != ConnectivityResult.wifi &&
+            result.first != ConnectivityResult.mobile;
+        if (Get.context == null) return;
+        isNotConnected
+            ? const SizedBox()
+            : ScaffoldMessenger.of(Get.context!).hideCurrentSnackBar();
+        ScaffoldMessenger.of(Get.context!).showSnackBar(
+          SnackBar(
+            backgroundColor: isNotConnected
+                ? Theme.of(context).colorScheme.error
+                : Theme.of(context).colorScheme.primary,
+            duration: Duration(seconds: isNotConnected ? 6000 : 3),
+            content: Text(
+              isNotConnected ? 'no_connection'.tr : 'connected'.tr,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        );
         if (!isNotConnected) {
           _route();
         }
@@ -42,7 +55,7 @@ class SplashScreenState extends State<SplashScreen> {
       Get.find<SplashController>().setGuestId(uuid);
     }
 
-    Get.find<SplashController>().initSharedData();
+    Get.find<SplashController>().inttSharedData();
     _route();
   }
 
@@ -55,27 +68,36 @@ class SplashScreenState extends State<SplashScreen> {
   void _route() {
     Get.find<SplashController>().getConfigData().then((isSuccess) async {
       if (Get.find<LocationController>().getUserAddress() != null) {
-        AddressModel addressModel = Get.find<LocationController>().getUserAddress()!;
-        Get.find<LocationController>().getZone(addressModel.latitude.toString(), addressModel.longitude.toString(), false).then((responseModel) {
-          addressModel.availableServiceCountInZone = responseModel.totalServiceCount;
-          Get.find<LocationController>().saveUserAddress(addressModel);
-        });
+        AddressModel addressModel = Get.find<LocationController>()
+            .getUserAddress()!;
+        Get.find<LocationController>()
+            .getZone(
+              addressModel.latitude.toString(),
+              addressModel.longitude.toString(),
+              false,
+            )
+            .then((responseModel) {
+              addressModel.availableServiceCountInZone =
+                  responseModel.totalServiceCount;
+              Get.find<LocationController>().saveUserAddress(addressModel);
+            });
       }
       if (isSuccess) {
         if (_checkAvailableUpdate()) {
           Get.offNamed(RouteHelper.getUpdateRoute('update'));
-        } else if (_checkMaintenanceModeActive() && !AppConstants.avoidMaintenanceMode) {
+        } else if (_checkMaintenanceModeActive() &&
+            !AppConstants.avoidMaintenanceMode) {
           Get.offAllNamed(RouteHelper.getMaintenanceRoute());
         } else {
           if (widget.body != null) {
             _notificationRoute();
           } else {
-            if (Get.find<SplashController>().isShowInitialLanguageScreen()) {
+            if (Get.find<SplashController>().isShowinttialLanguageScreen()) {
               Get.offNamed(RouteHelper.getLanguageScreen('fromOthers'));
             } else if (Get.find<SplashController>().isShowOnboardingScreen()) {
               Get.offAllNamed(RouteHelper.onBoardScreen);
             } else {
-              Get.offNamed(RouteHelper.getInitialRoute());
+              Get.offNamed(RouteHelper.getinitialRoute());
             }
           }
         }
@@ -87,40 +109,39 @@ class SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _globalKey,
-      body: GetBuilder<SplashController>(builder: (splashController) {
-        PriceConverter.getCurrency();
-        return splashController.hasConnection
-            ? Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        Images.logo,
-                        width: Dimensions.logoSize,
-                      ),
-                      const SizedBox(height: Dimensions.paddingSizeLarge),
-                      const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF57C21)),
-                      ),
-                      const SizedBox(height: Dimensions.paddingSizeDefault),
-                      Text(
-                        'loading'.tr,
-                        style: robotoRegular.copyWith(
-                          fontSize: Dimensions.fontSizeDefault,
-                          color: Colors.black54,
+      body: GetBuilder<SplashController>(
+        builder: (splashController) {
+          PriceConverter.getCurrency();
+          return splashController.hasConnection
+              ? Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(color: Colors.white),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(Images.logo, width: Dimensions.logoSize),
+                        const SizedBox(height: Dimensions.paddingSizeLarge),
+                        CircularProgressIndicator(
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFF141414),
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: Dimensions.paddingSizeDefault),
+                        Text(
+                          'loading'.tr,
+                          style: robotoRegular.copyWith(
+                            fontSize: Dimensions.fontSizeDefault,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              )
-            : NoInternetScreen(child: SplashScreen(body: widget.body));
-      }),
+                )
+              : NoInternetScreen(child: SplashScreen(body: widget.body));
+        },
+      ),
     );
   }
 
@@ -129,7 +150,7 @@ class SplashScreenState extends State<SplashScreen> {
     String? serverVersionStr = GetPlatform.isAndroid
         ? configModel.content?.minimumVersion?.minVersionForAndroid
         : configModel.content?.minimumVersion?.minVersionForIos;
-    if(serverVersionStr == null || serverVersionStr.isEmpty) return false;
+    if (serverVersionStr == null || serverVersionStr.isEmpty) return false;
     final localVersion = Version.parse(AppConstants.appVersion);
     final serverVersion = Version.parse(serverVersionStr);
     return localVersion.compareTo(serverVersion) == -1;
@@ -138,26 +159,52 @@ class SplashScreenState extends State<SplashScreen> {
   bool _checkMaintenanceModeActive() {
     final ConfigModel configModel = Get.find<SplashController>().configModel;
     return (configModel.content?.maintenanceMode?.maintenanceStatus == 1 &&
-        configModel.content?.maintenanceMode?.selectedMaintenanceSystem?.mobileApp == 1);
+        configModel
+                .content
+                ?.maintenanceMode
+                ?.selectedMaintenanceSystem
+                ?.mobileApp ==
+            1);
   }
 
   void _notificationRoute() {
     String notificationType = widget.body?.notificationType ?? "";
     switch (notificationType) {
       case "chatting":
-        Get.toNamed(RouteHelper.getInboxScreenRoute(fromNotification: "fromNotification"));
+        Get.toNamed(
+          RouteHelper.getInboxScreenRoute(fromNotification: "fromNotification"),
+        );
         break;
       case "bidding":
-        Get.toNamed(RouteHelper.getMyPostScreen(fromNotification: "fromNotification"));
+        Get.toNamed(
+          RouteHelper.getMyPostScreen(fromNotification: "fromNotification"),
+        );
         break;
       case "booking" || 'booking_ignored':
         if (widget.body!.bookingId != null && widget.body!.bookingId != "") {
-          if (widget.body?.bookingType == "repeat" && widget.body?.repeatBookingType == "single") {
-            Get.toNamed(RouteHelper.getBookingDetailsScreen(subBookingId: widget.body!.bookingId!, fromPage: 'fromNotification'));
-          } else if (widget.body?.bookingType == "repeat" && widget.body?.repeatBookingType != "single") {
-            Get.toNamed(RouteHelper.getRepeatBookingDetailsScreen(bookingId: widget.body!.bookingId, fromPage: "fromNotification"));
+          if (widget.body?.bookingType == "repeat" &&
+              widget.body?.repeatBookingType == "single") {
+            Get.toNamed(
+              RouteHelper.getBookingDetailsScreen(
+                subBookingId: widget.body!.bookingId!,
+                fromPage: 'fromNotification',
+              ),
+            );
+          } else if (widget.body?.bookingType == "repeat" &&
+              widget.body?.repeatBookingType != "single") {
+            Get.toNamed(
+              RouteHelper.getRepeatBookingDetailsScreen(
+                bookingId: widget.body!.bookingId,
+                fromPage: "fromNotification",
+              ),
+            );
           } else {
-            Get.toNamed(RouteHelper.getBookingDetailsScreen(bookingID: widget.body!.bookingId!, fromPage: 'fromNotification'));
+            Get.toNamed(
+              RouteHelper.getBookingDetailsScreen(
+                bookingID: widget.body!.bookingId!,
+                fromPage: 'fromNotification',
+              ),
+            );
           }
         } else {
           Get.toNamed(RouteHelper.getMainRoute(""));
@@ -170,10 +217,16 @@ class SplashScreenState extends State<SplashScreen> {
         Get.toNamed(RouteHelper.getTermsAndConditionsRoute());
         break;
       case "wallet":
-        Get.toNamed(RouteHelper.getMyWalletScreen(fromNotification: "fromNotification"));
+        Get.toNamed(
+          RouteHelper.getMyWalletScreen(fromNotification: "fromNotification"),
+        );
         break;
       case "loyalty_point":
-        Get.toNamed(RouteHelper.getLoyaltyPointScreen(fromNotification: "fromNotification"));
+        Get.toNamed(
+          RouteHelper.getLoyaltyPointScreen(
+            fromNotification: "fromNotification",
+          ),
+        );
         break;
       default:
         Get.toNamed(RouteHelper.getNotificationRoute());
@@ -187,20 +240,17 @@ class SplashLogoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     width: double.infinity,
-    decoration: const BoxDecoration(
-      color: Colors.white,
-    ),
+    decoration: const BoxDecoration(color: Colors.white),
     child: Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset(
-            Images.logo,
-            width: Dimensions.logoSize,
-          ),
+          Image.asset(Images.logo, width: Dimensions.logoSize),
           const SizedBox(height: Dimensions.paddingSizeLarge),
-          const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF57C21)),
+          CircularProgressIndicator(
+            // This fallback widget is built while the app root can be between
+            // routes, so avoid looking up Theme through Get.context here.
+            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF141414)),
           ),
         ],
       ),

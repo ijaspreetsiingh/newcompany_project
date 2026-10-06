@@ -1,12 +1,18 @@
-import 'package:jdds/helper/extension_helper.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:jdds/common/design_system/nest_icon_button.dart';
 
 class HomeSearchWidget extends StatelessWidget {
   const HomeSearchWidget({super.key}) ;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fillColor = isDark ? const Color(0xFF262626) : const Color(0xFFF6F6F6);
+    final borderColor = isDark ? const Color(0xFF333333) : const Color(0xFFE5E5E5);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
+
     return  SliverPersistentHeader(
       pinned: true,
       delegate: SliverDelegate(extentSize: 72,
@@ -14,7 +20,9 @@ class HomeSearchWidget extends StatelessWidget {
 
           onTap: () => Get.dialog(const SearchSuggestionDialog(), transitionCurve: Curves.easeIn),
 
-          child: Padding(padding: const EdgeInsets.only(left: Dimensions.paddingSizeDefault, right: Dimensions.paddingSizeDefault, top: Dimensions.paddingSizeSmall, bottom: Dimensions.paddingSizeSmall,),
+          child: Container(
+            color: isDark ? const Color(0xFF0D0D0D) : Colors.white,
+            padding: const EdgeInsets.only(left: Dimensions.paddingSizeDefault, right: Dimensions.paddingSizeDefault, top: Dimensions.paddingSizeSmall, bottom: Dimensions.paddingSizeSmall,),
             child: Container(
               height: 52,
               padding: EdgeInsets.only(
@@ -23,38 +31,32 @@ class HomeSearchWidget extends StatelessWidget {
               ),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                boxShadow: Get.find<ThemeController>().darkTheme ? null : searchBoxShadow,
                 border: Border.all(
-                  color: context.customThemeColors.searchBarBorder,
+                  color: borderColor,
                   width: 1,
                 ),
-                borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
-                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(16),
+                color: fillColor,
               ),
               child: Row( children: [
 
-                Image.asset(Images.searchIcon, width: 20, height: 20,
-                  color: Theme.of(context).hintColor,
-                ),
-                const SizedBox(width: Dimensions.paddingSizeSmall),
+                Icon(Icons.search_outlined, size: 19, color: mutedColor),
+                const SizedBox(width: 10),
 
-                Text('search_services'.tr, style: robotoRegular.copyWith(color: Theme.of(context).hintColor)),
+                Text('search_services'.tr, style: GoogleFonts.dmSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  color: mutedColor,
+                )),
                 const Spacer(),
 
-                /// Tune (filter) button - SS : right end par, divider ke saath, square rounded chip
-                Container(height: 36, width: 36,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColorLight.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                    border: Border.all(
-                      color: Theme.of(context).primaryColorLight,
-                      width: 1,
-                    ),
-                  ),
-                  margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
-                  child: Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeSmall - 2),
-                    child: Icon(Icons.tune, size: 18, color: Theme.of(context).colorScheme.primary),
-                  ),
+                /// Tune (filter) button - nest. style : soft dark-tinted rounded chip
+                NestIconButton(
+                  icon: Icons.tune,
+                  onPressed: () {
+                    // TODO: Open filter dialog
+                  },
+                  tooltip: 'Filter',
                 ),
 
               ]),
@@ -90,3 +92,5 @@ class SliverDelegate extends SliverPersistentHeaderDelegate {
     return oldDelegate.maxExtent != maxExtent || oldDelegate.minExtent != maxExtent || child != oldDelegate.child;
   }
 }
+
+

@@ -1,7 +1,6 @@
 import 'package:demandium_provider/feature/payement_information/controller/payment_info_controller.dart';
 import 'package:demandium_provider/feature/payement_information/model/payment_method_list_model.dart';
 import 'package:demandium_provider/feature/payement_information/widgets/method_popup_button_widget.dart';
-import 'package:demandium_provider/helper/extension_helper.dart';
 import 'package:demandium_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
@@ -12,12 +11,8 @@ class PaymentInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-      decoration: BoxDecoration(
-        color: Theme.of(context).hintColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(Dimensions.paddingSizeEight),
-      ),
+    return InkCard(
+      padding: const EdgeInsets.all(16),
       child: GetBuilder<PaymentInfoController>(
           builder: (paymentInfoController) {
 
@@ -25,34 +20,38 @@ class PaymentInfoCard extends StatelessWidget {
 
               Row(children: [
 
-                Text(paymentMethod?.methodName ?? '', style: robotoBold),
-                SizedBox(width: Dimensions.paddingSizeSmall),
+                Text(paymentMethod?.methodName ?? '', style: robotoSemiBold.copyWith(
+                  fontSize: 14, height: 1.3, color: InkColors.foreground,
+                )),
+                const SizedBox(width: 8),
 
                 if((paymentMethod?.isDefault ?? false) && index != null)
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeEight,vertical:Dimensions.paddingSizeExtraSmall),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: context.customThemeColors.success.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
+                      color: InkColors.foreground,
+                      borderRadius: BorderRadius.circular(50),
                     ),
                     child: Text('default'.tr, style: robotoMedium.copyWith(
-                      fontSize: Dimensions.fontSizeSmall,
-                      color: context.customThemeColors.success,
+                      fontSize: 10,
+                      height: 1.2,
+                      letterSpacing: 0.6,
+                      color: InkColors.background,
                     )),
                   ),
 
-                Spacer(),
+                const Spacer(),
 
                if(index != null) MethodPopupButtonWidget(paymentMethod: paymentMethod, index: index),
 
               ]),
 
               Container(
-                margin: EdgeInsets.only(top: Dimensions.paddingSizeSmall),
-                padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+                margin: const EdgeInsets.only(top: 12),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraSmall),
+                  color: InkColors.secondary,
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: ListView.separated(
                   physics: NeverScrollableScrollPhysics(),
@@ -65,7 +64,7 @@ class PaymentInfoCard extends StatelessWidget {
                       info: inputFieldValue.tr,
                     );
                   },
-                  separatorBuilder: (context, index) => SizedBox(height: Dimensions.paddingSizeExtraSmall),
+                  separatorBuilder: (context, index) => const SizedBox(height: 6),
                   itemCount: paymentMethod?.methodFieldData?.length ?? 0,
                 ),
               ),
@@ -87,21 +86,20 @@ class _InfoItemWidget extends StatelessWidget {
     return Row(crossAxisAlignment: CrossAxisAlignment.start,children: [
       Text(label ?? '', style: robotoRegular.copyWith(
         fontSize: Dimensions.fontSizeSmall,
-        color: Theme.of(context).hintColor,
+        color: InkColors.mutedForeground,
       )),
 
       Text(' : ', style: robotoRegular.copyWith(
         fontSize: Dimensions.fontSizeSmall,
-        color: Theme.of(context).textTheme.bodyLarge?.color,
+        color: InkColors.mutedForeground,
       )),
 
       Flexible(
         child: Text(info ?? '', style: robotoMedium.copyWith(
           fontSize: Dimensions.fontSizeSmall,
-          color: Theme.of(context).textTheme.bodyLarge?.color,
+          color: InkColors.foreground,
         )),
       ),
     ]);
   }
 }
-

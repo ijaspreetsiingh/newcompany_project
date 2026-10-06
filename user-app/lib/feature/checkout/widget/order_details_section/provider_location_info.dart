@@ -162,10 +162,10 @@ class _ProviderMapWidget extends StatefulWidget {
   const _ProviderMapWidget({required this.provider});
 
   @override
-  State<_ProviderMapWidget> createState() => _ProviderMapWidgetState();
+  State<_ProviderMapWidget> createState() => _ProviderMapwidgetstate();
 }
 
-class _ProviderMapWidgetState extends State<_ProviderMapWidget> {
+class _ProviderMapwidgetstate extends State<_ProviderMapWidget> {
 
   late LatLng _initialPosition;
   late Marker marker;
@@ -270,3 +270,5 @@ class _ProviderMapWidgetState extends State<_ProviderMapWidget> {
     );
   }
 }
+
+

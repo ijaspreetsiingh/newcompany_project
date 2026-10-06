@@ -68,7 +68,7 @@ class _BusinessInfoTabItemWidgetState extends State<BusinessInfoTabItemWidget> {
           enabled: userProfileController.isLoading,
           child: Form(
             key: userProfileController.profileInformationFormKey,
-            child: Container(color: Theme.of(context).colorScheme.surface,
+            child: Container(color: InkColors.background,
               child: Column(children: [
 
                 Expanded(child: SingleChildScrollView(
@@ -78,8 +78,10 @@ class _BusinessInfoTabItemWidgetState extends State<BusinessInfoTabItemWidget> {
 
                     Container(
                       decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
+                        color: InkColors.card,
+                        borderRadius: BorderRadius.circular(19),
+                        border: Border.all(color: InkColors.border),
+                        boxShadow: InkColors.cardShadow,
                       ),
                       child: Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -119,8 +121,10 @@ class _BusinessInfoTabItemWidgetState extends State<BusinessInfoTabItemWidget> {
 
                     Container(
                       decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
+                        color: InkColors.card,
+                        borderRadius: BorderRadius.circular(19),
+                        border: Border.all(color: InkColors.border),
+                        boxShadow: InkColors.cardShadow,
                       ),
                       child: Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -138,7 +142,7 @@ class _BusinessInfoTabItemWidgetState extends State<BusinessInfoTabItemWidget> {
                           Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                              color: Theme.of(context).scaffoldBackgroundColor,
+                              color: InkColors.secondary,
                             ),
                             padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeExtraSmall),
                             child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -148,9 +152,9 @@ class _BusinessInfoTabItemWidgetState extends State<BusinessInfoTabItemWidget> {
                                 width: Dimensions.paddingSizeLarge,
                                 height: Dimensions.paddingSizeLarge,
                                 child: Checkbox(
-                                  side: BorderSide(width: 1, color: Theme.of(context).hintColor),
-                                  checkColor: Theme.of(context).cardColor,
-                                  activeColor: Theme.of(context).primaryColor,
+                                  side: BorderSide(width: 1, color: InkColors.mutedForeground),
+                                  checkColor: InkColors.card,
+                                  activeColor: InkColors.foreground,
                                   value: userProfileController.keepPersonalInfoAsCompanyInfo,
                                   onChanged: (bool? isChecked) => userProfileController.togglePersonalInfoAsCompanyInfo(),
                                 ),
@@ -217,7 +221,7 @@ class _BusinessInfoTabItemWidgetState extends State<BusinessInfoTabItemWidget> {
             ) : CircleAvatar(radius: Dimensions.paddingSizeExtraLarge * 2, backgroundImage:FileImage(File(userProfileController.pickedFile!.path))),
 
             IconButton( onPressed: ()=>userProfileController.pickImage(),
-              icon: Icon(Icons.camera_enhance_rounded, color: light.cardColor),
+              icon: Icon(Icons.camera_enhance_rounded, color: InkColors.card),
             ),
           ],
         ),
@@ -515,14 +519,14 @@ class BasicInfoWidget extends StatelessWidget {
           Container(width: Get.width, height: 30,
             decoration: BoxDecoration(
               border: Border(bottom: BorderSide(
-                  color:Theme.of(context).disabledColor,width: 1
+                  color:InkColors.border,width: 1
               )),
             ),
 
             child: DropdownButtonHideUnderline(
               child: DropdownButton(
                 menuMaxHeight: Get.height*.40,
-                dropdownColor: Theme.of(context).cardColor,
+                dropdownColor: InkColors.card,
                 borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
                 elevation: 8,
                 hint: Text(
@@ -554,7 +558,7 @@ class BasicInfoWidget extends StatelessWidget {
           if(!userProfileController.isZoneValid)
             Padding(padding: const EdgeInsets.only(top : 5),
               child: Text("fill_required_field".tr,
-                style: robotoRegular.copyWith(color: Theme.of(context).colorScheme.error, fontSize: Dimensions.fontSizeSmall),
+                style: robotoRegular.copyWith(color: InkColors.destructive, fontSize: Dimensions.fontSizeSmall),
               ),
             ),
         ]);
@@ -588,9 +592,9 @@ class LogoWidget extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Column(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(Icons.cloud_upload, color: Theme.of(context).hintColor),
+                        Icon(Icons.cloud_upload, color: InkColors.mutedForeground),
 
-                        Text('update_logo'.tr, style: robotoRegular.copyWith(color: Theme.of(context).hintColor, fontSize: Dimensions.fontSizeSmall))
+                          Text('update_logo'.tr, style: robotoRegular.copyWith(color: InkColors.mutedForeground, fontSize: Dimensions.fontSizeSmall))
                       ]),
                     ],
                   ),
@@ -610,11 +614,11 @@ class LogoWidget extends StatelessWidget {
                   transform: Matrix4.translationValues(8, -8, 0),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                    color: Theme.of(context).cardColor,
-                    border: Border.all(color: Theme.of(context).primaryColor),
+                    color: InkColors.card,
+                    border: Border.all(color: InkColors.foreground),
                   ),
                   padding: EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
-                  child: Icon(Icons.edit, color: Theme.of(context).primaryColor, size: Dimensions.paddingSizeDefault,),
+                  child: Icon(Icons.edit, color: InkColors.foreground, size: Dimensions.paddingSizeDefault,),
                 ),
               ),
             )),
@@ -658,9 +662,9 @@ class CoverImageWidget extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Column(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center, children: [
-                          Icon(Icons.cloud_upload, color: Theme.of(context).hintColor),
+                          Icon(Icons.cloud_upload, color: InkColors.mutedForeground),
 
-                          Text('update_cover_image'.tr, style: robotoRegular.copyWith(color: Theme.of(context).hintColor, fontSize: Dimensions.fontSizeSmall))
+                          Text('update_cover_image'.tr, style: robotoRegular.copyWith(color: InkColors.mutedForeground, fontSize: Dimensions.fontSizeSmall))
                         ]),
                       ],
                     ),
@@ -678,11 +682,11 @@ class CoverImageWidget extends StatelessWidget {
                     transform: Matrix4.translationValues(8, -8, 0),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                      color: Theme.of(context).cardColor,
-                      border: Border.all(color: Theme.of(context).primaryColor),
+                      color: InkColors.card,
+                      border: Border.all(color: InkColors.foreground),
                     ),
                     padding: EdgeInsets.all(Dimensions.paddingSizeExtraSmall),
-                    child: Icon(Icons.edit, color: Theme.of(context).primaryColor, size: Dimensions.paddingSizeDefault,),
+                    child: Icon(Icons.edit, color: InkColors.foreground, size: Dimensions.paddingSizeDefault,),
                   ),
                 ),
               )),

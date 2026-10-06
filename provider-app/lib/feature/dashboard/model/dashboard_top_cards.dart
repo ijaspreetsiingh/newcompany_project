@@ -1,10 +1,4 @@
-import 'dart:convert';
-
-DashboardTopCards dashboardTopCardsFromJson(String str) =>
-    DashboardTopCards.fromJson(json.decode(str));
-
-String dashboardTopCardsToJson(DashboardTopCards data) =>
-    json.encode(data.toJson());
+import 'dart:ui';
 
 class DashboardTopCards {
   DashboardTopCards({
@@ -18,6 +12,10 @@ class DashboardTopCards {
   int? totalSubscribedServices;
   int? totalServiceMan;
   int? totalBookingServed;
+
+  /// Aliases for backward compatibility
+  int? get totalBooking => totalBookingServed;
+  int? get completedBooking => totalBookingServed;
 
   factory DashboardTopCards.fromJson(Map<String, dynamic> json) =>
       DashboardTopCards(

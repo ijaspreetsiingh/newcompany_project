@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:tiktok_events_sdk/tiktok_events_sdk.dart';
 
 class TikTokAnalyticsService {
-  static Future<void> init() async {
+  static Future<void> intt() async {
     try {
       await TikTokEventsSdk.initSdk(
         androidAppId: 'YOUR_APP_ID_HERE',
@@ -12,11 +12,11 @@ class TikTokAnalyticsService {
         isDebugMode: true,
       );
       if (kDebugMode) {
-        print("TikTok SDK Initialized successfully");
+        print("TikTok SDK initialized successfully");
       }
     } catch (e) {
       if (kDebugMode) {
-        print("TikTok Init Failed: $e");
+        print("TikTok intt Failed: $e");
       }
     }
   }
@@ -53,3 +53,4 @@ class TikTokAnalyticsService {
     }
   }
 }
+

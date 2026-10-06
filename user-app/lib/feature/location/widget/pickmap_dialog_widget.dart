@@ -11,10 +11,10 @@ class PickMapDialogWidget extends StatefulWidget {
   });
 
   @override
-  State<PickMapDialogWidget> createState() => _PickMapDialogWidgetState();
+  State<PickMapDialogWidget> createState() => _PickMapDialogwidgetstate();
 }
 
-class _PickMapDialogWidgetState extends State<PickMapDialogWidget> {
+class _PickMapDialogwidgetstate extends State<PickMapDialogWidget> {
   MapController? _mapController;
   LatLng? _currentLatLng;
   LatLng? _initialPosition;
@@ -82,7 +82,7 @@ class _PickMapDialogWidgetState extends State<PickMapDialogWidget> {
 
   void _onMapCreated(MapController mapController) {
     _mapController = mapController;
-    // Set initial pick position so the button can work
+    // Set inttial pick position so the button can work
     Get.find<LocationController>().getCurrentLocation(
       false,
       mapController: mapController,
@@ -227,3 +227,5 @@ class _DialogHeader extends StatelessWidget {
     );
   }
 }
+
+

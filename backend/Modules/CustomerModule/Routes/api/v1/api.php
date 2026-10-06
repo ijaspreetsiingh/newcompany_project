@@ -34,6 +34,7 @@ Route::group(['prefix' => 'client', 'as' => 'customer.', 'namespace' => 'Api\V1\
 
     Route::group(['prefix' => 'setup'], function () {
         Route::get('/', [ConfigController::class, 'configuration']);
+        Route::get('payment-config', [ConfigController::class, 'providerPaymentConfig']);
         Route::get('pages', [ConfigController::class, 'pages']);
         Route::get('page-facts/{key}', [ConfigController::class, 'pageDetails']);
         Route::get('fetch-region-id', [ConfigController::class, 'getZone']);

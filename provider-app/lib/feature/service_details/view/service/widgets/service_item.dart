@@ -59,7 +59,7 @@ class ServiceItem extends StatelessWidget {
                             '', discount.discountAmount.toString(),
                             discount.discountAmountType.toString(),
                           ),
-                            style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,color: light.cardColor),
+                            style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,color: Colors.white),
                           ),
                         ),
                       ),

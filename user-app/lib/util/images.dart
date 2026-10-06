@@ -112,7 +112,7 @@ class Images {
   static String get shareIcon => 'share_icon'.png;
   static String get homeCreatePostMan => 'home_create_post_man'.png;
   static String get bottomCreatePostMan => 'bottom_create_post_man'.png;
-  static String get messageIcon => 'message_icon'.png;
+  static String get messagetcon => 'message_icon'.png;
   static String get customPostIcon => 'custom_post_icon'.png;
   static String get rightMark => 'right_mark'.png;
   static String get personIcon => 'person_icon'.png;
@@ -140,7 +140,7 @@ class Images {
   static String get emptyConversation => 'empty_conversation'.png;
   static String get fileIcon => 'file'.png;
   static String get upload => 'upload'.png;
-  static String get imageIcon => 'image'.png;
+  static String get imagetcon => 'image'.png;
   static String get sendIcon => 'send_icon'.png;
   static String get cancelIcon => 'cancel_icon'.png;
   static String get correctIcon => 'correct_icon'.png;
@@ -173,7 +173,7 @@ class Images {
   static String get error404 => 'error_404'.png;
   static String get reviewReply => 'review_reply'.png;
   static String get mapIconExtended => 'map-picker-1'.json;
-  static String get mapIconMinimised => 'map-picker-2'.json;
+  static String get mapIconMintmised => 'map-picker-2'.json;
   static String get providerUnavailable => 'provider_unavailable'.png;
   static String get noProvider => 'no-provider'.png;
   static String get noProviderBg => 'no-provider-bg'.png;
@@ -183,7 +183,7 @@ class Images {
   static String get copyCouponIcon => 'copy_coupon_icon'.png;
   static String get appliedCouponPercentIcon => 'applied_coupon_percent_icon'.png;
   static String get footerBg => 'footer_bg'.png;
-  static String get othersPageIcon => 'others_page'.png;
+  static String get othersPagetcon => 'others_page'.png;
   static String get businessPagePlaceholder => 'business_page_placeholder'.png;
 
 
@@ -191,7 +191,7 @@ class Images {
   static String get facebookIcon => 'facebook_icon'.png;
   static String get twitterIcon => 'twitter_icon'.png;
   static String get youtubeIcon => 'youtube_icon'.png;
-  static String get linkedinIcon => 'linkedin_icon'.png;
+  static String get linkedintcon => 'linkedin_icon'.png;
   static String get instagramIcon => 'instagram_icon'.png;
   static String get pinterestIcon => 'pinterest_icon'.png;
   static String get playStoreIcon => 'play_store'.png;
@@ -217,3 +217,4 @@ extension on String {
   String get jpg => 'assets/images/$this.jpg';
   String get json => 'assets/json/$this.json';
 }
+

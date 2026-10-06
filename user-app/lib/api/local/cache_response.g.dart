@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+﻿// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'cache_response.dart';
 
@@ -433,3 +433,6 @@ class $AppDatabaseManager {
   $$CacheResponseTableTableManager get cacheResponse =>
       $$CacheResponseTableTableManager(_db, _db.cacheResponse);
 }
+
+
+

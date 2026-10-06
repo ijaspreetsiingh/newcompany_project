@@ -7,13 +7,13 @@ class ApiChecker {
 
     if(response.statusCode == 401) {
       Get.find<AuthController>().clearSharedData(response: response);
-      if(Get.currentRoute != RouteHelper.getInitialRoute()){
-        Get.offAllNamed(RouteHelper.getInitialRoute());
+      if(Get.currentRoute != RouteHelper.getinitialRoute()){
+        Get.offAllNamed(RouteHelper.getinitialRoute());
         customSnackBar("${response.statusCode!}".tr);
       }
     }if(response.statusCode == 204) {
       customSnackBar('information_not_found'.tr, showDefaultSnackBar: showDefaultToaster);
-      Get.offAllNamed(RouteHelper.getInitialRoute());
+      Get.offAllNamed(RouteHelper.getinitialRoute());
 
     }else if(response.statusCode == 500){
       customSnackBar("${response.statusCode!}".tr, showDefaultSnackBar: showDefaultToaster);
@@ -40,3 +40,4 @@ class ApiChecker {
     }
   }
 }
+

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\ProviderManagement\Http\Controllers\Api\V1\Customer\FavoriteProviderController;
 use Modules\ProviderManagement\Http\Controllers\Api\V1\Customer\ProviderController;
+use Modules\ProviderManagement\Http\Controllers\Api\V1\Provider\CategoryAssignmentController;
 use Modules\ProviderManagement\Http\Controllers\Api\V1\Provider\ConfigController as ProviderConfigController;
 use Modules\ProviderManagement\Http\Controllers\Api\V1\Provider\Report\BookingReportController;
 use Modules\ProviderManagement\Http\Controllers\Api\V1\Provider\Report\BusinessReportController;
@@ -44,6 +45,10 @@ Route::group(['prefix' => 'partner', 'as' => 'provider.', 'namespace' => 'Api\V1
     Route::delete('erase', [ProviderProviderController::class, 'deleteProvider']);
     Route::get('ledger-entry', [ProviderProviderController::class, 'transaction']);
     Route::get('enrolled/child-groups', [ProviderProviderController::class, 'subscribedSubCategories']);
+
+    // Category assignment: current tree + admin ko replace/change/cancel request
+    Route::get('category-assignment', [CategoryAssignmentController::class, 'show']);
+    Route::post('category-assignment/request', [CategoryAssignmentController::class, 'store']);
 
     Route::group(['prefix' => 'task', 'as' => 'service.',], function () {
         Route::post('modify-membership', [ServiceController::class, 'updateSubscription']);
@@ -98,6 +103,7 @@ Route::group(['prefix' => 'client', 'as' => 'customer.', 'namespace' => 'Api\V1\
     Route::group(['prefix' => 'partner', 'as' => 'provider.'], function () {
         Route::post('index', [ProviderController::class, 'getProviderList']);
         Route::get('index-by-childgroup', [ProviderController::class, 'getProviderListBySubCategory']);
+        Route::get('search-radius', [ProviderController::class, 'searchRadius']);
     });
 
     Route::group(['prefix' => 'saved', 'as' => 'favorite.', 'middleware' => ['auth:api']], function () {

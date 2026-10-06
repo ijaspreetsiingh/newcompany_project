@@ -1,47 +1,62 @@
 import 'package:demandium_serviceman/utils/core_export.dart';
 
 class ProfileInfoShimmer extends StatelessWidget {
-  const ProfileInfoShimmer ({super.key}) ;
+  const ProfileInfoShimmer({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Shimmer(
       duration: const Duration(seconds: 3),
-      interval: const Duration(seconds: 5), //Default value: Duration(seconds: 0)
-      color: Colors.white, //Default value
-      colorOpacity: 0, //Default value
-      enabled: true, //Default value
+      interval: const Duration(seconds: 5),
+      color: Colors.white,
+      colorOpacity: 0,
+      enabled: true,
       direction: const ShimmerDirection.fromLTRB(),
       child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Row(),
-            const SizedBox(height: 30,),
-            Container(
-              height: 100,
-              width: 100,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100),
-                color: Theme.of(context).shadowColor
-              ),
-            ),
-
-            const SizedBox(height: Dimensions.paddingSizeDefault,),
-            ListView.builder(
-                shrinkWrap: true,
-                itemCount: 4,
-                itemBuilder: (context,index){
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault,vertical: Dimensions.paddingSizeSmall),
-                    child: Container(
-                      height: 55,
-                      decoration: BoxDecoration(color:Theme.of(context).shadowColor, borderRadius: BorderRadius.circular(5)),
-                      child: const Row(),
-                    ));
-                })
-          ],
+        physics: const NeverScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(child: _block(context, 96, 96, radius: 100)),
+              const SizedBox(height: 20),
+              _block(context, 90, 14),
+              const SizedBox(height: 8),
+              _block(context, 0, 48),
+              const SizedBox(height: 20),
+              _block(context, 60, 14),
+              const SizedBox(height: 8),
+              _block(context, 0, 48),
+              const SizedBox(height: 20),
+              _block(context, 100, 14),
+              const SizedBox(height: 8),
+              _block(context, 0, 48),
+              const SizedBox(height: 20),
+              _block(context, 90, 14),
+              const SizedBox(height: 8),
+              _block(context, 0, 48),
+              const SizedBox(height: 20),
+              _block(context, 0, 48),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _block(
+    BuildContext context,
+    double width,
+    double height, {
+    double radius = kRadiusMd,
+  }) {
+    return Container(
+      width: width == 0 ? double.infinity : width,
+      height: height,
+      decoration: BoxDecoration(
+        color: context.kMuted,
+        borderRadius: BorderRadius.circular(radius),
       ),
     );
   }

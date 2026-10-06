@@ -43,10 +43,10 @@ class CustomPostCartSummary extends StatelessWidget {
                    color: Theme.of(context).textTheme.bodyMedium!.color!.withValues(alpha: 0.7)),)
              ],);
            }),
-            (configModel.content?.additionalChargeLabelName != "" && configModel.content?.additionalCharge == 1) ?
+            CheckoutHelper.shouldShowAdditionalCharge() ?
             const SizedBox(height: Dimensions.paddingSizeExtraSmall,): const SizedBox(),
 
-            (configModel.content?.additionalChargeLabelName != "" && configModel.content?.additionalCharge == 1) ?
+            CheckoutHelper.shouldShowAdditionalCharge() ?
             GetBuilder<CheckOutController>(builder: (controller){
               return  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,children: [
                 Text(configModel.content?.additionalChargeLabelName ?? "",style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall,
@@ -88,3 +88,5 @@ class CustomPostCartSummary extends StatelessWidget {
     );
   }
 }
+
+

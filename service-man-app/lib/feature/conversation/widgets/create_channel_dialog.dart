@@ -18,8 +18,9 @@ class _ProductBottomSheetState extends State<CreateChannelDialog> {
           left: Dimensions.paddingSizeDefault,
           bottom: Dimensions.paddingSizeDefault),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(Dimensions.radiusExtraLarge)),
+        color: context.kCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(kRadiusLg)),
+        border: Border(top: BorderSide(color: context.kBorder, width: 1)),
       ),
       child: GetBuilder<BookingDetailsController>(builder: (bookingDetailsController){
 
@@ -58,15 +59,21 @@ class _ProductBottomSheetState extends State<CreateChannelDialog> {
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Text(titleText.tr, style: robotoMedium,),
+                              Text(titleText.tr, style: robotoBold.copyWith(
+                                fontSize: 18,
+                                color: context.kForeground,
+                              ),),
                               const SizedBox(height: Dimensions.paddingSizeLarge,),
 
                               GetBuilder<BookingDetailsController>(builder: (bookingDetailsController){
                                 return Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      TextButton(
-                                        onPressed:(){
+                                      KButton(
+                                        label: 'zone_admin'.tr,
+                                        outline: true,
+                                        expanded: false,
+                                        onTap:(){
                                           Get.back();
                                           String providerId = provider?.userId ?? "";
                                           String refId = bookingDetails?.id?? "";
@@ -75,22 +82,15 @@ class _ProductBottomSheetState extends State<CreateChannelDialog> {
                                           String image = provider?.logoFullPath ??"";
                                           Get.find<ConversationController>().createChannel(providerId, refId,name: name,image: image,phone: phone.tr,userType: "provider");
                                         },
-                                        style: TextButton.styleFrom(
-                                          backgroundColor: Get.isDarkMode ? Theme.of(context).disabledColor : Theme.of(context).disabledColor.withValues(alpha:0.3),
-                                          minimumSize:  const Size(Dimensions.paddingSizeLarge, 40),
-                                          padding:  const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall,horizontal: Dimensions.paddingSizeLarge ),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Dimensions.radiusLarge)),
-                                        ),
-                                        child: Text(
-                                          'provider'.tr, textAlign: TextAlign.center,
-                                          style: robotoBold.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color),
-                                        ),
                                       ),
                                       const SizedBox(width: Dimensions.paddingSizeLarge),
 
                                       customer!=null?
-                                      TextButton(
-                                        onPressed:(){
+                                      KButton(
+                                        label: 'customer'.tr,
+                                        outline: true,
+                                        expanded: false,
+                                        onTap:(){
                                           Get.back();
                                           String customerId = customer.id ?? "";
                                           String refId = bookingDetails?.id ?? "";
@@ -99,16 +99,6 @@ class _ProductBottomSheetState extends State<CreateChannelDialog> {
                                           String phone = customer.phone??"";
                                           Get.find<ConversationController>().createChannel(customerId, refId,name: name,image: image,phone: phone.tr,userType: "customer");
                                         },
-                                        style: TextButton.styleFrom(
-                                          backgroundColor: Get.isDarkMode ? Theme.of(context).disabledColor : Theme.of(context).disabledColor.withValues(alpha:0.3),
-                                          minimumSize:  const Size(Dimensions.paddingSizeLarge, 40),
-                                          padding:  const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall,horizontal: Dimensions.paddingSizeLarge ),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Dimensions.radiusLarge)),
-                                        ),
-                                        child: Text(
-                                          'customer'.tr, textAlign: TextAlign.center,
-                                          style: robotoBold.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color),
-                                        ),
                                       ):const SizedBox(),
 
                                     ]);
@@ -126,4 +116,3 @@ class _ProductBottomSheetState extends State<CreateChannelDialog> {
     );
   }
 }
-

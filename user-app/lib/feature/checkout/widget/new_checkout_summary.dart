@@ -80,7 +80,7 @@ class NewCheckoutSummary extends StatelessWidget {
                 if (couponDisCount > 0) _buildPriceRow('coupon_discount'.tr, couponDisCount, context, isDiscount: true),
                 if (referDisCount > 0) _buildPriceRow('referral_discount'.tr, referDisCount, context, isDiscount: true),
                 _buildPriceRow('vat'.tr, vat, context),
-                if (configModel.content?.additionalCharge == 1 && configModel.content?.additionalChargeLabelName != "")
+                if (CheckoutHelper.shouldShowAdditionalCharge())
                   _buildPriceRow(configModel.content?.additionalChargeLabelName ?? '', additionalCharge, context),
 
                 const Divider(height: 24),
@@ -172,7 +172,7 @@ class NewCheckoutSummary extends StatelessWidget {
             PriceConverter.convertPrice(totalCost),
             style: robotoBold.copyWith(
               fontSize: Dimensions.fontSizeDefault,
-              color: const Color(0xFFF57C21),
+              color: primaryAccent,
             ),
           ),
         ],
@@ -203,11 +203,11 @@ class NewCheckoutSummary extends StatelessWidget {
             style: (isBold || isTotal)
                 ? robotoBold.copyWith(
                     fontSize: Dimensions.fontSizeDefault,
-                    color: isTotal ? const Color(0xFFF57C21) : Colors.black,
+                    color: isTotal ? primaryAccent : Colors.black,
                   )
                 : robotoRegular.copyWith(
                     fontSize: Dimensions.fontSizeDefault,
-                    color: isDiscount ? const Color(0xFF4CAF50) : Colors.black,
+                    color: isDiscount ? Theme.of(context).colorScheme.primary : Theme.of(context).textTheme.bodyLarge!.color,
                   ),
           ),
         ],
@@ -215,3 +215,5 @@ class NewCheckoutSummary extends StatelessWidget {
     );
   }
 }
+
+

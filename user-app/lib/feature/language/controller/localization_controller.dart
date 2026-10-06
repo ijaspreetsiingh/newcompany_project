@@ -18,7 +18,7 @@ class LocalizationController extends GetxController implements GetxService {
   bool get isLtr => _isLtr;
   List<LanguageModel> get languages =>  _localLanguages;
 
-  void setLanguage(Locale locale, {bool isInitial = false}) {
+  void setLanguage(Locale locale, {bool isinttial = false}) {
     Get.updateLocale(locale);
     _locale = locale;
     if(_locale.languageCode == 'ar') {
@@ -46,14 +46,14 @@ class LocalizationController extends GetxController implements GetxService {
     if(Get.find<LocationController>().getUserAddress() != null) {
       Get.find<ServiceAreaController>().getZoneList();
     }
-    Get.find<SplashController>().updateLanguage(isInitial);
+    Get.find<SplashController>().updateLanguage(isinttial);
     update();
   }
 
   void loadCurrentLanguage() async {
     _localLanguages = [];
     _localLanguages.addAll(AppConstants.languages);
-    filterLanguage(isInitial: true);
+    filterLanguage(isinttial: true);
     update();
   }
 
@@ -72,9 +72,9 @@ class LocalizationController extends GetxController implements GetxService {
     }
   }
 
-  void filterLanguage({bool shouldUpdate = true, bool isChooseLanguage = false, bool isInitial = false, String? fromPage = ""}) {
+  void filterLanguage({bool shouldUpdate = true, bool isChooseLanguage = false, bool isinttial = false, String? fromPage = ""}) {
 
-    List<Language>  adminLanguageList = isInitial ? [] : Get.find<SplashController>().configModel.content?.languageList ?? [];
+    List<Language>  adminLanguageList = isinttial ? [] : Get.find<SplashController>().configModel.content?.languageList ?? [];
 
     bool showAllLocalLanguage = (AppConstants.languageCode.length == 1 || adminLanguageList.isEmpty) ? true : false;
 
@@ -85,7 +85,7 @@ class LocalizationController extends GetxController implements GetxService {
       localLanguageCode.add(element.languageCode!);
     }
 
-    if( ((isChooseLanguage || isInitial) && fromPage != "menuDrawer" ) && adminLanguageList.length == 1 && localLanguageCode.contains(adminLanguageList[0].languageCode)){
+    if( ((isChooseLanguage || isinttial) && fromPage != "menuDrawer" ) && adminLanguageList.length == 1 && localLanguageCode.contains(adminLanguageList[0].languageCode)){
 
       int index = AppConstants.languages.indexWhere((element) => element.languageCode == adminLanguageList[0].languageCode);
 
@@ -93,11 +93,11 @@ class LocalizationController extends GetxController implements GetxService {
         _locale = Locale( AppConstants.languages[index].languageCode!,AppConstants.languages[index].countryCode);
         _isLtr = _locale.languageCode != 'ar';
         Future.delayed(const Duration(milliseconds: 10), (){
-          setLanguage(_locale, isInitial: true);
+          setLanguage(_locale, isinttial: true);
           if(Get.find<SplashController>().isShowOnboardingScreen()){
             Get.offAllNamed(RouteHelper.onBoardScreen);
           }else{
-            Get.offAllNamed(RouteHelper.getInitialRoute());
+            Get.offAllNamed(RouteHelper.getinitialRoute());
           }
         });
       }
@@ -165,10 +165,12 @@ class LocalizationController extends GetxController implements GetxService {
 
       if(fromPage != "menuDrawer"){
         Future.delayed(const Duration(milliseconds: 1000), (){
-          setLanguage(_locale, isInitial: true);
+          setLanguage(_locale, isinttial: true);
         });
       }
     }
   }
 
 }
+
+

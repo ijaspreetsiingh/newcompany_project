@@ -31,6 +31,19 @@ const robotoBold = TextStyle(
   fontWeight: FontWeight.w700,
 );
 
+final robotoSmall = TextStyle(
+  fontFamily: 'Roboto',
+  fontWeight: FontWeight.w400,
+  fontSize: Dimensions.fontSizeSmall,
+);
+
+/// Theme accent â€” follows app theme (black in light, white-ish in dark).
+/// Use this instead of hardcoded colors so screens always match the nest. theme.
+Color get primaryAccent {
+  final BuildContext? ctx = Get.context;
+  return ctx != null ? Theme.of(ctx).colorScheme.primary : const Color(0xFF141414);
+}
+
 List<BoxShadow>? searchBoxShadow =  [ BoxShadow(
   offset: Offset(0,4),
   color: Colors.black.withValues(alpha: 0.05) ,

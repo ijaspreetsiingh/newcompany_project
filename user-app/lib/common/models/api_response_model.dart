@@ -1,14 +1,16 @@
-
-class ApiResponseModel<T> {
+﻿
+class AptresponseModel<T> {
   final T? response;
   final dynamic error;
   final bool isSuccess;
 
-  ApiResponseModel(this.response, this.error, this.isSuccess);
+  AptresponseModel(this.response, this.error, this.isSuccess);
 
-  ApiResponseModel.withError(dynamic errorValue) : response = null, error = errorValue, isSuccess = false;
+  AptresponseModel.withError(dynamic errorValue) : response = null, error = errorValue, isSuccess = false;
 
-  ApiResponseModel.withSuccess(T? responseValue)
+  AptresponseModel.withSuccess(T? responseValue)
       : response = responseValue,
         error = null, isSuccess = true;
 }
+
+

@@ -49,7 +49,7 @@ class CookiesView extends StatelessWidget {
 
             TextButton(
               style: TextButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: Get.theme.colorScheme.primary,
                 padding: EdgeInsets.zero,
                 minimumSize: const Size(80,35),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -72,3 +72,5 @@ class CookiesView extends StatelessWidget {
     );
   }
 }
+
+

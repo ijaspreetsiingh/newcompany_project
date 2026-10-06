@@ -1,4 +1,3 @@
-import 'package:demandium_serviceman/common/widgets/no_data_screen.dart';
 import 'package:get/get.dart';
 import 'package:demandium_serviceman/utils/core_export.dart';
 
@@ -14,42 +13,41 @@ class _BookingListScreenState extends State<BookingListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar:  MainAppBar(title: 'booking_requests'.tr,color: Theme.of(context).primaryColor),
+      backgroundColor: context.kBackground,
       body: GetBuilder<BookingRequestController>(
         builder: (bookingRequestController){
 
-          bool isEmpty = bookingRequestController.bookingList.isEmpty;
-          int subBookingCount = 0;
+          final List<BookingRequestModel> bookingList = bookingRequestController.bookingList;
+          final String selectedStatus = bookingRequestController.bookingStatusState.name.toLowerCase();
 
-          if(bookingRequestController.bookingList.isNotEmpty){
-            for(var booking in bookingRequestController.bookingList){
-              if(booking.repeatBookingList !=null && booking.repeatBookingList!.isNotEmpty){
-                for(var subBooking in booking.repeatBookingList!){
-                  if(bookingRequestController.bookingStatusState.name.toLowerCase() == subBooking.bookingStatus){
-                    subBookingCount ++;
-                    break;
-                  }
+          final List<Widget> bookingCards = <Widget>[];
+          for (final BookingRequestModel booking in bookingList) {
+            final List<RepeatBooking>? repeats = booking.repeatBookingList;
+            if (repeats != null && repeats.isNotEmpty) {
+              for (final RepeatBooking repeatBooking in repeats) {
+                if (selectedStatus == 'all' || repeatBooking.bookingStatus == selectedStatus) {
+                  bookingCards.add(BookingRequestItem(
+                    bookingRequestModel: booking,
+                    repeatBooking: repeatBooking,
+                    onDecline: () => bookingRequestController.declineBookingFromList(repeatBooking.id),
+                    onAccept: () => bookingRequestController.acceptBookingFromList(repeatBooking.id),
+                  ));
                 }
-              }{
-                subBookingCount ++;
               }
+            } else {
+              bookingCards.add(BookingRequestItem(
+                bookingRequestModel: booking,
+                onDecline: () => bookingRequestController.declineBookingFromList(booking.id),
+                onAccept: () => bookingRequestController.acceptBookingFromList(booking.id),
+              ));
             }
           }
 
-          if(!isEmpty){
-            if(subBookingCount == 0){
-              isEmpty = true;
-            }
-          }
-
-
-          List<BookingRequestModel> bookingList = bookingRequestController.bookingList;
           return RefreshIndicator(
             backgroundColor: Theme.of(context).colorScheme.surface,
             color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.6),
             onRefresh: () async{
-              Get.find<BookingRequestController>().getBookingList(bookingRequestController.bookingStatusState.name.toLowerCase(),1);
+              bookingRequestController.getBookingList(selectedStatus,1);
             },
             child: CustomScrollView(
               controller:bookingRequestController.scrollController,
@@ -57,46 +55,43 @@ class _BookingListScreenState extends State<BookingListScreen> {
                 parent: AlwaysScrollableScrollPhysics()
               ),
               slivers: [
+                SliverToBoxAdapter(
+                  child: PageHeader(
+                    title: 'bookings'.tr,
+                    subtitle:
+                        '${bookingList.length} ${'total_word'.tr} · ${bookingCards.length} ${'match_found'.tr}',
+                    right: KIconButton(
+                      icon: Icons.refresh_rounded,
+                      onTap: () => bookingRequestController.getBookingList(selectedStatus, 1),
+                    ),
+                  ),
+                ),
+
                 SliverPersistentHeader(delegate: BookingListMenu(),pinned: true,floating: false,),
 
-                !bookingRequestController.isFirst? isEmpty ?
-                SliverToBoxAdapter(child: SizedBox(
-                  height: Get.height * 0.75,
-                  child: NoDataScreen(
-                    type: NoDataType.booking,
-                    text: '${'no'.tr} ${bookingRequestController.bookingStatusState.name.toLowerCase()=='all'?'':
-                    bookingRequestController.bookingStatusState.name.toLowerCase().tr.toLowerCase()} ${"request_right_now".tr}',
-
+                bookingRequestController.isFirst ?
+                const SliverToBoxAdapter(child: BookingRequestItemShimmer()) :
+                bookingCards.isEmpty ?
+                SliverToBoxAdapter(
+                  child: EmptyState(
+                    icon: Icons.work_outline_rounded,
+                    title: 'no_bookings_here'.tr,
+                    text: 'new_bookings_appear'.tr,
                   ),
-                )) : SliverToBoxAdapter(
-                  child: Column( children: [
-                    bookingList.length > 1 ? ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: bookingList.length,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemBuilder: (con, index){
-                        return bookingList[index].repeatBookingList !=null && bookingList[index].repeatBookingList!.isNotEmpty  ?
-                        ListView.builder(
-                          shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-                          itemCount: bookingList[index].repeatBookingList!.length,
-                          itemBuilder: (context,secondIndex){
-                            return bookingRequestController.bookingStatusState.name.toLowerCase() ==  bookingList[index].repeatBookingList![secondIndex].bookingStatus ? BookingRequestItem(
-                              bookingRequestModel: bookingList[index],
-                              repeatBooking : bookingList[index].repeatBookingList![secondIndex],
-                            ) : const SizedBox();
-                          },
-                        ):
-                        BookingRequestItem(bookingRequestModel: bookingList[index]);
-                      },
-                    ) : SizedBox(
-                      height: Get.height * 0.7,
-                      child: Center(
-                        child: NoDataScreen(text: 'no_booking_found'.tr),
-                      ),
+                ) :
+                SliverList(
+                  delegate: SliverChildListDelegate(bookingCards),
+                ),
+
+                if (bookingRequestController.isLoading && !bookingRequestController.isFirst)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
+                      child: Center(child: CircularProgressIndicator()),
                     ),
-                    bookingRequestController.isLoading ? CircularProgressIndicator(color: Theme.of(context).primaryColor,):const SizedBox()
-                  ]),
-                ) :const SliverToBoxAdapter(child: BookingRequestItemShimmer()),
+                  ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 112)),
               ],
             ),
           );
@@ -105,7 +100,3 @@ class _BookingListScreenState extends State<BookingListScreen> {
     );
   }
 }
-
-
-
-

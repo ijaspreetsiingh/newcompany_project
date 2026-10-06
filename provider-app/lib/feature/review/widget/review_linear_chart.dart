@@ -31,27 +31,27 @@ class ReviewLinearChart extends StatelessWidget {
       children: [
         ProgressBar(
           title: 'excellent'.tr,
-          color: const Color(0xFF69B469),
+          color: InkColors.foreground,
           percent: fiveStar,
         ),
         ProgressBar(
           title: 'good'.tr,
-          color: const Color(0xFFB0DC4B),
+          color: InkColors.chart1,
           percent: fourStar,
         ),
         ProgressBar(
           title: 'average'.tr,
-          color: const Color(0xFFFFC700),
+          color: InkColors.chart2,
           percent: threeStar,
         ),
         ProgressBar(
           title: 'below_average'.tr,
-          color: const Color(0xFFF7A41E),
+          color: InkColors.chart3,
           percent: twoStar,
         ),
         ProgressBar(
           title: 'poor'.tr,
-          color: const Color(0xFFFF2828),
+          color: InkColors.chart4,
           percent: oneStar,
         ),
       ],

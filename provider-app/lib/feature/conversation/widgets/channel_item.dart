@@ -1,192 +1,168 @@
-
-import 'package:demandium_provider/helper/extension_helper.dart';
-import 'package:get/get.dart';
 import 'package:demandium_provider/util/core_export.dart';
-
+import 'package:get/get.dart';
 
 class ChannelItem extends StatelessWidget {
   final ChannelData channelData;
   final bool isAdmin;
-  const ChannelItem({super.key, required this.channelData, this.isAdmin = false, });
+  const ChannelItem({super.key, required this.channelData, this.isAdmin = false});
+
+  String _relativeTime(String? isoString) {
+    if (isoString == null || isoString.isEmpty) return '';
+    final DateTime time = DateConverter.isoUtcStringToLocalDate(isoString);
+    final Duration diff = DateTime.now().difference(time);
+    if (diff.isNegative || diff.inMinutes < 1) return 'now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+    if (diff.inHours < 24) return '${diff.inHours}h';
+    return DateConverter.dateStringMonthYear(time, format: 'd MMM');
+  }
+
   @override
   Widget build(BuildContext context) {
-
     ConversationUserModel? conversationUser;
     int? isRead;
-    int? isSeen;
+
+    final String providerOwnerName =
+        "${Get.find<UserProfileController>().providerModel?.content?.providerInfo?.owner?.firstName} ${Get.find<UserProfileController>().providerModel?.content?.providerInfo?.owner?.lastName}";
+
+    if (channelData.channelUsers != null && channelData.channelUsers!.length > 1) {
+      conversationUser =
+          channelData.channelUsers?[0].user?.userType != "provider-admin" ? channelData.channelUsers![0] : channelData.channelUsers![1];
+      isRead = channelData.channelUsers![0].user?.userType == "provider-admin"
+          ? channelData.channelUsers![0].isRead!
+          : channelData.channelUsers![1].isRead!;
+    }
+
+    final bool isChannelAdmin = isAdmin || conversationUser?.user?.userType == "super-admin";
+
     String? lastMessage;
+    if (channelData.lastSentMessage != null) {
+      lastMessage =
+          channelData.lastMessageSentUser == providerOwnerName ? "${'you'.tr}: ${channelData.lastSentMessage}" : channelData.lastSentMessage;
+    } else if (channelData.lastSentAttachmentType != null) {
+      final bool isImage =
+          channelData.lastSentAttachmentType == "png" || channelData.lastSentAttachmentType == "jpg";
+      final bool isSender = channelData.lastMessageSentUser == providerOwnerName;
+      final int fileCount = channelData.lastSentFileCount ?? 1;
 
-    String providerOwnerName = "${Get.find<UserProfileController>().providerModel?.content?.providerInfo?.owner?.firstName} ${Get.find<UserProfileController>().providerModel?.content?.providerInfo?.owner?.lastName}";
-
-
-    if(channelData.channelUsers !=null && channelData.channelUsers!.length > 1){
-      conversationUser = channelData.channelUsers?[0].user?.userType != "provider-admin" ? channelData.channelUsers![0] : channelData.channelUsers![1];
-      isRead = channelData.channelUsers![0].user?.userType == "provider-admin" ? channelData.channelUsers![0].isRead! : channelData.channelUsers![1].isRead!;
-      isSeen = channelData.channelUsers?[0].user?.userType == "provider-admin" ? channelData.channelUsers![1].isRead : channelData.channelUsers![0].isRead;
-
-    }
-
-    String imageWithPath = conversationUser?.user?.userType=="super-admin" ?
-    Get.find<SplashController>().configModel.content?.faviconFullPath ?? "" : conversationUser?.user?.profileImageFullPath ?? "";
-
-    if(channelData.lastSentMessage !=null ){
-      if(channelData.lastMessageSentUser == providerOwnerName){
-        lastMessage = "${'you'.tr}: ${channelData.lastSentMessage}";
-      }else{
-        lastMessage = "${channelData.lastSentMessage}";
-      }
-
-    }else{
-      if(channelData.lastSentAttachmentType !=null){
-       if((channelData.lastSentAttachmentType == "png" || channelData.lastSentAttachmentType == "jpg")){
-         if(channelData.lastMessageSentUser == providerOwnerName){
-
-           if(channelData.lastSentFileCount!=null && channelData.lastSentFileCount! > 1){
-             lastMessage = "${'you_sent'.tr} ${channelData.lastSentFileCount} ${'photos'.tr}";
-           }else{
-             lastMessage = "you_sent_a_photo".tr;
-           }
-
-         }else{
-
-           if(channelData.lastSentFileCount!=null && channelData.lastSentFileCount! > 1){
-             lastMessage = "${'sent'.tr} ${channelData.lastSentFileCount!} ${'photos'.tr}";
-           }else{
-             lastMessage = 'sent_a_photo'.tr;
-           }
-
-         }
-       }else{
-
-         if(channelData.lastMessageSentUser == providerOwnerName){
-           if(channelData.lastSentFileCount!=null && channelData.lastSentFileCount! > 1){
-             lastMessage = "${'you_sent'.tr} ${channelData.lastSentFileCount} ${"attachments".tr}";
-           }else{
-             lastMessage = "you_sent_an_attachment".tr;
-           }
-
-         }else{
-           if(channelData.lastSentFileCount!=null && channelData.lastSentFileCount! > 1){
-             lastMessage = "${'sent'.tr} ${channelData.lastSentFileCount!} ${'attachments'.tr}";
-           }else{
-             lastMessage = 'sent_an_attachment'.tr;
-           }
-
-         }
-       }
+      if (isImage) {
+        if (fileCount > 1) {
+          lastMessage = isSender
+              ? "${'you_sent'.tr} $fileCount ${'photos'.tr}"
+              : "${'sent'.tr} $fileCount ${'photos'.tr}";
+        } else {
+          lastMessage = isSender ? "you_sent_a_photo".tr : 'sent_a_photo'.tr;
+        }
+      } else {
+        if (fileCount > 1) {
+          lastMessage = isSender
+              ? "${'you_sent'.tr} $fileCount ${"attachments".tr}"
+              : "${'sent'.tr} $fileCount ${"attachments".tr}";
+        } else {
+          lastMessage = isSender ? "you_sent_an_attachment".tr : 'sent_an_attachment'.tr;
+        }
       }
     }
 
-    return conversationUser != null ? Container(
-      margin: const EdgeInsets.symmetric(vertical: 5,horizontal: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-        color: isRead == 0 ? Theme.of(context).primaryColor.withValues(alpha:Get.isDarkMode?0.2:0.05) : Theme.of(context).cardColor.withValues(alpha:Get.isDarkMode?0.5:1),
-        boxShadow:  context.customThemeColors.lightShadow ,
-        border: Border.all(
-          color:  isRead == 0 ? Theme.of(context).primaryColor.withValues(alpha:0.5): Theme.of(context).cardColor,
-          width: 0.5
-        )
-      ),
-      child: Stack( children: [
+    if (conversationUser == null) return const SizedBox();
 
-        Padding(padding: const EdgeInsets.symmetric(horizontal : Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeDefault),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+    final String name =
+        isChannelAdmin ? "technical_support_team".tr : "${conversationUser.user?.firstName ?? ""} ${conversationUser.user?.lastName ?? ""}".trim();
 
-            Row(children: [
-              ClipRRect(borderRadius: BorderRadius.circular(50),
-                child: CustomImage(height: 45, width: 45,
-                  image: imageWithPath,
-                  placeholder: isAdmin ? Images.adminPlaceHolder : Images.userPlaceHolder,
-                ),
-              ),
+    final bool isUnread = isRead == 0;
+    final String time = _relativeTime(channelData.updatedAt ?? conversationUser.updatedAt);
 
-              const SizedBox(width: Dimensions.paddingSizeDefault,),
-
-              Expanded(child: Column(children: [
-                Column( crossAxisAlignment: CrossAxisAlignment.start, children: [
-
-                  Row( children: [
-                    Expanded(
-                      child: Text( isAdmin ? "admin".tr : "${ conversationUser.user?.firstName??""} ${ conversationUser.user?.lastName}",
-                        style: robotoBold.copyWith(
-                          fontSize: Dimensions.fontSizeLarge,
-                          color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.7)
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 10,),
-
-                    if( conversationUser.user?.userType == "super-admin") Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary.withValues(alpha:.2),
-                        borderRadius: const BorderRadius.all(Radius.circular(12.0)),
-                      ),
-                      child: Padding(
-                        padding:  const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall,vertical: 3),
-                        child: Text('support'.tr,style: robotoMedium.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontSize: Dimensions.fontSizeSmall,),
-                        ),
-                      ),
-                    ),
-                  ],),
-
-                  if(lastMessage!=null) Padding(padding: const EdgeInsets.only(top: Dimensions.paddingSizeExtraSmall -2),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(lastMessage.capitalizeFirst ?? "" ,
-                            style: isRead ==0 ?robotoMedium.copyWith(
-                              color: Theme.of(context).textTheme.bodySmall!.color!.withValues(alpha:0.7),
-                              fontSize: Dimensions.fontSizeDefault ,
-                            ) : robotoRegular.copyWith(
-                              color: Theme.of(context).textTheme.bodySmall!.color!.withValues(alpha:0.5),
-                              fontSize: Dimensions.fontSizeDefault ,
-                            ),
-                            maxLines: 1, overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-
-                        const SizedBox(width: Dimensions.paddingSizeSmall,),
-
-                        channelData.lastMessageSentUser == providerOwnerName ? Icon(Icons.done_all,
-                          color: isSeen ==1  && isRead == 1 ? Theme.of(context).primaryColor : Theme.of(context).hintColor.withValues(alpha:0.7),
-                          size: 20,
-                        ) : const SizedBox()
-                      ],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        final String image = conversationUser!.user?.userType == "super-admin"
+            ? (Get.find<SplashController>().configModel.content?.faviconFullPath ?? "")
+            : (conversationUser.user?.profileImageFullPath ?? "");
+        Get.toNamed(RouteHelper.getChatScreenRoute(
+          conversationUser.channelId ?? "",
+          name,
+          image,
+          conversationUser.user?.phone ?? "",
+          conversationUser.user?.userType ?? "",
+        ));
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),          child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          InkAvatar(name: name, size: 44),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Expanded(
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style:  TextStyle(
+                      fontSize: 14,
+                      height: 1.3,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.2,
+                      color: InkColors.foreground,
                     ),
                   ),
-
-                ],),
-              ],))
-            ],),
-            Text(DateConverter.dateMonthYearTime(DateConverter.isoUtcStringToLocalDate(conversationUser.updatedAt!)),
-              style: robotoRegular.copyWith(color:  Theme.of(context).hintColor, fontSize: Dimensions.fontSizeSmall + 1),
-              textDirection: TextDirection.ltr,
-            ),
-          ],),
-        ),
-
-        Positioned.fill(child: CustomInkWell(
-          radius: Dimensions.radiusDefault,
-          onTap:(){
-            String name = isAdmin ? "admin" : "${ conversationUser?.user?.firstName ?? ""} ${ conversationUser?.user?.lastName??""}";
-            String image = imageWithPath;
-            String phone =  conversationUser?.user?.phone??"";
-            String userType =  conversationUser?.user?.userType??"";
-            Get.toNamed(RouteHelper.getChatScreenRoute(
-                conversationUser?.channelId ?? "",name,image,phone,userType));
-          },
-        ),)
-
-
-      ],),
-
-    ) : const SizedBox();
+                ),
+                if (isChannelAdmin) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: InkColors.inkTint,
+                      borderRadius: BorderRadius.circular(50),
+                      border: Border.all(color: InkColors.inkLine),
+                    ),
+                    child: Text(
+                      'support'.tr.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 8.5,
+                        height: 1.2,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.6,
+                        color: InkColors.mutedForeground,
+                      ),
+                    ),
+                  ),
+                ],
+              ],),
+              const SizedBox(height: 4),
+              if (lastMessage != null)
+                Text(
+                  lastMessage.capitalizeFirst ?? "",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.3,
+                    fontWeight: isUnread ? FontWeight.w600 : FontWeight.w400,
+                    color: isUnread ? InkColors.foreground : InkColors.mutedForeground,
+                  ),
+                )
+              else
+                const SizedBox(height: 1),
+            ]),
+          ),
+          const SizedBox(width: 10),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
+            if (time.isNotEmpty)
+              Text(
+                time,
+                style:  TextStyle(fontSize: 10.5, height: 1.2, color: InkColors.mutedForeground),
+              ),
+            if (isUnread) ...[
+              if (time.isNotEmpty) const SizedBox(height: 5),
+              Container(
+                height: 8,
+                width: 8,
+                decoration:  BoxDecoration(color: InkColors.foreground, shape: BoxShape.circle),
+              ),
+            ],
+          ]),
+        ]),
+      ),
+    );
   }
 }
-

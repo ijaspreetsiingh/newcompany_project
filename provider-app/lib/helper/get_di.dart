@@ -21,6 +21,7 @@ Future<Map<String, Map<String, String>>> init() async{
   /// Repository
   Get.lazyPut(() => PostRepo(apiClient: Get.find()));
   Get.lazyPut(() => ConversationRepo(apiClient: Get.find()));
+  Get.lazyPut(() => RecheckRepo(apiClient: Get.find()));
   Get.lazyPut(() => SuggestServiceRepo(apiClient: Get.find()));
   Get.lazyPut(() => ReviewRepo(apiClient: Get.find()));
   Get.lazyPut(() => SplashRepo(sharedPreferences: Get.find(), apiClient: Get.find()));
@@ -34,6 +35,8 @@ Future<Map<String, Map<String, String>>> init() async{
   Get.lazyPut(() => UserRepo(Get.find(), apiClient: Get.find()));
   Get.lazyPut(() => BookingRequestRepo(apiClient: Get.find()));
   Get.lazyPut(() => AdvertisementRepo(apiClient: Get.find()));
+  Get.lazyPut(() => MyServicesRepo(apiClient: Get.find()));
+  Get.lazyPut(() => CategoryAssignmentRepo(apiClient: Get.find()));
   Get.lazyPut(() => SubscriptionRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
   Get.lazyPut(() => BusinessSettingRepo(apiClient: Get.find()));
   Get.lazyPut(() => NotificationSetupRepo(apiClient: Get.find()));
@@ -62,8 +65,11 @@ Future<Map<String, Map<String, String>>> init() async{
   Get.lazyPut(() => BookingDetailsController(bookingDetailsRepo: BookingDetailsRepo(apiClient: Get.find())));
   Get.lazyPut(() => BookingRequestController(bookingRequestRepo: Get.find()));
   Get.lazyPut(() => AdvertisementController(advertisementRepo: Get.find()));
+  Get.lazyPut(() => MyServicesController(myServicesRepo: Get.find()));
+  Get.lazyPut(() => CategoryAssignmentController(categoryAssignmentRepo: Get.find()));
   Get.lazyPut(() => ServicemanDetailsController(servicemanRepo: Get.find()));
   Get.lazyPut(() => ConversationController(conversationRepo: Get.find()));
+  Get.lazyPut(() => RecheckController(recheckRepo: Get.find()));
   Get.lazyPut(() => SuggestServiceController(suggestServiceRepo: Get.find()));
   Get.lazyPut(() => NotificationController(notificationRepo: Get.find()));
   Get.lazyPut(() => BusinessSubscriptionController(subscriptionRepo: SubscriptionRepo(apiClient: Get.find(), sharedPreferences: Get.find())));

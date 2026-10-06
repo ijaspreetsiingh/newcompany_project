@@ -56,7 +56,7 @@ class AddressFormBottomSheet extends StatefulWidget {
     required this.streetNode,
     required this.onSave,
     required this.isUpdate,
-    required this.bottomSheetExtent, // Required parameter
+    required this.bottomSheetExtent, // required parameter
   });
 
   @override
@@ -71,7 +71,7 @@ class _AddressFormBottomSheetState extends State<AddressFormBottomSheet> {
   final GlobalKey _bottomSheetWidgetKey = GlobalKey();
   final GlobalKey _buttonKey = GlobalKey();
 
-  // Dynamic initial size calculation
+  // Dynamic inttial size calculation
   double _currentExtent = 0.0; // Default fallback
   double _initialChildSize = 0.1; // Default fallback
   double _minChildSize = 0.25; // Default fallback
@@ -86,7 +86,7 @@ class _AddressFormBottomSheetState extends State<AddressFormBottomSheet> {
 
     // Measure height after the first frame renders
     SchedulerBinding.instance.addPostFrameCallback((_) {
-      _calculateInitialHeight();
+      _calculateinttialHeight();
     });
 
     _dragController.addListener(() {
@@ -98,7 +98,7 @@ class _AddressFormBottomSheetState extends State<AddressFormBottomSheet> {
 
         widget.bottomSheetExtent.value = _currentExtent;
 
-        // Close keyboard when user minimizes the bottom sheet
+        // Close keyboard when user mintmizes the bottom sheet
         if (previousExtent > 0.4 && _currentExtent <= 0.4) {
           _closeKeyboard();
         }
@@ -109,7 +109,7 @@ class _AddressFormBottomSheetState extends State<AddressFormBottomSheet> {
     _addFocusListeners();
   }
 
-  void _calculateInitialHeight() {
+  void _calculateinttialHeight() {
     final RenderBox? renderBox = _headerKey.currentContext?.findRenderObject() as RenderBox?;
     final RenderBox? bottomSheetRenderBox = _bottomSheetWidgetKey.currentContext?.findRenderObject() as RenderBox?;
     final RenderBox? buttonRenderBox = _buttonKey.currentContext?.findRenderObject() as RenderBox?;
@@ -517,3 +517,5 @@ class _BottomSheetContentWidget extends StatelessWidget {
     );
   }
 }
+
+

@@ -18,6 +18,14 @@ class ServiceCategoryController extends GetxController implements GetxService {
   bool _isPaginationLoading = false;
   int? subscriptionStatus;
 
+  /// Set when the category / sub-category API call fails (no server, no
+  /// internet, timeout) so the screen can show a retry option instead of an
+  /// endless loading shimmer.
+  bool _hasCategoryLoadFailed = false;
+  bool _hasSubCategoryLoadFailed = false;
+  bool get hasCategoryLoadFailed => _hasCategoryLoadFailed;
+  bool get hasSubCategoryLoadFailed => _hasSubCategoryLoadFailed;
+
   bool get isSubCategoryLoading => _isSubCategoryLoading;
   bool get isSubscriptionLoading => _isSubscriptionLoading;
   bool get isPaginationLoading => _isPaginationLoading;
@@ -65,8 +73,10 @@ class ServiceCategoryController extends GetxController implements GetxService {
     bool reloadSubcategory = false,
   }) async {
     serviceCategoryList = null;
+    _hasCategoryLoadFailed = false;
     Response response = await serviceRepo.getCategoryList();
     if (response.statusCode == 200) {
+      _hasCategoryLoadFailed = false;
       serviceCategoryList = [];
       List<dynamic> list = response.body['content']['data'];
       for (var category in list) {
@@ -78,6 +88,7 @@ class ServiceCategoryController extends GetxController implements GetxService {
         getSubCategoryList(offset: 1, isFromPagination: false);
       }
     } else {
+      _hasCategoryLoadFailed = true;
       ApiChecker.checkApi(response);
     }
     update();
@@ -95,6 +106,7 @@ class ServiceCategoryController extends GetxController implements GetxService {
     if (!isFromPagination) {
       serviceSubCategoryList = [];
       _isSubCategoryLoading = true;
+      _hasSubCategoryLoadFailed = false;
       update();
     }
     _isPaginationLoading = true;
@@ -105,6 +117,7 @@ class ServiceCategoryController extends GetxController implements GetxService {
       offset,
     );
     if (response.statusCode == 200) {
+      _hasSubCategoryLoadFailed = false;
       if (!isFromPagination) {
         serviceSubCategoryList = [];
       }
@@ -117,6 +130,7 @@ class ServiceCategoryController extends GetxController implements GetxService {
       }
       _pageSize = response.body['content']['last_page'];
     } else {
+      _hasSubCategoryLoadFailed = true;
       ApiChecker.checkApi(response);
     }
     _subcategoryApitHitCount--;

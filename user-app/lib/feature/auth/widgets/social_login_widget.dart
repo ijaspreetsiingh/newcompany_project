@@ -3,8 +3,8 @@ import 'package:jdds/feature/auth/widgets/social_login_button.dart';
 import 'package:get/get.dart';
 
 class SocialLoginWidget extends StatelessWidget {
-  final String? redirectUrl;
-  const SocialLoginWidget({super.key,  this.redirectUrl});
+  final String? redtrectUrl;
+  const SocialLoginWidget({super.key,  this.redtrectUrl});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,7 @@ class SocialLoginWidget extends StatelessWidget {
           return SocialLoginButton(
             title: "${'continue_with'.tr} ${socialLoginOption[index].name.tr}",
             socialLoginType: socialLoginOption[index],
-            redirectUrl: redirectUrl,
+            redtrectUrl: redtrectUrl,
             showPadding: false
           );},
           itemCount: socialLoginOption.length,
@@ -58,13 +58,13 @@ class SocialLoginWidget extends StatelessWidget {
             child: SocialLoginButton(
               title: "${socialLoginOption.length >= 2 ? "" : 'continue_with'.tr} ${ socialLoginOption.length <= 2 ? element.name.tr : ""}",
               socialLoginType: element,
-              redirectUrl: redirectUrl,
+              redtrectUrl: redtrectUrl,
               showPadding: (socialLoginOption.length-1) != socialLoginOption.indexOf(element),
             ),
           ) : SocialLoginButton(
             title: "${socialLoginOption.length >= 2 ? "" : 'continue_with'.tr} ${ socialLoginOption.length <= 2 ? element.name.tr : ""}",
             socialLoginType: element,
-            redirectUrl: redirectUrl,
+            redtrectUrl: redtrectUrl,
             showPadding: (socialLoginOption.length-1) != socialLoginOption.indexOf(element),
           );
         }).toList())
@@ -72,3 +72,5 @@ class SocialLoginWidget extends StatelessWidget {
     );
   }
 }
+
+

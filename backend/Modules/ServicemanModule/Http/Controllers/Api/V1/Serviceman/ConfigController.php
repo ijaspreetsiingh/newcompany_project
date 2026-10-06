@@ -164,7 +164,7 @@ class ConfigController extends Controller
         $searchText = $request->input('search_text');
         $url = 'https://nominatim.openstreetmap.org/search?q=' . urlencode($searchText) . '&format=json&limit=8&addressdetails=1';
         $response = Http::withHeaders([
-            'User-Agent' => 'JassBookingServiceApp/1.0',
+            'User-Agent' => 'YOVOWorkerApp/1.0',
             'Accept-Language' => 'en',
         ])->get($url);
 
@@ -210,7 +210,7 @@ class ConfigController extends Controller
         $url = "https://router.project-osrm.org/route/v1/driving/{$originLng},{$originLat};{$destLng},{$destLat}?overview=false";
 
         $response = Http::withHeaders([
-            'User-Agent' => 'JassBookingServiceApp/1.0',
+            'User-Agent' => 'YOVOWorkerApp/1.0',
         ])->get($url);
 
         $data = $response->json();
@@ -284,7 +284,7 @@ class ConfigController extends Controller
         $placeId = $request['placeid'];
         $url = "https://nominatim.openstreetmap.org/lookup?osm_ids={$placeId}&format=json&addressdetails=1&extratags=1";
         $response = Http::withHeaders([
-            'User-Agent' => 'JassBookingServiceApp/1.0',
+            'User-Agent' => 'YOVOWorkerApp/1.0',
             'Accept-Language' => 'en',
         ])->get($url);
 
@@ -382,7 +382,7 @@ class ConfigController extends Controller
 
         $url = "https://nominatim.openstreetmap.org/reverse?lat={$request->lat}&lon={$request->lng}&format=json&addressdetails=1&zoom=18";
         $response = Http::withHeaders([
-            'User-Agent' => 'JassBookingServiceApp/1.0',
+            'User-Agent' => 'YOVOWorkerApp/1.0',
             'Accept-Language' => 'en',
         ])->get($url);
 
@@ -478,3 +478,5 @@ class ConfigController extends Controller
         return response()->json(response_formatter(DEFAULT_200, $distance), 200);
     }
 }
+
+

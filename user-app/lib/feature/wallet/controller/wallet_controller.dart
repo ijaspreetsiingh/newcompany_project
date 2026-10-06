@@ -77,7 +77,7 @@ class WalletController extends GetxController{
 
   Future<void> addFundToWallet(double amount, String paymentMethod) async {
 
-    customSnackBar("message", customWidget: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+    customSnackBar("message", CustomWidget: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
       const Icon(Icons.check_circle, color: Colors.white70,),
       const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
       Text("fund_added_successfully".tr, style: robotoRegular.copyWith(color: Colors.white70,),)
@@ -136,3 +136,5 @@ class WalletController extends GetxController{
     return walletRepo.getWalletAccessToken();
   }
 }
+
+

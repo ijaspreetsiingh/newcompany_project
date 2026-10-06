@@ -41,3 +41,4 @@ class CustomerInfoCard extends GetView<UserController> {
     );
   }
 }
+

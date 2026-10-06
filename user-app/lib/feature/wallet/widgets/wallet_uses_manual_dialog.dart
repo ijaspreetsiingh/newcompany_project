@@ -10,7 +10,7 @@ class WalletUsesManualDialog extends StatelessWidget {
     List<String> noteList =[
       "earn_money_to_your_wallet_by_completing_the_offer".tr,
       "convert_your_loyalty_point_into_wallet_money".tr,
-      "admin_also_reward_their_top_customer_with_wallet_money".tr,
+      "admin_also_reward_thetr_top_customer_with_wallet_money".tr,
       "send_your_wallet_money_while_order".tr
     ];
 
@@ -64,5 +64,6 @@ class WalletUsesManualDialog extends StatelessWidget {
     });
   }
 }
+
 
 

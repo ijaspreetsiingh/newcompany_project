@@ -33,6 +33,7 @@ Future<Map<String, Map<String, String>>> init() async{
   Get.lazyPut(() => ConversationController(conversationRepo: Get.find()));
   Get.lazyPut(() => NotificationController(notificationRepo: Get.find()));
   Get.lazyPut(() => BookingRequestController(bookingRequestRepo: Get.find()));
+  Get.lazyPut(() => RecheckController(bookingRequestRepo: Get.find()));
   Get.lazyPut(() => UserController(userRepo: Get.find()));
   Get.lazyPut(() => HtmlViewController(htmlRepository: Get.find()));
   Get.lazyPut(() => LocationService());

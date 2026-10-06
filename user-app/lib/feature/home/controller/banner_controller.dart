@@ -1,4 +1,4 @@
-import 'package:jdds/api/local/cache_response.dart';
+﻿import 'package:jdds/api/local/cache_response.dart';
 import 'package:jdds/helper/data_sync_helper.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
@@ -57,7 +57,7 @@ class BannerController extends GetxController implements GetxService {
         Get.toNamed(RouteHelper.getServiceRoute(resourceID));
         break;
       case 'slider':
-        /// Admin ne banner-settings se redirect link diya hai to kholo
+        /// Admin ne banner-settings se redtrect link diya hai to kholo
         if (link.isNotEmpty && await canLaunchUrl(Uri.parse(link))) {
           await launchUrl(Uri.parse(link), mode: LaunchMode.externalApplication);
         }
@@ -70,3 +70,5 @@ class BannerController extends GetxController implements GetxService {
     }
   }
 }
+
+

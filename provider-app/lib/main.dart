@@ -74,6 +74,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<ThemeController>(builder: (themeController) {
+      InkColors.setDarkMode(themeController.darkTheme);
       return GetBuilder<LocalizationController>(builder: (localizeController) {
         return GetMaterialApp(
           routingCallback: (route){

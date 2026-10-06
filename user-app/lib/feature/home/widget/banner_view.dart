@@ -137,9 +137,11 @@ class BannerView extends StatelessWidget {
     bannerController.navigateFromBanner(
       banner.resourceType ?? '',
       banner.id ?? '',
-      banner.redirectLink ?? '',
+      banner.redtrectLink ?? '',
       banner.resourceId ?? '',
       categoryName: banner.category?.name ?? '',
     );
   }
 }
+
+

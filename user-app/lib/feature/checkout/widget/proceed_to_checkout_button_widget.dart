@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:jdds/util/core_export.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ProceedToCheckoutButtonWidget extends StatefulWidget {
   final String pageState;
@@ -9,12 +10,16 @@ class ProceedToCheckoutButtonWidget extends StatefulWidget {
   const ProceedToCheckoutButtonWidget({super.key, required this.pageState, required this.addressId}) ;
 
   @override
-  State<ProceedToCheckoutButtonWidget> createState() => _ProceedToCheckoutButtonWidgetState();
+  State<ProceedToCheckoutButtonWidget> createState() => _ProceedToCheckoutButtonwidgetstate();
 }
 
-class _ProceedToCheckoutButtonWidgetState extends State<ProceedToCheckoutButtonWidget> {
+class _ProceedToCheckoutButtonwidgetstate extends State<ProceedToCheckoutButtonWidget> {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
+
     return GetBuilder<ScheduleController>(builder: (scheduleController){
       return GetBuilder<CartController>(builder: (cartController){
 
@@ -29,30 +34,31 @@ class _ProceedToCheckoutButtonWidgetState extends State<ProceedToCheckoutButtonW
 
 
         return GetBuilder<CheckOutController>(builder: (checkoutController){
-          return Padding( padding: const EdgeInsets.symmetric(horizontal : Dimensions.paddingSizeDefault),
-            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [ Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+          return Padding(padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [ Padding(padding: const EdgeInsets.all(8),
 
               child: Center(child: Row(mainAxisAlignment: MainAxisAlignment.center, children:[
-                Text("total_price".tr, style: robotoRegular.copyWith(
-                  fontSize: Dimensions.fontSizeDefault , color: Theme.of(context).textTheme.bodyLarge!.color,
+                Text("total_price".tr, style: GoogleFonts.dmSans(
+                  fontSize: 12, color: mutedColor,
                 )),
-                const SizedBox(width: 5,),
+                const SizedBox(width: 8),
                 Directionality(
                   textDirection: TextDirection.ltr,
                   child: Text(PriceConverter.convertPrice(totalAmount),
-                    style: robotoBold.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                      fontSize: Dimensions.fontSizeDefault,
+                    style: GoogleFonts.manrope(
+                      color: primaryColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
               ]))),
 
               CustomButton(
-                height: 50,
-                radius: Dimensions.radiusDefault,
+                height: 52,
+                radius: 16,
                 isLoading: checkoutController.isLoading,
-                fontSize: Dimensions.fontSizeDefault + 1,
+                fontSize: 14,
                 buttonText: cartController.cartList.isEmpty ? "empty_cart_go_back".tr : (widget.pageState == "orderDetails" && checkoutController.currentPageState == PageState.orderDetails) ? "make_payment".tr : 'confirm_booking'.tr,
                 onPressed : (widget.pageState == "payment" || checkoutController.currentPageState == PageState.payment) && checkoutController.othersPaymentList.isEmpty && checkoutController.digitalPaymentList.isEmpty ? null : () {
                   if(errorText !=null && scheduleController.selectedScheduleType != ScheduleType.asap ){
@@ -168,7 +174,7 @@ class _ProceedToCheckoutButtonWidgetState extends State<ProceedToCheckoutButtonW
                         );
                       }
                       else if(cartController.walletPaymentStatus && isPartialPayment && checkoutController.selectedPaymentMethod == PaymentMethodName.walletMoney){
-                        customSnackBar("select_another_payment_method_to_pay_remaining_bill".tr, type: ToasterMessageType.info);
+                        customSnackBar("select_another_payment_method_to_pay_remaintng_bill".tr, type: ToasterMessageType.info);
                       }
                       else if(checkoutController.selectedPaymentMethod == PaymentMethodName.none){
                         customSnackBar("select_payment_method".tr, type: ToasterMessageType.info);
@@ -245,7 +251,7 @@ class _ProceedToCheckoutButtonWidgetState extends State<ProceedToCheckoutButtonW
     String? path = html.window.location.pathname;
     SignUpBody? newUserInfo = CheckoutHelper.getNewUserInfo(address: address, password: checkoutController.passwordController.text, isCheckedCreateAccount: checkoutController.isCheckedCreateAccount);
 
-    String? schedule = Get.find<ScheduleController>().scheduleTime;
+String? schedule = Get.find<ScheduleController>().scheduleTime;
     String userId = Get.find<UserController>().userInfoModel?.id?? Get.find<SplashController>().getGuestId();
     String encodedAddress = base64Encode(utf8.encode(jsonEncode(address?.toJson())));
     String encodedNewUserInfo = base64Encode(utf8.encode(jsonEncode(newUserInfo?.toJson())));
@@ -257,10 +263,20 @@ class _ProceedToCheckoutButtonWidgetState extends State<ProceedToCheckoutButtonW
     int isPartial = Get.find<CartController>().walletPaymentStatus && isPartialPayment ? 1 : 0;
     String platform = ResponsiveHelper.isWeb() ? "web" : "app" ;
 
+    // Get provider commission settings
+    String? commissionStatus;
+    int? commissionPercentage;
+    if (Get.find<CartController>().cartList.isNotEmpty &&
+        Get.find<CartController>().cartList[0].provider != null) {
+      commissionStatus = Get.find<CartController>().cartList[0].provider!.commissionStatus?.toString();
+      commissionPercentage = Get.find<CartController>().cartList[0].provider!.commissionPercentage;
+    }
+
     url = '${AppConstants.baseUrl}/payment?payment_method=${paymentMethod?.gateway}&access_token=${base64Url.encode(utf8.encode(userId))}&zone_id=$zoneId'
         '&service_schedule=$schedule&service_address_id=$addressId&callback=$callbackUrl'
         '&service_address=$encodedAddress&new_user_info=$encodedNewUserInfo&is_partial=$isPartial'
-        '&payment_platform=$platform&service_location=$serviceLocation';
+        '&payment_platform=$platform&service_location=$serviceLocation'
+        '&commission_status=$commissionStatus&commission_percentage=${commissionPercentage?.toString() ?? ''}';
 
     if (GetPlatform.isWeb) {
       printLog("url_with_digital_payment:$url");
@@ -271,3 +287,6 @@ class _ProceedToCheckoutButtonWidgetState extends State<ProceedToCheckoutButtonW
     }
   }
 }
+
+
+

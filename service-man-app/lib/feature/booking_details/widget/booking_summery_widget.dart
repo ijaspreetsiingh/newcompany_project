@@ -34,441 +34,197 @@ class BookingSummeryView extends StatelessWidget{
       double dueAmount = totalBookingAmount - paidAmount;
       double additionalCharge = isPartialPayment ? totalBookingAmount - paidAmount : bookingDetails.additionalCharge ?? 0;
 
+      Widget amountRow(String label, String value, {bool grand = false}) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: grand ? 0 : 12),
+          child: Row(children: [
+            Expanded(
+              child: Text(label,
+                overflow: TextOverflow.ellipsis,
+                style: grand
+                    ? robotoBold.copyWith(fontSize: 16, color: context.kForeground)
+                    : robotoRegular.copyWith(fontSize: 12, color: context.kMutedForeground),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: Text(value,
+                style: grand
+                    ? robotoBold.copyWith(fontSize: 16, color: context.kForeground)
+                    : robotoMedium.copyWith(fontSize: 14, color: context.kForeground),
+              ),
+            ),
+          ]),
+        );
+      }
+
+      Widget divider() => Container(height: 1, color: context.kBorder, margin: const EdgeInsets.symmetric(vertical: 12));
+
+      Widget totalBox(Widget child) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+        decoration: BoxDecoration(
+          color: context.kBackground,
+          borderRadius: BorderRadius.circular(kRadiusMd),
+          border: Border.all(color: context.kInputBorder, width: 1),
+        ),
+        child: child,
+      );
+
+      Widget dueRowAmount(double amount) => amountRow(
+        "${(bookingDetails.bookingStatus == "pending"  || bookingDetails.bookingStatus == "accepted" || bookingDetails.bookingStatus == "ongoing")
+            ? "due_amount".tr : "paid_amount".tr} (${"cash_after_service".tr})",
+        PriceConverter.convertPrice(amount, isShowLongPrice: true),
+      );
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-        Padding(padding: const EdgeInsets.symmetric(horizontal:Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeSmall),
-          child: Text("booking_summary".tr,
-            style:robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge,
-              color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9),
-            ),
-          ),
-        ),
+        SectionHeader(title: "booking_summary".tr),
 
-        Container(
-          decoration: BoxDecoration(color: Theme.of(context).cardColor, boxShadow: Get.find<ThemeController>().darkTheme ? null : lightShadow),
+        const SizedBox(height: 12),
+
+        KCard(
+          padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-            const SizedBox(height: Dimensions.paddingSizeDefault,),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Text("service_info".tr, style: robotoBold.copyWith(fontSize: 12, color: context.kMutedForeground)),
+              Text("price".tr, style: robotoBold.copyWith(fontSize: 12, color: context.kMutedForeground)),
+            ]),
 
-            Container(
-              color: Theme.of(context).primaryColor.withValues(alpha:0.05),
-              padding: const EdgeInsets.symmetric(horizontal: 7),
-              margin:  const EdgeInsets.symmetric(horizontal: 8),
-              height: 40,
-              child:  Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("service_info".tr, style:robotoBold.copyWith(
-                      fontSize: Dimensions.fontSizeLarge ,
-                      color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8), decoration: TextDecoration.none)
-                  ),
-                  Text("price".tr,style:robotoBold.copyWith(
-                      fontSize: Dimensions.fontSizeLarge,
-                      color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),decoration: TextDecoration.none)
-                  ),
-                ],
+            const SizedBox(height: 12),
+
+            for (int index = 0; index < (bookingDetails.details?.length ?? 0); index++)
+              ServiceInfoItem(
+                bookingService : bookingDetails.details?[index],
+                bookingDetailsController: bookingDetailsController,
+                index: index,
               ),
-            ),
 
-            const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: Column(children: [
-                ListView.builder(
-                  itemCount: bookingDetails.details?.length,
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: EdgeInsets.zero,
-                  shrinkWrap: true,
-                  itemBuilder: (context,index){
-                    return ServiceInfoItem(
-                      bookingService : bookingDetails.details?[index],
-                      bookingDetailsController: bookingDetailsController,
-                      index: index,
-                    );},
-                ),
+            divider(),
 
-                const Padding(
-                  padding: EdgeInsets.symmetric( vertical: Dimensions.paddingSizeDefault),
-                  child: Divider(height: 2, color: Colors.grey,),
-                ),
+            amountRow("subtotal_vat_ex".tr, PriceConverter.convertPrice(subTotal, isShowLongPrice:true)),
+            amountRow("service_discount".tr, "(-) ${PriceConverter.convertPrice(totalDiscount, isShowLongPrice:true)}"),
+            amountRow("coupon_discount".tr, "(-) ${PriceConverter.convertPrice(double.tryParse(bookingDetails.totalCouponDiscountAmount ?? ""), isShowLongPrice:true)}"),
 
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text("subtotal_vat_ex".tr,style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                          color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9)
-                      ),overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: Dimensions.paddingSizeDefault,),
-                    Text(PriceConverter.convertPrice(subTotal, isShowLongPrice:true),
-                      style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                          color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9)
-                      ),
-                    ),
+            if(bookingDetails.totalReferralDiscountAmount != null && bookingDetails.totalReferralDiscountAmount! > 0)
+              amountRow('referral_discount'.tr, '(-) ${PriceConverter.convertPrice(bookingDetails.totalReferralDiscountAmount ?? 0)}'),
+
+            amountRow("service_tax".tr, "(+) ${PriceConverter.convertPrice( bookingDetails.totalTaxAmount ?? 0, isShowLongPrice:true)}"),
+
+            if(bookingDetails.extraFee != null && bookingDetails.extraFee! > 0)
+              amountRow(
+                Get.find<SplashController>().configModel?.content?.additionalChargeLabelName ?? "",
+                "(+) ${PriceConverter.convertPrice( bookingDetails.extraFee ?? 0, isShowLongPrice:true)}",
+              ),
+
+            divider(),
+
+            if(!isPartialPayment && bookingDetails.paymentMethod != "wallet_payment")
+              (additionalCharge == 0) ||  bookingDetails.paymentMethod == "cash_after_service" ?
+              amountRow('grand_total'.tr, PriceConverter.convertPrice(bookingDetails.totalBookingAmount ?? 0, isShowLongPrice: true), grand: true)
+              :
+              Padding(
+                padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeExtraSmall),
+                child: totalBox(Column(children: [
+                  amountRow('grand_total'.tr, PriceConverter.convertPrice( totalBookingAmount ,isShowLongPrice: true), grand: true),
+                  if(additionalCharge > 0 ) ...[
+                    const SizedBox(height: Dimensions.paddingSizeSmall),
+                    dueRowAmount(additionalCharge),
                   ],
-                ),
+                ])),
+              )
+            else if(!isPartialPayment && bookingDetails.paymentMethod == "wallet_payment")
+              totalBox(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                amountRow('grand_total'.tr, PriceConverter.convertPrice(bookingDetails.totalBookingAmount ?? 0, isShowLongPrice: true), grand: true),
 
+                const SizedBox(height: Dimensions.paddingSizeSmall),
 
-                const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
-                Row(
-
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Text("service_discount".tr,style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                              color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9)
-                          ),overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
-
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: Dimensions.paddingSizeDefault,),
-                    Text("(-) ${PriceConverter.convertPrice(totalDiscount, isShowLongPrice:true)}",
-                      style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                          color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9)
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
-                Row(
-
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Text("coupon_discount".tr,style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                              color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9)
-                          ),overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: Dimensions.paddingSizeDefault,),
-                    Text("(-) ${PriceConverter.convertPrice(
-                        double.tryParse(bookingDetails.totalCouponDiscountAmount!),
-                        isShowLongPrice:true)}",
-                      style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                          color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9)
-                      ),
-                    ),
-                  ],
-                ),
-
-                if(bookingDetails.totalReferralDiscountAmount != null && bookingDetails.totalReferralDiscountAmount! > 0)
-                  const SizedBox(height: Dimensions.paddingSizeSmall),
-
-                if(bookingDetails.totalReferralDiscountAmount != null && bookingDetails.totalReferralDiscountAmount! > 0)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'referral_discount'.tr,
-                        style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color),
-                        overflow: TextOverflow.ellipsis,),
-                      Directionality(
-                        textDirection: TextDirection.ltr,
-                        child: Text('(-) ${PriceConverter.convertPrice(bookingDetails.totalReferralDiscountAmount ?? 0)}',
-                            style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color!)),
-                      ),
-                    ],
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
+                  decoration: BoxDecoration(
+                    color: context.kMuted,
+                    borderRadius: BorderRadius.circular(kRadiusSm),
                   ),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start ,children: [
 
-                const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
-                Row(
-
-                  children: [
-                    Expanded(
-                      child: Text("service_tax".tr,style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                          color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9)
-                      ),overflow: TextOverflow.ellipsis,
-                      ),
+                    Text( (bookingDetails.additionalCharge! <= 0) ? 'total_order_amount_has_been_paid_by_customer'.tr : "has_been_paid_by_customer".tr,
+                      style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall, color: context.kMutedForeground),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(width: Dimensions.paddingSizeDefault,),
-                    Text("(+) ${PriceConverter.convertPrice( bookingDetails.totalTaxAmount ?? 0,
-                        isShowLongPrice:true)}",
-                      style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                          color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9)
-                      ),
-                    ),
-                  ],
-                ),
 
-
-                if(bookingDetails.extraFee != null && bookingDetails.extraFee! > 0)
-                  Padding(
-                    padding: const EdgeInsets.only(top: Dimensions.paddingSizeExtraSmall),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text( Get.find<SplashController>().configModel?.content?.additionalChargeLabelName ?? "",style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                              color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9)
-                          ),overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: Dimensions.paddingSizeDefault,),
-                        Text("(+) ${PriceConverter.convertPrice( bookingDetails.extraFee ?? 0,
-                            isShowLongPrice:true)}",
-                          style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                              color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9)
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                const SizedBox(height : Dimensions.paddingSizeSmall),
-                const Divider(height: 2, color: Colors.grey,),
-                const SizedBox( height:Dimensions.paddingSizeExtraSmall),
-
-                !isPartialPayment && bookingDetails.paymentMethod != "wallet_payment" ? (additionalCharge == 0) ||  bookingDetails.paymentMethod == "cash_after_service" ?
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Text('grand_total'.tr,
-                    style: robotoBold.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).primaryColor),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: Text(
-                      PriceConverter.convertPrice(bookingDetails.totalBookingAmount ?? 0,isShowLongPrice: true),
-                      style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).primaryColor),),
-                  ),
-                ],) : Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-                  child: DottedBorder(
-                    options: RoundedRectDottedBorderOptions(
-                      radius: const Radius.circular(Dimensions.radiusDefault),
-                      color: Theme.of(context).colorScheme.primary,
-                      strokeWidth: 1.1,
-                      dashPattern: const [8, 4],
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withValues(alpha:0.02),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal : Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeSmall),
-                      child: Column(
-                        children: [
-
-                          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                            Text('grand_total'.tr,
-                              style: robotoBold.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).primaryColor),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Directionality(
-                              textDirection: TextDirection.ltr,
-                              child: Text(
-                                PriceConverter.convertPrice( totalBookingAmount ,isShowLongPrice: true),
-                                style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault, color : Theme.of(context).primaryColor)),
-                            ),
-                          ],),
-
-                          const SizedBox(height: Dimensions.paddingSizeSmall,),
-
-
-                          additionalCharge > 0 ?
-                          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                            Text("${(bookingDetails.bookingStatus == "pending"  || bookingDetails.bookingStatus == "accepted" || bookingDetails.bookingStatus == "ongoing")
-                                ? "due_amount".tr : "paid_amount".tr} (${"cash_after_service".tr})",
-                              style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
-                              overflow: TextOverflow.ellipsis,),
-                            Directionality(
-                              textDirection: TextDirection.ltr,
-                              child: Text( PriceConverter.convertPrice (additionalCharge, isShowLongPrice: true),
-                                style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color),),
-                            )]
-                          ): const SizedBox()
-                        ],
-                      ),
-                    ),
-                  ),
-                ) :
-
-                !isPartialPayment && bookingDetails.paymentMethod == "wallet_payment" ?
-                Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-                  child: Column( children: [
+                    const SizedBox(height: Dimensions.paddingSizeSmall),
 
                     Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                      Text('grand_total'.tr,
-                        style: robotoBold.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).colorScheme.primary,),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      Row(children: [
+                        Image.asset(Images.walletSmall, width: 17,),
+                        const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
+                        Text( 'via_wallet'.tr,
+                          style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: context.kMutedForeground),
+                          overflow: TextOverflow.ellipsis,),
+                      ],),
                       Directionality(
                         textDirection: TextDirection.ltr,
                         child: Text(
-                            PriceConverter.convertPrice(bookingDetails.totalBookingAmount ?? 0,isShowLongPrice: true),
-                            style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).colorScheme.primary,)),
+                          PriceConverter.convertPrice( paidAmount ,isShowLongPrice: true),
+                          style: robotoMedium.copyWith(fontSize: 14, color: context.kForeground),),
                       ),
-                    ],),
+                    ]),
 
-                    const SizedBox(height: Dimensions.paddingSizeSmall,),
+                    if(additionalCharge > 0 )
+                      dueRowAmount(additionalCharge),
 
-                    DottedBorder(
-                      options: RoundedRectDottedBorderOptions(
-                        radius: const Radius.circular(Dimensions.radiusDefault),
-                        color: Theme.of(context).colorScheme.primary,
-                        strokeWidth: 1.1,
-                        dashPattern: const [8, 4],
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withValues(alpha:0.02),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal : Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeSmall),
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start ,children: [
-
-                          Text( (bookingDetails.additionalCharge! <= 0) ? 'total_order_amount_has_been_paid_by_customer'.tr : "has_been_paid_by_customer".tr,
-                            style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).colorScheme.primary,),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-
-                          const SizedBox(height: Dimensions.paddingSizeSmall,),
-
-                          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                            Row(children: [
-
-                              Image.asset(Images.walletSmall,width: 17,),
-                              const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
-                              Text( 'via_wallet'.tr,
-                                style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
-                                overflow: TextOverflow.ellipsis,),
-                            ],),
-                            Directionality(
-                              textDirection: TextDirection.ltr,
-                              child: Text(
-                                PriceConverter.convertPrice( paidAmount ,isShowLongPrice: true),
-                                style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color),),
-                            )]
-                          ),
-
-                          if(additionalCharge > 0 )
-                            Padding( padding: const EdgeInsets.only(top : 8.0),
-                              child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                                Text("${(bookingDetails.bookingStatus == "pending"  || bookingDetails.bookingStatus == "accepted" || bookingDetails.bookingStatus == "ongoing")
-                                    ? "due_amount".tr : "paid_amount".tr} (${"cash_after_service".tr})",
-                                  style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
-                                  overflow: TextOverflow.ellipsis,),
-                                Directionality(
-                                  textDirection: TextDirection.ltr,
-                                  child: Text(
-                                    PriceConverter.convertPrice( additionalCharge, isShowLongPrice: true),
-                                    style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color),),
-                                )]
-                              ),
-                            )
-
-                        ]),
-                      ),
-                    ),
                   ]),
-                )  :
-
-                isPartialPayment ?
-                Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-                  child: DottedBorder(
-                    options: RoundedRectDottedBorderOptions(
-                      radius: const Radius.circular(Dimensions.radiusDefault),
-                      color: Theme.of(context).colorScheme.primary,
-                      strokeWidth: 1.1,
-                      dashPattern: const [8, 4],
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withValues(alpha:0.02),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal : Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeSmall),
-                      child: Column(
-                        children: [
-
-                          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                            Text('grand_total'.tr,
-                              style: robotoBold.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).colorScheme.primary,),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Directionality(
-                              textDirection: TextDirection.ltr,
-                              child: Text(
-                                PriceConverter.convertPrice( totalBookingAmount, isShowLongPrice: true),
-                                style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault, color : Theme.of(context).colorScheme.primary,),),
-                            ),
-                          ],),
-
-                          const SizedBox(height: Dimensions.paddingSizeSmall,),
-
-                          ListView.builder(itemBuilder: (context, index){
-                            String payWith = bookingDetails.partialPayments?[index].paidWith ?? "";
-
-                            return  Padding(padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeExtraSmall),
-                              child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                                Row(children: [
-
-                                  Image.asset(Images.walletSmall, width: 15,),
-
-                                  const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
-
-                                  Text( '${ payWith == "cash_after_service" ? "paid_amount".tr : payWith == "digital" && bookingDetails.paymentMethod == "offline_payment" ? ""  :'paid_by'.tr} ''${payWith == "digital" ? "${bookingDetails.paymentMethod}".tr : (payWith == "cash_after_service" ? "(${'cash_after_service'.tr})" : payWith).tr }',
-                                    style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
-                                    overflow: TextOverflow.ellipsis,),
-                                ],),
-                                Directionality(
-                                  textDirection: TextDirection.ltr,
-                                  child: Text(
-                                    PriceConverter.convertPrice( bookingDetails.partialPayments?[index].paidAmount ?? 0,isShowLongPrice: true),
-                                    style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color),),
-                                )]),
-                            );
-                          },itemCount: bookingDetails.partialPayments?.length,
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                          ),
-
-                          bookingDetails.partialPayments?.length == 1 && dueAmount > 0 ?
-                          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                            Text("${(bookingDetails.bookingStatus == "pending"  || bookingDetails.bookingStatus == "accepted" || bookingDetails.bookingStatus == "ongoing")
-                                ? "due_amount".tr : "paid_amount".tr} (${"cash_after_service".tr})",
-                              style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodyLarge!.color),
-                              overflow: TextOverflow.ellipsis,),
-                            Directionality(
-                              textDirection: TextDirection.ltr,
-                              child: Text(
-                                PriceConverter.convertPrice( dueAmount, isShowLongPrice: true),
-                                style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).textTheme.bodyLarge!.color),),
-                            )]) : const SizedBox(),
-
-                        ],
-                      ),
-                    ),
-                  ),
-                ) : Padding(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Text('grand_total'.tr,
-                      style: robotoBold.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).primaryColor),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Directionality(
-                      textDirection: TextDirection.ltr,
-                      child: Text(
-                        PriceConverter.convertPrice( totalBookingAmount,isShowLongPrice: true),
-                        style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).primaryColor),),
-                    ),
-                  ],),
                 ),
+              ]))
+            else if(isPartialPayment)
+              totalBox(Column(children: [
+                amountRow('grand_total'.tr, PriceConverter.convertPrice( totalBookingAmount, isShowLongPrice: true), grand: true),
 
+                const SizedBox(height: Dimensions.paddingSizeSmall),
 
-                const SizedBox(height: Dimensions.paddingSizeSmall,),
-              ]),
-            )
+                for (int index = 0; index < (bookingDetails.partialPayments?.length ?? 0); index++)
+                  _partialPaymentRow(context, bookingDetails, index),
+
+                if(bookingDetails.partialPayments?.length == 1 && dueAmount > 0)
+                  dueRowAmount(dueAmount),
+
+              ]))
+            else
+              amountRow('grand_total'.tr, PriceConverter.convertPrice( totalBookingAmount, isShowLongPrice: true), grand: true),
+
           ]),
         ),
       ],
       );
     },
+    );
+  }
+
+  Widget _partialPaymentRow(BuildContext context, BookingDetailsContent bookingDetails, int index) {
+    String payWith = bookingDetails.partialPayments?[index].paidWith ?? "";
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeExtraSmall),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Row(children: [
+          Image.asset(Images.walletSmall, width: 15,),
+          const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
+          Flexible(
+            child: Text( '${ payWith == "cash_after_service" ? "paid_amount".tr : payWith == "digital" && bookingDetails.paymentMethod == "offline_payment" ? ""  :'paid_by'.tr} ''${payWith == "digital" ? "${bookingDetails.paymentMethod}".tr : (payWith == "cash_after_service" ? "(${'cash_after_service'.tr})" : payWith).tr }',
+              style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: context.kMutedForeground),
+              overflow: TextOverflow.ellipsis,),
+          ),
+        ]),
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Text(
+            PriceConverter.convertPrice( bookingDetails.partialPayments?[index].paidAmount ?? 0,isShowLongPrice: true),
+            style: robotoMedium.copyWith(fontSize: 14, color: context.kForeground),),
+        )]),
     );
   }
 }
@@ -484,103 +240,70 @@ class ServiceInfoItem extends StatelessWidget {
     required this.index});
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeDefault),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
 
-
-        const SizedBox(height:Dimensions.paddingSizeSmall),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Expanded(
-              child: Text(bookingService?.serviceName??"",
-                style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                    color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9)
-                ),
-                overflow: TextOverflow.ellipsis,
-              )
-          ),
-          const SizedBox(width: Dimensions.paddingSizeDefault,),
-          Text(PriceConverter.convertPrice(BookingHelper.getBookingServiceUnitConst(bookingService), isShowLongPrice:true,),
-            style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
-                color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Expanded(
+                child: Text(bookingService?.serviceName??"",
+                  style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault, color: context.kForeground),
+                  overflow: TextOverflow.ellipsis,
+                )
             ),
+            const SizedBox(width: Dimensions.paddingSizeDefault,),
+            Text(PriceConverter.convertPrice(BookingHelper.getBookingServiceUnitConst(bookingService), isShowLongPrice:true,),
+              style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault, color: context.kForeground),
+            ),
+          ],
           ),
-        ],
-        ),
-        const SizedBox(height: Dimensions.paddingSizeExtraSmall-2,),
 
-        if(bookingService?.variantKey!=null)
-          Padding(padding: const EdgeInsets.only( bottom: Dimensions.paddingSizeExtraSmall),
-            child: Row(children: [
+          if(bookingService?.variantKey!=null)
+            Padding(padding: const EdgeInsets.only( top: Dimensions.paddingSizeExtraSmall),
+              child: Row(children: [
 
-              Text(bookingService?.variantKey?.replaceAll("-", " ").capitalizeFirst ?? "",
-                style: robotoRegular.copyWith(
-                    fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.7)
-                ),
-              ),
-
-              Container(
-                height: 10, width: 0.5,
-                color: Theme.of(context).hintColor,
-                margin : const EdgeInsets.only(left : Dimensions.paddingSizeSmall, right:  Dimensions.paddingSizeSmall, top: 5),
-              ),
-
-              Row(children: [
-                Text("${"qty".tr} : ${bookingService?.quantity}",
-                  style: robotoRegular.copyWith(
-                    fontSize: Dimensions.fontSizeSmall,
-                    color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.7),
+                Flexible(
+                  child: Text(bookingService?.variantKey?.replaceAll("-", " ").capitalizeFirst ?? "",
+                    style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: context.kMutedForeground),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
+
+                Container(
+                  height: 10, width: 0.5,
+                  color: context.kBorder,
+                  margin : const EdgeInsets.only(left : Dimensions.paddingSizeSmall, right:  Dimensions.paddingSizeSmall, top: 5),
+                ),
+
+                Text("${"qty".tr} : ${bookingService?.quantity}",
+                  style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: context.kMutedForeground),
+                ),
+
               ]),
+            ),
 
-            ]),
-          ),
+          priceText("unit_price".tr, bookingService?.serviceCost??"0", context),
 
-
-        priceText("unit_price".tr, bookingService?.serviceCost??"0", context),
-
-
-
-
-        // const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
-        // (bookingService?.discountAmount ?? 0) > 0
-        //     ? priceText("discount".tr,
-        //     (bookingService?.discountAmount ?? 0), context)
-        //     : const SizedBox(),
-        // (bookingService?.campaignDiscountAmount ?? 0) > 0
-        //     ? priceText("campaign".tr,
-        //     (bookingService?.campaignDiscountAmount??"0"),
-        //     context)
-        //     : const SizedBox(),
-        //
-        // (bookingService?.overallCouponDiscountAmount ?? 0) > 0
-        //     ? priceText("coupon".tr, (bookingService?.overallCouponDiscountAmount?? 0), context)
-        //     : const SizedBox(),
-        //
-        // bookingService?.service != null && (bookingService?.service?.tax??0) > 0
-        //     ? priceText(
-        //     "tax".tr, (bookingService?.taxAmount?? 0), context)
-        //     : const SizedBox(),
-      ],
+        ],
+      ),
     );
   }
 
 }
 
 
-Widget priceText(String title,var amount,context){
+Widget priceText(String title,var amount,BuildContext context){
   return Column(children: [
     Row(
       children: [
         Text("$title : ",
-          style: robotoRegular.copyWith(
-              fontSize: Dimensions.fontSizeSmall,color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.7)
-          ),
+          style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: context.kMutedForeground),
         ),
         Text(PriceConverter.convertPrice(amount,isShowLongPrice:true),
-          style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.7)),
+          style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: context.kMutedForeground),
         ),
       ],
     ),
@@ -588,4 +311,3 @@ Widget priceText(String title,var amount,context){
   ],
   );
 }
-

@@ -1,6 +1,6 @@
-import 'package:demandium_serviceman/feature/dashboard/widgets/booking_statistics_widget.dart';
 import 'package:get/get.dart';
 import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:demandium_serviceman/feature/dashboard/model/booking_statistics_model.dart';
 
 class DashBoardScreen extends StatefulWidget {
   const DashBoardScreen({super.key});
@@ -38,6 +38,12 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
     return 'good_evening'.tr;
   }
 
+  String _formatChange(double change) {
+    final bool isWhole = change == change.roundToDouble();
+    final String value = isWhole ? change.round().toString() : change.toStringAsFixed(1);
+    return '${change >= 0 ? '+' : ''}$value%';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -47,14 +53,9 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: MainAppBar(
-        color: Theme.of(context).primaryColor,
-        title: AppConstants.appName,
-        titleFontSize: Dimensions.fontSizeOverLarge,
-      ),
+      backgroundColor: context.kBackground,
       body: RefreshIndicator(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: context.kBackground,
         color: Theme.of(
           context,
         ).textTheme.bodyLarge!.color!.withValues(alpha: 0.6),
@@ -66,24 +67,37 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
             return dashboardController.isLoading
                 ? const DashboardTopCardShimmer()
                 : ListView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
-                    ),
+                    padding: EdgeInsets.zero,
                     physics: const AlwaysScrollableScrollPhysics(
                       parent: BouncingScrollPhysics(),
                     ),
                     children: [
-                      _buildHeroCard(context, dashboardController),
-                      const SizedBox(height: 20),
-                      const _QuickActionsRow(),
-                      const SizedBox(height: 24),
-                      const BusinessSummerySection(),
-                      const SizedBox(height: 24),
-                      const BookingStatisticsWidget(),
-                      const SizedBox(height: 24),
-                      const RecentActivitySection(),
-                      const SizedBox(height: 24),
+                      _buildHeader(context),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildOnlineCard(context),
+                            const SizedBox(height: 16),
+                            _buildStatsRow(context, dashboardController),
+                            const SizedBox(height: 24),
+                            _buildQuickActions(context),
+                            const SizedBox(height: 24),
+                            _buildEarningCard(context, dashboardController),
+                            const SizedBox(height: 24),
+                            _buildRecentBookings(context, dashboardController),
+                            const SizedBox(height: 20),
+                            KButton(
+                              label: 'refresh_dashboard'.tr,
+                              outline: true,
+                              icon: Icons.refresh_rounded,
+                              onTap: _loadData,
+                            ),
+                            const SizedBox(height: 112),
+                          ],
+                        ),
+                      ),
                     ],
                   );
           },
@@ -92,132 +106,109 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
     );
   }
 
-  Widget _buildHeroCard(BuildContext context, DashboardController controller) {
-    final completed = controller.cards.completedBookings ?? 0;
-    final ongoing = controller.cards.ongoingBookings ?? 0;
-    final assigned = controller.cards.pendingBookings ?? 0;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault + 3),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Theme.of(context).primaryColor,
-            Color.lerp(
-              Theme.of(context).primaryColor,
-              const Color(0xFF1E40AF),
-              0.55,
-            )!,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.30),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
+  Widget _buildHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Positioned(
-            right: -24,
-            top: -34,
-            child: Container(
-              height: 120,
-              width: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.10),
-              ),
-            ),
-          ),
-          Positioned(
-            right: 70,
-            bottom: -48,
-            child: Container(
-              height: 90,
-              width: 90,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.07),
-              ),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+          Expanded(
+            child: InkWell(
+              onTap: () => BottomNavScreen.onChangesIndex(3),
+              borderRadius: BorderRadius.circular(kRadiusMd),
+              child: Row(
                 children: [
+                  GetBuilder<UserController>(
+                    builder: (userController) => ValueListenableBuilder<bool>(
+                      valueListenable: WorkStatusService.online,
+                      builder: (context, online, _) => UserAvatar(
+                        imageUrl: userController.userInfo.profileImageFullPath,
+                        name: userController.userInfo.firstName,
+                        online: online,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           _greeting(),
-                          style: robotoBold.copyWith(
-                            fontSize: Dimensions.fontSizeOverLarge,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(
-                          height: Dimensions.paddingSizeExtraSmall,
-                        ),
-                        Text(
-                          'quick_overview_of_your_bookings'.tr,
-                          style: robotoRegular.copyWith(
-                            fontSize: Dimensions.fontSizeSmall,
-                            color: Colors.white.withValues(alpha: 0.85),
-                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          style: robotoRegular.copyWith(
+                            fontSize: 11,
+                            color: context.kMutedForeground,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: GetBuilder<UserController>(
+                                builder: (userController) {
+                                  final String firstName =
+                                      userController.userInfo.firstName ?? '';
+                                  return Text(
+                                    firstName.isNotEmpty
+                                        ? firstName
+                                        : 'service_man'.tr,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: robotoBold.copyWith(
+                                      fontSize: 16,
+                                      color: context.kForeground,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: context.kMuted,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'PRO',
+                                style: robotoBold.copyWith(
+                                  fontSize: 9,
+                                  color: context.kForeground,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    height: 52,
-                    width: 52,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(
-                        Dimensions.radiusLarge,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.insights_rounded,
-                      color: Colors.white,
-                      size: 26,
-                    ),
-                  ),
                 ],
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _heroStat('$assigned', 'assigned_booking'.tr),
-                  ),
-                  Container(
-                    width: 1,
-                    height: 36,
-                    color: Colors.white.withValues(alpha: 0.20),
-                  ),
-                  Expanded(child: _heroStat('$ongoing', 'ongoing_booking'.tr)),
-                  Container(
-                    width: 1,
-                    height: 36,
-                    color: Colors.white.withValues(alpha: 0.20),
-                  ),
-                  Expanded(
-                    child: _heroStat('$completed', 'completed_booking'.tr),
-                  ),
-                ],
+            ),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GetBuilder<NotificationController>(
+                builder: (notificationController) => KIconButton(
+                  icon: Icons.notifications_outlined,
+                  showBadge: notificationController.unseenNotificationCount > 0,
+                  onTap: () {
+                    Get.to(const NotificationScreen());
+                    notificationController.resetNotificationCount();
+                  },
+                ),
+              ),
+              const SizedBox(width: 4),
+              KIconButton(
+                icon: Icons.menu,
+                onTap: () => BottomNavScreen.openMenu(),
               ),
             ],
           ),
@@ -226,127 +217,402 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
     );
   }
 
-  Widget _heroStat(String value, String label) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          style: robotoBold.copyWith(
-            fontSize: Dimensions.fontSizeExtraLarge,
-            color: Colors.white,
-            height: 1.1,
+  Widget _buildOnlineCard(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: WorkStatusService.online,
+      builder: (context, online, _) {
+        final Color labelColor = online
+            ? context.kPrimaryForeground
+            : context.kPrimary;
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: context.kPrimary,
+            borderRadius: BorderRadius.circular(kRadiusMd),
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: robotoMedium.copyWith(
-            fontSize: Dimensions.fontSizeExtraSmall,
-            color: Colors.white.withValues(alpha: 0.85),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'work_availability'.tr,
+                      style: robotoRegular.copyWith(
+                        fontSize: 12,
+                        color: context.kPrimaryForeground.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      online ? 'you_are_online'.tr : 'you_are_offline'.tr,
+                      style: robotoBold.copyWith(
+                        fontSize: 18,
+                        color: context.kPrimaryForeground,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Material(
+                color: online ? context.kSuccess : context.kCard,
+                borderRadius: BorderRadius.circular(kRadiusMd),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(kRadiusMd),
+                  onTap: () => WorkStatusService.setStatus(!online),
+                  child: Container(
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: labelColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          online ? 'online'.tr : 'go_online'.tr,
+                          style: robotoMedium.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: labelColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-        ),
-      ],
+        );
+      },
     );
   }
-}
 
-class _QuickActionsRow extends StatelessWidget {
-  const _QuickActionsRow();
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildStatsRow(BuildContext context, DashboardController controller) {
     return Row(
       children: [
-        _QuickAction(
-          icon: Icons.calendar_month_rounded,
-          label: 'requests'.tr,
-          color: const Color(0xFF2563EB),
-          bgColor: const Color(0xFFDBEAFE),
-          onTap: () => BottomNavScreen.onChangesIndex(1),
+        Expanded(
+          child: StatCard(
+            label: 'assigned_booking'.tr,
+            value: '${controller.cards.pendingBookings ?? 0}',
+          ),
         ),
-        const SizedBox(width: 12),
-        _QuickAction(
-          icon: Icons.history_rounded,
-          label: 'history'.tr,
-          color: const Color(0xFF0EA5E9),
-          bgColor: const Color(0xFFE0F2FE),
-          onTap: () => BottomNavScreen.onChangesIndex(2),
+        const SizedBox(width: 8),
+        Expanded(
+          child: StatCard(
+            label: 'ongoing_booking'.tr,
+            value: '${controller.cards.ongoingBookings ?? 0}',
+            success: true,
+          ),
         ),
-        const SizedBox(width: 12),
-        _QuickAction(
-          icon: Icons.chat_bubble_outline_rounded,
-          label: 'inbox'.tr,
-          color: const Color(0xFF22C55E),
-          bgColor: const Color(0xFFECFDF5),
-          onTap: () => Get.toNamed(RouteHelper.getInboxScreenRoute()),
-        ),
-        const SizedBox(width: 12),
-        _QuickAction(
-          icon: Icons.notifications_outlined,
-          label: 'notification'.tr,
-          color: const Color(0xFFF59E0B),
-          bgColor: const Color(0xFFFFF7ED),
-          onTap: () {
-            Get.to(const NotificationScreen());
-            Get.find<NotificationController>().resetNotificationCount();
-          },
+        const SizedBox(width: 8),
+        Expanded(
+          child: StatCard(
+            label: 'completed_booking'.tr,
+            value: '${controller.cards.completedBookings ?? 0}',
+          ),
         ),
       ],
     );
   }
+
+  Widget _buildQuickActions(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(title: 'quick_actions'.tr),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _QuickActionTile(
+                icon: Icons.work_outline_rounded,
+                label: 'requests'.tr,
+                onTap: () => BottomNavScreen.onChangesIndex(1),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _QuickActionTile(
+                icon: Icons.history_rounded,
+                label: 'history'.tr,
+                onTap: () => Get.to(() => const BookingHistoryScreen()),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _QuickActionTile(
+                icon: Icons.mail_outline_rounded,
+                label: 'inbox'.tr,
+                onTap: () => BottomNavScreen.onChangesIndex(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _QuickActionTile(
+                icon: Icons.notifications_outlined,
+                label: 'notification'.tr,
+                onTap: () {
+                  Get.to(const NotificationScreen());
+                  Get.find<NotificationController>().resetNotificationCount();
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEarningCard(BuildContext context, DashboardController controller) {
+    final BookingData? thisMonth = controller.bookingStatisticsModel?.thisMonth;
+    final int total = thisMonth?.total ?? 0;
+    final String changeText = _formatChange(thisMonth?.change ?? 0);
+
+    final List<FlSpot> spots = controller.monthlyChartList;
+    final List<FlSpot> bars = spots.length > 8
+        ? spots.sublist(spots.length - 8)
+        : spots;
+    double maxValue = 0;
+    for (final spot in bars) {
+      if (spot.y > maxValue) maxValue = spot.y;
+    }
+
+    return KCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'this_month'.tr,
+                      style: robotoRegular.copyWith(
+                        fontSize: 12,
+                        color: context.kMutedForeground,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$total',
+                      style: robotoBold.copyWith(
+                        fontSize: 30,
+                        color: context.kForeground,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: context.kSuccessSoft,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  changeText,
+                  style: robotoBold.copyWith(
+                    fontSize: 12,
+                    color: context.kSuccess,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (bars.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (int i = 0; i < bars.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  Expanded(
+                    child: Container(
+                      height: (maxValue <= 0
+                              ? 6.0
+                              : (bars[i].y / maxValue) * 56)
+                          .clamp(6.0, 56.0)
+                          .toDouble(),
+                      decoration: BoxDecoration(
+                        color: i == bars.length - 1
+                            ? context.kForeground
+                            : context.kMuted,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentBookings(
+    BuildContext context,
+    DashboardController controller,
+  ) {
+    final List<_RecentBookingEntry> entries = [];
+    for (final booking in controller.bookings) {
+      final List<RepeatBooking>? repeats = booking.repeatBookingList;
+      if (repeats != null && repeats.isNotEmpty) {
+        for (final repeat in repeats) {
+          entries.add(_RecentBookingEntry(booking, repeat));
+        }
+      } else {
+        entries.add(_RecentBookingEntry(booking, null));
+      }
+    }
+
+    final int count = entries.length < 2 ? entries.length : 2;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          title: 'recent_bookings'.tr,
+          trailing: LinkButton(
+            label: 'see_all'.tr,
+            onTap: () => BottomNavScreen.onChangesIndex(1),
+          ),
+        ),
+        const SizedBox(height: 12),
+        for (int i = 0; i < count; i++) ...[
+          _buildBookingCard(entries[i]),
+          if (i < count - 1) const SizedBox(height: 12),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildBookingCard(_RecentBookingEntry entry) {
+    final DashboardBooking booking = entry.booking;
+    final RepeatBooking? repeat = entry.repeat;
+    final num amount =
+        repeat?.totalBookingAmount ?? booking.totalBookingAmount ?? 0;
+    final String? readableId =
+        repeat?.readableId ?? booking.readableId?.toString();
+
+    return BookingCard(
+      status: repeat?.bookingStatus ?? booking.bookingStatus ?? '',
+      id: readableId != null ? '#$readableId' : '',
+      title: _serviceTitle(booking, repeat),
+      schedule: _scheduleOf(repeat, booking),
+      amount: PriceConverter.convertPrice(amount.toDouble()),
+      onTap: () {
+        Get.toNamed(
+          RouteHelper.getBookingDetailsRoute(
+            bookingId: repeat?.id ?? booking.id!,
+            isSubBooking: repeat != null,
+          ),
+        );
+      },
+    );
+  }
+
+  String _serviceTitle(DashboardBooking booking, RepeatBooking? repeat) {
+    final List<ItemService>? repeatDetails = repeat?.details;
+    if (repeatDetails != null && repeatDetails.isNotEmpty) {
+      final String? name = repeatDetails.first.service?.name;
+      if (name != null && name.isNotEmpty) return name;
+    }
+    final List<RecentOrderDetail>? details = booking.detail;
+    if (details != null && details.isNotEmpty) {
+      return details.first.service?.name ?? '';
+    }
+    return '';
+  }
+
+  String? _scheduleOf(RepeatBooking? repeat, DashboardBooking booking) {
+    final List<String?> candidates = [
+      repeat?.serviceSchedule,
+      repeat?.createdAt,
+      booking.serviceSchedule,
+      booking.createdAt,
+    ];
+    String? raw;
+    for (final candidate in candidates) {
+      if (candidate != null && candidate.isNotEmpty) {
+        raw = candidate;
+        break;
+      }
+    }
+    if (raw == null) return null;
+    try {
+      return DateConverter.dateMonthYearTime(
+        DateConverter.isoUtcStringToLocalDate(raw),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
 }
 
-class _QuickAction extends StatelessWidget {
+class _RecentBookingEntry {
+  final DashboardBooking booking;
+  final RepeatBooking? repeat;
+
+  const _RecentBookingEntry(this.booking, this.repeat);
+}
+
+class _QuickActionTile extends StatelessWidget {
   final IconData icon;
   final String label;
-  final Color color;
-  final Color bgColor;
   final VoidCallback onTap;
 
-  const _QuickAction({
+  const _QuickActionTile({
     required this.icon,
     required this.label,
-    required this.color,
-    required this.bgColor,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          children: [
-            Container(
-              height: 52,
-              width: 52,
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(16),
+    return Container(
+      height: 80,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(kRadiusMd),
+        border: Border.all(color: context.kInputBorder, width: 1),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(kRadiusMd),
+          onTap: onTap,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 18, color: context.kForeground),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: robotoRegular.copyWith(
+                  fontSize: 11,
+                  color: context.kMutedForeground,
+                ),
               ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: robotoMedium.copyWith(
-                fontSize: Dimensions.fontSizeExtraSmall,
-                color: Theme.of(context).hintColor,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

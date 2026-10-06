@@ -2,10 +2,11 @@ import 'package:jdds/common/widgets/custom_pop_widget.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:jdds/common/widgets/address_selection_drawer.dart';
+import 'package:jdds/common/design_system/nest_screens_kit.dart';
 
 class ForgetPassScreen extends StatefulWidget {
-  final String? redirectUrl;
-  const ForgetPassScreen({super.key, this.redirectUrl});
+  final String? redtrectUrl;
+  const ForgetPassScreen({super.key, this.redtrectUrl});
 
   @override
   State<ForgetPassScreen> createState() => _ForgetPassScreenState();
@@ -38,11 +39,18 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
   Widget build(BuildContext context) {
     return CustomPopWidget(
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: NestInk.background,
         drawer: ResponsiveHelper.isDesktop(context) ? const AddressSelectionDrawer() : null,
         endDrawer: ResponsiveHelper.isDesktop(context) ? const MenuDrawer() : null,
-        body: GetBuilder<SplashController>(
-          builder: (splashController) {
+        body: Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: NestInk.primary,
+              onPrimary: NestInk.background,
+            ),
+          ),
+          child: GetBuilder<SplashController>(
+            builder: (splashController) {
             return GetBuilder<AuthController>(
               builder: (authController) {
                 return Column(
@@ -59,7 +67,7 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
                             Get.toNamed(RouteHelper.getSignInRoute());
                           }
                         },
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xff101828), size: 20),
+                        icon: Icon(Icons.arrow_back_ios_new_rounded, color: NestInk.primary, size: 20),
                       ),
                     ),
 
@@ -78,7 +86,7 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
                                 "Forget Password",
                                 style: robotoBold.copyWith(
                                   fontSize: 28,
-                                  color: const Color(0xff101828),
+                                  color: NestInk.primary,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -86,7 +94,7 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
                                 "Enter your email address\nto reset password.",
                                 style: robotoRegular.copyWith(
                                   fontSize: 15,
-                                  color: const Color(0xff98A2B3),
+                                  color: NestInk.mutedText,
                                   height: 1.4,
                                 ),
                               ),
@@ -129,8 +137,8 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
                               CustomButton(
                                 buttonText: 'Reset Password',
                                 isLoading: authController.isLoading,
-                                backgroundColor: const Color(0xffFF6B2C),
-                                textColor: Colors.white,
+                                backgroundColor: NestInk.primary,
+                                textColor: NestInk.background,
                                 onPressed: () => formKey.currentState!.validate() ? _forgetPass(countryDialCode, authController) : null,
                               ),
 
@@ -144,7 +152,8 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
                 );
               },
             );
-          },
+            },
+          ),
         ),
       ),
     );
@@ -156,7 +165,7 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
       child: Text(
         text,
         style: robotoSemiBold.copyWith(
-          color: const Color(0xff344054),
+          color: NestInk.primary,
           fontSize: 14,
         ),
       ),
@@ -175,7 +184,7 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
       identityType: phone != "" ? "phone" : "email",
       type: type,
       fromPage: "forget-password",
-      redirectUrl: widget.redirectUrl,
+      redtrectUrl: widget.redtrectUrl,
     ).then((status) {
       if (status != null) {
         if (status.isSuccess!) {
@@ -184,7 +193,7 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
             identityType: phone != "" ? "phone" : "email",
             fromPage: "forget-password",
             firebaseSession: type == SendOtpType.firebase ? status.message : null,
-            redirectUrl: widget.redirectUrl,
+            redtrectUrl: widget.redtrectUrl,
           ));
         } else {
           customSnackBar(status.message.toString().capitalizeFirst ?? "");
@@ -215,3 +224,5 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
     }
   }
 }
+
+

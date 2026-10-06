@@ -18,7 +18,7 @@ class ServicemanRepo{
     if (kDebugMode) {
       print("Booking Type : ${subBookingId!=null ? "Sub-Booking": "Regular-Booking"}");
     }
-    return await apiClient.postData("${AppConstants.servicemanAssignUri}/${bookingId ?? subBookingId}",
+    return await apiClient.putData("${AppConstants.servicemanAssignUri}/${bookingId ?? subBookingId}",
         {
           "booking_type": subBookingId != null ? "repeat" : "regular",
           'serviceman_id': servicemanId,

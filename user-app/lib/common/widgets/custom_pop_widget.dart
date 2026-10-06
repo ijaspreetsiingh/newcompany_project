@@ -12,10 +12,10 @@ class CustomPopWidget extends StatefulWidget {
   const CustomPopWidget({super.key, required this.child, this.onPopInvoked, bool isExit = false, this.isNavigationOnOnPop}) : _canShowCloseDialog = isExit;
 
   @override
-  State<CustomPopWidget> createState() => _CustomPopWidgetState();
+  State<CustomPopWidget> createState() => _CustomPopwidgetstate();
 }
 
-class _CustomPopWidgetState extends State<CustomPopWidget> {
+class _CustomPopwidgetstate extends State<CustomPopWidget> {
   bool _canExit = GetPlatform.isWeb ? true : false;
 
 
@@ -52,9 +52,9 @@ class _CustomPopWidgetState extends State<CustomPopWidget> {
             });
           }
 
-        }else if(_canGoToInitialRoute()){
+        }else if(_canGoToinitialRoute()){
 
-          _goToInitialRoute(context);
+          _goToinitialRoute(context);
 
 
         }else {
@@ -70,17 +70,20 @@ class _CustomPopWidgetState extends State<CustomPopWidget> {
     );
   }
 
-  void _goToInitialRoute(BuildContext context) {
-    Get.offAllNamed(RouteHelper.getInitialRoute());
+  void _goToinitialRoute(BuildContext context) {
+    Get.offAllNamed(RouteHelper.getinitialRoute());
     // if( !Navigator.canPop(context) && Get.find<LocationController>().getUserAddress() !=null && context.mounted && onPopInvoked == null){
-    //   Get.offAllNamed(RouteHelper.getInitialRoute());
+    //   Get.offAllNamed(RouteHelper.getinitialRoute());
     // }
 
   }
 
   bool _canShowCloseDialog()=> !Navigator.canPop(context) && widget._canShowCloseDialog;
-  bool _canGoToInitialRoute()=> !Navigator.canPop(context) && !widget._canShowCloseDialog;
+  bool _canGoToinitialRoute()=> !Navigator.canPop(context) && !widget._canShowCloseDialog;
 
 
 
 }
+
+
+

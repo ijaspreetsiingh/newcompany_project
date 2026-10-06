@@ -55,7 +55,7 @@
                         </clipPath>
                         </defs>
                     </svg>
-                    <p class="fz-12">After configuration next go to setup <a href="#" class="text-primary fw-semibold text-decoration-underline">Authentication</a> . Otherwise firebase can’t work properly in your system.</p>
+                    <p class="fz-12">After configuration next go to setup <a href="#" class="text-primary fw-semibold text-decoration-underline">Authentication</a> . Otherwise firebase canâ€™t work properly in your system.</p>
                 </div>
                 <div class="card mb-20">
                     <div class="card-body p-20">
@@ -107,7 +107,7 @@
                                         <ul class="d-flex flex-column gap-2 px-3 mb-0">
                                             <li class="fz-12">{{translate('Upload file must be JASON file format in and click Update button.')}}
                                             </li>
-                                            <li class="fz-12">{{translate('Without update the service File content can’t update properly and you can’t see the updated content in the field.')}}
+                                            <li class="fz-12">{{translate('Without update the service File content canâ€™t update properly and you canâ€™t see the updated content in the field.')}}
                                             </li>
                                         </ul>
                                     </div>
@@ -647,7 +647,7 @@
                         >info</i>
                     </div>
                     <div class="copy-text border rounded py-2 h-46 px-3 bg-white position-relative d-flex justify-content-between gap-1">
-                        <input type="text" class="text border-0 text-light-gray bg-transparent w-100 pe-3" value="https://JassBooking.6amtech.com/customer/auth/login/google/callback" />
+                        <input type="text" class="text border-0 text-light-gray bg-transparent w-100 pe-3" value="https://yovo.com/customer/auth/login/google/callback" />
                         <button class="border-0 outline-0 text-primary p-0 bg-transparent"><span class="material-symbols-outlined">content_copy</span></button>
                     </div>
                 </div>
@@ -659,7 +659,7 @@
                         >info</i>
                     </div>
                     <div class="copy-text border rounded py-2 h-46 px-3 bg-white position-relative d-flex justify-content-between gap-1">
-                        <input type="text" class="text border-0 text-light-gray bg-transparent w-100 pe-3" value="https://JassBooking.6amtech.com/customer/auth/login/google/callback" />
+                        <input type="text" class="text border-0 text-light-gray bg-transparent w-100 pe-3" value="https://yovo.com/customer/auth/login/google/callback" />
                         <button class="border-0 outline-0 text-primary p-0 bg-transparent"><span class="material-symbols-outlined">content_copy</span></button>
                     </div>
                 </div>
@@ -1066,7 +1066,7 @@
                                                                 from the Firebase
                                                                 Console dashboard')}}
                                                             </li>
-                                                            <li>{{translate('If you don’t have any project before. Create one with
+                                                            <li>{{translate('If you donâ€™t have any project before. Create one with
                                                                 the website name')}}
                                                             </li>
                                                         </ul>
@@ -1309,7 +1309,7 @@
                                                 <li>{{translate('Select reCAPTCHA v3 as ReCAPTCHA Type')}}</li>
                                                 <li>{{translate('Select Sub type: I am not a robot Checkbox')}} </li>
                                                 <li>{{translate('Add Domain')}} (For ex: demo.6amtech.com)</li>
-                                                <li>{{translate('Check in “Accept the reCAPTCHA Terms of Service”')}} </li>
+                                                <li>{{translate('Check in â€œAccept the reCAPTCHA Terms of Serviceâ€')}} </li>
                                                 <li>{{translate('Press Submit')}}</li>
                                                 <li>{{translate('Copy Site Key and Secret Key, Paste in the input filed below and
                                                     Save.')}}
@@ -1382,7 +1382,7 @@
                                                         >info</i>
                                                     </label>
                                                     <div class="copy-text position-relative d-flex align-items-center h-46 rounded py-2 p-3 justify-content-between gap-1 bg-white">
-                                                        <input type="text" class="text border-0 w-100 text-light-gray bg-transparent" value="https://JassBooking.6amtech.com/customer/auth/login/google/callback" />
+                                                        <input type="text" class="text border-0 w-100 text-light-gray bg-transparent" value="https://yovo.com/customer/auth/login/google/callback" />
                                                         <button class="border-0 outline-0 text-primary p-0 bg-transparent"><span class="material-symbols-outlined">content_copy</span></button>
                                                     </div>
                                                 </div>
@@ -2975,7 +2975,7 @@
                                     <p class="fz-12 fw-medium">In this page you can setup latest version app forcefully activate for the users. Please input proper data for the app link & versions. </p>
                                 </div>
                                 <ul class="m-0 ps-20 d-flex flex-column gap-1 text-dark">
-                                    <li>Some time older version app can’t work properly and crash when start the app.</li>
+                                    <li>Some time older version app canâ€™t work properly and crash when start the app.</li>
                                     <li>This section may help user to get the update features in their app.</li>
                                 </ul>
                             </div>
@@ -3738,7 +3738,7 @@
                             </div>
                             <div class="text-center" >
                                 <h3 class="mb-4 mt-4"> {{ translate('Important Alert!')}}</h3><span class="d-none" id="gateway_name"></span>
-                                <div class="mb-4 mt-4"> <p>{{ translate('You must activate at least one digital payment method that support your system currency (')}} {{ $currency }} {{ translate(').Otherwise customer won’t see the digital payment option & won’t be able to pay via digitally from website and apps. ') }}</h3></p></div>
+                                <div class="mb-4 mt-4"> <p>{{ translate('You must activate at least one digital payment method that support your system currency (')}} {{ $currency }} {{ translate(').Otherwise customer wonâ€™t see the digital payment option & wonâ€™t be able to pay via digitally from website and apps. ') }}</h3></p></div>
                             </div>
 
                             <div class="text-center mb-4 mt-4" >
@@ -4204,3 +4204,5 @@
     </script>
     
 @endpush
+
+

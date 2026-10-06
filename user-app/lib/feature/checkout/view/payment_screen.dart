@@ -29,13 +29,13 @@ class PaymentScreenState extends State<PaymentScreen> {
   void initState() {
     super.initState();
     selectedUrl = widget.url;
-    _initData(widget.fromPage ?? "" );
+    _inttData(widget.fromPage ?? "" );
 
 
     log(widget.url);
   }
 
-  void _initData(String fromPage) async {
+  void _inttData(String fromPage) async {
     browser = MyInAppBrowser(fromPage: fromPage);
 
     if(GetPlatform.isAndroid){
@@ -90,7 +90,7 @@ class MyInAppBrowser extends InAppBrowser {
 
   MyInAppBrowser({required  this.fromPage});
 
-  bool _canRedirect = true;
+  bool _canRedtrect = true;
 
   @override
   Future onBrowserCreated() async {
@@ -104,7 +104,7 @@ class MyInAppBrowser extends InAppBrowser {
     if (kDebugMode) {
       print("\n\nStarted: $url\n\n");
     }
-    _pageRedirect(url.toString());
+    _pageRedtrect(url.toString());
   }
 
   @override
@@ -113,7 +113,7 @@ class MyInAppBrowser extends InAppBrowser {
     if (kDebugMode) {
       print("\n\nStopped: $url\n\n");
     }
-    _pageRedirect(url.toString());
+    _pageRedtrect(url.toString());
   }
 
   @override
@@ -136,7 +136,7 @@ class MyInAppBrowser extends InAppBrowser {
 
   @override
   void onExit() {
-    if(_canRedirect) {
+    if(_canRedtrect) {
       showDialog(
         context: Get.context!,
         barrierDismissible: false,
@@ -180,12 +180,12 @@ class MyInAppBrowser extends InAppBrowser {
     }
   }
 
-  void _pageRedirect(String url) async {
+  void _pageRedtrect(String url) async {
     if (kDebugMode) {
-      print("inside_page_redirect");
+      print("inside_page_redtrect");
     }
     printLog("url:$url");
-    if(_canRedirect) {
+    if(_canRedtrect) {
       bool isSuccess = url.contains('success') && url.contains(AppConstants.baseUrl) && url.contains("flag");
       bool isFailed = url.contains('fail') && url.contains(AppConstants.baseUrl) && url.contains("flag");
       bool isCancel = url.contains('cancel') && url.contains(AppConstants.baseUrl) && url.contains("flag");
@@ -195,7 +195,7 @@ class MyInAppBrowser extends InAppBrowser {
         print('This_called_1::::$url');
       }
       if (isSuccess || isFailed || isCancel) {
-        _canRedirect = false;
+        _canRedtrect = false;
         close();
       }
 
@@ -248,6 +248,9 @@ class MyInAppBrowser extends InAppBrowser {
     }
   }
 }
+
+
+
 
 
 

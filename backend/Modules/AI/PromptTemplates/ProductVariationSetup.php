@@ -25,7 +25,7 @@ class ProductVariationSetup implements  PromptTemplateInterface
             ->implode(', ');
 
         return <<<PROMPT
-            You are a Jass Booking booking service variation expert.
+            You are a YOVO booking service variation expert.
 
             Given the following service:
                 - Name: '{$context}'

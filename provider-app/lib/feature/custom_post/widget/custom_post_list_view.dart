@@ -11,7 +11,7 @@ class CustomPostListview extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetBuilder<PostController>(
         builder: (postController) {
-        return Padding(padding: const EdgeInsets.fromLTRB(Dimensions.paddingSizeDefault,10,15,10),
+        return Padding(padding: const EdgeInsets.fromLTRB(16,0,16,16),
           child: postController.loading?
           const Center(child: CircularProgressIndicator()):
           CustomScrollView(

@@ -263,8 +263,10 @@ class BookingController extends Controller
      * @return JsonResponse
      */
     /**
-     * Serviceman accept — provider ke accept hone ke baad booking serviceman ke paas
-     * 'pending' timer ke saath aati hai. Accept karne par 'accepted' ho jayegi.
+     * Serviceman accept:
+     *  - booking PENDING (kisi ne accept nahi kiya): ye pehla accept hai ->
+     *    booking ACCEPTED, lead = ye serviceman, baaki team slots join ke liye open
+     *  - booking ACCEPTED (team): ye member team me jud raha hai
      */
     public function acceptBooking(Request $request, string $bookingId): JsonResponse
     {
@@ -272,30 +274,60 @@ class BookingController extends Controller
         $booking = $this->booking
             ->where('id', $bookingId)
             ->where('provider_id', $serviceman->provider_id)
-            ->where('booking_status', 'pending')
+            ->whereIn('booking_status', ['pending', 'accepted'])
             ->first();
 
         if (!$booking) {
             return response()->json(response_formatter(DEFAULT_204), 200);
         }
 
-        // timer expire ho gaya toh accept nahi kar sakte
-        if ($booking->serviceman_assign_expires_at && $booking->serviceman_assign_expires_at->isPast()) {
-            return response()->json(response_formatter(DEFAULT_400, null, [['error_code' => 'booking', 'message' => translate('booking_request_expired')]]), 400);
+        $slot = \Modules\BookingModule\Entities\BookingServiceman::where('booking_id', $booking->id)
+            ->where('serviceman_id', $serviceman->id)
+            ->first();
+
+        // ye serviceman ko is booking ki request gayi hi nahi
+        if (!$slot && $booking->serviceman_id !== $serviceman->id) {
+            return response()->json(response_formatter(DEFAULT_204), 200);
         }
 
-        $booking->serviceman_id = $serviceman->id;
-        $booking->booking_status = 'accepted';
-        $booking->serviceman_assign_expires_at = null;
+        // pending booking par timer expire ho chuka to accept nahi
+        if ($booking->booking_status === 'pending') {
+            $expired = ($slot && $slot->expires_at && $slot->expires_at->isPast())
+                || (!$slot && $booking->serviceman_assign_expires_at && $booking->serviceman_assign_expires_at->isPast());
+            if ($expired) {
+                return response()->json(response_formatter(DEFAULT_400, null, [['error_code' => 'booking', 'message' => translate('booking_request_expired')]]), 400);
+            }
+        }
 
-        $bookingStatusHistory = $this->bookingStatusHistory;
-        $bookingStatusHistory->booking_id = $booking->id;
-        $bookingStatusHistory->changed_by = $request->user()->id;
-        $bookingStatusHistory->booking_status = 'accepted';
+        $isFirstAccept = $booking->booking_status === 'pending';
 
-        DB::transaction(function () use ($bookingStatusHistory, $booking) {
-            $booking->save();
-            $bookingStatusHistory->save();
+        DB::transaction(function () use ($booking, $slot, $serviceman, $request, $isFirstAccept) {
+            if ($slot) {
+                $slot->status = \Modules\BookingModule\Entities\BookingServiceman::STATUS_ACCEPTED;
+                $slot->save();
+            }
+
+            if ($isFirstAccept) {
+                // pehla accept = booking confirm (lead = ye serviceman)
+                $booking->serviceman_id = $serviceman->id;
+                $booking->booking_status = 'accepted';
+                $booking->serviceman_assign_expires_at = null;
+                $booking->save();
+
+                $bookingStatusHistory = new $this->bookingStatusHistory;
+                $bookingStatusHistory->booking_id = $booking->id;
+                $bookingStatusHistory->changed_by = $request->user()->id;
+                $bookingStatusHistory->booking_status = 'accepted';
+                $bookingStatusHistory->save();
+
+                // team ke baaki pending slots: deadline hatao (ab join kar sakte hain)
+                \Modules\BookingModule\Entities\BookingServiceman::where('booking_id', $booking->id)
+                    ->where('status', \Modules\BookingModule\Entities\BookingServiceman::STATUS_PENDING)
+                    ->update(['expires_at' => null]);
+            } elseif (!$slot) {
+                // legacy flow (bina pivot) — sirf lead hi accept kar sakta tha
+                return;
+            }
         });
 
         // provider ko notify karo ki serviceman ne accept kar liya
@@ -312,7 +344,9 @@ class BookingController extends Controller
     }
 
     /**
-     * Serviceman reject — booking ko agle available serviceman ko bhejo
+     * Serviceman reject:
+     *  - booking PENDING: slot reject -> agla NEAREST serviceman (loop)
+     *  - booking ACCEPTED (team): member team se nikla; lead chhoda to naya lead
      */
     public function rejectBooking(Request $request, string $bookingId): JsonResponse
     {
@@ -320,23 +354,73 @@ class BookingController extends Controller
         $booking = $this->booking
             ->where('id', $bookingId)
             ->where('provider_id', $serviceman->provider_id)
-            ->where('booking_status', 'pending')
+            ->whereIn('booking_status', ['pending', 'accepted'])
             ->first();
 
         if (!$booking) {
             return response()->json(response_formatter(DEFAULT_204), 200);
         }
 
-        $rejectedServicemanId = $booking->serviceman_id;
-        $booking->serviceman_id = null;
-        $booking->serviceman_assign_expires_at = null;
-        $booking->save();
+        $slot = \Modules\BookingModule\Entities\BookingServiceman::where('booking_id', $booking->id)
+            ->where('serviceman_id', $serviceman->id)
+            ->first();
 
-        $nextServiceman = findNextServiceman($booking, $rejectedServicemanId ? [$rejectedServicemanId] : []);
-        if ($nextServiceman) {
-            assignBookingToServiceman($booking, $nextServiceman);
+        if (!$slot && $booking->serviceman_id !== $serviceman->id) {
+            return response()->json(response_formatter(DEFAULT_204), 200);
         }
-        // koi serviceman available nahi -> booking pending hi rahegi, provider manually assign kar sakta hai
+
+        if ($booking->booking_status === 'pending') {
+            DB::transaction(function () use ($booking, $slot, $serviceman) {
+                if ($slot) {
+                    $slot->status = \Modules\BookingModule\Entities\BookingServiceman::STATUS_REJECTED;
+                    $slot->save();
+                }
+                if ($booking->serviceman_id === $serviceman->id) {
+                    $booking->serviceman_id = null;
+                    $booking->serviceman_assign_expires_at = null;
+                    $booking->save();
+                }
+            });
+
+            // team ka koi aur live pending slot hai? to usi par chalega
+            $hasLiveSlot = \Modules\BookingModule\Entities\BookingServiceman::where('booking_id', $booking->id)
+                ->where('status', \Modules\BookingModule\Entities\BookingServiceman::STATUS_PENDING)
+                ->where('expires_at', '>', now())
+                ->exists();
+
+            if (!$hasLiveSlot) {
+                // agla nearest serviceman (jo pehle try nahi hua)
+                $alreadyTried = getTriedServicemanIds($booking);
+                $nextServiceman = findNearestServicemen($booking, $booking->provider_id, $alreadyTried)->first();
+                if ($nextServiceman) {
+                    $provider = $booking->provider;
+                    $waitTime = max(30, (int) ($provider->auto_assign_wait_time ?: 60));
+                    assignBookingToServiceman($booking, $nextServiceman, $waitTime);
+                } else {
+                    // sab reject/mana -> provider manually assign kare
+                    if ($booking->provider) {
+                        notifyProviderToAssignManually($booking->provider, $booking);
+                    }
+                }
+            }
+        } else {
+            // booking already accepted (team) — ye member exit kar raha hai
+            DB::transaction(function () use ($booking, $slot, $serviceman) {
+                if ($slot) {
+                    $slot->status = \Modules\BookingModule\Entities\BookingServiceman::STATUS_REJECTED;
+                    $slot->save();
+                }
+                if ($booking->serviceman_id === $serviceman->id) {
+                    // lead chhod raha hai -> kisi accepted member ko naya lead banao
+                    $newLead = \Modules\BookingModule\Entities\BookingServiceman::where('booking_id', $booking->id)
+                        ->where('serviceman_id', '!=', $serviceman->id)
+                        ->where('status', \Modules\BookingModule\Entities\BookingServiceman::STATUS_ACCEPTED)
+                        ->first();
+                    $booking->serviceman_id = $newLead?->serviceman_id;
+                    $booking->save();
+                }
+            });
+        }
 
         // provider ko notify karo
         try {
@@ -354,9 +438,14 @@ class BookingController extends Controller
     public function bookingDetails(Request $request, string $id): JsonResponse
     {
         $booking = $this->booking->with([
-            'detail.service', 'schedule_histories.user', 'status_histories.user', 'customer', 'provider', 'zone', 'serviceman.user', 'booking_partial_payments'
+            'detail.service', 'schedule_histories.user', 'status_histories.user', 'customer', 'provider', 'zone', 'serviceman.user', 'booking_partial_payments',
+            'servicemenAssignments.serviceman.user'
         ])->where(function ($query) use ($request) {
-            return $query->where('serviceman_id', $request->user()->serviceman->id)->orWhereNull('provider_id');
+            return $query->where('serviceman_id', $request->user()->serviceman->id)
+                ->orWhereHas('servicemenAssignments', function ($subQuery) use ($request) {
+                    $subQuery->where('serviceman_id', $request->user()->serviceman->id);
+                })
+                ->orWhereNull('provider_id');
         })->where(['id' => $id])->first();
 
         if (isset($booking)) {
@@ -371,8 +460,35 @@ class BookingController extends Controller
                 })->values()->all();
             }
 
+            // AUTO-ASSIGN: mera accept deadline + team members
+            $myId = $request->user()->serviceman->id;
+            $mySlot = $booking->servicemenAssignments->firstWhere('serviceman_id', $myId);
+
+            $acceptRemaining = 0;
+            if ($mySlot && $mySlot->status === \Modules\BookingModule\Entities\BookingServiceman::STATUS_PENDING && $mySlot->expires_at) {
+                $acceptRemaining = max(0, $mySlot->expires_at->getTimestamp() - now()->getTimestamp());
+            } elseif ($booking->booking_status === 'pending' && $booking->serviceman_assign_expires_at) {
+                $assignExpires = $booking->serviceman_assign_expires_at instanceof \Carbon\Carbon
+                    ? $booking->serviceman_assign_expires_at
+                    : \Carbon\Carbon::parse($booking->serviceman_assign_expires_at);
+                $acceptRemaining = max(0, $assignExpires->getTimestamp() - now()->getTimestamp());
+            }
+
+            $team = $booking->servicemenAssignments->map(function ($assignment) use ($myId) {
+                return [
+                    'serviceman_id' => $assignment->serviceman_id,
+                    'name' => trim(($assignment->serviceman?->user?->first_name ?? '') . ' ' . ($assignment->serviceman?->user?->last_name ?? '')),
+                    'image' => $assignment->serviceman?->user?->profile_image_full_path
+                        ?? ($assignment->serviceman?->user?->profile_image ? asset('public/assets/provider-module/img/user2x.png') : null),
+                    'status' => $assignment->status,
+                    'is_me' => $assignment->serviceman_id === $myId,
+                ];
+            })->values();
+
             return response()->json(response_formatter(DEFAULT_200, [
                 'booking' => $booking,
+                'accept_remaining_seconds' => $acceptRemaining,
+                'team' => $team,
                 'provider_serviceman_can_cancel_booking' => (int)provider_config('provider_serviceman_can_cancel_booking', 'serviceman_config', $booking->provider_id)?->live_values,
                 'provider_serviceman_can_edit_booking' => (int)provider_config('provider_serviceman_can_edit_booking', 'serviceman_config', $booking->provider_id)?->live_values,
             ]), 200);
@@ -424,9 +540,12 @@ class BookingController extends Controller
 
         $servicemanId = auth('api')->user()->serviceman->id;
 
-        $bookings = $this->booking->with(['subCategory:id,name', 'repeat'])
+        $bookings = $this->booking->with(['subCategory:id,name', 'repeat', 'servicemenAssignments'])
             ->where(function ($query) use ($servicemanId) {
                 $query->where('serviceman_id', $servicemanId)
+                    ->orWhereHas('servicemenAssignments', function ($subQuery) use ($servicemanId) {
+                        $subQuery->where('serviceman_id', $servicemanId);
+                    })
                     ->orWhereHas('repeat', function ($subQuery) use ($servicemanId) {
                         $subQuery->where('serviceman_id', $servicemanId);
                     });
@@ -449,6 +568,12 @@ class BookingController extends Controller
                     $booking->repeats = $filteredRepeats->values()->toArray();
                 }
                 unset($booking->repeat);
+
+                // AUTO-ASSIGN: mera accept deadline (pending slot ho toh)
+                $mySlot = $booking->servicemenAssignments->firstWhere('serviceman_id', $servicemanId);
+                $booking->accept_remaining_seconds = ($mySlot && $mySlot->status === \Modules\BookingModule\Entities\BookingServiceman::STATUS_PENDING && $mySlot->expires_at)
+                    ? max(0, $mySlot->expires_at->getTimestamp() - now()->getTimestamp())
+                    : 0;
             }
 
         return response()->json(response_formatter(DEFAULT_200, $bookings), 200);
@@ -529,6 +654,7 @@ class BookingController extends Controller
         }
 
         $data = [];
+        $providerId = $request->user()->serviceman->provider_id;
         foreach (json_decode($request['service_info'], true) as $item) {
             $service = Service::active()
                 ->where('id', $item['service_id'])
@@ -541,7 +667,7 @@ class BookingController extends Controller
             $quantity = $item['quantity'];
             $variationPrice = $service?->variations[0]?->price;
 
-            $basicDiscount = basic_discount_calculation($service, $variationPrice * $quantity);
+            $basicDiscount = basic_discount_calculation($service, $variationPrice * $quantity, $providerId);
             $campaignDiscount = campaign_discount_calculation($service, $variationPrice * $quantity);
             $subTotal = round($variationPrice * $quantity, 2);
 

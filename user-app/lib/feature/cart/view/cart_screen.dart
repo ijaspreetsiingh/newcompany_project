@@ -1,8 +1,10 @@
 import 'package:jdds/common/widgets/custom_pop_widget.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
+import 'package:jdds/common/widgets/nest_shared.dart';
 import 'package:jdds/feature/cart/widget/cart_product_widget.dart';
 import 'package:jdds/common/widgets/address_selection_drawer.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 
 class CartScreen extends StatefulWidget {
@@ -25,12 +27,12 @@ class _CartScreenState extends State<CartScreen> {
       Get.find<CartController>().getCartListFromServer().timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          Get.find<CartController>().setLoadingFalse();
+          Get.find<CartController>().setLoadingfalse();
         },
       ).then((value) {
 
         Future.delayed(const Duration(milliseconds: 500)).then((value) {
-          Get.find<CartController>().showMinimumAndMaximumOrderValueToaster();
+          Get.find<CartController>().showMintmumAndMaximumOrderValueToaster();
           if(Get.find<CartController>().checkProviderUnavailability() && Get.currentRoute.contains(RouteHelper.cart)){
             showModalBottomSheet(
               useRootNavigator: true,
@@ -49,20 +51,36 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
 
     return CustomPopWidget(
       child: Scaffold(
         drawer: ResponsiveHelper.isDesktop(context) ? const AddressSelectionDrawer() : null,
 
         endDrawer:ResponsiveHelper.isDesktop(context) ? const MenuDrawer():null,
-        appBar: CustomAppBar( title: 'cart'.tr,
-          isBackButtonExist: (ResponsiveHelper.isDesktop(context) || !widget.fromNav),
-          onBackPressed: (){
-          if(Navigator.canPop(context)){
-            Get.back();
-          }else{
-            Get.offAllNamed(RouteHelper.getMainRoute("home"));
-          }},
+        /// nest. page header : back circle + bold "Your cart"
+        appBar: AppBar(
+          automaticallyImplyLeading: (ResponsiveHelper.isDesktop(context) || !widget.fromNav),
+          leading: (ResponsiveHelper.isDesktop(context) || !widget.fromNav) ? IconButton(
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: primaryColor),
+            onPressed: (){
+              if(Navigator.canPop(context)){
+                Get.back();
+              }else{
+                Get.offAllNamed(RouteHelper.getMainRoute("home"));
+              }
+            },
+          ) : null,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: Text('your_cart'.tr,
+            style: GoogleFonts.manrope(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: primaryColor,
+            ),
+          ),
         ),
         body: SafeArea(child: GetBuilder<CartController>(builder: (cartController){
 
@@ -91,7 +109,7 @@ class _CartScreenState extends State<CartScreen> {
                               )),
                               Expanded(child: WebShadowWrap(
                                 child: Column(children: [
-                                  Get.find<SplashController>().configModel.content?.directProviderBooking == 1
+                                  Get.find<SplashController>().configModel.content?.dtrectProviderBooking == 1
                                       ? _ProviderInfoWidget(provider: provider) : const SizedBox(),
                                   _PriceButtonWidget(cartController: cartController)
                                 ]),
@@ -99,7 +117,7 @@ class _CartScreenState extends State<CartScreen> {
                             ]) : Column(
                               children: [
 
-                                Get.find<SplashController>().configModel.content?.directProviderBooking == 1
+                                Get.find<SplashController>().configModel.content?.dtrectProviderBooking == 1
                                     ? _ProviderInfoWidget(provider: provider) : const SizedBox(),
 
                                 _CartListWidget(),
@@ -134,39 +152,31 @@ class _CartListWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
+
     final cartController = Get.find<CartController>();
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Padding(
-        padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "${cartController.cartList.length} ${'services_in_cart'.tr}",
-              style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,),
-            ),
-          ],
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Text(
+          "${cartController.cartList.length} ${cartController.cartList.length == 1 ? 'service'.tr : 'services'.tr}",
+          style: GoogleFonts.dmSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: mutedColor,
+          ),
         ),
       ),
-      GridView.builder(
-        key: UniqueKey(),
-        gridDelegate:
-        SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisSpacing: Dimensions.paddingSizeLarge,
-          mainAxisSpacing: Dimensions.paddingSizeMini,
-          childAspectRatio: ResponsiveHelper.isMobile(context) ?  5 : 6 ,
-          crossAxisCount: 1,
-          mainAxisExtent:ResponsiveHelper.isMobile(context) ? 125 : 135,
-        ),
-        physics: const NeverScrollableScrollPhysics(),
-        shrinkWrap: true,
-        itemCount: cartController.cartList.length,
-        itemBuilder: (context, index) {
-          return cartController.cartList[index].service != null
-              ? CartServiceWidget(cart: cartController.cartList[index], cartIndex: index)
-              : const SizedBox();
-        },
-      ),
+      ...List.generate(cartController.cartList.length, (index) => cartController.cartList[index].service != null
+          ? CartServiceWidget(cart: cartController.cartList[index], cartIndex: index) : const SizedBox()),
+      Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: OutlinedButton.icon(
+        onPressed: () => Get.find<BottomNavController>().changePage(BnbItem.offers),
+        icon: const Icon(Icons.add, size: 20), label: Text('add_more_services'.tr),
+        style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(54), foregroundColor: Theme.of(context).textTheme.bodyLarge?.color,
+          side: BorderSide(color: Theme.of(context).dividerColor), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+      )),
       const SizedBox(height: Dimensions.paddingSizeSmall),
     ]);
   }
@@ -180,55 +190,51 @@ class _PriceButtonWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
 
-
-      SizedBox(
-        height: 50,
-        child: Center(
-          child:Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('total_price'.tr,
-                style: robotoRegular.copyWith(
-                  fontSize: Dimensions.fontSizeLarge,
-                  fontWeight: FontWeight.w400,
-                  color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: .6),
-                ),
-              ),
-              Directionality(
-                textDirection: TextDirection.ltr,
-                child: Text(' ${PriceConverter.convertPrice((cartController.totalPrice),
-                    isShowLongPrice: true)} ', style: robotoBold.copyWith(color: Theme.of(context).colorScheme.error, fontSize: Dimensions.fontSizeLarge,),
-                ),
-              )
-            ],
-          ),
-        ),
-      ),
-      Padding(padding: const EdgeInsets.only(
-        left: Dimensions.paddingSizeDefault,
-        right: Dimensions.paddingSizeDefault,
-        bottom: Dimensions.paddingSizeSmall,
-      ),
-        child: CustomButton(
-          width: Get.width,
-          height:  ResponsiveHelper.isDesktop(context)? 50 : 45,
-          radius: Dimensions.radiusDefault,
-          buttonText: 'proceed_to_checkout'.tr,
-          onPressed: cartController.checkProviderUnavailability() ? (){
+    final subtotal = cartController.cartList.fold<double>(0, (sum, item) => sum + item.totalCost.toDouble());
+    final tax = cartController.cartList.fold<double>(0, (sum, item) => sum + item.taxAmount.toDouble());
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 8), child: TextField(
+        readOnly: true, onTap: () => Get.toNamed(RouteHelper.getVoucherRoute(fromPage: 'cart')),
+        decoration: InputDecoration(prefixIcon: const Icon(Icons.sell_outlined), hintText: 'enter_coupon_code'.tr,
+          suffixText: 'view_offers'.tr, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16))),
+      )),
+      Container(margin: const EdgeInsets.fromLTRB(16, 16, 16, 12), padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF202020) : const Color(0xFFF4F4F4), borderRadius: BorderRadius.circular(22)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('payment_summary'.tr, style: GoogleFonts.manrope(fontSize: 17, fontWeight: FontWeight.w600, color: primaryColor)),
+          const SizedBox(height: 16),
+          _priceLine(context, 'item_total'.tr, subtotal),
+          const SizedBox(height: 10),
+          _priceLine(context, 'taxes_and_fee'.tr, tax),
+          const Divider(height: 24),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Text('amount_to_pay'.tr, style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: primaryColor)),
+            Text(PriceConverter.convertPrice(cartController.totalPrice), style: GoogleFonts.manrope(fontWeight: FontWeight.w800, color: primaryColor)),
+          ]),
+        ])),
+      Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 10), child: NestButton(
+          label: '${'checkout'.tr} Â· ${PriceConverter.convertPrice(cartController.totalPrice)}',
+          onTap: cartController.checkProviderUnavailability() ? (){
             customSnackBar("your_selected_provider_is_unavailable_right_now".tr);
           }: (Get.find<SplashController>().configModel.content?.minBookingAmount ?? 0) >  cartController.totalPrice ? (){
-            cartController.showMinimumAndMaximumOrderValueToaster();
+            cartController.showMintmumAndMaximumOrderValueToaster();
           } : () {
             Get.find<CheckOutController>().updateState(PageState.orderDetails);
-            Get.toNamed(RouteHelper.getNewBookingDetailsRoute());
+            Get.toNamed(RouteHelper.getCheckoutFinalRoute());
           },
         ),
       ),
     ]);
   }
+
+  Widget _priceLine(BuildContext context, String label, double amount) => Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+    Text(label, style: GoogleFonts.dmSans(fontSize: 13, color: Theme.of(context).textTheme.bodySmall?.color)),
+    Text(PriceConverter.convertPrice(amount), style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).textTheme.bodyLarge?.color)),
+  ]);
 }
 
 
@@ -238,6 +244,12 @@ class _ProviderInfoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
+    final bgColor = isDark ? const Color(0xFF171717) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF333333) : const Color(0xFFE5E5E5);
+
     return GetBuilder<CartController>(builder: (cartController){
 
       bool timeSlotAvailable;
@@ -260,65 +272,86 @@ class _ProviderInfoWidget extends StatelessWidget {
 
       return Container(
         width: ResponsiveHelper.isDesktop(context) ? 600 : Dimensions.webMaxWidth,
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05)),
-        padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-        child: Container(
-          decoration : BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-          ),
-          padding: const EdgeInsets.all(Dimensions.paddingSizeDefault,),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Text('provider_info'.tr, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault)),
-            const SizedBox(height: Dimensions.paddingSizeDefault),
-            Row(spacing: Dimensions.paddingSizeDefault, children: [
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Text('provider_info'.tr, style: GoogleFonts.manrope(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: primaryColor,
+          )),
+          const SizedBox(height: 16),
+          Row(spacing: 12, children: [
 
-              provider != null ? ClipRRect(
-                borderRadius: BorderRadius.circular(Dimensions.radiusSeven),
-                child: CustomImage(
-                  height: 60, width: 60,
-                  image: "${provider?.logoFullPath}",
-                ),
-              ) : const UnselectedProductWidget(),
+            provider != null ? ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: CustomImage(
+                height: 60, width: 60,
+                image: "${provider?.logoFullPath}",
+              ),
+            ) : const UnselectedProductWidget(),
 
-              provider != null ? Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, spacing: 5 ,children: [
-                  Text(provider?.companyName ?? "" , style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault)),
+            provider != null ? Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, spacing: 4 ,children: [
+                Text(provider?.companyName ?? "" , style: GoogleFonts.manrope(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: primaryColor,
+                )),
 
-                  Text(cartController.maskNumberWithoutCountryCode(provider?.contactPersonPhone ?? ''), style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault)),
-                  RichText(
-                    text: TextSpan(
-                      text: timeSlotAvailable && cartController.cartList[0].provider?.serviceAvailability == 1 ? 'available_from'.tr : "provider_is_currently_on_a_break".tr,
-                      style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,  color: Theme.of(context).textTheme.bodySmall?.color),
-                      children: <TextSpan>[
-                        if(timeSlotAvailable && cartController.cartList[0].provider?.serviceAvailability == 1)
-                          TextSpan(
-                            text: " : ${DateConverter.convertStringDateTimeToTime(cartController.cartList[0].provider!.timeSchedule!.startTime!)} ${'to'.tr} ${DateConverter.convertStringDateTimeToTime(cartController.cartList[0].provider!.timeSchedule!.endTime!)}",
-                            style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,  color: Theme.of(context).textTheme.bodyLarge?.color),
-                          )
-                      ],
+                Text(cartController.maskNumberWithoutCountryCode(provider?.contactPersonPhone ?? ''), style: GoogleFonts.dmSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                  color: mutedColor,
+                )),
+                RichText(
+                  text: TextSpan(
+                    text: timeSlotAvailable && cartController.cartList[0].provider?.serviceAvailability == 1 ? 'available_from'.tr : "provider_is_currently_on_a_break".tr,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                      color: mutedColor,
                     ),
-                  )
-                ]),
-              ) :  Expanded(
-                child: Text('${'let'.tr} ${AppConstants.appName} \n${'choose_for_you'.tr}'.tr,
-                  style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge - 1),
+                    children: <TextSpan>[
+                      if(timeSlotAvailable && cartController.cartList[0].provider?.serviceAvailability == 1)
+                        TextSpan(
+                          text: " : ${DateConverter.convertStringDateTimeToTime(cartController.cartList[0].provider!.timeSchedule!.startTime!)} ${'to'.tr} ${DateConverter.convertStringDateTimeToTime(cartController.cartList[0].provider!.timeSchedule!.endTime!)}",
+                          style: GoogleFonts.dmSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: primaryColor,
+                          ),
+                        )
+                    ],
+                  ),
+                )
+              ]),
+            ) :  Expanded(
+              child: Text('${'let'.tr} ${AppConstants.appName} \n${'choose_for_you'.tr}'.tr,
+                style: GoogleFonts.dmSans(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: mutedColor,
                 ),
               ),
-              InkWell(
-                onTap: () => showModalBottomSheet(
-                  useRootNavigator: true,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  context: context, builder: (context) => AvailableProviderWidget(
+            ),
+            InkWell(
+              onTap: () => showModalBottomSheet(
+                useRootNavigator: true,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                context: context, builder: (context) => AvailableProviderWidget(
                   subcategoryId: cartController.subcategoryId,
                 )),
-                child: Image.asset(Images.editButton,width: 20.0,height: 20.0,
-                ),
-              )
-            ]),
+              child: Image.asset(Images.editButton,width: 20.0,height: 20.0,
+              ),
+            )
           ]),
-        ),
+        ]),
       );
     });
   }
@@ -328,3 +361,6 @@ class _ProviderInfoWidget extends StatelessWidget {
         && DateConverter.convertTimeToDateTime(time).isBefore(DateConverter.convertTimeToDateTime(endTime!));
   }
 }
+
+
+

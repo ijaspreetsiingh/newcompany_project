@@ -156,3 +156,6 @@ class ProviderOfferDetailsScreen extends StatelessWidget {
     );
   }
 }
+
+
+

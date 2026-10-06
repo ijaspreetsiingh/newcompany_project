@@ -457,7 +457,16 @@ class UserProfileController extends GetxController implements GetxService{
   }
 
 
+  // Provider Subscribe toggle (admin se aata hai).
+  // true = subscription required (existing flow), false = koi payment nahi, subscription UI hide
+  bool get isSubscriptionRequired =>
+      (_providerModel?.content?.subscriptionInfo?.subscriptionRequired ?? 1) == 1;
+
   bool checkAvailableFeatureInSubscriptionPlan({required String featureType}){
+
+    if(!isSubscriptionRequired){
+      return true;
+    }
 
     bool status = _providerModel?.content?.subscriptionInfo?.status == "subscription_base"
         && !_providerModel!.content!.subscriptionInfo!.subscribedPackageDetails!.featureList!.contains(featureType) ? false : true;
@@ -501,6 +510,34 @@ class UserProfileController extends GetxController implements GetxService{
       final newMode = response.body['content']?['auto_assign_mode'];
       if (newMode != null) {
         _autoAssignMode = newMode == 1;
+      }
+      showCustomSnackBar('auto_assign_mode_updated'.tr, type: ToasterMessageType.success);
+    } else {
+      showCustomSnackBar(response.body['message'] ?? 'something_went_wrong'.tr);
+    }
+
+    _autoAssignLoading = false;
+    update();
+  }
+
+  /// Toggle ON ke saath wait time set karo (pehle toggle, phir wait time save)
+  Future<void> enableAutoAssign(int seconds) async {
+    _autoAssignLoading = true;
+    update();
+
+    Response response = await userRepo.toggleAutoAssign();
+    if (response.statusCode == 200) {
+      _autoAssignMode = true;
+      final newMode = response.body['content']?['auto_assign_mode'];
+      if (newMode != null) {
+        _autoAssignMode = newMode == 1;
+      }
+
+      if (seconds != _autoAssignWaitTime) {
+        Response waitResponse = await userRepo.updateAutoAssignWaitTime(seconds);
+        if (waitResponse.statusCode == 200) {
+          _autoAssignWaitTime = seconds;
+        }
       }
       showCustomSnackBar('auto_assign_mode_updated'.tr, type: ToasterMessageType.success);
     } else {

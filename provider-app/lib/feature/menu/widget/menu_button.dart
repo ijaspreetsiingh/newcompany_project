@@ -66,7 +66,9 @@ class MenuButton extends StatelessWidget {
           padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
           margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
           alignment: Alignment.center,
-          child: Image.asset(menu!.icon!, width: size, height: size,fit:BoxFit.contain),
+          child: menu!.icon != null
+              ? Image.asset(menu!.icon!, width: size, height: size,fit:BoxFit.contain)
+              : Icon(menu!.iconData ?? Icons.circle, size: size * 0.8, color: Theme.of(context).primaryColor),
         ),
         const SizedBox(height: Dimensions.paddingSizeExtraSmall),
         Text(menu!.title!,

@@ -37,3 +37,4 @@ class LanguageController extends GetxController {
     }
   }
 }
+

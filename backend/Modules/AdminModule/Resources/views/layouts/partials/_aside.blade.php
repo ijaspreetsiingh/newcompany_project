@@ -238,58 +238,8 @@ $logo = getBusinessSettingsImageFullPath(key: 'business_logo', settingType: 'bus
                     </ul>
                 </li>
             @endcanany
-            @canany(['campaign_view', 'campaign_add'])
-                <li class="has-sub-item {{request()->is('admin/campaign/*')?'sub-menu-opened':''}}">
-                    <a href="#" class="{{request()->is('admin/campaign/*')?'active-menu':''}}">
-                        <span class="material-icons" title="{{translate('campaigns')}}">campaign</span>
-                        <span class="link-title">{{translate('campaigns')}}</span>
-                    </a>
-                    <ul class="nav sub-menu">
-                        @can('campaign_view')
-                            <li>
-                                <a href="{{route('admin.campaign.list')}}"
-                                   class="{{request()->is('admin/campaign/list')?'active-menu':''}}">
-                                    {{translate('campaign_list')}}
-                                </a>
-                            </li>
-                        @endcan
-                        @can('campaign_add')
-                            <li>
-                                <a href="{{route('admin.campaign.create')}}"
-                                   class="{{request()->is('admin/campaign/create')?'active-menu':''}}">
-                                    {{translate('add_new_campaign')}}
-                                </a>
-                            </li>
-                        @endcan
-                    </ul>
-                </li>
-            @endcanany
-            @canany(['advertisement_view', 'advertisement_add'])
-                <li class="has-sub-item {{request()->is('admin/advertisements/*')?'sub-menu-opened':''}}">
-                    <a href="#" class="{{request()->is('admin/advertisements/*')?'active-menu':''}}">
-                        <span class="material-icons" title="{{translate('advertisements')}}">campaign</span>
-                        <span class="link-title">{{translate('advertisements')}}</span>
-                    </a>
-                    <ul class="nav sub-menu">
-                        @can('advertisement_view')
-                            <li>
-                                <a href="{{route('admin.advertisements.ads-list', ['status' => 'all'])}}"
-                                   class="{{request()->is('admin/advertisements/ads-list')?'active-menu':''}}">
-                                    {{translate('Ads List')}}
-                                </a>
-                            </li>
-                        @endcan
-                        @can('advertisement_add')
-                            <li>
-                                <a href="{{route('admin.advertisements.new-ads-request', ['status' => 'new'])}}"
-                                   class="{{request()->is('admin/advertisements/new-ads-request')?'active-menu':''}}">
-                                    {{translate('New Ads Request')}}
-                                </a>
-                            </li>
-                        @endcan
-                    </ul>
-                </li>
-            @endcanany
+
+
             @canany(['banner_add', 'banner_view'])
                 <li>
                     <a href="{{route('admin.banner.create')}}"
@@ -334,22 +284,13 @@ $logo = getBusinessSettingsImageFullPath(key: 'business_logo', settingType: 'bus
             @endcanany
 
 
-            @canany(['provider_view', 'provider_add', 'onboarding_request_view','withdraw_view', 'withdraw_add'])
+            @canany(['provider_view', 'provider_add', 'withdraw_view', 'withdraw_add'])
                 <li class="nav-category"
                     title="{{translate('provider_management')}}">
                     {{translate('provider_management')}}
                 </li>
             @endcanany
-            @can('onboarding_request_view')
-                <li>
-                    <a href="{{route('admin.provider.onboarding_request', ['status'=>'onboarding'])}}"
-                       class="{{request()->is('admin/provider/onboarding*')?'active-menu':''}}">
-                        <span class="material-icons" title="{{translate('Onboarding_Request')}}">description</span>
-                        <span class="link-title">{{translate('Onboarding_Request')}} <span
-                                class="count">{{$pending_providers + $denied_providers}}</span></span>
-                    </a>
-                </li>
-            @endcan
+
             @canany(['provider_view', 'provider_add'])
                 <li class="has-sub-item  {{(request()->is('admin/provider/list') || request()->is('admin/provider/create') || request()->is('admin/provider/details*') || request()->is('admin/provider/edit*') || request()->is('admin/provider/collect-cash*'))?'sub-menu-opened':''}}">
                     <a href="#"
@@ -467,12 +408,18 @@ $logo = getBusinessSettingsImageFullPath(key: 'business_logo', settingType: 'bus
                                     <span class="link-title">{{translate('New Service Requests')}}</span>
                                 </a>
                             </li>
+                            <li>
+                                <a href="{{route('admin.service.provider-services')}}"
+                                   class="{{request()->is('admin/service/provider-services*')?'active-menu':''}}">
+                                    <span class="link-title">{{translate('Provider Services')}}</span>
+                                </a>
+                            </li>
                         @endcan
                     </ul>
                 </li>
             @endcanany
 
-            @canany(['wallet_add','wallet_view','customer_view','customer_add','point_view', 'newsletter_view'])
+            @canany(['wallet_add','wallet_view','customer_view','customer_add','point_view'])
                 <li class="nav-category" title="{{translate('customer_management')}}">
                     {{translate('customer_management')}}
                 </li>
@@ -550,15 +497,6 @@ $logo = getBusinessSettingsImageFullPath(key: 'business_logo', settingType: 'bus
                 </li>
             @endcan
 
-            @can('newsletter_view')
-                <li>
-                    <a href="{{route('admin.customer.newsletter.index')}}"
-                       class="{{request()->is('admin/customer/newsletter/*')?'active-menu':''}}">
-                        <span class="material-icons" title="{{translate('subscribed_newsletter')}}">email</span>
-                        <span class="link-title">{{translate('Subscribed Newsletter')}}</span>
-                    </a>
-                </li>
-            @endcan
 
             @canany(['role_view', 'role_add', 'employee_add', 'employee_view'])
                 <li class="nav-category" title="{{translate('employee_management')}}">{{translate('employee_management')}}</li>
@@ -917,3 +855,4 @@ $logo = getBusinessSettingsImageFullPath(key: 'business_logo', settingType: 'bus
         </ul>
     </div>
 </aside>
+

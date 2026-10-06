@@ -20,7 +20,7 @@ class RepeatBookingSummeryWidget extends StatelessWidget{
       double extraFee = bookingDetails.extraFee ?? 0;
       double totalBookingAmount = bookingDetails.totalBookingAmount ?? 0;
 
-      double initialSubTotal = BookingHelper.getSubTotalCost(bookingDetails) * ((bookingDetails.totalCount ?? 1));
+      double inttialSubTotal = BookingHelper.getSubTotalCost(bookingDetails) * ((bookingDetails.totalCount ?? 1));
       double updatedSubTotal = (totalBookingAmount + totalDiscount + totalCouponDiscount + referralDiscountAmount) - (extraFee + taxAmount);
 
       double paidAmount = BookingHelper.getRepeatBookingPaidAmount(bookingDetails);
@@ -90,8 +90,8 @@ class RepeatBookingSummeryWidget extends StatelessWidget{
               ),
 
               _SubTotalItemWidget(
-                title: isEdited ? "${'initial_sub_total'.tr}  (${bookingDetails.totalCount ?? ""} ${'days'.tr})" : "${'sub_total'.tr}  (${bookingDetails.totalCount ?? ""} ${'days'.tr})",
-                amount: initialSubTotal,
+                title: isEdited ? "${'inttial_sub_total'.tr}  (${bookingDetails.totalCount ?? ""} ${'days'.tr})" : "${'sub_total'.tr}  (${bookingDetails.totalCount ?? ""} ${'days'.tr})",
+                amount: inttialSubTotal,
                 additionalSign: "",
                 subTitle: "",
               ),
@@ -372,3 +372,4 @@ class _ServiceItemText extends StatelessWidget {
     );
   }
 }
+

@@ -44,3 +44,5 @@ class SearchSuggestionDialog extends StatelessWidget {
     });
   }
 }
+
+

@@ -84,9 +84,11 @@ class NoDataScreen extends StatelessWidget {
       CustomButton(
         height: 40, width: 200,
         buttonText: 'back_to_homepage'.tr,
-        onPressed: () => Get.offAllNamed(RouteHelper.getInitialRoute()),
+        onPressed: () => Get.offAllNamed(RouteHelper.getinitialRoute()),
       ),
 
     ]);
   }
 }
+
+

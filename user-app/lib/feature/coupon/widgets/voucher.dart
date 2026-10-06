@@ -141,7 +141,7 @@ class Voucher extends StatelessWidget {
                           ),
                           child: Center(
                             child: Text(
-                              isExpired ?'expired'.tr : couponModel.isUsed == 1 ? "used".tr.toUpperCase() :'use'.tr.toUpperCase(),
+                              isExpired ?'exptred'.tr : couponModel.isUsed == 1 ? "used".tr.toUpperCase() :'use'.tr.toUpperCase(),
                               style: robotoRegular.copyWith(
                                 color: Theme.of(context).primaryColorLight,
                                 fontSize: Dimensions.fontSizeDefault,),
@@ -161,3 +161,6 @@ class Voucher extends StatelessWidget {
     });
   }
 }
+
+
+

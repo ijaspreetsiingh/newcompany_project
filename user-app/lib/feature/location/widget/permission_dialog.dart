@@ -49,3 +49,4 @@ class PermissionDialog extends StatelessWidget {
     );
   }
 }
+

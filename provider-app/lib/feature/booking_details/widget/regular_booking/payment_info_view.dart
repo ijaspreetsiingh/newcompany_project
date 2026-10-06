@@ -1,4 +1,3 @@
-import 'package:demandium_provider/helper/extension_helper.dart';
 import 'package:demandium_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
@@ -12,10 +11,12 @@ class PaymentInfoView extends StatelessWidget {
     return  GetBuilder<BookingDetailsController>(builder: (bookingDetailsController){
       return Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          boxShadow: context.customThemeColors.lightShadow
+          color: InkColors.card,
+          borderRadius: BorderRadius.circular(19),
+          border: Border.all(color: InkColors.border),
+          boxShadow: InkColors.cardShadow,
         ),
-        margin: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
+        margin: const EdgeInsets.only(bottom: 24),
         padding: const EdgeInsets.symmetric(
             vertical: Dimensions.paddingSizeDefault,
         ),

@@ -138,7 +138,7 @@ class AddressController extends Controller
             'address_type' => 'required|in:service,billing',
             'contact_person_name' => 'required',
             'contact_person_number' => 'required',
-            'address_label' => 'required',
+            'address_label' => 'nullable',
             'house' => 'nullable',
             'floor' => 'nullable',
         ]);
@@ -170,7 +170,7 @@ class AddressController extends Controller
         $address->address_type = $request->address_type;
         $address->contact_person_name = $request->contact_person_name;
         $address->contact_person_number = $request->contact_person_number;
-        $address->address_label = $request->address_label;
+        $address->address_label = $request->address_label ?? $address->address_label;
         $address->house = $request->house;
         $address->floor = $request->floor;
         $address->save();

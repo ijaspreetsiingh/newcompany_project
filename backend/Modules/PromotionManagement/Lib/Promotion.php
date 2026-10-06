@@ -216,16 +216,141 @@ if (!function_exists('device_notification_for_chatting')) {
     }
 }
 if (!function_exists('basic_discount_calculation')) {
-    function basic_discount_calculation($service, $total_purchase_amount): float
+    function basic_discount_calculation($service, $total_purchase_amount, mixed $providerId = null): float
     {
         $keeper = null;
-        if ($service->service_discount->count() > 0) {
-            $keeper = $service->service_discount[0]->discount;
-        } elseif ($service->category->category_discount->count() > 0) {
-            $keeper = $service->category->category_discount[0]->discount;
+
+        foreach ($service->service_discount as $serviceDiscountType) {
+            if (discount_applies_to_provider($serviceDiscountType->discount, $providerId)) {
+                $keeper = $serviceDiscountType->discount;
+                break;
+            }
+        }
+
+        if ($keeper === null) {
+            foreach ($service->category?->category_discount ?? [] as $categoryDiscountType) {
+                if (discount_applies_to_provider($categoryDiscountType->discount, $providerId)) {
+                    $keeper = $categoryDiscountType->discount;
+                    break;
+                }
+            }
         }
 
         return booking_discount_calculator($keeper, $total_purchase_amount);
+    }
+}
+
+if (!function_exists('discount_applies_to_provider')) {
+    /**
+     * Provider-restricted discount check. Discounts WITHOUT provider rows
+     * apply to every provider (legacy behaviour).
+     *
+     * @param mixed $discount Discount model (or null)
+     * @param mixed $providerId Offering provider id (null = no context → unrestricted)
+     * @return bool
+     */
+    function discount_applies_to_provider(mixed $discount, mixed $providerId): bool
+    {
+        if ($discount == null || empty($providerId)) return true;
+
+        $providerTypes = $discount->relationLoaded('discount_types')
+            ? $discount->discount_types->where('discount_type', 'provider')
+            : $discount->discount_types()->where('discount_type', 'provider')->get();
+
+        if ($providerTypes->isEmpty()) return true;
+
+        return $providerTypes->pluck('type_wise_id')->contains($providerId);
+    }
+}
+
+if (!function_exists('promotion_filtered_provider_ids')) {
+    /**
+     * Cascade filter: providers in selected zones that offer the selected
+     * categories/services (own services incl. clones/single-provider ∪
+     * category subscriptions of admin-owned services).
+     *
+     * @param array $categoryIds
+     * @param array $serviceIds
+     * @param array $zoneIds
+     * @param string $discountType
+     * @return array
+     */
+    function promotion_filtered_provider_ids(array $categoryIds, array $serviceIds, array $zoneIds, string $discountType): array
+    {
+        $clean = function (array $ids) {
+            return array_values(array_filter($ids, fn($id) => $id !== 'all' && $id !== '0' && $id !== 0 && !is_null($id) && $id !== ''));
+        };
+
+        $categoryIds = $clean($categoryIds);
+        $serviceIds = $clean($serviceIds);
+        $zoneIds = $clean($zoneIds);
+
+        $serviceCategoryIds = !empty($serviceIds)
+            ? \Modules\ServiceManagement\Entities\Service::whereIn('id', $serviceIds)->pluck('category_id')->filter()->unique()->values()->all()
+            : [];
+
+        $effectiveCategoryIds = array_values(array_unique(array_merge($categoryIds, $serviceCategoryIds)));
+
+        $query = \Modules\ProviderManagement\Entities\Provider::query()
+            ->where('is_active', 1)
+            ->where('is_approved', 1)
+            ->where('is_suspended', 0)
+            ->when(!empty($zoneIds), fn($q) => $q->whereIn('zone_id', $zoneIds));
+
+        if (!empty($categoryIds) || !empty($serviceIds) || !empty($effectiveCategoryIds)) {
+            $candidateIds = collect();
+
+            if (!empty($categoryIds) || !empty($serviceIds)) {
+                $ownedServices = \Modules\ServiceManagement\Entities\Service::where(function ($q) use ($categoryIds, $serviceIds) {
+                    if (!empty($categoryIds)) {
+                        $q->orWhereIn('category_id', $categoryIds);
+                    }
+                    if (!empty($serviceIds)) {
+                        $q->orWhereIn('id', $serviceIds);
+                    }
+                })->get(['provider_id', 'single_provider_id']);
+
+                $candidateIds = $candidateIds
+                    ->merge($ownedServices->pluck('provider_id'))
+                    ->merge($ownedServices->pluck('single_provider_id'));
+            }
+
+            if (!empty($effectiveCategoryIds)) {
+                $candidateIds = $candidateIds->merge(
+                    \Modules\ProviderManagement\Entities\SubscribedService::where('is_subscribed', 1)
+                        ->whereIn('category_id', $effectiveCategoryIds)
+                        ->pluck('provider_id')
+                );
+            }
+
+            $query->whereIn('id', $candidateIds->filter()->unique()->values()->all());
+        }
+
+        return $query->pluck('id')->all();
+    }
+}
+
+if (!function_exists('promotion_resolve_provider_ids')) {
+    /**
+     * Resolve provider_ids coming from admin forms ('all' expands server-side).
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return array
+     */
+    function promotion_resolve_provider_ids(\Illuminate\Http\Request $request): array
+    {
+        $requested = array_values(array_filter((array)$request->input('provider_ids', [])));
+
+        if (in_array('all', $requested, true)) {
+            return promotion_filtered_provider_ids(
+                (array)$request->input('category_ids', []),
+                (array)$request->input('service_ids', []),
+                (array)$request->input('zone_ids', []),
+                (string)$request->input('discount_type', 'category')
+            );
+        }
+
+        return array_values(array_diff($requested, ['all', '0']));
     }
 }
 

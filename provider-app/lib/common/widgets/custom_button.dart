@@ -50,19 +50,19 @@ class CustomButton extends StatelessWidget {
             isShowLoadingButton ? isLoading ?
             Padding( padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
               child: SizedBox(height: fontSize ?? Dimensions.fontSizeDefault , width: fontSize ?? Dimensions.fontSizeDefault,
-                child: CircularProgressIndicator(color: transparent! ? Theme.of(context).primaryColor : textColor ?? Colors.white, strokeWidth: 2,),
+                child: CircularProgressIndicator(color: transparent! ? Theme.of(context).primaryColor : textColor ?? (Get.isDarkMode ? const Color(0xFF0A0A0A) : Colors.white), strokeWidth: 2,),
               ),
             ): const SizedBox() : const SizedBox(),
 
             icon != null && !isLoading ? Padding(
               padding: const EdgeInsets.only(right: Dimensions.paddingSizeExtraSmall),
-              child: Icon(icon, color: transparent! ? Theme.of(context).primaryColor : textColor ?? Colors.white, size: fontSize ?? Dimensions.fontSizeLarge,),
+              child: Icon(icon, color: transparent! ? Theme.of(context).primaryColor : textColor ?? (Get.isDarkMode ? const Color(0xFF0A0A0A) : Colors.white), size: fontSize ?? Dimensions.fontSizeLarge,),
             ) : const SizedBox(),
 
             Flexible(
               child: Text( isLoading ? "loading".tr : btnTxt, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis, style: robotoMedium.copyWith(
                 letterSpacing: 0.2,
-                color: transparent! ? Theme.of(context).primaryColor : textColor ?? Colors.white, fontSize: fontSize ?? Dimensions.fontSizeLarge,
+                color: transparent! ? Theme.of(context).primaryColor : textColor ?? (Get.isDarkMode ? const Color(0xFF0A0A0A) : Colors.white), fontSize: fontSize ?? Dimensions.fontSizeLarge,
               )),
             ),
           ]),

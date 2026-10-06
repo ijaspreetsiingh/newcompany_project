@@ -2,65 +2,50 @@ import 'package:demandium_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 class NoServicemanView extends StatelessWidget {
-  const NoServicemanView({
-    super.key,
-  });
+  const NoServicemanView({super.key});
+
+  void _addServiceman() {
+    Get.find<BusinessSubscriptionController>().openTrialEndBottomSheet().then((isTrial){
+      if(isTrial){
+        Get.find<ServicemanSetupController>().controller!.index = 0;
+        Get.find<ServicemanSetupController>().getSingleServicemanData(index: -1, fromPage: "others");
+        Get.find<ServicemanSetupController>().clearAllData();
+        Get.find<ServicemanSetupController>().resetOtherValidationData();
+        Get.to(()=>const AddNewServicemanScreen());
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SliverToBoxAdapter(child: SizedBox(
-      height: Get.height * 0.8,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
 
+            Image.asset(Images.noServicemanIcon, height: 64, width: 64),
 
-          Image.asset(Images.noServicemanIcon, height: 60, width: 60,),
-          const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+            const SizedBox(height: 20),
 
-
-          Text("no_serviceman_title".tr, style: robotoBold,),
-          const SizedBox(height: Dimensions.paddingSizeSmall),
-
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeLarge),
-            child: Text("no_serviceman_subtitle".tr,
-              maxLines: 3,
-              textAlign: TextAlign.center,
-              style: robotoLight),
-          ),
-          const SizedBox(height: Dimensions.paddingSizeDefault),
-
-
-          Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-
-
-            const Expanded(child: SizedBox()),
-            Expanded(flex: 2,
-              child: CustomButton(
-                onPressed: (){
-                Get.find<BusinessSubscriptionController>().openTrialEndBottomSheet().then((isTrial){
-                  if(isTrial){
-                    Get.find<ServicemanSetupController>().controller!.index=0;
-                    Get.find<ServicemanSetupController>().getSingleServicemanData(index :-1, fromPage: "others");
-                    Get.find<ServicemanSetupController>().clearAllData();
-                    Get.find<ServicemanSetupController>().resetOtherValidationData();
-                    Get.to(()=>const AddNewServicemanScreen());
-                  }
-                });},
-                btnTxt: "add_serviceman".tr,
-                icon: Icons.add_circle_outline,
-              ),
+            Text("no_serviceman_title".tr, textAlign: TextAlign.center,
+              style:  TextStyle(fontSize: 17, height: 1.3, fontWeight: FontWeight.w700, color: InkColors.foreground),
             ),
-            const Expanded(child: SizedBox()),
 
+            const SizedBox(height: 8),
 
-          ])
+            Text("no_serviceman_subtitle".tr, textAlign: TextAlign.center,
+              style:  TextStyle(fontSize: 13, height: 1.5, color: InkColors.mutedForeground),
+            ),
 
-        ],),
-    ),);
+            const SizedBox(height: 24),
+
+            InkPrimaryButton(label: "add_serviceman".tr, onTap: _addServiceman),
+
+          ],
+        ),
+      ),
+    );
   }
 }

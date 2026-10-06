@@ -1,0 +1,386 @@
+# 🎯 COMPLETE BOOKING FLOW - A-TO-Z DESIGNNEW REFERENCE
+
+## FLOW DIAGRAM:
+
+```
+HOME → BROWSE SERVICES → SELECT SERVICE → BOOK (SHEET)
+  ↓
+CART → CHECKOUT (ADDRESS + DATE + TIME) → PAYMENT → CONFIRMATION → TRACKING
+  ↓
+BOOKINGS LIST → SELECT BOOKING → BOOKING DETAILS (TRACKING) → REPEAT/CANCEL
+```
+
+---
+
+## SCREEN-BY-SCREEN BREAKDOWN:
+
+### 1️⃣ HOME SCREEN (Bottom Nav: "Home")
+**Action: Click Service Card**
+- Shows: Categories, featured service, popular services
+- Click "Book now" on any service card
+- **NEXT SCREEN:** ServiceCustomizeSheet (sheet overlay)
+
+---
+
+### 2️⃣ SERVICE CUSTOMIZE SHEET (Modal/Sheet)
+**Design:** Bottom sheet with handle bar
+- Shows: Service image, name, category, rating
+- **Section: "Choose package"** (standard service option selected)
+- **Section: "Quantity"** (+ and - buttons to select quantity)
+- **Button: "Add to cart · ₹[price]"** → Adds quantity × price to cart, closes sheet
+- **X Button:** Closes sheet without adding
+
+**Next Action from here:**
+- Tap "Add to cart" → goes to CART
+- Tap X → back to service detail
+
+---
+
+### 3️⃣ CART SCREEN (Bottom Nav: "Cart")
+**Shows:**
+- Cart item card: image + name + date/time + price + quantity stepper
+- **Button: "Add more services"** → goes to SERVICES LIST
+- **Coupon Input:** with "View offers" button
+- **Price Summary:**
+  - Item total
+  - Taxes & fee
+  - Coupon discount (if applied)
+  - Total amount to pay
+
+- **Button: "Checkout · ₹[total]"** → goes to CHECKOUT
+
+---
+
+### 4️⃣ CHECKOUT SCREEN (Address + Schedule + Payment Progress 1/3)
+**Design:** ONE FULL PAGE with scroll
+
+**Progress Indicator:** 1 ✓ — 2 ◦ — 3 ◦
+
+**Section: "Service address"**
+- **Card: Address selected** (Home, Office, etc.)
+  - Shows: Address name, full address
+  - "EDIT" button
+  - Green border/checkmark (selected)
+- **Button: "+ Add a new address"** → Opens address selector sheet (future)
+
+**Section: "Choose a day"**
+- **Horizontal scroll of 4 date cards:**
+  - Today | 29
+  - Tomorrow | 30
+  - Thu | 01
+  - Fri | 02
+  - (Tap to select, shows active state)
+
+**Section: "Pick a time"**
+- **Grid of 6 time slots (2 columns or 3x2):**
+  - 8:00 AM | 10:00 AM | 12:00 PM
+  - 2:00 PM | 4:00 PM | 6:00 PM
+  - (Tap to select, shows active state)
+
+**Price Summary:**
+- Item total: ₹2,499
+- Taxes & fee: ₹249
+- Total: ₹2,748
+
+**Button: "Continue to payment"** → goes to PAYMENT
+
+---
+
+### 5️⃣ PAYMENT SCREEN (Payment Method + Progress 2/3)
+**Design:** ONE FULL PAGE
+
+**Progress Indicator:** 1 ✓ — 2 ✓ — 3 ◦
+
+**Booking Mini Card (Recap):**
+- 📅 Icon
+- **SERVICE APPOINTMENT** (label)
+- Tomorrow, 10:00 AM (selected date/time)
+- Home · Indiranagar (selected address)
+
+**Section: "Select payment method"**
+- **3 Payment Option Cards (each clickable):**
+
+  1. **Cash after service**
+     - Icon: Wallet
+     - Subtitle: "Pay after service"
+     - Radio button (selected/unselected)
+
+  2. **UPI / digital wallet**
+     - Icon: Lightning bolt
+     - Subtitle: "Instant payment"
+     - Radio button
+
+  3. **Credit or debit card**
+     - Icon: Credit card
+     - Subtitle: "Secure payment"
+     - Radio button
+
+**Price Summary (Same as checkout):**
+- Item total: ₹2,499
+- Taxes & fee: ₹249
+- Total: ₹2,748
+
+**Button: "Place booking · ₹2,748"** → goes to CONFIRMATION
+
+---
+
+### 6️⃣ CONFIRMATION SCREEN (Success)
+**Design:** Centered, vertical layout
+
+- **Success Mark:** Large ✓ in circle (orange background)
+- **"BOOKING CONFIRMED"** (small label)
+- **"Your home is in good hands."** (large title)
+- **"We've received your booking. A professional will be assigned shortly."** (description)
+
+**Booking Ticket Card:**
+- **BOOKING ID**
+- **#NE384921** (displayed prominently)
+- Line divider
+- 📅 Tomorrow, 30 Sep
+- 🕐 10:00 AM
+- 📍 Home · Indiranagar
+
+**Button: "Track booking"** → goes to BOOKING TRACKING
+
+**Button: "Back to home"** (outline style) → goes to HOME
+
+---
+
+### 7️⃣ BOOKING TRACKING SCREEN (Full Details + Timeline)
+**Design:** Full screen with scroll
+
+**Status Hero (Top):**
+- **"PROFESSIONAL ASSIGNED"** (label)
+- **"Everything's on track"** (title)
+- **"Rahul will arrive tomorrow by 10:00 AM"** (subtitle)
+
+**Timeline Section:**
+- 4 Steps (vertical line connecting them):
+  1. ✓ Booking confirmed — Today, 11:42 AM
+  2. ✓ Professional assigned — Today, 12:10 PM
+  3. ◦ Service in progress — Pending
+  4. ◦ Completed — Pending
+
+**Professional Card:**
+- Avatar: "RK" (initials)
+- **YOUR PROFESSIONAL**
+- **Rahul Kumar**
+- ⭐ 4.92 · 1.2k jobs
+- 📞 Call button (icon button)
+- 💬 Chat button (icon button)
+
+**Info Cards (3 cards):**
+1. 📅 **SCHEDULE** → Tomorrow, 10:00 AM
+2. 📍 **ADDRESS** → 12, 3rd Cross Road, Indiranagar
+3. 💳 **PAYMENT** → Cash after service
+
+**Buttons:**
+- "Cancel booking" (outline)
+- "Repeat" (filled orange)
+
+---
+
+### 8️⃣ BOOKINGS LIST SCREEN (Bottom Nav: "Bookings")
+**Design:** Full screen
+
+**Header:**
+- **"Bookings"** (title)
+- 🆘 Help icon button → goes to SUPPORT
+
+**Tab Row (3 tabs):**
+- **Ongoing** (default, active)
+- **Completed**
+- **Canceled**
+
+**TAB: "Ongoing"**
+- **Booking Card (clickable):**
+  - **PROFESSIONAL ASSIGNED** #NE384921
+  - Service image
+  - **Full home deep cleaning**
+  - Tomorrow · 10:00 AM
+  - ₹2,548
+  - →  (chevron)
+  - Progress dots (✓✓◦◦)
+  - "Rahul is preparing for your service"
+  - **Tap card → goes to BOOKING TRACKING** (screen #7)
+
+**TAB: "Completed"**
+- **Booking Card:**
+  - **COMPLETED** #NE371024
+  - Service image: AC service & repair
+  - 16 Sep · 2:00 PM
+  - ₹699
+  - "Book again" button
+  - **Tap "Book again" → goes to SERVICE DETAIL** (new instance, or add to cart directly)
+
+**TAB: "Canceled"**
+- Empty state: "No canceled bookings. Bookings you cancel will show up here."
+
+---
+
+### 9️⃣ SERVICE DETAIL SCREEN
+**Action: Tap service card on Home or Services list**
+
+**Hero Section:**
+- Full image (scrollable)
+- Back button (left)
+- Save button + Cart counter (right, top corner)
+
+**Content Section (scroll):**
+- **Service category** (small label)
+- **Service name** (title)
+- **Rating line:** ⭐ 4.89 · 8.2k reviews · 🕐 4–5 hrs
+
+**Price Band:**
+- Starts at ₹2,499
+- Pay after service
+
+**About Section:**
+- Description text
+- **7-day service warranty card**
+  - ✓ Free revisit if something isn't right
+
+**Photos & videos:**
+- Gallery (2-3 images)
+- "See all" action link
+
+**Ratings & reviews:**
+- Star rating: 4.89
+- Based on 8.2k verified bookings
+- Sample review card:
+  - Avatar: "PS"
+  - Name: Priya Sharma
+  - Time: 3 days ago
+  - ⭐ 5
+  - Comment: "Professional, punctual and very thorough..."
+
+**Sticky Button (bottom):**
+- **"Book now · ₹2,499"** → opens ServiceCustomizeSheet
+
+---
+
+## BOTTOM NAVIGATION (5 Tabs)
+✅ Home
+✅ Services
+✅ Bookings
+✅ Cart
+❌ ~~Inbox~~ (REMOVED)
+✅ Account
+
+**IMPORTANT:** Inbox removed from bottom nav - only accessible from Account menu
+
+---
+
+## ACCOUNT SCREEN (Bottom Nav: "Account")
+**Shows:**
+
+**Header:**
+- "Account" title
+- 🔔 Notifications icon button → goes to NOTIFICATIONS
+
+**Profile Card:**
+- Avatar: "AS"
+- "Aanya Sharma"
+- "View or edit profile"
+- → Tap → goes to PROFILE
+
+**Menu Card (11 items):**
+1. 📥 Inbox → goes to INBOX SCREEN
+2. 👤 Profile → goes to PROFILE
+3. 📅 Bookings → goes to BOOKINGS LIST
+4. 🏷️  Offers → goes to OFFERS
+5. 🎁 Vouchers → goes to COUPONS
+6. ❤️ My favorites → goes to FAVORITES
+7. 💬 My posts → goes to MY POSTS
+8. 💼 Wallet → goes to WALLET
+9. 🎁 Refer & earn → goes to REFERRAL
+10. 🌐 Language → goes to LANGUAGE
+11. ⚙️ Settings → goes to SETTINGS
+
+**Secondary Menu Card (5 items):**
+1. 📍 Service area → goes to AREAS
+2. ❓ Help & support → goes to SUPPORT
+3. 💼 Become professional → goes to PROVIDER
+4. ℹ️ About nest. → goes to POLICY
+5. 📋 Terms & privacy → goes to POLICY
+
+**Button:**
+- "Log out" → goes to SIGNIN
+
+---
+
+## ADDITIONAL SCREENS (Accessible from Account or other menus):
+
+### INBOX SCREEN
+- Conversations list (professional name + last message + timestamp)
+- Tap conversation → goes to CHAT
+
+### CHAT SCREEN
+- Messages thread
+- Message input at bottom
+- Call button, Chat heading
+
+### NOTIFICATIONS SCREEN
+- List of notifications by date
+- "Professional assigned", "Booking confirmed", etc.
+
+### PROFILE SCREEN
+- Avatar with "Change photo" button
+- Form fields: Full name, Phone, Email
+- "Save changes" button
+
+### SETTINGS SCREEN
+- Toggle switches:
+  - 🌙 Dark mode
+  - 🔔 Booking updates
+  - 🎁 Offers & updates
+- "Delete account" button
+
+### WALLET SCREEN
+- Balance card: ₹1,240
+- "Add money" button
+- Loyalty points: 680 pts (₹68 value)
+- Recent transactions list
+
+### OFFERS SCREEN
+- Black hero banner: "A little care on us"
+- Offer cards: 25% OFF, ₹200 OFF, etc.
+- Tap offer → goes to SERVICE DETAIL
+
+### COUPONS SCREEN
+- Coupon cards (code + discount + terms + APPLY button)
+- Tap APPLY → applies coupon
+
+### FAVORITES SCREEN
+- Tab: Services | Professionals
+- List of saved services
+- Tap service → goes to SERVICE DETAIL
+
+### SERVICES LIST SCREEN
+- Search box
+- Category chips (All, Cleaning, AC, etc.)
+- Sort & filter button
+- Services grid/list
+- Tap service → goes to SERVICE DETAIL
+
+---
+
+## COMPLETE FLOW SUMMARY:
+
+**Shopping Flow:**
+Home (category/search) → Services List → Service Detail → Customize Sheet → Cart → Checkout → Payment → Confirmation → Tracking
+
+**Management Flow:**
+Bookings List (tab: Ongoing/Completed) → Booking Tracking → Call/Chat/Cancel/Repeat
+
+**Account Flow:**
+Account → Any sub-screen (Profile, Settings, Wallet, etc.)
+
+---
+
+✅ **ALL SCREENS MAPPED**
+✅ **EVERY CLICK DESTINATION DOCUMENTED**
+✅ **DESIGNNEW REFERENCE COMPLETE**
+✅ **BOTTOM NAV UPDATED** (Inbox removed, Account only)
+
+Ready to implement!

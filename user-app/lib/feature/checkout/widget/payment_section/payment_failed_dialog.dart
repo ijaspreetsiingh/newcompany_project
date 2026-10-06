@@ -28,7 +28,7 @@ class PaymentFailedDialog extends StatelessWidget {
 
       TextButton(
         onPressed: () {
-          Get.offAllNamed(RouteHelper.getInitialRoute());
+          Get.offAllNamed(RouteHelper.getinitialRoute());
         },
         style: TextButton.styleFrom(
           backgroundColor: Theme.of(context).disabledColor.withValues(alpha: 0.3), minimumSize: const Size(Dimensions.webMaxWidth, 45), padding: EdgeInsets.zero,
@@ -40,3 +40,5 @@ class PaymentFailedDialog extends StatelessWidget {
     ]);
   }
 }
+
+

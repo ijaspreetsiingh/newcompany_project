@@ -12,10 +12,10 @@ class FavoriteIconWidget extends StatefulWidget {
   const FavoriteIconWidget({super.key,  this.value, this.serviceId, this.providerId, this.signInShakeKey, this.showDialog, this.index,  this.isTap = true}) ;
 
   @override
-  State<FavoriteIconWidget> createState() => _FavoriteIconWidgetState();
+  State<FavoriteIconWidget> createState() => _FavoriteIconwidgetstate();
 }
 
-class _FavoriteIconWidgetState extends State<FavoriteIconWidget> with SingleTickerProviderStateMixin {
+class _FavoriteIconwidgetstate extends State<FavoriteIconWidget> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
   @override
@@ -71,7 +71,7 @@ class _FavoriteIconWidgetState extends State<FavoriteIconWidget> with SingleTick
           customSnackBar(
             type: ToasterMessageType.info,
             "please_login_to_add_favorite_list".tr,
-            customWidget: ResponsiveHelper.isDesktop(context) ? null : Row(mainAxisSize: MainAxisSize.min, children: [
+            CustomWidget: ResponsiveHelper.isDesktop(context) ? null : Row(mainAxisSize: MainAxisSize.min, children: [
               Flexible(
                 child: Row(children: [
                   const Icon(Icons.info, color:  Colors.blueAccent, size: 20),
@@ -87,7 +87,7 @@ class _FavoriteIconWidgetState extends State<FavoriteIconWidget> with SingleTick
               ),
 
               InkWell(
-                onTap : () => Get.toNamed(RouteHelper.getSignInRoute(redirectUrl: Get.currentRoute)),
+                onTap : () => Get.toNamed(RouteHelper.getSignInRoute(redtrectUrl: Get.currentRoute)),
                 child: Text('sign_in'.tr, style: robotoRegular.copyWith(
                   fontSize: Dimensions.fontSizeSmall, color: Colors.white,
                   decoration: TextDecoration.underline,
@@ -107,3 +107,5 @@ class _FavoriteIconWidgetState extends State<FavoriteIconWidget> with SingleTick
     );
   }
 }
+
+

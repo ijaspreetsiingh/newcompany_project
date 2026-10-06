@@ -65,7 +65,7 @@ class RepeatBookingDetailsWidget extends StatelessWidget {
 
                       const SizedBox(width:Dimensions.paddingSizeSmall),
 
-                      CustomButton(width: 120, color: Colors.blue,
+                      CustomButton(width: 120,
                         icon: Icons.file_present, btnTxt: "invoice".tr,
                         onPressed: () async {
                           showCustomDialog(child: const CustomLoader());
@@ -129,12 +129,20 @@ class RepeatBookingDetailsWidget extends StatelessWidget {
                       heroTag: "1",
                       elevation: 0.0,
                       backgroundColor: Colors.green,
-                      onPressed: () async => await  launchUrl(Uri(
-                        scheme: 'tel',
-                        path: bookingDetails.serviceAddress?.contactPersonNumber ?? bookingDetails.subBooking?.serviceAddress?.contactPersonNumber ?? "",
-                      ),mode: LaunchMode.externalApplication,
-                      ),
-                      child: Icon(Icons.call,color: light.cardColor, size: 20,),
+                      onPressed: () async {
+                        try {
+                          final bool ok = await launchUrl(Uri(
+                            scheme: 'tel',
+                            path: bookingDetails.serviceAddress?.contactPersonNumber ?? bookingDetails.subBooking?.serviceAddress?.contactPersonNumber ?? "",
+                          ), mode: LaunchMode.externalApplication);
+                          if (!ok) {
+                            showCustomSnackBar('something_went_wrong'.tr, type: ToasterMessageType.error);
+                          }
+                        } catch (_) {
+                          showCustomSnackBar('something_went_wrong'.tr, type: ToasterMessageType.error);
+                        }
+                      },
+                      child: Icon(Icons.call,color: Colors.white, size: 20,),
                     ),
                   ),
 
@@ -151,7 +159,7 @@ class RepeatBookingDetailsWidget extends StatelessWidget {
                           showCustomBottomSheet(child: const CreateChannelDialog(isSubBooking: false));
                         }
                       },
-                      child: Icon(Icons.message_rounded,color: light.cardColor,size: 18,),
+                      child: Icon(Icons.message_rounded,color: Theme.of(context).colorScheme.onPrimary,size: 18,),
                     ),
                   ),
                 ],

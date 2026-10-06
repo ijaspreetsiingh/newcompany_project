@@ -9,29 +9,30 @@ class NotificationSetupShimmer extends StatelessWidget {
     return ListView.builder(
       itemBuilder: (context ,index){
         return Padding(padding: const EdgeInsets.symmetric(
-          vertical: Dimensions.paddingSizeSmall- 3,
+          vertical: 6,
         ),
           child: Shimmer(duration: const Duration(seconds: 2), child: Container(
             height: 120, width: Get.width,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
-              color: Theme.of(context).hintColor.withValues(alpha:0.2),
+              borderRadius: BorderRadius.circular(16),
+              color: InkColors.card,
+              border: Border.all(color: InkColors.border),
             ),
-            child:  Padding(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeSmall + 2,),
+            child:  Padding(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12,),
               child: Column( crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-                Container(height: 20, width: 150,
+                Container(height: 18, width: 150,
                   decoration: BoxDecoration(
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
+                      color: InkColors.accent,
                       borderRadius: BorderRadius.circular(Dimensions.radiusDefault)
                   ),
                 ),
-                const SizedBox(height: Dimensions.paddingSizeSmall),
+                const SizedBox(height: 10),
 
 
                 Container(height: 12 , width: 200,
                   decoration: BoxDecoration(
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
+                      color: InkColors.accent,
                       borderRadius: BorderRadius.circular(Dimensions.radiusDefault)
                   ),
                 ),
@@ -40,7 +41,7 @@ class NotificationSetupShimmer extends StatelessWidget {
 
                 Container(height: 12 , width: 170,
                   decoration: BoxDecoration(
-                      color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
+                      color: InkColors.accent,
                       borderRadius: BorderRadius.circular(Dimensions.radiusDefault)
                   ),
                 ),
@@ -53,7 +54,7 @@ class NotificationSetupShimmer extends StatelessWidget {
                     children: [
                       Container(height: 18, width: 18,
                         decoration: BoxDecoration(
-                            color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
+                            color: InkColors.accent,
                             borderRadius: BorderRadius.circular(5)
                         ),
                       ),
@@ -62,7 +63,7 @@ class NotificationSetupShimmer extends StatelessWidget {
 
                       Container(height: 18, width: 80,
                         decoration: BoxDecoration(
-                            color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
+                            color: InkColors.accent,
                             borderRadius: BorderRadius.circular(5)
                         ),
                       ),
@@ -72,7 +73,7 @@ class NotificationSetupShimmer extends StatelessWidget {
                     children: [
                       Container(height: 18, width: 18,
                         decoration: BoxDecoration(
-                            color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
+                            color: InkColors.accent,
                             borderRadius: BorderRadius.circular(5)
                         ),
                       ),
@@ -81,7 +82,7 @@ class NotificationSetupShimmer extends StatelessWidget {
 
                       Container(height: 18, width: 70,
                         decoration: BoxDecoration(
-                            color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
+                            color: InkColors.accent,
                             borderRadius: BorderRadius.circular(5)
                         ),
                       ),
@@ -91,7 +92,7 @@ class NotificationSetupShimmer extends StatelessWidget {
                     children: [
                       Container(height: 18, width: 18,
                         decoration: BoxDecoration(
-                            color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
+                            color: InkColors.accent,
                             borderRadius: BorderRadius.circular(5)
                         ),
                       ),
@@ -100,7 +101,7 @@ class NotificationSetupShimmer extends StatelessWidget {
 
                       Container(height: 18, width: 60,
                         decoration: BoxDecoration(
-                            color: Get.isDarkMode? Colors.grey.shade700 : Colors.grey.shade100,
+                            color: InkColors.accent,
                             borderRadius: BorderRadius.circular(5)
                         ),
                       ),

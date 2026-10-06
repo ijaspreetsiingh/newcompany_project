@@ -2,6 +2,43 @@ import 'package:demandium_provider/feature/reporting/model/business_report_earni
 import 'package:get/get.dart';
 import 'package:demandium_provider/util/core_export.dart';
 
+ TextStyle _earnLabelStyle = TextStyle(
+  fontSize: 12.5,
+  height: 1.3,
+  fontWeight: FontWeight.w500,
+  color: InkColors.mutedForeground,
+);
+
+ TextStyle _earnLabelStrongStyle = TextStyle(
+  fontSize: 13,
+  height: 1.3,
+  fontWeight: FontWeight.w700,
+  color: InkColors.foreground,
+);
+
+ TextStyle _earnValueStyle = TextStyle(
+  fontFamily: 'SpaceGrotesk',
+  fontSize: 13,
+  height: 1.3,
+  fontWeight: FontWeight.w700,
+  letterSpacing: -0.2,
+  color: InkColors.foreground,
+);
+
+Widget _earnRow(String label, String value, {TextStyle? style}) => Padding(
+  padding: const EdgeInsets.symmetric(vertical: 5),
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Flexible(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: _earnLabelStyle)),
+      const SizedBox(width: 12),
+      Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, style: style ?? _earnValueStyle),
+    ],
+  ),
+);
+
+Widget _earnDivider() => Container(height: 1, color: InkColors.border);
+
 class BusinessReportEarningListView extends StatelessWidget {
   final  List<BusinessReportEarningFilterData>  filterData;
   const BusinessReportEarningListView({super.key, required this.filterData});
@@ -14,314 +51,127 @@ class BusinessReportEarningListView extends StatelessWidget {
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.only(top: Dimensions.paddingSizeDefault, bottom: Dimensions.paddingSizeDefault),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           itemBuilder: (context,index){
 
             double  netProfit = filterData[index].bookingDetailsAmounts?.providerEarning??0;
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: Dimensions.paddingSizeExtraSmall,
-                horizontal: Dimensions.paddingSizeDefault
+            return Container(
+              width: double.infinity,
+              margin: EdgeInsets.only(bottom: index == filterData.length - 1 ? 0 : 12),
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: InkColors.card,
+                borderRadius: BorderRadius.circular(19),
+                border: Border.all(color: InkColors.border),
               ),
-              child: Container(
-                width: Get.width,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Theme.of(context).hintColor.withValues(alpha:0.2)),
-                  borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                  color: Theme.of(context).cardColor.withValues(alpha:Get.isDarkMode?0.5:1),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withValues(alpha:0.05),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(Dimensions.radiusSmall),
-                          topRight: Radius.circular(Dimensions.radiusSmall),
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
+              child: Column(children: [
 
-                              Text('booking_id'.tr,
-                                style: robotoMedium.copyWith(
-                                  color: Theme.of(context).hintColor,
-                                ),
-                              ),
-                              Text(" #${filterData[index].readableId.toString()}",
-                                style: robotoMedium,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-
-                            ],
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration:  BoxDecoration(
+                    color: InkColors.secondary,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(19),
+                      topRight: Radius.circular(19),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: [
+                        Text('booking_id'.tr, style: _earnLabelStyle),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(" #${filterData[index].readableId.toString()}",
+                            style:  TextStyle(
+                              fontSize: 12.5,
+                              height: 1.3,
+                              fontWeight: FontWeight.w700,
+                              color: InkColors.foreground,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: Dimensions.paddingSizeSmall),
-
-                          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                            Text('booking_amount'.tr,
-                              style: robotoRegular.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                              ),
-                            ),
-                            Text(PriceConverter.convertPrice(filterData[index].totalBookingAmount),
-                              style: robotoBold.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).primaryColor,
-                              ),
-                            ),
-                          ],)
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: Dimensions.paddingSizeSmall,
-                        vertical: Dimensions.paddingSizeSmall
-                      ),
-                      child: Column(children: [
-
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-
-                            Text('total_service_discount'.tr,
-                              style: robotoRegular.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).hintColor,
-                              ),
-                            ),
-                            Text(PriceConverter.convertPrice(filterData[index].totalDiscountAmount),
-                              style: robotoMedium.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                              ),
-                            )
-                          ],
                         ),
-                        const SizedBox(height: Dimensions.paddingSizeSmall),
+                      ]),
+                      const SizedBox(height: 8),
 
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-
-                            Text('provider_paid_service_discount'.tr,
-                              style: robotoRegular.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).hintColor,
-                              ),
-                            ),
-                            Text(PriceConverter.convertPrice(filterData[index].bookingDetailsAmounts?.discountByProvider??0),
-                              style: robotoMedium.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                              ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(height: Dimensions.paddingSizeSmall),
-
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-
-                            Text('total_coupon_discount'.tr,
-                              style: robotoRegular.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).hintColor,
-                              ),
-                            ),
-                            Text(PriceConverter.convertPrice(filterData[index].totalCouponDiscountAmount),
-                              style: robotoMedium.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                              ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(height: Dimensions.paddingSizeSmall),
-
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-
-                            Text('provider_paid_coupon_discount'.tr,
-                              style: robotoRegular.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).hintColor,
-                              ),
-                            ),
-                            Text(PriceConverter.convertPrice(filterData[index].bookingDetailsAmounts?.couponDiscountByProvider??0),
-                              style: robotoMedium.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                              ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(height: Dimensions.paddingSizeSmall),
-
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-
-                            Text('total_campaign_discount'.tr,
-                              style: robotoRegular.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).hintColor,
-                              ),
-                            ),
-                            Text(PriceConverter.convertPrice(filterData[index].totalCampaignDiscountAmount),
-                              style: robotoMedium.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                              ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(height: Dimensions.paddingSizeSmall),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-
-                            Text('provider_paid_campaign_discount'.tr,
-                              style: robotoRegular.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).hintColor,
-                              ),
-                            ),
-                            Text(PriceConverter.convertPrice(filterData[index].bookingDetailsAmounts?.campaignDiscountByProvider??0),
-                              style: robotoMedium.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                              ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(height: Dimensions.paddingSizeSmall),
-
-
-                        CustomDivider(color: Theme.of(context).hintColor.withValues(alpha:0.2), width: 3.0),
-                        const SizedBox(height: Dimensions.paddingSizeSmall),
-
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-
-                            Text('sub_total'.tr,
-                              style: robotoMedium.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                              ),
-                            ),
-                            Text(PriceConverter.convertPrice(filterData[index].totalBookingAmount),
-                              style: robotoMedium.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                              ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(height: Dimensions.paddingSizeSmall),
-
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-
-                            Text('admin_commission'.tr,
-                              style: robotoRegular.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).hintColor,
-                              ),
-                            ),
-                            Text(PriceConverter.convertPrice(filterData[index].bookingDetailsAmounts?.adminCommission??0),
-                              style: robotoMedium.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                              ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(height: Dimensions.paddingSizeSmall),
-
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-
-                            Text("${'vat/tax'.tr} : ",
-                              style: robotoRegular.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).hintColor,
-                              ),
-                            ),
-                            Text(PriceConverter.convertPrice(filterData[index].totalTaxAmount),
-                              style: robotoMedium.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                              ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(height: Dimensions.paddingSizeSmall),
-
-
-                        CustomDivider(color: Theme.of(context).hintColor.withValues(alpha:0.2), width: 3.0),
-                        const SizedBox(height: Dimensions.paddingSizeSmall),
-
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('provider_net_income'.tr,
-                              style: robotoBold.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                              ),
-                            ),
-                            Text(PriceConverter.convertPrice(netProfit),
-                              style: robotoBold.copyWith(
-                                fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).primaryColor,
-                              ),
-                            )
-                          ],
-                        )],
-
-
-                      ),
-                    ),
-                  ],
+                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('booking_amount'.tr, style: _earnLabelStyle),
+                          Text(PriceConverter.convertPrice(filterData[index].totalBookingAmount),
+                            maxLines: 1,
+                            style: _earnValueStyle,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],)
+                    ],
+                  ),
                 ),
-              ),
+
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(children: [
+
+                    _earnRow('total_service_discount'.tr, PriceConverter.convertPrice(filterData[index].totalDiscountAmount)),
+                    _earnRow('provider_paid_service_discount'.tr, PriceConverter.convertPrice(filterData[index].bookingDetailsAmounts?.discountByProvider??0)),
+                    _earnRow('total_coupon_discount'.tr, PriceConverter.convertPrice(filterData[index].totalCouponDiscountAmount)),
+                    _earnRow('provider_paid_coupon_discount'.tr, PriceConverter.convertPrice(filterData[index].bookingDetailsAmounts?.couponDiscountByProvider??0)),
+                    _earnRow('total_campaign_discount'.tr, PriceConverter.convertPrice(filterData[index].totalCampaignDiscountAmount)),
+                    _earnRow('provider_paid_campaign_discount'.tr, PriceConverter.convertPrice(filterData[index].bookingDetailsAmounts?.campaignDiscountByProvider??0)),
+
+                    const SizedBox(height: 6),
+                    _earnDivider(),
+                    const SizedBox(height: 6),
+
+                    _earnRow('sub_total'.tr, PriceConverter.convertPrice(filterData[index].totalBookingAmount)),
+                    _earnRow('admin_commission'.tr, PriceConverter.convertPrice(filterData[index].bookingDetailsAmounts?.adminCommission??0)),
+                    _earnRow("${'vat/tax'.tr} : ", PriceConverter.convertPrice(filterData[index].totalTaxAmount)),
+
+                    const SizedBox(height: 6),
+                    _earnDivider(),
+                    const SizedBox(height: 6),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Text('provider_net_income'.tr,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: _earnLabelStrongStyle,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(PriceConverter.convertPrice(netProfit),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: _earnValueStyle.copyWith(fontSize: 14),
+                        )
+                      ],
+                    ),
+
+                  ]),
+                ),
+              ]),
             );
           },
           itemCount: filterData.length,
         ):
         SizedBox(height: Get.height*0.33,
-          child: const Center(
-            child: NoDataScreen(text: "", type: NoDataType.others,),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: InkEmptyState('no_data_found'.tr),
+            ),
           ),),
         if(Get.find<BusinessReportController>().isLoading)
-          const CircularProgressIndicator()
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          )
       ],
     );
   }
 }
-

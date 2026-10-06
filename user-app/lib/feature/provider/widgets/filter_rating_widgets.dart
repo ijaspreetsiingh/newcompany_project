@@ -1,9 +1,9 @@
 import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 
-class FilterRatingWidgets extends StatelessWidget {
+class FilterRatingwidgets extends StatelessWidget {
   final bool clickable;
-  const FilterRatingWidgets({super.key,this.clickable = true}) ;
+  const FilterRatingwidgets({super.key,this.clickable = true}) ;
 
   @override
   Widget build(BuildContext context) {
@@ -37,3 +37,4 @@ class FilterRatingWidgets extends StatelessWidget {
     );
   }
 }
+

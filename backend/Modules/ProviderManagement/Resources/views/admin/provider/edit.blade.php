@@ -281,7 +281,7 @@
                     </div>
                 </section>
                 <h3>{{translate('Step 2')}}</h3>
-                <section>
+                <section id="business-plan-section">
                     <div class="page-title-wrap mb-3">
                         <h2 class="page-title mb-2">{{translate('Update Provider')}}</h2>
                         <p class="page-title-text">{{translate('Setup Provider information and business plan from here')}} </p>
@@ -422,6 +422,710 @@
                         </div>
                     </div>
                 </section>
+                <h3>{{translate('Step 3')}} : {{translate('Provider Subscribe')}}</h3>
+                <section>
+                    <div class="page-title-wrap mb-3">
+                        <h2 class="page-title mb-2">{{translate('Provider Subscribe')}}</h2>
+                        <p class="page-title-text">{{translate('Turn ON to give the provider permanent access — no subscription needed, business plan stays off until you turn this OFF. Turn OFF for the normal subscription flow.')}}</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-4 create-provider-item mb-4">
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="material-symbols-outlined icon-1">check</span>
+                                    {{translate('Basic info')}}
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="material-symbols-outlined icon-1">check</span>
+                                    {{translate('Set Business Plan')}}
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="material-symbols-outlined icon-1">check</span>
+                                    {{translate('Provider Subscribe')}}
+                                </div>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="mb-2 text-dark">{{translate('Permanent Access')}}</label>
+                                    <p class="fz-12 mb-10">{{translate('ON = provider gets permanent access: subscription + business plan stay OFF for him until you turn this off. OFF = normal flow, provider must subscribe via Business Plan.')}}</p>
+                                    <div class="border p-12 rounded d-flex justify-content-between bg-white">
+                                        <span class="text-dark fz-14">{{translate('Provider Subscribe')}}</span>
+                                        <label class="switcher">
+                                            <input class="switcher_input" type="checkbox"
+                                                   id="subscription_required"
+                                                   name="subscription_required"
+                                                   value="1"
+                                                   onchange="toggleBusinessPlanSection()"
+                                                {{ old('subscription_required', ($provider->subscription_required ?? 1) == 0) ? 'checked' : '' }}>
+                                            <span class="switcher_control"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <h3>{{translate('Step 4')}} : {{translate('Independent Commission')}}</h3>
+                <section>
+                    <div class="page-title-wrap mb-3">
+                        <h2 class="page-title mb-2">{{translate('Independent Commission')}}</h2>
+                        <p class="page-title-text">{{translate('ON = provider runs on independent commission: admin gets Admin %, provider gets Provider % and the rest goes to his servicemen from every booking payment. OFF = existing commission/subscription flow continues.')}}</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-4 create-provider-item mb-4">
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="material-symbols-outlined icon-1">check</span>
+                                    {{translate('Basic info')}}
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="material-symbols-outlined icon-1">check</span>
+                                    {{translate('Set Business Plan')}}
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="material-symbols-outlined icon-1">check</span>
+                                    {{translate('Provider Subscribe')}}
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="icon-4">4</span>
+                                    {{translate('Independent Commission')}}
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="mb-2 text-dark">{{translate('Allow Independent Commission')}}</label>
+                                        <p class="fz-12 mb-10">{{translate('ON = set Admin %, Provider %, payment fee, tax, customer booking fee and allowed payment gateways below for this provider. OFF = nothing changes, existing flow keeps working.')}}</p>
+                                    <div class="border p-12 rounded d-flex justify-content-between bg-white">
+                                        <span class="text-dark fz-14">{{translate('Independent Commission')}}</span>
+                                        <label class="switcher">
+                                            <input class="switcher_input" type="checkbox"
+                                                   id="independent_mode"
+                                                   name="independent_mode"
+                                                   value="1"
+                                                {{ old('independent_mode', $provider->independent_mode ?? 0) ? 'checked' : '' }}>
+                                            <span class="switcher_control"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="independent-commission-fields" class="row g-3" style="{{ old('independent_mode', $provider->independent_mode ?? 0) ? '' : 'display:none;' }}">
+                                <div class="col-md-6">
+                                    <label class="mb-2 text-dark">{{translate('Admin / System Commission (%)')}}</label>
+                                    <p class="fz-12 mb-10">{{translate('Example: 2 = admin receives 2% from every booking payment of this provider.')}}</p>
+                                    <div class="form-floating form-floating__icon">
+                                        <input type="number" class="form-control" name="admin_commission_percent"
+                                               id="admin_commission_percent" min="0" max="100" step="0.01"
+                                               placeholder="{{translate('Admin Commission (%)')}}"
+                                               value="{{ old('admin_commission_percent', $provider->admin_commission_percent ?? 0) }}">
+                                        <label>{{translate('Admin Commission (%)')}} *</label>
+                                        <span class="material-icons">percent</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="mb-2 text-dark">{{translate('Provider Commission (%)')}}</label>
+                                    <p class="fz-12 mb-10">{{translate('Example: 8 = provider receives 8% from every booking payment. Rest goes to his servicemen.')}}</p>
+                                    <div class="form-floating form-floating__icon">
+                                        <input type="number" class="form-control" name="provider_commission_percent"
+                                               id="provider_commission_percent" min="0" max="100" step="0.01"
+                                               placeholder="{{translate('Provider Commission (%)')}}"
+                                               value="{{ old('provider_commission_percent', $provider->provider_commission_percent ?? 0) }}">
+                                        <label>{{translate('Provider Commission (%)')}} *</label>
+                                        <span class="material-icons">percent</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="mb-2 text-dark">{{translate('Payment Fee Amount')}}</label>
+                                    <p class="fz-12 mb-10">{{translate('Flat fee deducted from this provider payment on every booking. Customer price does not change.')}}</p>
+                                    <div class="form-floating form-floating__icon">
+                                        <input type="number" class="form-control" name="platform_fee_amount"
+                                               id="platform_fee_amount" min="0" step="0.01"
+                                               placeholder="{{translate('Payment Fee Amount')}}"
+                                               value="{{ old('platform_fee_amount', $provider->platform_fee_amount ?? 0) }}">
+                                        <label>{{translate('Payment Fee Amount')}}</label>
+                                        <span class="material-icons">payments</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="mb-2 text-dark">{{translate('Payment Fee Label (text)')}}</label>
+                                    <p class="fz-12 mb-10">{{translate('Text shown for the fee, e.g. Platform Fee / Convenience Fee.')}}</p>
+                                    <div class="form-floating form-floating__icon">
+                                        <input type="text" class="form-control" name="platform_fee_label"
+                                               id="platform_fee_label" maxlength="191"
+                                               placeholder="{{translate('Payment Fee Label')}}"
+                                               value="{{ old('platform_fee_label', $provider->platform_fee_label ?? '') }}">
+                                        <label>{{translate('Payment Fee Label')}}</label>
+                                        <span class="material-icons">label</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="mb-2 text-dark">{{translate('Tax (%) for this provider')}}</label>
+                                    <p class="fz-12 mb-10">{{translate('Tax applied on this provider services at checkout. Leave empty = each service own tax is used.')}}</p>
+                                    <div class="form-floating form-floating__icon">
+                                        <input type="number" class="form-control" name="tax_percent"
+                                               id="tax_percent" min="0" max="100" step="0.01"
+                                               placeholder="{{translate('Tax (%)')}}"
+                                               value="{{ old('tax_percent', $provider->tax_percent ?? '') }}">
+                                        <label>{{translate('Tax (%)')}}</label>
+                                        <span class="material-icons">percent</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="mb-2 text-dark">{{translate('Customer Booking Fee')}}</label>
+                                    <p class="fz-12 mb-10">{{translate('Flat booking fee charged to the customer for this provider. 0 = global booking fee applies.')}}</p>
+                                    <div class="form-floating form-floating__icon">
+                                        <input type="number" class="form-control" name="booking_fee"
+                                               id="booking_fee" min="0" step="0.01"
+                                               placeholder="{{translate('Booking Fee')}}"
+                                               value="{{ old('booking_fee', $provider->booking_fee ?? 0) }}">
+                                        <label>{{translate('Booking Fee')}}</label>
+                                        <span class="material-icons">receipt_long</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="mb-2 text-dark">{{translate('Allowed Payment Gateways')}}</label>
+                                    <p class="fz-12 mb-10">{{translate('Customer checkout par sirf ticked payment options dikhenge aur chalenge. None ticked = all options allowed.')}}</p>
+                                    @php
+                                        $selectedPaymentMethods = providerAllowedPaymentMethods($provider) ?? [];
+                                        $paymentGatewayOptions = paymentGatewayOptions();
+                                    @endphp
+                                    <div class="border rounded p-12 bg-white">
+                                        <div class="row g-2">
+                                            @foreach ($paymentGatewayOptions as $gatewayOption)
+                                                <div class="col-md-4 col-sm-6">
+                                                    <label class="d-flex align-items-center gap-2 border rounded p-2 bg-light h-100">
+                                                        <input type="checkbox" class="form-check-input m-0"
+                                                               name="allowed_payment_methods[]"
+                                                               value="{{ $gatewayOption['key'] }}"
+                                                               @checked(in_array($gatewayOption['key'], $selectedPaymentMethods, true))>
+                                                        <span class="fz-14 text-dark">{{ $gatewayOption['label'] }}</span>
+                                                    </label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <style>
+                        #independent-commission-fields { display: none !important; }
+                        body:has(#independent_mode:checked) #independent-commission-fields { display: flex !important; }
+                    </style>
+                    <script>
+                        (function () {
+                            function syncIndependentFields() {
+                                var box = document.getElementById('independent_mode');
+                                var fields = document.getElementById('independent-commission-fields');
+                                if (!box || !fields) return;
+                                fields.style.setProperty('display', box.checked ? 'flex' : 'none', 'important');
+                            }
+                            document.addEventListener('change', function (e) {
+                                if (e.target && e.target.id === 'independent_mode') syncIndependentFields();
+                            }, true);
+                            document.addEventListener('click', function (e) {
+                                var t = e.target;
+                                if (t && t.id === 'independent_mode') syncIndependentFields();
+                            }, true);
+                            if (document.readyState === 'loading') {
+                                document.addEventListener('DOMContentLoaded', syncIndependentFields);
+                            }
+                            syncIndependentFields();
+                        })();
+                    </script>
+                </section>
+                <h3>{{translate('Step 5')}} : {{translate('Category Assignment')}}</h3>
+                <section id="step5-category-assignment">
+                    <div class="page-title-wrap mb-3">
+                        <h2 class="page-title mb-2">{{translate('Category Assignment')}}</h2>
+                        <p class="page-title-text">{{translate('Assign main category or sub-categories to provider. Same zone + same category/sub-category = only one provider allowed.')}}</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-4 create-provider-item mb-4">
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="material-symbols-outlined icon-1">check</span>
+                                    {{translate('Basic info')}}
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="material-symbols-outlined icon-1">check</span>
+                                    {{translate('Set Business Plan')}}
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="material-symbols-outlined icon-1">check</span>
+                                    {{translate('Provider Subscribe')}}
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="material-symbols-outlined icon-1">check</span>
+                                    {{translate('Independent Commission')}}
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="icon-5">5</span>
+                                    {{translate('Category Assignment')}}
+                                </div>
+                            </div>
+
+                            @php
+                                $assignedRows = $provider->subscribed_services()->where('zone_id', $provider->zone_id)->get();
+
+                                $oldComplete = old('complete_main_category_ids');
+                                $prefillComplete = is_array($oldComplete)
+                                    ? array_values(array_unique($oldComplete))
+                                    : $assignedRows->where('assign_type', 'complete')->pluck('category_id')->unique()->values()->all();
+
+                                $oldSpecific = old('sub_category_ids');
+                                $prefillSpecific = is_array($oldSpecific)
+                                    ? array_values(array_unique($oldSpecific))
+                                    : $assignedRows->where('assign_type', 'specific')->pluck('sub_category_id')->unique()->values()->all();
+
+                                $mainName = [];
+                                $subCount = [];
+                                foreach ($mainCategories as $mainCat) {
+                                    $mainName[$mainCat->id] = $mainCat->name;
+                                    $subCount[$mainCat->id] = $subCategories->where('parent_id', $mainCat->id)->count();
+                                }
+
+                                $subParentId = [];
+                                $subParentName = [];
+                                foreach ($subCategories as $subCat) {
+                                    $subParentId[$subCat->id] = $subCat->parent_id;
+                                    $subParentName[$subCat->id] = $mainName[$subCat->parent_id] ?? '';
+                                }
+
+                                $cascadeParent = '';
+                                foreach ($prefillSpecific as $subId) {
+                                    if (isset($subParentId[$subId]) && ($subCount[$subParentId[$subId]] ?? 0) > 0) {
+                                        $cascadeParent = $subParentId[$subId];
+                                        break;
+                                    }
+                                }
+                                if ($cascadeParent === '') {
+                                    foreach ($subCount as $mainId => $cnt) {
+                                        if ($cnt > 0) { $cascadeParent = $mainId; break; }
+                                    }
+                                }
+                            @endphp
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="mb-2 text-dark">{{translate('Switch 1 - Give complete main categories')}}</label>
+                                    <p class="fz-12 mb-10">{{translate('ON = one field appears below. Tick any main category - this provider gets that main category plus all of its sub-categories. No other provider in the same zone can take any of them. You can tick more than one.')}}</p>
+                                    <div class="border p-12 rounded d-flex justify-content-between bg-white">
+                                        <span class="text-dark fz-14">{{translate('Complete main category')}}</span>
+                                        <label class="switcher">
+                                            <input class="switcher_input" type="checkbox" id="complete_mode"
+                                                {{ count($prefillComplete) ? 'checked' : '' }}>
+                                            <span class="switcher_control"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="mb-2 text-dark">{{translate('Switch 2 - Give specific sub-categories')}}</label>
+                                    <p class="fz-12 mb-10">{{translate('ON = two fields appear below. First pick a main category, then tick only its sub-categories. This switch can stay ON together with Switch 1.')}}</p>
+                                    <div class="border p-12 rounded d-flex justify-content-between bg-white">
+                                        <span class="text-dark fz-14">{{translate('Specific sub-category')}}</span>
+                                        <label class="switcher">
+                                            <input class="switcher_input" type="checkbox" id="specific_mode"
+                                                {{ (count($prefillSpecific) || !count($prefillComplete)) ? 'checked' : '' }}>
+                                            <span class="switcher_control"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Switch 1 : one field - tick main categories -->
+                            <div id="complete-main-category-fields" class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="mb-2 text-dark d-block">1. Tick the main categories to give</label>
+                                    <p class="fz-12 mb-10">{{translate('Every ticked main category gives this provider that main category plus all of its sub-categories. Untick to remove it.')}}</p>
+                                    <div class="option-list" id="complete-list">
+                                        @foreach($mainCategories as $mainCat)
+                                            <label class="option-item">
+                                                <input type="checkbox" name="complete_main_category_ids[]" class="opt-input"
+                                                       value="{{ $mainCat->id }}"
+                                                       data-subs="{{ $subCount[$mainCat->id] }}"
+                                                       data-name="{{ $mainCat->name }}"
+                                                    {{ in_array($mainCat->id, $prefillComplete) ? 'checked' : '' }}>
+                                                <span class="option-text">{{ $mainCat->name }}</span>
+                                                <span class="option-meta">{{ $subCount[$mainCat->id] }} sub-categories</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Switch 2 : two fields - pick main, then its subs -->
+                            <div id="sub-category-only-fields" class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="mb-2 text-dark d-block">1. Pick a main category</label>
+                                    <p class="fz-12 mb-10">{{translate('Only the sub-categories of this main category are listed in the next field.')}}</p>
+                                    <div class="form-floating">
+                                        <select class="select-identity theme-input-style w-100" id="sub_parent_id">
+                                            @foreach($mainCategories as $mainCat)
+                                                @if(($subCount[$mainCat->id] ?? 0) > 0)
+                                                    <option value="{{ $mainCat->id }}" {{ $cascadeParent == $mainCat->id ? 'selected' : '' }}>
+                                                        {{ $mainCat->name }}
+                                                    </option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="mb-2 text-dark d-block">2. Tick its sub-categories</label>
+                                    <p class="fz-12 mb-10">{{translate('Sub-categories ticked earlier from another main category stay selected - they always show in the list below.')}}</p>
+                                    <div class="option-list" id="sub-list">
+                                        @foreach($subCategories as $subCat)
+                                            <label class="option-item" data-parent="{{ $subParentId[$subCat->id] }}">
+                                                <input type="checkbox" name="sub_category_ids[]" class="opt-input"
+                                                       value="{{ $subCat->id }}"
+                                                       data-parent="{{ $subParentId[$subCat->id] }}"
+                                                       data-parent-name="{{ $subParentName[$subCat->id] }}"
+                                                       data-name="{{ $subCat->name }}"
+                                                    {{ in_array($subCat->id, $prefillSpecific) ? 'checked' : '' }}>
+                                                <span class="option-text">{{ $subCat->name }}</span>
+                                                <span class="option-meta">{{ $subParentName[$subCat->id] }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Selected for this provider -->
+                            <div class="mt-4">
+                                <label class="mb-1 text-dark d-block">Selected for this provider</label>
+                                <p class="fz-12 mb-10 opacity-75">{{translate('Everything below is saved when you press Update. Click X to remove one.')}}</p>
+                                <div id="category-chips" class="d-flex flex-wrap gap-2"></div>
+                                <p class="fz-12 mt-2 opacity-75 mb-0 d-none" id="chips-empty">
+                                    {{translate('Nothing selected yet. Tick at least one main category or sub-category above.')}}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <style>
+                        #complete-main-category-fields, #sub-category-only-fields { display: none !important; }
+
+                        .option-list {
+                            border: 1px solid var(--bs-border-color, #d9dee5);
+                            border-radius: 10px;
+                            background: var(--bs-body-bg, #fff);
+                            max-height: 340px; overflow: auto; padding: 6px;
+                        }
+                        .option-item {
+                            display: flex; align-items: center; gap: 10px;
+                            padding: 10px 12px; border-radius: 8px; cursor: pointer;
+                            font-size: 14px; color: var(--bs-body-color, #2b3440);
+                        }
+                        .option-item:hover { background: rgba(128, 138, 148, .14); }
+                        .option-item input { flex: 0 0 auto; width: 16px; height: 16px; cursor: pointer; accent-color: var(--bs-primary, #0d6efd); }
+                        .option-text { flex: 1 1 auto; font-weight: 500; }
+                        .option-meta {
+                            flex: 0 0 auto; font-size: 11px;
+                            color: var(--bs-secondary-color, #5b6470);
+                            background: rgba(128, 138, 148, .16);
+                            border-radius: 6px; padding: 3px 9px; white-space: nowrap;
+                        }
+                        .option-item:has(input:checked) {
+                            background: rgba(var(--bs-primary-rgb, 13, 110, 253), .14);
+                            box-shadow: inset 3px 0 0 var(--bs-primary, #0d6efd);
+                        }
+                        .option-item:has(input:checked) .option-text {
+                            font-weight: 700; color: var(--bs-primary, #0d6efd);
+                        }
+
+                        #category-chips .chip-badge {
+                            display: inline-flex; align-items: center; gap: 8px;
+                            border: 1px solid var(--bs-border-color, #d9dee5);
+                            background: var(--bs-body-bg, #fff);
+                            color: var(--bs-body-color, #2b3440);
+                            border-radius: 999px; padding: 7px 14px; font-size: 12px; line-height: 1.4;
+                        }
+                        #category-chips .chip-badge.chip-complete {
+                            border-color: var(--bs-primary, #0d6efd);
+                            background: rgba(var(--bs-primary-rgb, 13, 110, 253), .14);
+                        }
+                        #category-chips .chip-badge.chip-specific {
+                            border-color: var(--bs-success, #198754);
+                            background: rgba(var(--bs-success-rgb, 25, 135, 84), .14);
+                        }
+                        #category-chips .chip-x {
+                            border: 0; background: transparent; color: var(--bs-danger, #dc3545);
+                            font-size: 16px; line-height: 1; cursor: pointer; padding: 0 0 0 2px;
+                        }
+                        #category-chips .chip-x:hover { opacity: .75; }
+
+                        /* ---------- dark theme ---------- */
+                        body[data-bs-theme="dark"] .option-list { background: var(--bs-body-bg); border-color: var(--bs-border-color); }
+                        body[data-bs-theme="dark"] .option-item { color: var(--bs-body-color); }
+                        body[data-bs-theme="dark"] .option-item:hover { background: rgba(255, 255, 255, .07); }
+                        body[data-bs-theme="dark"] .option-meta { background: rgba(255, 255, 255, .10); color: var(--bs-secondary-color); }
+                        body[data-bs-theme="dark"] .option-item:has(input:checked) { background: rgba(var(--bs-primary-rgb, 13, 110, 253), .24); }
+                        body[data-bs-theme="dark"] .option-item:has(input:checked) .option-text { color: #7fb2ff; }
+                        body[data-bs-theme="dark"] #category-chips .chip-badge { background: var(--bs-body-bg); border-color: var(--bs-border-color); color: var(--bs-body-color); }
+                        body[data-bs-theme="dark"] #category-chips .chip-badge.chip-complete { background: rgba(var(--bs-primary-rgb, 13, 110, 253), .24); border-color: #3b82f6; }
+                        body[data-bs-theme="dark"] #category-chips .chip-badge.chip-specific { background: rgba(var(--bs-success-rgb, 25, 135, 84), .24); border-color: #20c997; }
+
+                        /* ---------- this section only: follow theme ---------- */
+                        #step5-category-assignment .text-dark { color: var(--bs-body-color); }
+                        #step5-category-assignment .bg-white { background-color: var(--bs-body-bg); border-color: var(--bs-border-color); }
+                        #step5-category-assignment .opacity-75 { opacity: .75; }
+                        body[data-bs-theme="dark"] #step5-category-assignment .option-list,
+                        body[data-bs-theme="dark"] #step5-category-assignment .bg-white { border-color: var(--bs-border-color); }
+                    </style>
+                    <script>
+                        (function () {
+                            var completeMode = document.getElementById('complete_mode');
+                            var specificMode = document.getElementById('specific_mode');
+                            var completeList = document.getElementById('complete-list');
+                            var subList = document.getElementById('sub-list');
+                            var parentSel = document.getElementById('sub_parent_id');
+                            var chipsBox = document.getElementById('category-chips');
+                            var emptyHint = document.getElementById('chips-empty');
+
+                            if (!completeMode || !specificMode || !completeList || !subList || !parentSel || !chipsBox) return;
+
+                            function toArray(nodeList) { return Array.prototype.slice.call(nodeList); }
+                            function boxes(list) { return toArray(list.querySelectorAll('input.opt-input')); }
+                            function ticked(list) { return boxes(list).filter(function (b) { return b.checked; }); }
+
+                            function setArea(id, show) {
+                                var el = document.getElementById(id);
+                                if (el) el.style.setProperty('display', show ? 'flex' : 'none', 'important');
+                            }
+
+                            function applyCascade() {
+                                var pid = parentSel.value;
+                                toArray(subList.querySelectorAll('.option-item')).forEach(function (item) {
+                                    item.style.display = (item.getAttribute('data-parent') === pid) ? '' : 'none';
+                                });
+                            }
+
+                            function makeChip(label, meta, kind, onRemove) {
+                                var wrap = document.createElement('span');
+                                wrap.className = 'chip-badge ' + (kind === 'complete' ? 'chip-complete' : 'chip-specific');
+
+                                var txt = document.createElement('span');
+                                txt.textContent = label + (meta ? ' \u00b7 ' + meta : '');
+
+                                var btn = document.createElement('button');
+                                btn.type = 'button';
+                                btn.className = 'chip-x';
+                                btn.innerHTML = '&times;';
+                                btn.title = 'Remove';
+                                btn.addEventListener('click', function (e) {
+                                    e.preventDefault();
+                                    onRemove();
+                                });
+
+                                wrap.appendChild(txt);
+                                wrap.appendChild(btn);
+                                return wrap;
+                            }
+
+                            function renderChips() {
+                                chipsBox.innerHTML = '';
+                                var total = 0;
+
+                                if (completeMode.checked) {
+                                    ticked(completeList).forEach(function (box) {
+                                        total++;
+                                        chipsBox.appendChild(makeChip(
+                                            box.getAttribute('data-name'),
+                                            'complete (all ' + (box.getAttribute('data-subs') || '0') + ' sub-categories)',
+                                            'complete',
+                                            function () { box.checked = false; renderChips(); }
+                                        ));
+                                    });
+                                }
+
+                                if (specificMode.checked) {
+                                    ticked(subList).forEach(function (box) {
+                                        total++;
+                                        chipsBox.appendChild(makeChip(
+                                            (box.getAttribute('data-parent-name') || '') + ' \u2192 ' + box.getAttribute('data-name'),
+                                            'specific',
+                                            'specific',
+                                            function () { box.checked = false; applyCascade(); renderChips(); }
+                                        ));
+                                    });
+                                }
+
+                                if (emptyHint) emptyHint.classList.toggle('d-none', total > 0);
+                            }
+
+                            function sync() {
+                                var cOn = completeMode.checked;
+                                var sOn = specificMode.checked;
+
+                                setArea('complete-main-category-fields', cOn);
+                                setArea('sub-category-only-fields', sOn);
+
+                                boxes(completeList).forEach(function (b) { b.disabled = !cOn; });
+                                boxes(subList).forEach(function (b) { b.disabled = !sOn; });
+                                parentSel.disabled = !sOn;
+
+                                if (sOn) applyCascade();
+                                renderChips();
+                            }
+
+                            function hasAnySelection() {
+                                return (completeMode.checked && ticked(completeList).length > 0)
+                                    || (specificMode.checked && ticked(subList).length > 0);
+                            }
+
+                            document.addEventListener('change', function (e) {
+                                var t = e.target;
+                                if (!t) return;
+                                if (t.id === 'complete_mode' || t.id === 'specific_mode') sync();
+                                else if (t.id === 'sub_parent_id') { applyCascade(); renderChips(); }
+                                else if (t.className === 'opt-input') renderChips();
+                            }, true);
+
+                            document.addEventListener('submit', function (e) {
+                                if (!hasAnySelection()) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    alert('Tick at least one main category or sub-category before saving.');
+                                    return false;
+                                }
+                            }, true);
+
+                            if (document.readyState === 'loading') {
+                                document.addEventListener('DOMContentLoaded', sync);
+                            }
+                            sync();
+                        })();
+                    </script>
+                </section>
+
+                <h3>{{translate('Step 6')}} : {{translate('Service Permission')}}</h3>
+                <section id="step6-service-permission">
+                    <div class="page-title-wrap mb-3">
+                        <h2 class="page-title mb-2">{{translate('Service Permission')}}</h2>
+                        <p class="page-title-text">{{translate('Decide what the provider can do with services inside his own zone. Toggles OFF = provider can only view the services of the categories you assigned.')}}</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-4 create-provider-item mb-4">
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="material-symbols-outlined icon-1">check</span>
+                                    {{ translate('Basic info') }}
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="material-symbols-outlined icon-1">check</span>
+                                    {{ translate('Set Business Plan') }}
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="material-symbols-outlined icon-1">check</span>
+                                    {{ translate('Provider Subscribe') }}
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="material-symbols-outlined icon-1">check</span>
+                                    {{ translate('Independent Commission') }}
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="material-symbols-outlined icon-1">check</span>
+                                    {{ translate('Category Assignment') }}
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="icon-6">6</span>
+                                    {{ translate('Service Permission') }}
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-4">
+                                <div class="col-md-6">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                                <div>
+                                                    <h4 class="c1 mb-2">{{translate('Add new service')}}</h4>
+                                                    <p class="mb-0 opacity-75 fs-12">
+                                                        {{translate('Provider can create his own services for the categories assigned to him, inside his zone. Every new service goes live only after admin approval.')}}
+                                                    </p>
+                                                </div>
+                                                <label class="switcher flex-shrink-0">
+                                                    <input type="checkbox"
+                                                           class="switcher_input"
+                                                           name="allow_service_create"
+                                                           value="1"
+                                                           {{$provider->allow_service_create == 1 ? 'checked' : ''}}>
+                                                    <span class="switcher_control"></span>
+                                                </label>
+                                            </div>
+                                            <div class="p-12 rounded bg-primary bg-opacity-10 fs-12">
+                                                {{translate('ON = provider app me "My Services" se naya service add kar sakta hai. OFF = sirf dekh sakta hai.')}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                                <div>
+                                                    <h4 class="c1 mb-2">{{translate('Edit admin service')}}</h4>
+                                                    <p class="mb-0 opacity-75 fs-12">
+                                                        {{translate('Provider can update the admin created services of his zone - short description, price and cover image. The change stays inside his zone only.')}}
+                                                    </p>
+                                                </div>
+                                                <label class="switcher flex-shrink-0">
+                                                    <input type="checkbox"
+                                                           class="switcher_input"
+                                                           name="allow_service_edit"
+                                                           value="1"
+                                                           {{$provider->allow_service_edit == 1 ? 'checked' : ''}}>
+                                                    <span class="switcher_control"></span>
+                                                </label>
+                                            </div>
+                                            <div class="p-12 rounded bg-primary bg-opacity-10 fs-12">
+                                                {{translate('ON = admin ki service ka price / description / image edit kar sakta hai. OFF = read only.')}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-4 mt-3">
+                                <div class="col-12">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                                <div>
+                                                    <h4 class="c1 mb-2">{{translate('Approval required for service changes')}}</h4>
+                                                    <p class="mb-0 opacity-75 fs-12">
+                                                        {{translate('When ON, every new service created by this provider and every update he makes to an admin created service first goes to the approval queue. Admin sees it in two tabs - New Services and Service Updates - and publishes it only after approving.')}}
+                                                    </p>
+                                                </div>
+                                                <label class="switcher flex-shrink-0">
+                                                    <input type="checkbox"
+                                                           class="switcher_input"
+                                                           name="service_approval_required"
+                                                           value="1"
+                                                           {{$provider->service_approval_required == 1 ? 'checked' : ''}}>
+                                                    <span class="switcher_control"></span>
+                                                </label>
+                                            </div>
+                                            <div class="p-12 rounded bg-primary bg-opacity-10 fs-12">
+                                                <b>ON =</b> {{translate('provider ki new service aur admin service ki update approve hone tak live nahi hogi (2 tabs me dikhegi).')}}
+                                                <br>
+                                                <b>OFF =</b> {{translate('admin ki bina approve ke hi create / update turant publish ho jayega.')}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info mt-3 mb-0 fs-12" role="alert">
+                                <span class="material-symbols-outlined me-1 fz-14 align-text-bottom">info</span>
+                                {{translate('Both toggles OFF means the My Services screen becomes view-only: provider can see how many main categories and sub-categories you assigned, and the services inside them, but cannot add or edit anything.')}}
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </form>
         </div>
     </div>
@@ -558,6 +1262,23 @@
                     prevEl: ".swiper-button-prev",
                 },
             });
+        });
+
+        function toggleBusinessPlanSection() {
+            const subscriptionRequired = document.getElementById('subscription_required');
+            const businessPlanSection = document.getElementById('business-plan-section');
+            if (subscriptionRequired && businessPlanSection) {
+                if (subscriptionRequired.checked) {
+                    businessPlanSection.style.display = 'none';
+                } else {
+                    businessPlanSection.style.display = 'block';
+                }
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleBusinessPlanSection();
         });
 
         $(document).ready(function () {

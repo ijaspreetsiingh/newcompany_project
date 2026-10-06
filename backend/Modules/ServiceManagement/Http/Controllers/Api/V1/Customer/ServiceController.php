@@ -75,14 +75,16 @@ class ServiceController extends Controller
         $services = $this->service
             ->with(['category.zonesBasicInfo', 'variations', 'service_discount', 'category.category_discount'])
             ->where(function ($query) {
-                $query->whereDoesntHave('service_discount')
-                    ->orWhereHas('service_discount');
-            })
-            ->orWhere(function ($query) {
-                $query->whereDoesntHave('category.category_discount')
-                    ->orWhereHas('category.category_discount');
+                $query->where(function ($query) {
+                    $query->whereDoesntHave('service_discount')
+                        ->orWhereHas('service_discount');
+                })->orWhere(function ($query) {
+                    $query->whereDoesntHave('category.category_discount')
+                        ->orWhereHas('category.category_discount');
+                });
             })
             ->active()
+            ->visibleInCurrentZone()
             ->latest()
             ->paginate($request['limit'], ['*'], 'offset', $request['offset'])
             ->withPath('');
@@ -124,6 +126,7 @@ class ServiceController extends Controller
             ->with(['category.zonesBasicInfo', 'variations', 'tags', 'faqs', 'favorites', 'service_discount', 'category.category_discount'])
             ->withCount('favorites', 'bookings')
             ->active()
+            ->visibleInCurrentZone()
             ->where(function ($query) use ($decodedString, $keys) {
                 foreach ($keys as $key) {
                     $query->orWhere('name', 'LIKE', '%' . $key . '%');
@@ -295,10 +298,6 @@ class ServiceController extends Controller
         $decodedString = $searchString;
         $searchWords = explode(' ', $decodedString);
 
-        $services = $this->service->whereHas('category.zones', function ($query) {
-            $query->where('zone_id', Config::get('zone_id'));
-        });
-
         $bindings = [
             $decodedString,
             "$decodedString%",
@@ -306,21 +305,27 @@ class ServiceController extends Controller
             "%$decodedString"
         ];
 
-        $searchQuery = $services->orderByRaw("
-            CASE
-                WHEN name = ? THEN 0
-                WHEN name LIKE ? THEN 1
-                WHEN name LIKE ? THEN 2
-                WHEN name LIKE ? THEN 3
-                ELSE 4
-            END
-        ", $bindings);
+        $searchQuery = $this->service
+            ->where(function ($query) use ($searchWords) {
+                $query->whereHas('category.zones', function ($q) {
+                    $q->where('zone_id', Config::get('zone_id'));
+                });
 
-        foreach ($searchWords as $word) {
-            $searchQuery->orWhere('name', 'LIKE', "%$word%");
-        }
+                foreach ($searchWords as $word) {
+                    $query->orWhere('name', 'LIKE', "%$word%");
+                }
+            })
+            ->orderByRaw("
+                CASE
+                    WHEN name = ? THEN 0
+                    WHEN name LIKE ? THEN 1
+                    WHEN name LIKE ? THEN 2
+                    WHEN name LIKE ? THEN 3
+                    ELSE 4
+                END
+            ", $bindings);
 
-        $servicesResult = $searchQuery->active()->take(100)->get();
+        $servicesResult = $searchQuery->active()->visibleInCurrentZone()->take(100)->get();
 
         $categoryServices = $this->service->withoutGlobalScopes()->with('category')
             ->whereHas('category', function ($query) use ($decodedString) {
@@ -329,6 +334,7 @@ class ServiceController extends Controller
             ->whereHas('category.zones', function ($query) {
                 $query->where('zone_id', Config::get('zone_id'));
             })
+            ->visibleInCurrentZone()
             ->take(100)
             ->get();
 
@@ -339,6 +345,7 @@ class ServiceController extends Controller
             ->whereHas('category.zones', function ($query) {
                 $query->where('zone_id', Config::get('zone_id'));
             })
+            ->visibleInCurrentZone()
             ->take(100)
             ->get();
 
@@ -349,6 +356,7 @@ class ServiceController extends Controller
             ->whereHas('category.zones', function ($query) {
                 $query->where('zone_id', Config::get('zone_id'));
             })
+            ->visibleInCurrentZone()
             ->take(100)
             ->get();
 
@@ -392,16 +400,18 @@ class ServiceController extends Controller
 
         $servicesQuery = $this->service->with(['category.zonesBasicInfo', 'variations', 'service_discount', 'category.category_discount'])
             ->where(function ($query) {
-                $query->whereDoesntHave('service_discount')
-                    ->orWhereHas('service_discount');
-            })
-            ->orWhere(function ($query) {
-                $query->whereDoesntHave('category.category_discount')
-                    ->orWhereHas('category.category_discount');
+                $query->where(function ($query) {
+                    $query->whereDoesntHave('service_discount')
+                        ->orWhereHas('service_discount');
+                })->orWhere(function ($query) {
+                    $query->whereDoesntHave('category.category_discount')
+                        ->orWhereHas('category.category_discount');
+                });
             })
             ->withCount('bookings')
             ->orderBy('bookings_count', 'desc')
-            ->active();
+            ->active()
+            ->visibleInCurrentZone();
 
         if ($this->booking->count() > 0) {
             $servicesQuery->has('bookings');
@@ -452,7 +462,8 @@ class ServiceController extends Controller
         ->where(function ($query) {
             $query->whereDoesntHave('category.category_discount')
                 ->orWhereHas('category.category_discount');
-        });
+        })
+        ->visibleInCurrentZone();
 
         if (auth('api')->user()) {
             $user = auth('api')->user();
@@ -503,6 +514,7 @@ class ServiceController extends Controller
     {
         $services = $this->service->select('id', 'name')
             ->active()
+            ->visibleInCurrentZone()
             ->inRandomOrder()
             ->take(5)->get();
 
@@ -532,18 +544,20 @@ class ServiceController extends Controller
         $servicesQuery = $this->service
             ->with(['category.zonesBasicInfo', 'variations', 'service_discount', 'category.category_discount'])
             ->where(function ($query) {
-                $query->whereDoesntHave('service_discount')
-                    ->orWhereHas('service_discount');
-            })
-            ->orWhere(function ($query) {
-                $query->whereDoesntHave('category.category_discount')
-                    ->orWhereHas('category.category_discount');
+                $query->where(function ($query) {
+                    $query->whereDoesntHave('service_discount')
+                        ->orWhereHas('service_discount');
+                })->orWhere(function ($query) {
+                    $query->whereDoesntHave('category.category_discount')
+                        ->orWhereHas('category.category_discount');
+                });
             })
             ->withCount(['bookings' => function ($query) {
                 $query->where('created_at', '>', now()->subDays(30)->endOfDay());
             }])
             ->orderBy('bookings_count', 'desc')
-            ->active();
+            ->active()
+            ->visibleInCurrentZone();
 
         if ($this->booking->count() > 0) {
             $servicesQuery->whereHas('bookings', function ($query) {
@@ -601,12 +615,13 @@ class ServiceController extends Controller
                 });
             })
             ->active()
+            ->visibleInCurrentZone()
             ->orderBy('avg_rating', 'DESC')
             ->paginate($request['limit'], ['*'], 'offset', $request['offset'])
             ->withPath('');
 
         foreach ($services as $service){
-            $service['is_favorite'] = $this->favoriteService->where('customer_user_id', $this->customer_user_id)->where('service_id',$service->id)->exists() ? 1 : 0;
+            $service['is_favorite'] = $this->favoriteService->where('customer_user_id',$this->customer_user_id)->where('service_id',$service->id)->exists() ? 1 : 0;
         }
 
         return response()->json(response_formatter(DEFAULT_200, self::variationMapper($services)), 200);
@@ -694,9 +709,12 @@ class ServiceController extends Controller
 
         $services = $this->service
             ->with(['category.zonesBasicInfo', 'variations', 'service_discount', 'category.category_discount'])
-            ->whereHas('service_discount')
-            ->orWhereHas('category.category_discount')
+            ->where(function ($query) {
+                $query->whereHas('service_discount')
+                    ->orWhereHas('category.category_discount');
+            })
             ->active()
+            ->visibleInCurrentZone()
             ->orderBy('avg_rating', 'DESC')
             ->paginate($request['limit'], ['*'], 'offset', $request['offset'])->withPath('');
 
@@ -745,6 +763,7 @@ class ServiceController extends Controller
                 return $query->where('is_active', 1);
             }])
             ->ofStatus(1)
+            ->visibleInCurrentZone()
             ->first();
 
         if (isset($service)) {
@@ -856,6 +875,7 @@ class ServiceController extends Controller
                             ->orWhereHas('category.category_discount');
                     });
             })
+            ->visibleInCurrentZone()
             ->latest();
 
         $services = $servicesQuery

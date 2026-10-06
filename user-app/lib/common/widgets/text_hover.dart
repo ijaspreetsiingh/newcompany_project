@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class TextHover extends StatefulWidget {
   final Widget Function(bool isHovered) builder;
@@ -30,3 +30,6 @@ class _TextHoverState extends State<TextHover> {
   }
 
 }
+
+
+

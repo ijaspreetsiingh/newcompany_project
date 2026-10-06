@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:jdds/api/local/cache_response.dart';
 import 'package:jdds/common/repo/data_sync_repo.dart';
 import 'package:jdds/feature/auth/controller/facebook_login_controller.dart';
@@ -8,7 +8,7 @@ import 'package:jdds/util/core_export.dart';
 
 final database = AppDatabase();
 
-Future<Map<String, Map<String, String>>> init() async {
+Future<Map<String, Map<String, String>>> intt() async {
 
   final sharedPreferences = await SharedPreferences.getInstance();
 
@@ -64,7 +64,7 @@ Future<Map<String, Map<String, String>>> init() async {
   Get.lazyPut(() => MyFavoriteController(myFavoriteRepo: Get.find()));
   Get.lazyPut(() => AllSearchController(searchRepo: Get.find()));
   Get.lazyPut(() => NotificationController( notificationRepo: Get.find()));
-  Get.lazyPut(() => ServiceBookingController(serviceBookingRepo: Get.find()));
+  Get.lazyPut(() => ServiceBookingController(serviceBookingRepo: Get.find()), fenix: true);
   Get.lazyPut(() => BookingDetailsController(bookingDetailsRepo: Get.find()));
   Get.lazyPut(() => FacebookLoginController());
   Get.lazyPut(() => NewBookingController());
@@ -79,7 +79,13 @@ Future<Map<String, Map<String, String>>> init() async {
 
   Get.lazyPut(() => ThemeController(sharedPreferences: Get.find()));
   Get.lazyPut(() => LocationController(locationRepo: LocationRepo(apiClient: Get.find(), sharedPreferences: Get.find())));
+  Get.lazyPut(() => RadiusSearchController(locationRepo: LocationRepo(apiClient: Get.find(), sharedPreferences: Get.find())), fenix: true);
   Get.lazyPut(() => CartController(cartRepo: CartRepo(sharedPreferences:Get.find(),apiClient: Get.find())));
+  Get.lazyPut(() => FriendLocationController(
+        sharedPreferences: Get.find(),
+        locationRepo: LocationRepo(apiClient: Get.find(), sharedPreferences: Get.find()),
+        cartRepo: CartRepo(sharedPreferences: Get.find(), apiClient: Get.find()),
+      ), fenix: true);
 
 
 

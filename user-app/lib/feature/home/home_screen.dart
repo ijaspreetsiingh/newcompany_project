@@ -1,17 +1,14 @@
-import 'package:jdds/feature/home/widget/nearby_provider_listview.dart';
-import 'package:jdds/feature/home/widget/popular_service_list_view.dart';
 import 'package:get/get.dart';
+import 'package:jdds/feature/home/widget/nest_home_widgets.dart';
+import 'package:jdds/feature/home/widget/all_services_vertical_list.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:jdds/util/core_export.dart';
-import 'package:jdds/common/widgets/address_selection_drawer.dart';
-
 
 class HomeScreen extends StatefulWidget {
   static Future<void> loadData(bool reload, {int availableServiceCount = 1}) async {
-
     if(availableServiceCount==0){
       Get.find<BannerController>().getBannerList(reload);
     }else{
-      // Critical data - load immediately
       await Future.wait([
         Get.find<ServiceController>().getRecommendedSearchList(),
         Get.find<BannerController>().getBannerList(reload),
@@ -20,10 +17,8 @@ class HomeScreen extends StatefulWidget {
         Get.find<AdvertisementController>().getAdvertisementList(reload),
       ]);
 
-      // Non-critical data - load after critical data
       Future.wait([
         Get.find<ServiceController>().getAllServiceList(1,reload),
-        Get.find<ServiceController>().getTrendingServiceList(1,reload),
         Get.find<ProviderBookingController>().getProviderList(1,reload),
         Get.find<NearbyProviderController>().getProviderList(1,reload),
         Get.find<CampaignController>().getCampaignList(reload),
@@ -35,212 +30,203 @@ class HomeScreen extends StatefulWidget {
       ]);
 
       Get.find<BookingDetailsController>().manageDialog();
-
     }
   }
+
   final AddressModel? addressModel;
   final bool showServiceNotAvailableDialog;
-  const HomeScreen({super.key, this.addressModel, required this.showServiceNotAvailableDialog}) ;
+  const HomeScreen({super.key, this.addressModel, required this.showServiceNotAvailableDialog});
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  AddressModel? _previousAddress;
-  int availableServiceCount = 0;
-
   @override
   void initState() {
     super.initState();
-
-    Get.find<LocalizationController>().filterLanguage(shouldUpdate: false);
-    if(Get.find<AuthController>().isLoggedIn()) {
-      Get.find<UserController>().getUserInfo();
-      Get.find<LocationController>().getAddressList();
-    }
-    if(Get.find<LocationController>().getUserAddress() !=null){
-      availableServiceCount = Get.find<LocationController>().getUserAddress()!.availableServiceCountInZone ?? 0;
-    }
-    HomeScreen.loadData(false, availableServiceCount: availableServiceCount);
-
-    _previousAddress = widget.addressModel;
-
-    if (_previousAddress != null && availableServiceCount == 0 && widget.showServiceNotAvailableDialog) {
-      Future.delayed(const Duration(microseconds: 1000), () {
-        Get.dialog(
-          ServiceNotAvailableDialog(
-            address: _previousAddress,
-            forCard: false,
-            showButton: true,
-            onBackPressed: () {
-              Get.back();
-              Get.find<LocationController>().setZoneContinue('false');
-            },
-          )
-        );
-      });
-    }
-
-    /// Enable location popup as full-screen dialog so the blur covers
-    /// the app bar and bottom nav bar too
-    if (availableServiceCount == 0 && !(_previousAddress != null && widget.showServiceNotAvailableDialog)) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (mounted) {
-          Get.dialog(
-            const EnableLocationPopup(),
-            barrierDismissible: false,
-            useSafeArea: false,
-            barrierColor: Colors.transparent,
-          );
-        }
+    if (Get.isRegistered<RadiusSearchController>()) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        unawaited(Get.find<RadiusSearchController>().checkAvailabilityAndPrompt());
       });
     }
   }
-
-  PreferredSizeWidget homeAppBar({GlobalKey<CustomShakingWidgetState>? signInShakeKey}){
-    if(ResponsiveHelper.isDesktop(context)){
-      return WebMenuBar(signInShakeKey: signInShakeKey,);
-    }else{
-      return const AddressAppBar(backButton: false);
-    }
-  }
-  final ScrollController scrollController = ScrollController();
-  final signInShakeKey = GlobalKey<CustomShakingWidgetState>();
 
   @override
   Widget build(BuildContext context) {
+    Get.find<BannerController>().setCurrentIndex(0, false);
+    
+    return GetBuilder<ServiceController>(builder: (serviceController) {
+      bool isAvailableService = serviceController.popularServiceList != null && serviceController.popularServiceList!.isNotEmpty;
+      
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: isAvailableService ? _buildHome(context) : const ServiceNotAvailableScreen(),
+      );
+    });
+  }
 
-    return Scaffold(
-      appBar: homeAppBar(signInShakeKey: signInShakeKey),
-      drawer: ResponsiveHelper.isDesktop(context) ? const AddressSelectionDrawer() : null,
-      endDrawer:ResponsiveHelper.isDesktop(context) ? const MenuDrawer() : null,
-      body: ResponsiveHelper.isDesktop(context)
-          ? WebHomeScreen(scrollController: scrollController, availableServiceCount: availableServiceCount, signInShakeKey: signInShakeKey,)
-          : _buildHomeContent(),
+  Widget _buildHome(BuildContext context) {
+    return SafeArea(
+      top: true,
+      bottom: false,
+      child: SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const NestHomeHeader(),
+          const NestGreetingHeader(),
+          _buildSearchBox(context),
+          const SizedBox(height: 16),
+          const CategoryView(),
+          const SizedBox(height: 20),
+          GetBuilder<ServiceController>(builder: (serviceController) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+              child: NestHeroBanner(serviceList: serviceController.popularServiceList),
+            );
+          }),
+          const SizedBox(height: 20),
+          GetBuilder<ServiceController>(builder: (serviceController) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+              child: NestPopularRows(serviceList: serviceController.popularServiceList),
+            );
+          }),
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Why choose Jass', style: robotoBold.copyWith(fontSize: 16)),
+                const SizedBox(height: 12),
+                const NestTrustBadges(),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildSpecialOfferBanner(context),
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('All services', style: robotoBold.copyWith(fontSize: 16)),
+                InkWell(
+                  onTap: () => Get.toNamed(RouteHelper.allServiceScreenRoute('home')),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('See all', style: robotoMedium.copyWith(fontSize: 12, color: primaryAccent)),
+                      const SizedBox(width: 4),
+                      Icon(Icons.arrow_forward, size: 14, color: primaryAccent),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          GetBuilder<ServiceController>(builder: (serviceController) {
+            return serviceController.allService != null && serviceController.allService!.isNotEmpty
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+                    child: AllServicesVerticalList(serviceList: serviceController.allService),
+                  )
+                : const SizedBox();
+          }),
+          const SizedBox(height: 24),
+        ],
+      ),
+      ),
     );
   }
 
-  Widget _buildHomeContent() {
-    return SafeArea(
-      child: RefreshIndicator(
-        onRefresh: () async {
-          if(availableServiceCount > 0){
-            // Critical data - load first
-            await Future.wait([
-              Get.find<SplashController>().getConfigData(),
-              Get.find<BannerController>().getBannerList(true),
-              Get.find<CategoryController>().getCategoryList(true),
-              Get.find<ServiceController>().getPopularServiceList(1,true),
-              Get.find<AdvertisementController>().getAdvertisementList(true),
-            ]);
-            
-            // Non-critical data - load after
-            Future.wait([
-              Get.find<ServiceController>().getAllServiceList(1,true),
-              Get.find<ServiceController>().getRecommendedServiceList(1,true),
-              Get.find<ProviderBookingController>().getProviderList(1, true),
-              Get.find<ServiceController>().getTrendingServiceList(1,true),
-              Get.find<CampaignController>().getCampaignList(true),
-              Get.find<ServiceController>().getFeatherCategoryList(true),
-              Get.find<CartController>().getCartListFromServer(),
-              if(Get.find<AuthController>().isLoggedIn()) 
-                Get.find<ServiceController>().getRecentlyViewedServiceList(1,true),
-            ]);
-          }else{
-            await Get.find<BannerController>().getBannerList(true);
-          }
-        },
-        child: GestureDetector(
-          onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-          child: GetBuilder<SplashController>(builder: (splashController){
-            return GetBuilder<ProviderBookingController>(builder: (providerController){
-              return GetBuilder<ServiceController>(builder: (serviceController){
+  Widget _buildSearchBox(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color fillColor = isDark ? const Color(0xFF262626) : const Color(0xFFF6F6F6);
+    final Color borderColor = isDark ? const Color(0xFF333333) : const Color(0xFFE5E5E5);
+    final Color mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
 
-                bool isAvailableProvider = providerController.providerList != null && providerController.providerList!.isNotEmpty;
-                int ? providerBooking = splashController.configModel.content?.directProviderBooking;
-                bool isLtr = Get.find<LocalizationController>().isLtr;
+    return GestureDetector(
+      onTap: () => Get.toNamed(RouteHelper.allServiceScreenRoute('home')),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+        height: 48,
+        padding: const EdgeInsets.symmetric(
+          horizontal: Dimensions.paddingSizeDefault,
+        ),
+        decoration: BoxDecoration(
+          color: fillColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderColor),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.search_outlined, size: 18, color: mutedColor),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'search_services'.tr,
+                style: robotoRegular.copyWith(fontSize: 13, color: mutedColor),
+              ),
+            ),
+            Icon(Icons.tune_rounded, size: 18, color: mutedColor),
+          ],
+        ),
+      ),
+    );
+  }
 
-                return CustomScrollView(
-                  controller: scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(
-                    parent: ClampingScrollPhysics()
-                  ),
-                  slivers: [
-                    const SliverToBoxAdapter(child: SizedBox(height: Dimensions.paddingSizeSmall)),
-                    const HomeSearchWidget(),
-                    SliverToBoxAdapter(
-                      child: Center(child: SizedBox(width: Dimensions.webMaxWidth, child: Column(children: [
-                        const BannerView(),
-                        availableServiceCount > 0 ? Column(children: [
+  Widget _buildSpecialOfferBanner(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1A1A1A) : Colors.black;
+    final textColor = Colors.white;
 
-                          /// Services grid (SS style)
-                          const Padding(padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-                            child: CategoryView(),
-                          ),
-
-                          const SizedBox(height: Dimensions.paddingSizeLarge),
-
-                          /// Most Popular Services (SS style chips + cards)
-                          PopularServiceListView(serviceList: serviceController.popularServiceList),
-
-                          const Padding(padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-                            child: HighlightProviderWidget(),
-                          ),
-                          const SizedBox(height: Dimensions.paddingSizeLarge),
-                          RecommendedServiceView(height: isLtr ? 210 : 225,),
-                          SizedBox(height: (providerBooking == 1 && (isAvailableProvider || providerController.providerList == null)) ? Dimensions.paddingSizeLarge : 0,),
-                          (providerBooking == 1 && (isAvailableProvider || providerController.providerList == null)) ?
-                          NearbyProviderListview(height:  isLtr ? 190 : 205) : const SizedBox(),
-                          (providerBooking == 1 && (isAvailableProvider || providerController.providerList == null)) ?
-                          Padding(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeLarge),
-                            child: SizedBox(
-                              height: 160,
-                              child: ExploreProviderCard(showShimmer: providerController.providerList == null,),
-                            ),
-                          ) : const SizedBox(),
-                          if(Get.find<SplashController>().configModel.content?.directProviderBooking==1)
-                            const HomeRecommendProvider(height: 220,),
-                          if(Get.find<SplashController>().configModel.content?.biddingStatus == 1)
-                            (serviceController.allService != null && serviceController.allService!.isNotEmpty) ?
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeLarge),
-                              child: HomeCreatePostView(showShimmer: false,),
-                            ) : const SizedBox(),
-                          if(Get.find<AuthController>().isLoggedIn())
-                            HorizontalScrollServiceView(fromPage: 'recently_view_services',serviceList: serviceController.recentlyViewServiceList),
-                          HorizontalScrollServiceView(fromPage: 'trending_services',serviceList: serviceController.trendingServiceList),
-                          const FeatheredCategoryView(),
-                          (serviceController.allService != null && serviceController.allService!.isNotEmpty) ? (ResponsiveHelper.isMobile(context) || ResponsiveHelper.isTab(context))?  Padding(
-                            padding: const EdgeInsets.fromLTRB(Dimensions.paddingSizeDefault, 15, Dimensions.paddingSizeDefault,  Dimensions.paddingSizeSmall,),
-                            child: TitleWidget(
-                              title: 'all_service'.tr,
-                              onTap: () => Get.toNamed(RouteHelper.getSearchResultRoute()),
-                            ),
-                          ) : const SizedBox.shrink() : const SizedBox.shrink(),
-                          PaginatedListView(
-                            scrollController: scrollController,
-                            totalSize: serviceController.serviceContent?.total ,
-                            offset:  serviceController.serviceContent?.currentPage ,
-                            onPaginate: (int offset) async => await serviceController.getAllServiceList(offset, false),
-                            showBottomSheet: true,
-                            itemView: ServiceViewVertical(
-                              service: serviceController.serviceContent != null ? serviceController.allService : null,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: ResponsiveHelper.isDesktop(context) ? Dimensions.paddingSizeExtraSmall : Dimensions.paddingSizeDefault,
-                                vertical: ResponsiveHelper.isDesktop(context) ? Dimensions.paddingSizeExtraSmall : 0,
-                              ),
-                              type: 'others',
-                              noDataType: NoDataType.home,
-                            ),
-                          ),
-                        ],) : SizedBox( height: MediaQuery.of(context).size.height *.6, child: const ServiceNotAvailableScreen())
-                      ]))),
+    return GestureDetector(
+      onTap: () => Get.toNamed(RouteHelper.getCouponRoute()),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+        padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.local_offer_rounded, color: textColor, size: 24),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Special Offer',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: textColor.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    Text(
+                      'Current Offers',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: textColor,
+                      ),
                     ),
                   ],
-                );
-              });
-            });
-          }),
+                ),
+              ],
+            ),
+            Icon(Icons.arrow_forward_rounded, color: textColor, size: 20),
+          ],
         ),
       ),
     );

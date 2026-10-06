@@ -19,7 +19,7 @@ enum HtmlType {
 }
 enum SendOtpType {forgetPassword, firebase, verification}
 enum NoDataType { notification, booking, others}
-enum BooingListStatus{pending,accepted,ongoing}
+enum BooingListStatus{all,pending,accepted,ongoing,completed,canceled}
 enum BookingDetailsTabControllerState {bookingDetails,status}
 enum EarningType{monthly, yearly}
 enum EditProfileTabControllerState {generalInfo,accountIno}

@@ -1,4 +1,4 @@
-class MenuModel {
+﻿class MenuModel {
   String? icon;
   String? title;
   String? route;
@@ -6,3 +6,5 @@ class MenuModel {
 
   MenuModel({required this.icon, required this.title, required this.route, this.isLogout = false});
 }
+
+

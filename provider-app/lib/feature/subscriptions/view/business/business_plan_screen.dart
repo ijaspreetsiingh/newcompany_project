@@ -1,4 +1,5 @@
 import 'package:demandium_provider/util/core_export.dart';
+import 'package:demandium_provider/feature/profile/model/provider_model.dart';
 import 'package:get/get.dart';
 
 class BusinessPlanScreen extends StatefulWidget {
@@ -53,61 +54,46 @@ class _BusinessPlanScreenState extends State<BusinessPlanScreen> {
         return;
       },
       child: Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        appBar: CustomAppBar(title: "business_plan".tr, elevation: 0,),
-        body: GetBuilder<UserProfileController>(builder: (userProfileController){
-          if (userProfileController.providerModel?.content?.subscriptionInfo == null) {
-            return const Center(child: CircularProgressIndicator());
-          } else {
-            return userProfileController.providerModel?.content?.subscriptionInfo != null && userProfileController.providerModel?.content?.subscriptionInfo?.status == "commission_base" &&  userProfileController.providerModel?.content?.subscriptionInfo?.totalSubscription == 0 ?
-            const CommissionInfoWidget() : DefaultTabController(
-              length: 2,
-              child: Column(children: [
+        backgroundColor: InkColors.background,
+        body: SafeArea(
+          child: GetBuilder<UserProfileController>(builder: (userProfileController){
+            SubscriptionInfo? subscriptionInfo = userProfileController.providerModel?.content?.subscriptionInfo;
 
-                Container(
-                  decoration:  BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                  ),
-                  child: TabBar(
-                    unselectedLabelColor:Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha:0.5),
-                    indicatorColor: Theme.of(context).primaryColor,
-                    labelColor: Theme.of(context).primaryColorLight,
-                    labelStyle:  robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge),
-                    labelPadding: EdgeInsets.zero,
-                    dividerHeight: 0.2,
-                    dividerColor: Theme.of(context).primaryColor,
-                    tabs:  [
-                      SizedBox(
-                        height: 40,
-                        width: MediaQuery.of(context).size.width* .5,
-                        child:Center(
-                          child: Text("plan_details".tr),
-                        ),
-                      ),
-                      SizedBox(
-                        height: 40,
-                        width: MediaQuery.of(context).size.width*.5,
-                        child:  Center(
-                          child: Text("transaction".tr),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+            if (subscriptionInfo == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      userProfileController.providerModel?.content?.subscriptionInfo?.status == "commission_base" ?
-                      const CommissionInfoWidget() :  BusinessPlanDetailsWidget(tooltipController: tooltipController,),
-                      const SubscriptionTransactionListScreen(),
-                    ],
-                  ),
-                ),
-              ]),
-            );
-          }
-        }),
+            SubscribedPackageDetails? subscribedPackageDetails = subscriptionInfo.subscribedPackageDetails;
+
+            bool isCommissionCase = subscriptionInfo.status == "commission_base" && (subscriptionInfo.totalSubscription ?? 0) == 0;
+
+            int remainingDays = subscribedPackageDetails?.packageEndDate != null ?
+            DateConverter.countDays(endDate: DateTime.tryParse(subscribedPackageDetails?.packageEndDate ?? "")) : 0;
+
+            String? planName = subscribedPackageDetails?.packageName ?? subscriptionInfo.renewalPackageDetails?.name;
+
+            String title = isCommissionCase ? "business_plan".tr : (planName ?? "business_plan".tr);
+            String? subtitle;
+            if(!isCommissionCase){
+              subtitle = "$remainingDays ${'days_left'.tr}";
+            }
+
+            return Column(children: [
+
+              InkTopBar(
+                title: title,
+                subtitle: subtitle,
+                onBack: () => Get.back(),
+              ),
+
+              Expanded(
+                child: isCommissionCase ? const CommissionInfoWidget() :
+                BusinessPlanDetailsWidget(tooltipController: tooltipController),
+              ),
+
+            ]);
+          }),
+        ),
       ),
     );
   }

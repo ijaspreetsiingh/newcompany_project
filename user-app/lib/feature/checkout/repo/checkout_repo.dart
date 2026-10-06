@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 
@@ -14,6 +14,12 @@ class CheckoutRepo extends GetxService {
   Future<Response> getOfflinePaymentMethod() async {
     Response response = await apiClient.getData(AppConstants.offlinePaymentUri);
     return response;
+  }
+
+  Future<Response> getProviderPaymentConfig(String? providerId) async {
+    return await apiClient.getData(
+      '${AppConstants.providerPaymentConfigUri}?provider_id=${providerId ?? ''}',
+    );
   }
 
   Future<Response> getDigitalPaymentResponse({String? transactionId}) async {
@@ -76,3 +82,5 @@ class CheckoutRepo extends GetxService {
     }, timeout: 30);
   }
 }
+
+

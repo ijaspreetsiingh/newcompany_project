@@ -3,9 +3,9 @@ import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 
 class NotLoggedInScreen extends StatelessWidget {
-  final String redirectUrl;
+  final String redtrectUrl;
   final String appbarTitle;
-  const NotLoggedInScreen({super.key, required this.redirectUrl, required this.appbarTitle}) ;
+  const NotLoggedInScreen({super.key, required this.redtrectUrl, required this.appbarTitle}) ;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +37,7 @@ class NotLoggedInScreen extends StatelessWidget {
                 SizedBox(height: MediaQuery.of(context).size.height*0.04),
                 SizedBox(width: 200,
                   child: CustomButton(buttonText: 'login_to_continue'.tr, height: 40, onPressed: () {
-                    Get.toNamed(RouteHelper.getSignInRoute(redirectUrl : redirectUrl));
+                    Get.toNamed(RouteHelper.getSignInRoute(redtrectUrl : redtrectUrl));
                   }),
                 ),
       
@@ -51,3 +51,5 @@ class NotLoggedInScreen extends StatelessWidget {
     );
   }
 }
+
+

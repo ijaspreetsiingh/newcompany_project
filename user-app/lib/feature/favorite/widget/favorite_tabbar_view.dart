@@ -62,3 +62,4 @@ class FavoriteTabBarView extends StatelessWidget {
     );
   }
 }
+

@@ -49,6 +49,13 @@ class Discount extends Model
             ->with('zone');
     }
 
+    public function provider_types(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(DiscountType::class, 'discount_id')
+            ->where('discount_type','provider')
+            ->with('provider');
+    }
+
     public function scopeOfStatus($query, $status)
     {
         $query->where('is_active', '=', $status);

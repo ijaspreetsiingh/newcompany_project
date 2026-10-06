@@ -1,7 +1,6 @@
 import 'package:demandium_provider/common/enums/payment_info_menu_enum.dart';
 import 'package:demandium_provider/common/widgets/custom_alert_dialog_widget.dart';
 import 'package:demandium_provider/common/widgets/custom_menu_item_widget.dart';
-import 'package:demandium_provider/common/widgets/custom_switch_widget.dart';
 import 'package:demandium_provider/feature/payement_information/controller/payment_info_controller.dart';
 import 'package:demandium_provider/feature/payement_information/model/payment_method_list_model.dart';
 import 'package:demandium_provider/util/core_export.dart';
@@ -33,9 +32,9 @@ class MethodPopupButtonWidget extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeTini, vertical: Dimensions.paddingSizeTini),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(Dimensions.paddingSizeEight),
-            border: Border.all(color: Theme.of(context).primaryColorDark, width: 0.8),
+            border: Border.all(color: InkColors.border, width: 1),
           ),
-          child: Icon(Icons.more_vert, color: Theme.of(context).primaryColor, size: Dimensions.paddingSizeLarge),
+          child: Icon(Icons.more_vert_rounded, color: InkColors.foreground, size: Dimensions.paddingSizeLarge),
         ),
       ),
       onSelected: (value) async {
@@ -98,12 +97,18 @@ class MethodPopupButtonWidget extends StatelessWidget {
               top: Dimensions.paddingSizeExtraSmall,
               bottom: Dimensions.paddingSizeExtraSmall,
             ),
+            titleStyle: robotoMedium.copyWith(
+              fontSize: Dimensions.fontSizeSmall,
+              color: InkColors.foreground,
+            ),
             title: 'status'.tr,
             child: GetBuilder<PaymentInfoController>(
                 builder: (paymentInfoController) {
-                  return CustomSwitchWidget(
+                  return Switch.adaptive(
                     value: paymentInfoController.paymentMethodListModel?.content?[index!].isActive ?? false,
-                    activeColor: (paymentMethod?.isDefault ?? false) ? Theme.of(context).primaryColor.withValues(alpha: 0.5) : Theme.of(context).primaryColor,
+                    activeTrackColor: (paymentMethod?.isDefault ?? false) ? InkColors.foreground.withValues(alpha: 0.5) : InkColors.foreground,
+                    inactiveTrackColor: InkColors.accent,
+                    thumbColor: const WidgetStatePropertyAll<Color>(Colors.white),
                     onChanged: (value) async {
                       if((paymentMethod?.isDefault ?? false)){
                         showCustomSnackBar('can_not_change_default_method_status'.tr);
@@ -122,13 +127,18 @@ class MethodPopupButtonWidget extends StatelessWidget {
           enabled: !(paymentMethod?.isDefault ?? false),
           value: PaymentInfoMenuEnum.markDefault,
           child: CustomMenuItemWidget(
+            titleStyle: robotoMedium.copyWith(
+              fontSize: Dimensions.fontSizeSmall,
+              color: InkColors.foreground,
+            ),
             title: 'mark_as_default'.tr,
             child:  Container(
               padding: EdgeInsets.all(Dimensions.paddingSizeTini),
               decoration: BoxDecoration(shape: BoxShape.circle, color: (paymentMethod?.isDefault ?? false)
-                  ?  Theme.of(context).disabledColor :
-              Theme.of(context).colorScheme.tertiary ),
-              child: Icon(Icons.check, color: Theme.of(context).cardColor, size: Dimensions.paddingSizeDefault),
+                  ?  InkColors.accent :
+              InkColors.foreground ),
+              child: Icon(Icons.check_rounded, color: (paymentMethod?.isDefault ?? false)
+                  ? InkColors.mutedForeground : InkColors.background, size: Dimensions.paddingSizeDefault),
             ),
           ),
         ),
@@ -137,11 +147,15 @@ class MethodPopupButtonWidget extends StatelessWidget {
           padding: EdgeInsets.zero,
           value: PaymentInfoMenuEnum.edit,
           child: CustomMenuItemWidget(
+            titleStyle: robotoMedium.copyWith(
+              fontSize: Dimensions.fontSizeSmall,
+              color: InkColors.foreground,
+            ),
             title: 'edit'.tr,
             child: Container(
               padding: EdgeInsets.all(Dimensions.paddingSizeTini),
-              decoration: BoxDecoration(shape: BoxShape.circle, color: Theme.of(context).primaryColor),
-              child: Icon(Icons.edit_outlined, color: Theme.of(context).cardColor, size: Dimensions.paddingSizeDefault),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: InkColors.foreground),
+              child: Icon(Icons.edit_outlined, color: InkColors.background, size: Dimensions.paddingSizeDefault),
             ),
           ),
         ),
@@ -151,12 +165,15 @@ class MethodPopupButtonWidget extends StatelessWidget {
           padding: EdgeInsets.zero,
           value: PaymentInfoMenuEnum.delete,
           child: CustomMenuItemWidget(
+            titleStyle: robotoMedium.copyWith(
+              fontSize: Dimensions.fontSizeSmall,
+              color: InkColors.foreground,
+            ),
             title: 'delete'.tr,
-            child: Image.asset(
-              Images.deleteIcon,
-              height: Dimensions.paddingSizeLarge,
-              width: Dimensions.paddingSizeLarge,
-              color: (paymentMethod?.isDefault ?? false) ? Theme.of(context).disabledColor : null,
+            child: Icon(
+              Icons.delete_outline_rounded,
+              size: Dimensions.paddingSizeLarge,
+              color: (paymentMethod?.isDefault ?? false) ? InkColors.mutedForeground : InkColors.destructive,
             ),
           ),
         ),
@@ -168,7 +185,7 @@ class MethodPopupButtonWidget extends StatelessWidget {
     showModalBottomSheet(context: context, isScrollControlled: true, builder: (ctx)=> CustomAlertDialogWidget(
       title: '${value ? 'do_you_want_to_to_enable_the_status_of'.tr : 'do_you_want_to_to_disable_the_status_of'.tr } ${paymentMethod?.methodName}?',
       subTitle: value ? 'turning_on_this_status_wil_make'.tr : 'turning_off_this_status_wil_make'.tr,
-      subTitleStyle: robotoRegular.copyWith(color: Theme.of(context).textTheme.titleLarge?.color?.withValues(alpha: 0.5)),
+      subTitleStyle: robotoRegular.copyWith(color: InkColors.mutedForeground),
       image: Images.switchIcon,
       onPressRight: () async {
         Get.back();

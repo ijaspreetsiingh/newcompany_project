@@ -81,18 +81,18 @@ class _SuggestServiceScreenState extends State<SuggestServiceScreen> {
                             duration: const Duration(milliseconds: 500),
                             child: Padding(
                               padding: const EdgeInsets.all(Dimensions.paddingSizeExtraLarge,),
-                              child: Image.asset(Images.suggestServiceIcon,width: suggestServiceController.initialImageSize,),
+                              child: Image.asset(Images.suggestServiceIcon,width: suggestServiceController.inttialImageSize,),
                             ),
                           ),
 
-                          AnimatedOpacity(opacity: suggestServiceController.initialContainerOpacity,
+                          AnimatedOpacity(opacity: suggestServiceController.inttialContainerOpacity,
                             duration: const Duration(milliseconds: 1500),
                             child: const SuggestServiceInputField(),
                           )
                         ]),
 
                         AnimatedPositioned(
-                          top: suggestServiceController.initialButtonPadding,
+                          top: suggestServiceController.inttialButtonPadding,
                           duration: const Duration(milliseconds: 500),
                           child: suggestServiceController.isLoading==false?
                           CustomButton(width: 240, fontSize: Dimensions.fontSizeDefault,
@@ -104,7 +104,7 @@ class _SuggestServiceScreenState extends State<SuggestServiceScreen> {
                                 if(suggestServiceController.selectedCategoryName==""){
                                   customSnackBar('select_category'.tr,  type: ToasterMessageType.info);
                                 }else if(suggestServiceController.serviceNameController.text==""){
-                                  customSnackBar('provide_your_desired_service_name'.tr,  type: ToasterMessageType.info);
+                                  customSnackBar('provide_your_destred_service_name'.tr,  type: ToasterMessageType.info);
                                 }else if(suggestServiceController.serviceDetailsController.text.isEmpty){
                                   customSnackBar("provide_some_details_about_your_service".tr,  type: ToasterMessageType.info);
                                 }else{
@@ -126,3 +126,5 @@ class _SuggestServiceScreenState extends State<SuggestServiceScreen> {
     );
   }
 }
+
+

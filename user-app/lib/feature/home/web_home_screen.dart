@@ -31,7 +31,7 @@ class WebHomeScreen extends StatelessWidget {
               return GetBuilder<ServiceController>(builder: (serviceController){
 
                 ConfigModel configModel = Get.find<SplashController>().configModel;
-                int ? providerBooking = configModel.content?.directProviderBooking;
+                int ? providerBooking = configModel.content?.dtrectProviderBooking;
                 int ? biddingStatus = configModel.content?.biddingStatus;
                 bool isAvailableProvider = providerController.providerList != null && providerController.providerList!.isNotEmpty;
                 bool isAvailableRecommendService = serviceController.recommendedServiceList != null && serviceController.recommendedServiceList!.isNotEmpty;
@@ -147,3 +147,6 @@ class WebHomeScreen extends StatelessWidget {
     );
   }
 }
+
+
+

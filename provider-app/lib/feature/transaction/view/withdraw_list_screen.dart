@@ -1,12 +1,45 @@
 import 'package:demandium_provider/feature/transaction/widget/withdraw_list_shimmer.dart';
-import 'package:demandium_provider/helper/extension_helper.dart';
-import 'package:get/get.dart';
 import 'package:demandium_provider/util/core_export.dart';
+import 'package:get/get.dart';
 
+double _amountOf(String? value) => double.tryParse(value ?? "0") ?? 0;
+
+String _rupeeGroup(num value) {
+  final bool negative = value.isNegative;
+  final double v = value.abs().toDouble();
+  final bool isInt = v == v.roundToDouble();
+  final String s = isInt ? v.round().toString() : v.toStringAsFixed(2);
+
+  String whole;
+  String? dec;
+  if (!isInt) {
+    final int idx = s.indexOf('.');
+    whole = s.substring(0, idx);
+    dec = s.substring(idx);
+  } else {
+    whole = s;
+  }
+
+  String result;
+  if (whole.length <= 3) {
+    result = whole;
+  } else {
+    final String last3 = whole.substring(whole.length - 3);
+    String rest = whole.substring(0, whole.length - 3);
+    final List<String> buf = <String>[];
+    while (rest.length > 2) {
+      buf.insert(0, rest.substring(rest.length - 2));
+      rest = rest.substring(0, rest.length - 2);
+    }
+    if (rest.isNotEmpty) buf.insert(0, rest);
+    result = '${buf.join(',')},$last3';
+  }
+  return '${negative ? '-' : ''}$result${dec ?? ''}';
+}
 
 class TransactionScreen extends StatefulWidget {
   final String? fromNotification;
-  const TransactionScreen({super.key,  this.fromNotification = ""});
+  const TransactionScreen({super.key, this.fromNotification = ""});
 
   @override
   State<TransactionScreen> createState() => _TransactionScreenState();
@@ -14,277 +47,321 @@ class TransactionScreen extends StatefulWidget {
 
 class _TransactionScreenState extends State<TransactionScreen> {
 
+  final TextEditingController _amountController = TextEditingController();
+  String _selectedMethodId = "";
+  int _filterIndex = 0;
+
   @override
   void initState() {
     super.initState();
-    Get.find<TransactionController>().getWithdrawRequestList(1,false, shouldUpdate: widget.fromNotification == "from_notification" ? false: true);
+    Get.find<TransactionController>().getWithdrawRequestList(1, false, shouldUpdate: widget.fromNotification == "from_notification" ? false : true);
+    Get.find<UserProfileController>().getProviderInfo(reload: true);
+    Get.find<TransactionController>().getWithdrawMethods(isReload: true);
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  String _effectiveMethodId(List<WithdrawalMethod> methods) {
+    if (_selectedMethodId.isNotEmpty && methods.any((m) => m.id == _selectedMethodId)) {
+      return _selectedMethodId;
+    }
+    for (final WithdrawalMethod method in methods) {
+      if (method.isDefault == 1) return method.id ?? "";
+    }
+    return methods.isNotEmpty ? (methods.first.id ?? "") : "";
+  }
+
+  void _openRequest(TransactionController transactionController, double available) {
+    final List<WithdrawalMethod> methods = (transactionController.withdrawModel?.withdrawalMethods ?? [])
+        .where((m) => m.isActive != 0)
+        .toList();
+
+    final String id = _effectiveMethodId(methods);
+    String name = "";
+    for (final WithdrawalMethod method in methods) {
+      if (method.id == id) {
+        name = method.methodName ?? "";
+        break;
+      }
+    }
+
+    Get.to(() => WithdrawRequestScreen(
+      amount: available,
+      initialAmount: _amountController.text,
+      initialMethodId: id,
+      initialMethodName: name,
+    ));
+  }
+
+  Widget _methodPill(WithdrawalMethod method, String effectiveId) {
+    final bool active = method.id == effectiveId;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedMethodId = method.id ?? ""),
+      child: Container(
+        height: 40,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: active ? InkColors.foreground : InkColors.card,
+          borderRadius: BorderRadius.circular(50),
+          border: Border.all(color: active ? Colors.transparent : InkColors.border),
+        ),
+        child: Text(
+          method.methodName ?? "",
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12.5,
+            height: 1.3,
+            fontWeight: FontWeight.w600,
+            color: active ? InkColors.background : InkColors.foreground,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: CustomAppBar(title: "withdraw_list".tr,onBackPressed: (){
-        if(widget.fromNotification == "fromNotification"){
-          Get.offAllNamed(RouteHelper.getInitialRoute());
-        }else{
-          Get.back();
-        }
-      },),
-      body: GetBuilder<TransactionController>(
-        builder: (transactionController){
-        List<TransactionData>? transactionsList = transactionController.transactionsList;
-        return transactionController.isLoading && transactionsList!.isEmpty ?
-        const WithdrawListShimmer() :
-        transactionController.transactionsList!.isEmpty ?
-        Center(child: const NoDataScreen(text: "no_withdraw_history",type: NoDataType.transaction)):
-        RefreshIndicator(
-          color: Theme.of(context).primaryColorLight,
-          backgroundColor: Theme.of(context).cardColor,
-          onRefresh: () async {
-            Get.find<TransactionController>().getWithdrawRequestList(1,false);
-          },
-          child: Column(children: [
-              const SizedBox(height: Dimensions.paddingSizeLarge),
+      backgroundColor: InkColors.background,
+      body: SafeArea(
+        child: GetBuilder<UserProfileController>(builder: (userProfileController) {
 
-              Expanded(child: Column(children: [
+          final account = userProfileController.providerModel?.content?.providerInfo?.owner?.account;
+          final double receivable = _amountOf(account?.accountReceivable);
+          final double payable = _amountOf(account?.accountPayable);
+          final double available = userProfileController.getTransactionAmountAmount(payable, receivable);
+          final double pending = _amountOf(account?.balancePending);
 
-                  Expanded(child: ListView.builder(
-                      controller: transactionController.scrollController,
-                      itemBuilder: (context,index){
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: Dimensions.paddingSizeDefault,
-                          vertical: Dimensions.paddingSizeExtraSmall,
-                        ),
-                        child: Container(
-                          width: Get.width,
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                            color: Theme.of(context).cardColor.withValues(alpha:Get.isDarkMode ? 0.5 : 1),
-                            border: Border.all(
-                              color: Theme.of(context).hintColor.withValues(alpha:0.2),
-                            )
+          return GetBuilder<TransactionController>(builder: (transactionController) {
+
+            final List<TransactionData> all = transactionController.transactionsList ?? [];
+
+            if (transactionController.isLoading && all.isEmpty) {
+              return const WithdrawListShimmer();
+            }
+
+            final List<String> pillItems = ['all'.tr, 'paid'.tr, 'unpaid'.tr];
+            final List<TransactionData> filtered = _filterIndex == 0
+                ? all
+                : all.where((t) => _filterIndex == 1 ? t.isPaid == 1 : t.isPaid != 1).toList();
+
+            final List<WithdrawalMethod> methods = (transactionController.withdrawModel?.withdrawalMethods ?? [])
+                .where((m) => m.isActive != 0)
+                .toList();
+            final String effectiveMethodId = _effectiveMethodId(methods);
+
+            return RefreshIndicator(
+              color: InkColors.foreground,
+              backgroundColor: InkColors.card,
+              onRefresh: () async {
+                await transactionController.getWithdrawRequestList(1, false);
+              },
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                controller: transactionController.scrollController,
+                padding: const EdgeInsets.only(bottom: 32),
+                children: [
+
+                  InkTopBar(
+                    title: 'withdraw'.tr,
+                    subtitle: "${'balance'.tr} ₹${_rupeeGroup(available)}",
+                    onBack: () {
+                      if (widget.fromNotification == "fromNotification") {
+                        Get.offAllNamed(RouteHelper.getInitialRoute());
+                      } else {
+                        Get.back();
+                      }
+                    },
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(children: [
+                      Expanded(child: InkStat(label: "Available", value: '₹${_rupeeGroup(available)}')),
+                      const SizedBox(width: 12),
+                      Expanded(child: InkStat(label: 'pending'.tr, value: '₹${_rupeeGroup(pending)}')),
+                    ]),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  InkSection(
+                    title: 'new_request'.tr,
+                    child: InkCard(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+
+                        InkEyebrow('amount'.tr),
+
+                        const SizedBox(height: 6),
+
+                        TextField(
+                          controller: _amountController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(20),
+                          ],
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: const EdgeInsets.only(top: 4, bottom: 8),
+                            hintText: '0',
+                            hintStyle: displayBold.copyWith(fontSize: 26, color: InkColors.mutedForeground),
+                            enabledBorder:  UnderlineInputBorder(borderSide: BorderSide(color: InkColors.border)),
+                            focusedBorder:  UnderlineInputBorder(borderSide: BorderSide(color: InkColors.foreground)),
+                            border:  UnderlineInputBorder(borderSide: BorderSide(color: InkColors.border)),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: Dimensions.paddingSizeSmall,
-                              vertical: Dimensions.paddingSizeDefault
-                            ),
-                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          style: displayBold.copyWith(fontSize: 26, height: 1.2, color: InkColors.foreground),
+                        ),
 
-                                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  Text('withdrawn_amount'.tr,
-                                    style: robotoMedium.copyWith(
-                                      fontSize: Dimensions.fontSizeLarge,
-                                      color: Theme.of(context).primaryColor,
-                                    ),
-                                  ),
-                                  SizedBox(width: Dimensions.paddingSizeSmall),
+                        const SizedBox(height: 18),
 
-                                  Flexible(child: Wrap(alignment: WrapAlignment.end,children: [
-                                      Text(PriceConverter.convertPrice(double.tryParse(transactionsList[index].amount ?? '0')),
-                                        style: robotoBold.copyWith(
-                                            fontSize: Dimensions.fontSizeLarge,
-                                            color: Theme.of(context).primaryColorLight),
-                                      ),
-                                      const SizedBox(width: Dimensions.paddingSizeExtraSmall),
-                                    
-                                      Text(transactionsList[index].isPaid == 1 ? "(${'paid'.tr})" : "(${'unpaid'.tr})", style: robotoMedium.copyWith(
-                                          fontSize: Dimensions.fontSizeSmall,
-                                          color: transactionsList[index].isPaid == 1
-                                              ? Colors.green
-                                              : Theme.of(context).colorScheme.error
-                                      )),
-                                    ])),
-                                ]),
-                                const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+                        const InkEyebrow('Method'),
 
+                        const SizedBox(height: 10),
 
-                                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-
-
-                                  Text(DateConverter.dateMonthYearTime(DateConverter.isoUtcStringToLocalDate(
-                                      transactionsList[index].createdAt??"")),
-                                      style: robotoRegular.copyWith(
-                                          fontSize: Dimensions.fontSizeDefault,
-                                          color: Theme.of(context).hintColor
-                                      ),
-                                      textDirection: TextDirection.ltr
-                                  ),
-
-
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: Dimensions.paddingSizeSmall,
-                                      vertical: Dimensions.paddingSizeExtraSmall
-                                    ),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(Dimensions.paddingSizeDefault),
-                                      color: context.customThemeColors.buttonTextColorMap[transactionsList[index].requestStatus]?.withValues(alpha:0.2)
-                                    ),
-                                    child: Text("${transactionsList[index].requestStatus}".tr,
-                                        style: robotoMedium.copyWith(
-                                            fontSize: Dimensions.fontSizeSmall,
-                                            color: context.customThemeColors.buttonTextColorMap[transactionsList[index].requestStatus]
-                                        )
-                                    ),
-                                  ),
-
-
-                                ]),
-                                const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
-
-
-                                if(transactionsList[index].requestUpdater!.userType!='provider-admin')
-                                  Row(children: [
-
-
-                                    Text('${transactionsList[index].requestStatus.toString().tr} ${'by'.tr} : ',
-                                      style: robotoRegular.copyWith(
-                                          fontSize: Dimensions.fontSizeDefault,
-                                          color: Theme.of(context).hintColor
-                                      ),
-                                    ),
-
-
-                                    Text('${transactionsList[index].requestUpdater!.firstName??""} '
-                                          '${transactionsList[index].requestUpdater!.lastName??""}',
-                                      style: robotoBold.copyWith(
-                                        fontSize: Dimensions.fontSizeDefault,
-                                        color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                                      ),
-                                    )
-
-
-                                  ]),
-                                  const SizedBox(height: Dimensions.paddingSizeSmall,),
-
-
-                                transactionsList[index].providerNote !=null || transactionsList[index].adminNote != null?
-                                Container(margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).primaryColor.withValues(alpha:0.08),
-                                    borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                                    border: Border.all(
-                                        color: Theme.of(context).primaryColor.withValues(alpha:0.08)
-                                    ),
-                                  ),
-                                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: Dimensions.paddingSizeExtraSmall
-                                      ),
-                                      child: CustomBookingDetailsExpansionTile(
-                                        tilePadding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
-                                        titlePadding: EdgeInsets.zero,
-                                        isShowExpandIcon: false,
-                                        trailingIconSize: Dimensions.paddingSizeExtraLarge * 1.5,
-                                        isShowTrailingExpandIcon: true,
-                                        leading: Image(
-                                          image: AssetImage(Images.note),
-                                          height: Dimensions.paddingSizeExtraLarge,
-                                          width: Dimensions.paddingSizeExtraLarge,
-                                        ),
-                                        bookingTitle: "note".tr,
-                                        bookingTitleColor: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                                        children: [
-
-
-                                          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-
-
-                                            const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-                                            Divider(height: 1, thickness: 1,
-                                                color: Theme.of(context).primaryColor.withValues(alpha: 0.08)
-                                            ),
-
-
-                                            if( transactionsList[index].providerNote !=null )
-                                            Padding(padding: const EdgeInsets.symmetric(
-                                              horizontal: Dimensions.paddingSizeSmall,
-                                              vertical: 10
-                                             ),
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-
-                                                  Text(
-                                                    "provider_note".tr,
-                                                    style: robotoMedium.copyWith(
-                                                      fontSize: Dimensions.fontSizeDefault,
-                                                      color: Theme.of(context).textTheme.bodyLarge!.color,
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    transactionsList[index].providerNote??"",
-                                                    style: robotoRegular.copyWith(
-                                                      fontSize: Dimensions.fontSizeDefault,
-                                                      color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.6),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-
-                                            if( transactionsList[index].adminNote !=null )
-                                              Padding(padding: const EdgeInsets.symmetric(
-                                                horizontal: Dimensions.paddingSizeSmall,
-                                              ),
-                                                child: Column(
-                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      "admin_note".tr,
-                                                      style: robotoMedium.copyWith(
-                                                        fontSize: Dimensions.fontSizeDefault,
-                                                        color: Theme.of(context).textTheme.bodyLarge!.color,
-                                                      ),
-                                                    ),
-                                                    Text(
-                                                      transactionsList[index].adminNote??"",
-                                                      style: robotoRegular.copyWith(
-                                                        fontSize: Dimensions.fontSizeDefault,
-                                                        color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.6),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-
-                                            if( transactionsList[index].adminNote !=null )
-                                            const SizedBox(height: Dimensions.paddingSizeSmall,)
-
-
-                                          ]),
-
-
-                                        ]),
-                                       ),
-
-                                  ]),
-                                 ): const SizedBox(),
-
-
+                        if (methods.isEmpty)
+                          Text('no_data_found'.tr,
+                            style:  TextStyle(fontSize: 12, height: 1.4, color: InkColors.mutedForeground),
+                          )
+                        else
+                          for (int i = 0; i < methods.length; i += 2)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Row(children: [
+                                Expanded(child: _methodPill(methods[i], effectiveMethodId)),
+                                const SizedBox(width: 8),
+                                if (i + 1 < methods.length)
+                                  Expanded(child: _methodPill(methods[i + 1], effectiveMethodId))
+                                else
+                                  const Expanded(child: SizedBox()),
                               ]),
-                          ),
-                        ),
-                      );
-                      },
-                      itemCount: transactionsList!.length,
-                    )),
-                  transactionController.paginationLoading!?
-                  CircularProgressIndicator(color: Theme.of(context).hoverColor
-                  ) : const SizedBox.shrink()
-                ],
-              ),)
-            ],
-          ),
-        );
-      }),
+                            ),
 
+                        const SizedBox(height: 10),
+
+                        InkPrimaryButton(
+                          label: "Request withdraw",
+                          height: 46,
+                          onTap: () => _openRequest(transactionController, available),
+                        ),
+
+                      ]),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: InkPills(
+                      items: pillItems,
+                      value: pillItems[_filterIndex],
+                      onChanged: (value) => setState(() => _filterIndex = pillItems.indexOf(value)),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  InkSection(
+                    title: 'withdraw_list'.tr,
+                    child: filtered.isEmpty
+                        ? const NoDataScreen(text: "no_withdraw_history", type: NoDataType.transaction)
+                        : InkCard(
+                            padding: EdgeInsets.zero,
+                            child: Column(children: [
+                              for (int i = 0; i < filtered.length; i++) ...[
+                                if (i > 0)  Divider(height: 1, thickness: 1, color: InkColors.border),
+                                _WithdrawRow(data: filtered[i]),
+                              ],
+                            ]),
+                          ),
+                  ),
+
+                  if (transactionController.paginationLoading == true)
+                     Padding(
+                      padding: EdgeInsets.only(top: 16),
+                      child: Center(
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: InkColors.foreground),
+                        ),
+                      ),
+                    ),
+
+                ],
+              ),
+            );
+          });
+        }),
+      ),
     );
   }
 }
 
+class _WithdrawRow extends StatelessWidget {
+  final TransactionData data;
+  const _WithdrawRow({required this.data});
 
+  @override
+  Widget build(BuildContext context) {
+
+    final bool paid = data.isPaid == 1;
+    final String date = DateConverter.dateMonthYearTime(DateConverter.isoUtcStringToLocalDate(data.createdAt ?? ""));
+    final String amount = '₹${_rupeeGroup(double.tryParse(data.amount ?? "0") ?? 0)}';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+            Text(amount,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style:  TextStyle(fontSize: 13.5, height: 1.3, fontWeight: FontWeight.w600, color: InkColors.foreground),
+            ),
+            const SizedBox(height: 3),
+            Text(date,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textDirection: TextDirection.ltr,
+              style:  TextStyle(fontSize: 11, height: 1.3, color: InkColors.mutedForeground),
+            ),
+          ]),
+        ),
+
+        const SizedBox(width: 12),
+
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: paid ? InkColors.foreground : Colors.transparent,
+            borderRadius: BorderRadius.circular(50),
+            border: Border.all(color: paid ? Colors.transparent : InkColors.border),
+          ),
+          child: Text(
+            paid ? 'paid'.tr.toUpperCase() : 'pending'.tr.toUpperCase(),
+            style: TextStyle(
+              fontSize: 10,
+              height: 1.2,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+              color: paid ? InkColors.background : InkColors.mutedForeground,
+            ),
+          ),
+        ),
+
+      ]),
+    );
+  }
+}

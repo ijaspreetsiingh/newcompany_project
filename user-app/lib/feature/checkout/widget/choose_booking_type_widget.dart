@@ -72,3 +72,4 @@ class ChooseBookingTypeWidget extends StatelessWidget {
     });
   }
 }
+

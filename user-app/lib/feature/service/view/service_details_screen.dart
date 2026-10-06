@@ -1,9 +1,14 @@
+// ignore_for_file: deprecated_member_use
 import 'package:jdds/common/widgets/custom_pop_widget.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:jdds/common/widgets/address_selection_drawer.dart';
 import 'package:readmore/readmore.dart';
+import 'package:google_fonts/google_fonts.dart';
 
+/// nest. style Service Details screen (reference: design_refrence/home-harmony-hub)
+/// Square hero, bold black title, grey meta row, grey price strip, warranty card,
+/// single black "Book now" CTA - all content from the app's existing API.
 class ServiceDetailsScreen extends StatefulWidget {
   final String? serviceID;
   final String? fromPage;
@@ -93,40 +98,35 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                       child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            /// 1. Hero image - cover only, 3:1 perfect fit (no crop)
-                            _HeroImageSection(
-                              coverImage: coverImage,
-                              service: service,
-                            ),
+                            /// 1. Hero image - nest. square-ish (1.5:1)
+                            NestDetailHeroImage(coverImage: coverImage),
 
-                            /// 2. Service name + rating + bookmark + thumbnail
-                            _ServiceInfoSection(service: service),
+                            /// 2. nest. info section : category eyebrow, bold name, meta row
+                            NestDetailInfo(service: service),
 
-                            /// 3. Price row
-                            _PriceSection(
-                              service: service,
-                              discount: discount,
-                              lowestPrice: lowestPrice,
-                            ),
+                            /// 3. nest. price strip (grey rounded box)
+                            NestDetailPriceStrip(lowestPrice: lowestPrice, discount: discount),
 
-                            /// 4. About me
-                            _AboutSection(
-                                description: service.description ?? ''),
+                            /// 4. About
+                            NestDetailAbout(description: service.description ?? ''),
 
-                            /// 5. Photos & Videos gallery grid — sirf gallery images (cover nahi)
+                            /// 5. nest. warranty note
+                            const NestDetailWarranty(),
+
+                            /// 6. Photos & Videos gallery grid (API data)
                             if (galleryImages.isNotEmpty)
-                              _ServiceGalleryGrid(
+                              NestDetailGallery(
                                 images: galleryImages,
                                 scrollController: _scrollController,
                               ),
 
-                            /// 6. Ratings & Reviews
-                            _ReviewsSection(
+                            /// 7. Ratings & Reviews (API data)
+                            NestDetailReviews(
                                 serviceId: service.id ?? '',
                                 scrollController: _scrollController),
 
-                            /// Bottom padding for buttons
-                            const SizedBox(height: 80),
+                            /// Bottom padding for CTA
+                            const SizedBox(height: 100),
                           ]),
                     ),
                   ),
@@ -136,15 +136,15 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                     top: 0,
                     left: 0,
                     right: 0,
-                    child: _TopBarOverlay(service: service),
+                    child: NestDetailTopBar(),
                   ),
 
-                  /// Bottom buttons
+                  /// Bottom CTA - nest. single black "Book now Â· price" button
                   Positioned(
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    child: _BottomActionButtons(service: service),
+                    child: NestDetailBottomBar(service: service, lowestPrice: lowestPrice),
                   ),
                 ]);
               } else {
@@ -163,20 +163,22 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
   }
 }
 
-/// Top bar with back + cart icons overlaid on hero
-class _TopBarOverlay extends StatelessWidget {
-  final Service service;
-  const _TopBarOverlay({required this.service});
+/// Top bar with back + cart icons overlaid on hero (updated design)
+class NestDetailTopBar extends StatelessWidget {
+  const NestDetailTopBar({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF0D0D0D) : Colors.white;
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.black.withValues(alpha: 0.4),
+            const Color(0xFF050505).withValues(alpha: 0.42),
             Colors.transparent,
           ],
           stops: const [0.0, 1.0],
@@ -186,59 +188,64 @@ class _TopBarOverlay extends StatelessWidget {
         bottom: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(
-              horizontal: Dimensions.paddingSizeSmall,
-              vertical: Dimensions.paddingSizeSmall),
+              horizontal: 16,
+              vertical: 16),
           child: Row(children: [
             InkWell(
               onTap: () => Get.back(),
               child: Container(
-                height: 40,
-                width: 40,
+                height: 38,
+                width: 38,
                 decoration: BoxDecoration(
+                  color: bgColor.withValues(alpha: 0.92),
                   shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.9),
                 ),
-                child: const Icon(Icons.arrow_back_ios_new_rounded,
-                    size: 18, color: Colors.black87),
+                child: Icon(Icons.arrow_back_ios_new_rounded,
+                    size: 19, color: isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414)),
               ),
             ),
             const Spacer(),
             GetBuilder<CartController>(builder: (cartController) {
-              return InkWell(
-                onTap: () => Get.toNamed(RouteHelper.getCartRoute()),
-                child: Container(
-                  height: 40,
-                  width: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.9),
-                  ),
-                  child: Stack(children: [
-                    const Center(
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  InkWell(
+                    onTap: () => Get.toNamed(RouteHelper.getCartRoute()),
+                    child: Container(
+                      height: 38,
+                      width: 38,
+                      decoration: BoxDecoration(
+                        color: bgColor.withValues(alpha: 0.92),
+                        shape: BoxShape.circle,
+                      ),
                       child: Icon(Icons.shopping_cart_outlined,
-                          size: 20, color: Colors.black87),
+                          size: 19, color: isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414)),
                     ),
-                    if (cartController.cartList.isNotEmpty)
-                      Positioned(
-                        top: 2,
-                        right: 2,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
+                  ),
+                  if (cartController.cartList.isNotEmpty)
+                    Positioned(
+                      top: -3,
+                      right: -3,
+                      child: Container(
+                        width: 15,
+                        height: 15,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: bgColor, width: 1),
+                        ),
+                        child: Center(
                           child: Text(
-                            '${cartController.cartList.length}',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold),
+                            cartController.cartList.length > 9 ? '9+' : '${cartController.cartList.length}',
+                            style: TextStyle(
+                                color: bgColor,
+                                fontSize: 8,
+                                fontWeight: FontWeight.w800),
                           ),
                         ),
                       ),
-                  ]),
-                ),
+                    ),
+                ],
               );
             }),
           ]),
@@ -248,26 +255,25 @@ class _TopBarOverlay extends StatelessWidget {
   }
 }
 
-/// Hero image section - cover only, AspectRatio 3:1 (perfect fit, no side cut)
-class _HeroImageSection extends StatelessWidget {
+/// nest. hero image - 1.5:1 aspect (square-ish like reference)
+class NestDetailHeroImage extends StatelessWidget {
   final String coverImage;
-  final Service service;
-  const _HeroImageSection({required this.coverImage, required this.service});
+  const NestDetailHeroImage({super.key, required this.coverImage});
 
   @override
   Widget build(BuildContext context) {
     if (coverImage.isEmpty) {
       return Container(
         width: double.infinity,
-        height: ResponsiveHelper.isDesktop(context) ? 400 : 300,
-        color: Theme.of(context).cardColor,
+        height: 260,
+        color: Theme.of(context).primaryColorLight,
         child: Center(
           child: Image.asset(Images.placeholder, width: 150),
         ),
       );
     }
     return AspectRatio(
-      aspectRatio: 3,
+      aspectRatio: 1.5,
       child: CustomImage(
         image: coverImage,
         width: double.infinity,
@@ -279,69 +285,68 @@ class _HeroImageSection extends StatelessWidget {
   }
 }
 
-/// Service info section - name, rating, bookmark
-class _ServiceInfoSection extends StatelessWidget {
+/// nest. info section : uppercase category eyebrow, big bold name, meta row (updated design)
+class NestDetailInfo extends StatelessWidget {
   final Service service;
-  const _ServiceInfoSection({required this.service});
+  const NestDetailInfo({super.key, required this.service});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          Dimensions.paddingSizeDefault,
-          Dimensions.paddingSizeDefault,
-          Dimensions.paddingSizeDefault,
-          0),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        /// Thumbnail (1:1) — admin se upload hua service thumbnail yahan dikhega
-        if ((service.thumbnailFullPath ?? '').isNotEmpty) ...[
-          ClipRRect(
-            borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-            child: CustomImage(
-              image: service.thumbnailFullPath!,
-              height: 72,
-              width: 72,
-              fit: BoxFit.cover,
-              placeholder: Images.placeholder,
-            ),
-          ),
-          const SizedBox(height: Dimensions.paddingSizeSmall),
-        ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
 
-        /// Name + Bookmark
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 22, 16, 0),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        /// Category eyebrow - nest. uppercase tracking style
+        Text((service.category?.name ?? '').toUpperCase(),
+          style: GoogleFonts.dmSans(
+            fontSize: 9,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.14,
+            color: mutedColor,
+          ),
+          maxLines: 1, overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 8),
+
+        /// Name + favorite
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Expanded(
             child: Text(service.name ?? '',
-              style: robotoBold.copyWith(
-                fontSize: Dimensions.fontSizeOverLarge,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
+              style: GoogleFonts.manrope(
+                fontSize: 28, height: 1.04, fontWeight: FontWeight.w800,
+                color: primaryColor,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: Dimensions.paddingSizeSmall),
+          const SizedBox(width: 8),
           FavoriteIconWidget(
             value: service.isFavorite,
             serviceId: service.id,
           ),
         ]),
-        const SizedBox(height: Dimensions.paddingSizeSmall),
+        const SizedBox(height: 8),
 
-        /// Rating row
+        /// Meta row - rating Â· reviews (nest. mono mintmal)
         Row(children: [
-          const Icon(Icons.star_rounded, color: Color(0xFFFF9900), size: 22),
-          const SizedBox(width: Dimensions.paddingSizeMini),
-          Text((service.avgRating ?? 0.0).toStringAsFixed(1),
-            style: robotoBold.copyWith(
-              fontSize: Dimensions.fontSizeDefault,
-              color: Theme.of(context).textTheme.bodyLarge!.color,
+          Icon(Icons.star_rounded, size: 14, color: primaryColor, fill: 1.0),
+          const SizedBox(width: 4),
+          Text((service.avgRating ?? 0.0).toStringAsFixed(2),
+            style: GoogleFonts.dmSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: primaryColor,
             ),
           ),
-          Text('  (${service.ratingCount ?? 0} ${'reviews'.tr})',
-            style: robotoRegular.copyWith(
-              fontSize: Dimensions.fontSizeSmall,
-              color: Theme.of(context).hintColor,
+          Text(' Â· ${service.ratingCount ?? 0}',
+            style: GoogleFonts.dmSans(
+              fontSize: 10,
+              fontWeight: FontWeight.w400,
+              color: mutedColor,
             ),
           ),
         ]),
@@ -350,104 +355,178 @@ class _ServiceInfoSection extends StatelessWidget {
   }
 }
 
-/// Price section - only price, no ADD button
-class _PriceSection extends StatelessWidget {
-  final Service service;
-  final Discount discount;
+/// nest. price strip : grey rounded box - "Starts at" + price + "Pay after service" (updated design)
+class NestDetailPriceStrip extends StatelessWidget {
   final double lowestPrice;
-  const _PriceSection(
-      {required this.service,
-      required this.discount,
-      required this.lowestPrice});
+  final Discount discount;
+  const NestDetailPriceStrip({super.key, required this.lowestPrice, required this.discount});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
+    final bgColor = isDark ? const Color(0xFF171717) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF333333) : const Color(0xFFE5E5E5);
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          Dimensions.paddingSizeDefault,
-          Dimensions.paddingSizeDefault,
-          Dimensions.paddingSizeDefault,
-          Dimensions.paddingSizeDefault),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        if ((discount.discountAmount ?? 0) > 0)
-          Text(PriceConverter.convertPrice(lowestPrice, isShowLongPrice: true),
-            style: robotoRegular.copyWith(
-              fontSize: Dimensions.fontSizeSmall,
-              decoration: TextDecoration.lineThrough,
-              color: Theme.of(context).hintColor,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor),
+        ),
+        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Starts at', style: GoogleFonts.dmSans(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: mutedColor,
+            )),
+            const SizedBox(height: 3),
+            if ((discount.discountAmount ?? 0) > 0)
+              Text(PriceConverter.convertPrice(lowestPrice, isShowLongPrice: true),
+                style: GoogleFonts.dmSans(
+                  fontSize: 10,
+                  decoration: TextDecoration.lineThrough,
+                  color: mutedColor,
+                )),
+            Text(PriceConverter.convertPrice(
+              lowestPrice,
+              discount: discount.discountAmount?.toDouble() ?? 0.0,
+              discountType: discount.discountAmountType ?? 'amount',
+            ),
+              style: GoogleFonts.manrope(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: primaryColor,
+              )),
+          ]),
+          Text('pay_after_service'.tr,
+            style: GoogleFonts.dmSans(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: mutedColor,
             ),
           ),
-        Text(
-          PriceConverter.convertPrice(
-            lowestPrice,
-            discount: discount.discountAmount?.toDouble() ?? 0.0,
-            discountType: discount.discountAmountType ?? 'amount',
-            isShowLongPrice: true,
-          ),
-          style: robotoBold.copyWith(
-            fontSize: Dimensions.fontSizeOverLarge + 4,
-            color: Get.isDarkMode
-                ? Theme.of(context).primaryColorLight
-                : Theme.of(context).primaryColor,
-          ),
-        ),
-      ]),
+        ]),
+      ),
     );
   }
 }
 
-/// About section
-class _AboutSection extends StatelessWidget {
+/// About section (updated design)
+class NestDetailAbout extends StatelessWidget {
   final String description;
-  const _AboutSection({required this.description});
+  const NestDetailAbout({super.key, required this.description});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          Dimensions.paddingSizeDefault,
-          0,
-          Dimensions.paddingSizeDefault,
-          Dimensions.paddingSizeDefault),
+      padding: const EdgeInsets.fromLTRB(16, 22, 16, 16),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('about_me'.tr,
-          style: robotoBold.copyWith(
-            fontSize: Dimensions.fontSizeLarge,
-            color: Theme.of(context).textTheme.bodyLarge!.color,
+          style: GoogleFonts.manrope(
+            fontSize: 19,
+            fontWeight: FontWeight.w700,
+            color: primaryColor,
           ),
         ),
-        const SizedBox(height: Dimensions.paddingSizeSmall),
+        const SizedBox(height: 10),
         ReadMoreText(
           description,
           trimCollapsedText: "see_more".tr,
           trimExpandedText: "  ${"see_less".tr}",
           trimMode: TrimMode.Line,
           trimLines: 3,
-          style: robotoRegular.copyWith(
-            color: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.color
-                ?.withValues(alpha: 0.6),
-            fontSize: Dimensions.fontSizeDefault,
+          style: GoogleFonts.dmSans(
+            color: mutedColor,
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
             height: 1.5,
           ),
-          moreStyle: robotoMedium.copyWith(
-              color: Theme.of(context).colorScheme.primary),
-          lessStyle: robotoMedium.copyWith(
-              color: Theme.of(context).colorScheme.primary),
+          moreStyle: GoogleFonts.dmSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: primaryColor),
+          lessStyle: GoogleFonts.dmSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: primaryColor),
         ),
       ]),
     );
   }
 }
 
+/// nest. warranty note - hatrline border card (updated design)
+class NestDetailWarranty extends StatelessWidget {
+  const NestDetailWarranty({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
+    final bgColor = isDark ? const Color(0xFF171717) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF333333) : const Color(0xFFE5E5E5);
+    final iconBgColor = isDark ? const Color(0xFF262626) : const Color(0xFFF6F6F6);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: bgColor,
+          border: Border.all(color: borderColor),
+        ),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.shield_outlined, size: 20,
+              color: primaryColor),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Service warranty', style: GoogleFonts.dmSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: primaryColor,
+            )),
+            const SizedBox(height: 3),
+            Text('If something isn\'t right within 7 days, we\'ll send a pro back at no extra cost.',
+              style: GoogleFonts.dmSans(
+                fontSize: 10,
+                fontWeight: FontWeight.w400,
+                height: 1.4,
+                color: mutedColor,
+              )),
+          ])),
+        ]),
+      ),
+    );
+  }
+}
+
 /// Photos & Videos gallery grid
-class _ServiceGalleryGrid extends StatelessWidget {
+class NestDetailGallery extends StatelessWidget {
   final List<String> images;
   final ScrollController scrollController;
-  const _ServiceGalleryGrid(
-      {required this.images, required this.scrollController});
+  const NestDetailGallery(
+      {super.key, required this.images, required this.scrollController});
 
   @override
   Widget build(BuildContext context) {
@@ -466,13 +545,17 @@ class _ServiceGalleryGrid extends StatelessWidget {
           ),
           InkWell(
             onTap: () =>
-                Get.dialog(_GalleryFullViewDialog(images: images)),
-            child: Text('see_all'.tr,
-              style: robotoMedium.copyWith(
-                fontSize: Dimensions.fontSizeDefault,
-                color: Theme.of(context).colorScheme.primary,
+                Get.dialog(NestGalleryFullViewDialog(images: images)),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Text('see_all'.tr,
+                style: robotoBold.copyWith(
+                  fontSize: Dimensions.fontSizeDefault,
+                  color: Theme.of(context).textTheme.bodyLarge!.color,
+                ),
               ),
-            ),
+              Icon(Icons.arrow_forward_rounded, size: 15,
+                color: Theme.of(context).textTheme.bodyLarge!.color),
+            ]),
           ),
         ]),
         const SizedBox(height: Dimensions.paddingSizeDefault),
@@ -490,8 +573,8 @@ class _ServiceGalleryGrid extends StatelessWidget {
           itemBuilder: (context, index) {
             return InkWell(
               onTap: () => Get.dialog(
-                  _GalleryFullViewDialog(
-                      images: images, initialIndex: index)),
+                  NestGalleryFullViewDialog(
+                      images: images, inttialIndex: index)),
               borderRadius:
                   BorderRadius.circular(Dimensions.radiusDefault),
               child: ClipRRect(
@@ -514,17 +597,17 @@ class _ServiceGalleryGrid extends StatelessWidget {
 }
 
 /// Ratings & Reviews section
-class _ReviewsSection extends StatefulWidget {
+class NestDetailReviews extends StatefulWidget {
   final String serviceId;
   final ScrollController scrollController;
-  const _ReviewsSection(
-      {required this.serviceId, required this.scrollController});
+  const NestDetailReviews(
+      {super.key, required this.serviceId, required this.scrollController});
 
   @override
-  State<_ReviewsSection> createState() => _ReviewsSectionState();
+  State<NestDetailReviews> createState() => _NestDetailReviewsState();
 }
 
-class _ReviewsSectionState extends State<_ReviewsSection> {
+class _NestDetailReviewsState extends State<NestDetailReviews> {
   @override
   void initState() {
     super.initState();
@@ -543,14 +626,14 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Expanded(
               child: Row(children: [
-                const Icon(Icons.star_rounded,
-                    color: Color(0xFFFF9900), size: 22),
-                const SizedBox(width: Dimensions.paddingSizeMini),
+                Icon(Icons.star_rounded,
+                    color: Theme.of(context).textTheme.bodyLarge!.color, size: 18),
+                const SizedBox(width: Dimensions.paddingSizeMint),
                 Flexible(
                   child: Text(
                     '${serviceTabController.rating.averageRating?.toStringAsFixed(1) ?? '0.0'} (${serviceTabController.rating.ratingCount ?? 0} ${'reviews'.tr})',
                     style: robotoBold.copyWith(
-                      fontSize: Dimensions.fontSizeDefault,
+                      fontSize: Dimensions.fontSizeLarge,
                       color:
                           Theme.of(context).textTheme.bodyLarge!.color,
                     ),
@@ -570,12 +653,16 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
                               serviceID: widget.serviceId)),
                     ));
               },
-              child: Text('see_all'.tr,
-                style: robotoMedium.copyWith(
-                  fontSize: Dimensions.fontSizeDefault,
-                  color: Theme.of(context).colorScheme.primary,
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Text('see_all'.tr,
+                  style: robotoBold.copyWith(
+                    fontSize: Dimensions.fontSizeDefault,
+                    color: Theme.of(context).textTheme.bodyLarge!.color,
+                  ),
                 ),
-              ),
+                Icon(Icons.arrow_forward_rounded, size: 15,
+                  color: Theme.of(context).textTheme.bodyLarge!.color),
+              ]),
             ),
           ]),
         ),
@@ -608,107 +695,72 @@ class _ReviewsSectionState extends State<_ReviewsSection> {
   }
 }
 
-/// Bottom Action buttons
-class _BottomActionButtons extends StatelessWidget {
+/// nest. bottom bar - single black "Book now Â· price" CTA (reference footer style) (updated design)
+class NestDetailBottomBar extends StatelessWidget {
   final Service service;
-  const _BottomActionButtons({required this.service});
+  final double lowestPrice;
+  const NestDetailBottomBar({super.key, required this.service, required this.lowestPrice});
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final bgColor = isDark ? const Color(0xFF0D0D0D) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF333333) : const Color(0xFFE5E5E5);
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(
-        Dimensions.paddingSizeDefault,
-        Dimensions.paddingSizeSmall,
-        Dimensions.paddingSizeDefault,
-        Dimensions.paddingSizeSmall,
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: BoxDecoration(
-        color: Get.isDarkMode ? Theme.of(context).cardColor : Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: Get.isDarkMode ? 0.3 : 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          )
-        ],
+        color: bgColor,
+        border: Border(
+          top: BorderSide(color: borderColor, width: 1),
+        ),
       ),
       child: SafeArea(
         top: false,
-        child: Row(children: [
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                padding: const EdgeInsets.symmetric(
-                    vertical: Dimensions.paddingSizeDefault),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                        Dimensions.radiusExtraLarge)),
-                elevation: 0,
-              ),
-              onPressed: () {
-                showModalBottomSheet(
-                    context: context,
-                    useRootNavigator: true,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => ServiceCenterDialog(
-                          service: service,
-                          isFromDetails: true,
-                        ));
-              },
-              child: Text('add'.tr,
-                style: robotoBold.copyWith(
-                  fontSize: Dimensions.fontSizeDefault,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+        child: SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              foregroundColor: bgColor,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              elevation: 0,
+            ),
+            onPressed: () {
+              showModalBottomSheet(
+                  context: context,
+                  useRootNavigator: true,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => ServiceCenterDialog(
+                        service: service,
+                        isFromDetails: true,
+                      ));
+            },
+            child: Text(
+              'Book now',
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: bgColor,
               ),
             ),
           ),
-          const SizedBox(width: Dimensions.paddingSizeDefault),
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                padding: const EdgeInsets.symmetric(
-                    vertical: Dimensions.paddingSizeDefault),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                        Dimensions.radiusExtraLarge)),
-                elevation: 0,
-              ),
-              onPressed: () {
-                showModalBottomSheet(
-                    context: context,
-                    useRootNavigator: true,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => ServiceCenterDialog(
-                          service: service,
-                          isFromDetails: true,
-                        ));
-              },
-              child: Text('book_now'.tr,
-                style: robotoBold.copyWith(
-                  fontSize: Dimensions.fontSizeDefault,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ]),
+        ),
       ),
     );
   }
 }
 
 /// Full gallery view dialog
-class _GalleryFullViewDialog extends StatelessWidget {
+class NestGalleryFullViewDialog extends StatelessWidget {
   final List<String> images;
-  final int initialIndex;
-  const _GalleryFullViewDialog(
-      {required this.images, this.initialIndex = 0});
+  final int inttialIndex;
+  const NestGalleryFullViewDialog(
+      {super.key, required this.images, this.inttialIndex = 0});
 
   @override
   Widget build(BuildContext context) {
@@ -723,7 +775,7 @@ class _GalleryFullViewDialog extends StatelessWidget {
               height: Get.height * 0.6,
               viewportFraction: 1.0,
               enableInfiniteScroll: images.length > 1,
-              initialPage: initialIndex,
+              initialPage: inttialIndex,
             ),
             itemCount: images.length,
             itemBuilder: (context, index, _) {
@@ -760,3 +812,6 @@ class _GalleryFullViewDialog extends StatelessWidget {
     );
   }
 }
+
+
+

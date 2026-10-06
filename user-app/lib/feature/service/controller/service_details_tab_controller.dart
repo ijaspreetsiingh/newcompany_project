@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -11,7 +11,7 @@ class ServiceTabController extends GetxController with GetTickerProviderStateMix
   TabController? controller;
   var servicePageCurrentState = ServiceTabControllerState.serviceOverview;
 
-  void initTabController({required int length}) {
+  void inttTabController({required int length}) {
     if (controller == null) {
       controller = TabController(vsync: this, length: length);
       update();
@@ -99,3 +99,5 @@ class ServiceTabController extends GetxController with GetTickerProviderStateMix
     }
   }
 }
+
+

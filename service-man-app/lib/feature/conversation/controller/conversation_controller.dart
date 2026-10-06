@@ -55,6 +55,34 @@ class ConversationController extends GetxController  with GetSingleTickerProvide
   bool _isSearchComplete = true;
   bool get isSearchComplete => _isSearchComplete;
 
+  bool _loadingMoreChannels = false;
+  bool get loadingMoreChannels => _loadingMoreChannels;
+
+  Future<void> loadMoreChannels(String type) async {
+    if (_loadingMoreChannels) {
+      return;
+    }
+
+    final int currentOffset =
+        type == "customer" ? _customerChannelOffset : _providerChannelOffset;
+    final int? pageSize =
+        type == "customer" ? _customerChannelPageSize : _providerChannelPageSize;
+
+    if (pageSize == null || currentOffset >= pageSize) {
+      return;
+    }
+
+    _loadingMoreChannels = true;
+    update();
+
+    try {
+      await getChannelList(currentOffset + 1, type: type, isFromPagination: true);
+    } finally {
+      _loadingMoreChannels = false;
+      update();
+    }
+  }
+
   String _onMessageTimeShowID = '';
   String get onMessageTimeShowID => _onMessageTimeShowID;
 

@@ -27,19 +27,19 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
     return GetBuilder<NewBookingController>(
       builder: (controller) {
         return Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+              icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).textTheme.bodyLarge!.color),
               onPressed: () => Get.back(),
             ),
             title: Text(
               'booking_details'.tr,
               style: robotoBold.copyWith(
                 fontSize: Dimensions.fontSizeLarge,
-                color: Colors.black,
+                color: Theme.of(context).textTheme.bodyLarge!.color,
               ),
             ),
             centerTitle: true,
@@ -92,14 +92,14 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
           'select_date'.tr,
           style: robotoBold.copyWith(
             fontSize: Dimensions.fontSizeDefault,
-            color: Colors.black,
+            color: Theme.of(context).textTheme.bodyLarge!.color,
           ),
         ),
         const SizedBox(height: Dimensions.paddingSizeDefault),
         Container(
           height: 80,
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: Theme.of(context).primaryColorLight,
             borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
           ),
           child: ListView.builder(
@@ -118,10 +118,10 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
                   width: 60,
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFF57C21) : Colors.white,
+                    color: isSelected ? primaryAccent : Colors.white,
                     borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
                     border: Border.all(
-                      color: isSelected ? const Color(0xFFF57C21) : Colors.grey[300]!,
+                      color: isSelected ? primaryAccent : Colors.grey[300]!,
                     ),
                   ),
                   child: Column(
@@ -139,7 +139,7 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
                         DateFormat('d').format(date),
                         style: robotoBold.copyWith(
                           fontSize: Dimensions.fontSizeLarge,
-                          color: isSelected ? Colors.white : Colors.black,
+                          color: isSelected ? Colors.white : Theme.of(context).textTheme.bodyLarge!.color,
                         ),
                       ),
                     ],
@@ -161,14 +161,14 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
           'working_hours'.tr,
           style: robotoBold.copyWith(
             fontSize: Dimensions.fontSizeDefault,
-            color: Colors.black,
+            color: Theme.of(context).textTheme.bodyLarge!.color,
           ),
         ),
         const SizedBox(height: Dimensions.paddingSizeDefault),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: Theme.of(context).primaryColorLight,
             borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
           ),
           child: Row(
@@ -181,13 +181,13 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
                         _bookingController.updateWorkingHours(_bookingController.workingHours - 1);
                       }
                     : null,
-                color: const Color(0xFFF57C21),
+                color: primaryAccent,
               ),
               Text(
                 '${_bookingController.workingHours} ${'hours'.tr}',
                 style: robotoBold.copyWith(
                   fontSize: Dimensions.fontSizeLarge,
-                  color: Colors.black,
+                  color: Theme.of(context).textTheme.bodyLarge!.color,
                 ),
               ),
               IconButton(
@@ -195,7 +195,7 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
                 onPressed: () {
                   _bookingController.updateWorkingHours(_bookingController.workingHours + 1);
                 },
-                color: const Color(0xFFF57C21),
+                color: primaryAccent,
               ),
             ],
           ),
@@ -212,7 +212,7 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
           'choose_start_time'.tr,
           style: robotoBold.copyWith(
             fontSize: Dimensions.fontSizeDefault,
-            color: Colors.black,
+            color: Theme.of(context).textTheme.bodyLarge!.color,
           ),
         ),
         const SizedBox(height: Dimensions.paddingSizeDefault),
@@ -232,10 +232,10 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
                   width: 80,
                   margin: const EdgeInsets.only(right: Dimensions.paddingSizeSmall),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFF57C21) : Colors.white,
+                    color: isSelected ? primaryAccent : Colors.white,
                     borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
                     border: Border.all(
-                      color: isSelected ? const Color(0xFFF57C21) : Colors.grey[300]!,
+                      color: isSelected ? primaryAccent : Colors.grey[300]!,
                     ),
                   ),
                   child: Center(
@@ -243,7 +243,7 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
                       timeSlots[index],
                       style: robotoMedium.copyWith(
                         fontSize: Dimensions.fontSizeDefault,
-                        color: isSelected ? Colors.white : Colors.black,
+                        color: isSelected ? Colors.white : Theme.of(context).textTheme.bodyLarge!.color,
                       ),
                     ),
                   ),
@@ -264,7 +264,7 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
           'promo_code'.tr,
           style: robotoBold.copyWith(
             fontSize: Dimensions.fontSizeDefault,
-            color: Colors.black,
+            color: Theme.of(context).textTheme.bodyLarge!.color,
           ),
         ),
         const SizedBox(height: Dimensions.paddingSizeDefault),
@@ -274,20 +274,20 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
             decoration: BoxDecoration(
               color: const Color(0xFFE8F5E9),
               borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-              border: Border.all(color: const Color(0xFF4CAF50)),
+              border: Border.all(color: Theme.of(Get.context!).colorScheme.primary),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.check_circle, color: Color(0xFF4CAF50)),
+                    Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary),
                     const SizedBox(width: 8),
                     Text(
                       _bookingController.selectedPromoCode!,
                       style: robotoMedium.copyWith(
                         fontSize: Dimensions.fontSizeDefault,
-                        color: const Color(0xFF4CAF50),
+                        color: Theme.of(Get.context!).colorScheme.primary,
                       ),
                     ),
                   ],
@@ -296,7 +296,7 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
                   onTap: () {
                     _bookingController.removePromoCode();
                   },
-                  child: const Icon(Icons.close, color: Color(0xFF4CAF50)),
+                  child: Icon(Icons.close, color: Get.isDarkMode ? Colors.black : Colors.white),
                 ),
               ],
             ),
@@ -312,13 +312,13 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
                 vertical: Dimensions.paddingSizeLarge,
               ),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: Theme.of(context).primaryColorLight,
                 borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
                 border: Border.all(color: Colors.grey[300]!),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.local_offer_outlined, color: Color(0xFFF57C21)),
+                  Icon(Icons.local_offer_outlined, color: primaryAccent),
                   const SizedBox(width: 12),
                   Text(
                     'add_promo_code'.tr,
@@ -360,7 +360,7 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
                 PriceConverter.convertPrice(basePrice),
                 style: robotoMedium.copyWith(
                   fontSize: Dimensions.fontSizeDefault,
-                  color: Colors.black,
+                  color: Theme.of(context).textTheme.bodyLarge!.color,
                 ),
               ),
             ],
@@ -374,14 +374,14 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
                   'discount'.tr,
                   style: robotoRegular.copyWith(
                     fontSize: Dimensions.fontSizeDefault,
-                    color: const Color(0xFF4CAF50),
+                    color: Theme.of(Get.context!).colorScheme.primary,
                   ),
                 ),
                 Text(
                   '-${PriceConverter.convertPrice(_bookingController.discountAmount)}',
                   style: robotoMedium.copyWith(
                     fontSize: Dimensions.fontSizeDefault,
-                    color: const Color(0xFF4CAF50),
+                    color: Theme.of(Get.context!).colorScheme.primary,
                   ),
                 ),
               ],
@@ -395,14 +395,14 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
                 'total'.tr,
                 style: robotoBold.copyWith(
                   fontSize: Dimensions.fontSizeLarge,
-                  color: Colors.black,
+                  color: Theme.of(context).textTheme.bodyLarge!.color,
                 ),
               ),
               Text(
                 PriceConverter.convertPrice(finalPrice),
                 style: robotoBold.copyWith(
                   fontSize: Dimensions.fontSizeLarge,
-                  color: const Color(0xFFF57C21),
+                  color: primaryAccent,
                 ),
               ),
             ],
@@ -423,7 +423,7 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
               Get.toNamed(RouteHelper.getNewBookingLocationRoute());
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF57C21),
+              backgroundColor: primaryAccent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
               ),
@@ -432,7 +432,7 @@ class _NewBookingDetailsScreenState extends State<NewBookingDetailsScreen> {
               'continue'.tr,
               style: robotoBold.copyWith(
                 fontSize: Dimensions.fontSizeLarge,
-                color: Colors.white,
+                color: Theme.of(context).scaffoldBackgroundColor,
               ),
             ),
           ),
@@ -458,8 +458,8 @@ class AddPromoScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.6,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -483,7 +483,7 @@ class AddPromoScreen extends StatelessWidget {
                   'available_promo_codes'.tr,
                   style: robotoBold.copyWith(
                     fontSize: Dimensions.fontSizeLarge,
-                    color: Colors.black,
+                    color: Theme.of(context).textTheme.bodyLarge!.color,
                   ),
                 ),
                 IconButton(
@@ -532,7 +532,7 @@ class AddPromoScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => Get.back(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF57C21),
+                  backgroundColor: primaryAccent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
                   ),
@@ -541,7 +541,7 @@ class AddPromoScreen extends StatelessWidget {
                   'apply_promo'.tr,
                   style: robotoBold.copyWith(
                     fontSize: Dimensions.fontSizeLarge,
-                    color: Colors.white,
+                    color: Theme.of(context).scaffoldBackgroundColor,
                   ),
                 ),
               ),
@@ -567,7 +567,7 @@ class AddPromoScreen extends StatelessWidget {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: const Color(0xFFF57C21).withValues(alpha: 0.1),
+              color: primaryAccent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
             ),
             child: Center(
@@ -575,7 +575,7 @@ class AddPromoScreen extends StatelessWidget {
                 coupon.discount?.discountAmountType == 'percent' ? '${coupon.discount?.discountAmount}%' : PriceConverter.convertPrice(coupon.discount?.discountAmount ?? 0),
                 style: robotoBold.copyWith(
                   fontSize: Dimensions.fontSizeDefault,
-                  color: const Color(0xFFF57C21),
+                  color: primaryAccent,
                 ),
               ),
             ),
@@ -589,7 +589,7 @@ class AddPromoScreen extends StatelessWidget {
                   coupon.couponCode ?? '',
                   style: robotoBold.copyWith(
                     fontSize: Dimensions.fontSizeDefault,
-                    color: Colors.black,
+                    color: Theme.of(context).textTheme.bodyLarge!.color,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -610,7 +610,7 @@ class AddPromoScreen extends StatelessWidget {
             },
             child: Radio(
               value: coupon.couponCode ?? '',
-              activeColor: const Color(0xFFF57C21),
+              activeColor: primaryAccent,
             ),
           ),
         ],
@@ -618,3 +618,4 @@ class AddPromoScreen extends StatelessWidget {
     );
   }
 }
+

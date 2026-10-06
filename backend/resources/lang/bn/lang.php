@@ -3633,4 +3633,5 @@ _Message' => 'Customer notification for provider bid offer
   'AI_Configuration' => 'AI Configuration',
   'Minimum variant cannot be less than one' => 'Minimum variant cannot be less than one',
   'The topic field is required.' => 'The topic field is required.',
+  'payment_method_not_allowed_for_provider' => 'এই প্রোভাইডারের জন্য নির্বাচিত পেমেন্ট পদ্ধতি উপলব্ধ নয়।',
 );

@@ -1,4 +1,4 @@
-import 'package:demandium_provider/helper/extension_helper.dart';
+import 'package:demandium_provider/feature/serviceman/view/serviceman_details.dart';
 import 'package:demandium_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
@@ -7,188 +7,132 @@ class ServicemanCardView extends StatelessWidget {
   final int index;
   const ServicemanCardView({super.key, this.serviceman, required this.index});
 
+  Future<void> _openMenu(BuildContext context, ServicemanSetupController servicemanController) async {
+
+    final bool isTrial = await Get.find<BusinessSubscriptionController>().openTrialEndBottomSheet();
+    if(!isTrial || !context.mounted) return;
+
+    final RenderBox menuBox = context.findRenderObject() as RenderBox;
+    final Offset offset = menuBox.localToGlobal(Offset.zero);
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+
+    final String? action = await showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx - 140,
+        offset.dy + menuBox.size.height + 6,
+        overlay.size.width - (offset.dx + menuBox.size.width),
+        overlay.size.height - (offset.dy + menuBox.size.height),
+      ),
+      items: [
+        PopupMenuItem(value: 'edit', child: Text('edit'.tr, style: robotoRegular)),
+        PopupMenuItem(value: 'delete', child: Text('delete'.tr, style: robotoRegular)),
+        PopupMenuItem(
+          value: 'status',
+          child: Text(serviceman?.isActive == 1 ? 'inactive'.tr : "Active", style: robotoRegular),
+        ),
+      ],
+    );
+
+    if(action == null) return;
+
+    if(action == 'edit'){
+      servicemanController.clearImageData();
+      servicemanController.resetOtherValidationData();
+      servicemanController.updateTabControllerValue(ServicemanTabControllerState.generalInfo);
+      servicemanController.controller!.index = 0;
+      servicemanController.getSingleServicemanData(index: index, fromPage: 'editPage');
+      Get.to(()=>const AddNewServicemanScreen(isEditScreen: true));
+
+    }else if(action == 'delete'){
+      showCustomDialog(child: ConfirmationDialog(
+        title: "delete_this_service_man".tr,
+        icon: Images.servicemanImage,
+        description: 'this_operation_cannot_be_undone'.tr,
+        onYesPressed: () async{
+          Get.back();
+          showCustomDialog(child: const CustomLoader());
+          await servicemanController.deleteServiceman(servicemanController.servicemanList![index].serviceman!.id!);
+        },
+        onNoPressed: () {
+          servicemanController.updateIndex(-1);
+          Get.back();
+        },
+      ), barrierDismissible: true);
+
+    }else if(action == 'status'){
+      servicemanController.changeServicemanStatus(index, servicemanController.servicemanList![index].serviceman!.id!);
+      Get.find<DashboardController>().getDashboardData();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GetBuilder<ServicemanSetupController>(builder: (servicemanController){
-      return Container(
-        margin: const EdgeInsets.all(5),
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-          color: serviceman?.isActive == 1 ?
-          Theme.of(context).cardColor.withValues(alpha:Get.isDarkMode?0.5:1):Colors.grey.withValues(alpha:0.2),
-          boxShadow: serviceman?.isActive == 1 ? context.customThemeColors.shadow : null,
-        ),
 
-        child: Stack(alignment: Alignment.center,
-          children: [
-            const Row(),
-            Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+      final bool isActive = serviceman?.isActive == 1;
+      final String name = "${serviceman?.firstName ?? ""} ${serviceman?.lastName ?? ""}".trim();
+      final String phone = serviceman?.phone ?? "";
 
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(50),
-                  child: Stack(
-                    children: [
-                      CustomImage(fit: BoxFit.cover, height: 60, width: 60,
-                        image: '${serviceman?.profileImageFullPath}',
-                        placeholder: Images.userPlaceHolder,
-                      ),
-                      if(serviceman?.isActive.toString()=='0') Container(
-                        height: 60,
-                        width: 60,
-                        color: Colors.black.withValues(alpha:0.6),
-                      ),
-                      if(serviceman?.isActive.toString()=='0') Positioned( top: 23, left: 7,
-                        child: Text('inactive'.tr, style: robotoMedium.copyWith(
-                            fontSize: Dimensions.fontSizeSmall, color: light.cardColor, letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: InkCard(
+          padding: const EdgeInsets.all(16),
+          onTap: (){
+            servicemanController.updateIndex(-1);
+            Get.to(()=> ServicemanDetails(id: servicemanController.servicemanList![index].serviceman!.id!, fromDashboard: false,));
+          },
+          child: Row(children: [
 
-                    ],
+            InkAvatar(name: name, size: 46),
+
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+                Text(name, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style:  TextStyle(fontSize: 14, height: 1.3, fontWeight: FontWeight.w700, color: InkColors.foreground),
+                ),
+                if(phone.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(phone, maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style:  TextStyle(fontSize: 11.5, height: 1.3, color: InkColors.mutedForeground),
                   ),
-                ),
-
-                const SizedBox(height: Dimensions.paddingSizeSmall),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
-                  child: Text(
-                    "${serviceman?.firstName ?? ""} ${serviceman?.lastName ?? "" }",
-                    style: robotoBold.copyWith(
-                      color: serviceman?.isActive==1?
-                      Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.7):
-                      Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.3),
-                      fontSize: Dimensions.fontSizeSmall,
-                    ),
-                    textAlign: TextAlign.center,overflow: TextOverflow.ellipsis,maxLines: 2,
-                  ),
-                ),
-
-                const SizedBox(height: Dimensions.paddingSizeSmall),
-                Text(serviceman?.phone ?? "",
-                  style: robotoRegular.copyWith(
-                    fontSize: Dimensions.fontSizeSmall-1,
-                    color: serviceman?.isActive==1?
-                    Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.7):
-                    Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.3),),
-                ),
-              ],
+                ],
+              ]),
             ),
 
-            servicemanController.selectedIndex == index ?
-            Positioned(top: 30, right: 30,
-              child: Container(
-                height: 60,
-                padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
-                width:ResponsiveHelper.isTab(context)?
-                MediaQuery.of(context).size.width*0.18 : MediaQuery.of(context).size.width*0.35,
-                decoration: BoxDecoration(borderRadius: BorderRadius.circular(5),
-                    color: Theme.of(context).colorScheme.surface,
-                    boxShadow: [
-                      BoxShadow(
-                        offset: const Offset(0, 2),
-                        blurRadius: 5,
-                        color: Colors.black.withValues(alpha:0.3),
-                      )]
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        servicemanController.clearImageData();
-                        servicemanController.resetOtherValidationData();
-                        servicemanController.updateTabControllerValue(ServicemanTabControllerState.generalInfo);
-                        servicemanController.controller!.index=0;
-                        servicemanController.getSingleServicemanData(index:index, fromPage: 'editPage');
-                        Get.to(const AddNewServicemanScreen(isEditScreen: true));
-                      },
-                      child: Image.asset(Images.servicemanEdit,height: 25,width: 25),
-                    ),
+            const SizedBox(width: 8),
 
-                    GestureDetector(
-                      onTap: () => showCustomDialog(child: ConfirmationDialog(
-                        title: "delete_this_service_man".tr,
-                        icon: Images.servicemanImage,
-                        description: 'this_operation_cannot_be_undone'.tr,
-                        onYesPressed: () async{
-                          Get.back();
-                          showCustomDialog(child: const CustomLoader());
-                          await servicemanController.deleteServiceman(servicemanController
-                              .servicemanList![index].serviceman!.id!);
-                        },
-                        onNoPressed: () { servicemanController.updateIndex(-1);
-                        Get.back();
-                        },
-                      ), barrierDismissible: true),
-                      child: Image.asset(Images.servicemanDelete,height: 25,width: 25),
-                    ),
-
-                    GestureDetector(
-                      onTap: (){
-
-                        servicemanController.changeServicemanStatus(
-                            index,servicemanController.servicemanList![index].serviceman!.id!
-                        );
-
-                        Get.find<DashboardController>().getDashboardData();
-                      },
-                      child: Container(height: 25, width: 45,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(50),
-                            color: servicemanController.servicemanList?[index].isActive==1?
-                            Theme.of(context).primaryColor: Colors.grey.withValues(alpha:0.5)
-                        ),
-                        child: Row(
-                          mainAxisAlignment: servicemanController.servicemanList?[index].isActive==0?
-                          MainAxisAlignment.start:MainAxisAlignment.end,
-                          children: [
-                            Container(
-                              height: 22,
-                              width: 22,
-                              margin: const EdgeInsets.symmetric(horizontal: 2),
-                              decoration: BoxDecoration(
-                                boxShadow: [
-                                  BoxShadow(
-                                    offset: const Offset(0, 2),
-                                    blurRadius: 5,
-                                    color: Colors.black.withValues(alpha:0.3),
-                                  )],
-                                borderRadius: BorderRadius.circular(50),
-                                color: light.cardColor,),
-                              child: Icon( Icons.person,
-                                size: 15,
-                                color: servicemanController.servicemanList?[index].isActive==0?
-                                Theme.of(context).colorScheme.error:Theme.of(context).primaryColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  ],
-                ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(50),
+                border: Border.all(color: InkColors.border),
               ),
-            )
-                :const SizedBox(),
-
-            Positioned(right: 10, top: 10,
-              child: GestureDetector(
-                onTap: () => Get.find<BusinessSubscriptionController>().openTrialEndBottomSheet().then((isTrail){
-                  if(isTrail){
-                    servicemanController.updateIndex(index);
-                  }
-                }),
-                child: Container(
-                  decoration: BoxDecoration(
-                      color:Get.isDarkMode ? Colors.grey.withValues(alpha:0.2) : Theme.of(context).primaryColor.withValues(alpha:0.1),
-                      borderRadius: BorderRadius.circular(7)
-                  ),
-                  child: Icon(Icons.more_horiz_rounded, color: Theme.of(context).primaryColorLight.withValues(alpha:0.8),
-                  ),
+              child: Text(isActive ? "ON DUTY" : "OFF DUTY",
+                style: TextStyle(
+                  fontSize: 10,
+                  height: 1.2,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                  color: isActive ? InkColors.foreground : InkColors.mutedForeground,
                 ),
               ),
             ),
-          ],
+
+            const SizedBox(width: 2),
+
+            Builder(builder: (menuContext) => GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _openMenu(menuContext, servicemanController),
+              child:  Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(Icons.more_vert_rounded, size: 18, color: InkColors.mutedForeground),
+              ),
+            )),
+
+          ]),
         ),
       );
     });

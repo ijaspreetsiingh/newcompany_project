@@ -1,4 +1,4 @@
-import 'package:jdds/common/enums/enums.dart';
+﻿import 'package:jdds/common/enums/enums.dart';
 import 'package:jdds/common/models/api_response_model.dart';
 import 'package:jdds/common/repo/data_sync_repo.dart';
 import 'package:get/get.dart';
@@ -8,27 +8,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ServiceRepo extends DataSyncRepo  {
   ServiceRepo({required super.apiClient, required SharedPreferences super.sharedPreferences});
 
-  Future<ApiResponseModel<T>> getAllServiceList<T>({required DataSourceEnum source, int offset = 1}) async {
+  Future<AptresponseModel<T>> getAllServiceList<T>({required DataSourceEnum source, int offset = 1}) async {
     return await fetchData<T>('${AppConstants.allServiceUri}?offset=$offset&limit=10', source);
   }
 
-  Future<ApiResponseModel<T>>  getPopularServiceList<T>({required DataSourceEnum source, int offset = 1}) async {
+  Future<AptresponseModel<T>>  getPopularServiceList<T>({required DataSourceEnum source, int offset = 1}) async {
     return await fetchData<T>('${AppConstants.popularServiceUri}?offset=$offset&limit=10', source);
   }
 
-  Future<ApiResponseModel<T>> getTrendingServiceList<T>({required DataSourceEnum source, int offset = 1}) async {
+  Future<AptresponseModel<T>> getTrendingServiceList<T>({required DataSourceEnum source, int offset = 1}) async {
     return await fetchData<T>('${AppConstants.trendingServiceUri}?offset=$offset&limit=10', source);
   }
 
-  Future<ApiResponseModel<T>> getRecentlyViewedServiceList<T>({required DataSourceEnum source, int offset = 1}) async {
+  Future<AptresponseModel<T>> getRecentlyViewedServiceList<T>({required DataSourceEnum source, int offset = 1}) async {
     return await fetchData<T>('${AppConstants.recentlyViewedServiceUri}?offset=$offset&limit=10', source);
   }
 
-  Future<ApiResponseModel<T>> getFeatheredCategoryServiceList<T> ({required DataSourceEnum source, int offset = 1}) async {
+  Future<AptresponseModel<T>> getFeatheredCategoryServiceList<T> ({required DataSourceEnum source, int offset = 1}) async {
     return await fetchData<T>(AppConstants.getFeaturedCategoryService, source);
   }
 
-  Future<ApiResponseModel<T>> getRecommendedServiceList<T>({required DataSourceEnum source, int offset = 1}) async {
+  Future<AptresponseModel<T>> getRecommendedServiceList<T>({required DataSourceEnum source, int offset = 1}) async {
     return await fetchData<T>('${AppConstants.recommendedServiceUri}?limit=10&offset=$offset', source);
   }
 
@@ -54,3 +54,5 @@ class ServiceRepo extends DataSyncRepo  {
   }
 
 }
+
+

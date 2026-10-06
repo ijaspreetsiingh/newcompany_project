@@ -23,8 +23,8 @@ class ScheduleController extends GetxController implements GetxService{
   ScheduleType _selectedScheduleType = ScheduleType.asap;
   ScheduleType get selectedScheduleType => _selectedScheduleType;
 
-  ScheduleType? _initialSelectedScheduleType;
-  ScheduleType? get initialSelectedScheduleType => _initialSelectedScheduleType;
+  ScheduleType? _inttialSelectedScheduleType;
+  ScheduleType? get inttialSelectedScheduleType => _inttialSelectedScheduleType;
 
   String selectedDate =   DateFormat('yyyy-MM-dd').format(DateTime.now());
   String selectedTime = DateFormat('HH:mm:ss').format(DateTime.now().add(const Duration(minutes: 2)));
@@ -51,9 +51,9 @@ class ScheduleController extends GetxController implements GetxService{
   DateTimeRange? _finalPickedWeeklyRepeatBookingDateRange;
   DateTimeRange? get pickedWeeklyRepeatBookingDateRange => _finalPickedWeeklyRepeatBookingDateRange;
 
-  DateTimeRange? _initialPickedWeeklyRepeatBookingDateRange;
-  DateTimeRange? get initialPickedWeeklyRepeatBookingDateRange => _initialPickedWeeklyRepeatBookingDateRange;
-  set updateInitialWeeklyRepeatBookingDateRange(DateTimeRange? dateRange) => _initialPickedWeeklyRepeatBookingDateRange = dateRange;
+  DateTimeRange? _inttialPickedWeeklyRepeatBookingDateRange;
+  DateTimeRange? get inttialPickedWeeklyRepeatBookingDateRange => _inttialPickedWeeklyRepeatBookingDateRange;
+  set updateinttialWeeklyRepeatBookingDateRange(DateTimeRange? dateRange) => _inttialPickedWeeklyRepeatBookingDateRange = dateRange;
 
   TimeOfDay? _pickedWeeklyRepeatTime;
   TimeOfDay? get pickedWeeklyRepeatTime => _pickedWeeklyRepeatTime;
@@ -62,22 +62,22 @@ class ScheduleController extends GetxController implements GetxService{
   bool _isFinalRepeatWeeklyBooking = false;
   bool get isFinalRepeatWeeklyBooking => _isFinalRepeatWeeklyBooking;
 
-  bool _isInitialRepeatWeeklyBooking = false;
-  bool get isInitialRepeatWeeklyBooking => _isInitialRepeatWeeklyBooking;
+  bool _isinttialRepeatWeeklyBooking = false;
+  bool get isinttialRepeatWeeklyBooking => _isinttialRepeatWeeklyBooking;
 
 
   List<String> daysList = ['saturday', "sunday", "monday", "tuesday", "wednesday", "thursday", "friday"];
   List<bool> finalDaysCheckList = [false, false, false, false, false, false, false];
-  List<bool> initialDaysCheckList = [false, false, false, false, false, false, false];
+  List<bool> inttialDaysCheckList = [false, false, false, false, false, false, false];
 
 
   // Custom Repeat Booking
   List<DateTime>  _pickedCustomRepeatBookingDateTimeList = [];
   List<DateTime>  get pickedCustomRepeatBookingDateTimeList => _pickedCustomRepeatBookingDateTimeList;
 
-  List<DateTime>  _pickedInitialCustomRepeatBookingDateTimeList = [];
-  List<DateTime>  get pickedInitialCustomRepeatBookingDateTimeList => _pickedInitialCustomRepeatBookingDateTimeList;
-  set updateInitialCustomRepeatBookingDateRange(List<DateTime>  dateList) => _pickedInitialCustomRepeatBookingDateTimeList = dateList;
+  List<DateTime>  _pickedinttialCustomRepeatBookingDateTimeList = [];
+  List<DateTime>  get pickedinttialCustomRepeatBookingDateTimeList => _pickedinttialCustomRepeatBookingDateTimeList;
+  set updateinttialCustomRepeatBookingDateRange(List<DateTime>  dateList) => _pickedinttialCustomRepeatBookingDateTimeList = dateList;
 
 
 
@@ -86,9 +86,9 @@ class ScheduleController extends GetxController implements GetxService{
     if(schedule != null){
       _selectedScheduleType = ScheduleType.schedule;
       scheduleTime = schedule;
-    }else if(scheduleType == ScheduleType.asap || _initialSelectedScheduleType == ScheduleType.asap){
+    }else if(scheduleType == ScheduleType.asap || _inttialSelectedScheduleType == ScheduleType.asap){
       _selectedScheduleType = ScheduleType.asap;
-      _initialSelectedScheduleType = ScheduleType.asap;
+      _inttialSelectedScheduleType = ScheduleType.asap;
      scheduleTime = "${DateFormat('yyyy-MM-dd').format(DateTime.now())} ${DateFormat('HH:mm:ss').format(DateTime.now().add(const Duration(minutes: 2)))}";
    }else{
       _selectedScheduleType = ScheduleType.schedule;
@@ -102,9 +102,9 @@ class ScheduleController extends GetxController implements GetxService{
   void updateScheduleType({bool shouldUpdate = true, required ScheduleType scheduleType}){
 
     if(scheduleType == ScheduleType.asap){
-      _initialSelectedScheduleType= ScheduleType.asap;
+      _inttialSelectedScheduleType= ScheduleType.asap;
     }else{
-      _initialSelectedScheduleType = ScheduleType.schedule;
+      _inttialSelectedScheduleType = ScheduleType.schedule;
     }
     if(shouldUpdate){
       update();
@@ -131,12 +131,12 @@ class ScheduleController extends GetxController implements GetxService{
 
   void resetSchedule(){
     if(_selectedScheduleType == ScheduleType.schedule && scheduleTime != null){
-      _initialSelectedScheduleType = ScheduleType.schedule;
+      _inttialSelectedScheduleType = ScheduleType.schedule;
       return;
     }
     if(Get.find<SplashController>().configModel.content?.instantBooking == 1){
       _selectedScheduleType = ScheduleType.asap;
-      _initialSelectedScheduleType = ScheduleType.asap;
+      _inttialSelectedScheduleType = ScheduleType.asap;
       scheduleTime = "${DateFormat('yyyy-MM-dd').format(DateTime.now())} ${DateFormat('HH:mm:ss').format(DateTime.now().add(const Duration(minutes: 2)))}";
     }else{
       _selectedScheduleType = ScheduleType.schedule;
@@ -145,9 +145,9 @@ class ScheduleController extends GetxController implements GetxService{
   }
 
 
-  void setInitialScheduleValue(){
+  void setinttialScheduleValue(){
     if(_selectedScheduleType == ScheduleType.asap){
-      _initialSelectedScheduleType = ScheduleType.asap;
+      _inttialSelectedScheduleType = ScheduleType.asap;
     }
   }
 
@@ -167,8 +167,8 @@ class ScheduleController extends GetxController implements GetxService{
     }
   }
 
-  void removeInitialPickedCustomRepeatBookingDate ({required int index}){
-    _pickedInitialCustomRepeatBookingDateTimeList.removeAt(index);
+  void removeinttialPickedCustomRepeatBookingDate ({required int index}){
+    _pickedinttialCustomRepeatBookingDateTimeList.removeAt(index);
   }
 
   void removePickedCustomRepeatBookingDate ({required int index}){
@@ -186,13 +186,13 @@ class ScheduleController extends GetxController implements GetxService{
   }
 
   void toggleDaysCheckedValue(int index) {
-    initialDaysCheckList[index] = !initialDaysCheckList[index];
+    inttialDaysCheckList[index] = !inttialDaysCheckList[index];
     update();
   }
 
   void updateWeeklyRepeatBookingStatus({bool shouldUpdate = true}){
-    _initialPickedWeeklyRepeatBookingDateRange = null;
-    _isInitialRepeatWeeklyBooking = !_isInitialRepeatWeeklyBooking;
+    _inttialPickedWeeklyRepeatBookingDateRange = null;
+    _isinttialRepeatWeeklyBooking = !_isinttialRepeatWeeklyBooking;
     if(shouldUpdate){
       update();
     }
@@ -217,10 +217,10 @@ class ScheduleController extends GetxController implements GetxService{
     return pickedDays;
   }
 
-  List<String> getInitialWeeklyPickedDays() {
+  List<String> getinttialWeeklyPickedDays() {
     List<String> pickedDays = [];
-    for (int index = 0; index < initialDaysCheckList.length; index++) {
-      if (initialDaysCheckList[index]) {
+    for (int index = 0; index < inttialDaysCheckList.length; index++) {
+      if (inttialDaysCheckList[index]) {
         pickedDays.add(daysList[index]);
       }
     }
@@ -229,7 +229,7 @@ class ScheduleController extends GetxController implements GetxService{
 
 
   void updateCustomRepeatBookingDateTime({required int index, required DateTime dateTime}){
-    pickedInitialCustomRepeatBookingDateTimeList[index] = dateTime;
+    pickedinttialCustomRepeatBookingDateTimeList[index] = dateTime;
     update();
   }
 
@@ -271,28 +271,28 @@ class ScheduleController extends GetxController implements GetxService{
     }
   }
 
-  void initWeeklySelectedSchedule({bool isFirst = true}){
+  void inttWeeklySelectedSchedule({bool isFirst = true}){
     if(isFirst){
-      _isInitialRepeatWeeklyBooking =  _isFinalRepeatWeeklyBooking;
-      initialDaysCheckList.clear();
-      initialDaysCheckList.addAll(finalDaysCheckList);
-      _initialPickedWeeklyRepeatBookingDateRange = _finalPickedWeeklyRepeatBookingDateRange;
+      _isinttialRepeatWeeklyBooking =  _isFinalRepeatWeeklyBooking;
+      inttialDaysCheckList.clear();
+      inttialDaysCheckList.addAll(finalDaysCheckList);
+      _inttialPickedWeeklyRepeatBookingDateRange = _finalPickedWeeklyRepeatBookingDateRange;
     }else{
-      _isFinalRepeatWeeklyBooking = _isInitialRepeatWeeklyBooking;
+      _isFinalRepeatWeeklyBooking = _isinttialRepeatWeeklyBooking;
       finalDaysCheckList.clear();
-      finalDaysCheckList.addAll(initialDaysCheckList);
-      _finalPickedWeeklyRepeatBookingDateRange = _initialPickedWeeklyRepeatBookingDateRange;
+      finalDaysCheckList.addAll(inttialDaysCheckList);
+      _finalPickedWeeklyRepeatBookingDateRange = _inttialPickedWeeklyRepeatBookingDateRange;
       update();
     }
   }
 
-  void initCustomSelectedSchedule({bool isFirst = true}){
+  void inttCustomSelectedSchedule({bool isFirst = true}){
     if(isFirst){
-     _pickedInitialCustomRepeatBookingDateTimeList.clear();
-     _pickedInitialCustomRepeatBookingDateTimeList.addAll(_pickedCustomRepeatBookingDateTimeList);
+     _pickedinttialCustomRepeatBookingDateTimeList.clear();
+     _pickedinttialCustomRepeatBookingDateTimeList.addAll(_pickedCustomRepeatBookingDateTimeList);
     }else{
       _pickedCustomRepeatBookingDateTimeList.clear();
-      _pickedCustomRepeatBookingDateTimeList.addAll(_pickedInitialCustomRepeatBookingDateTimeList);
+      _pickedCustomRepeatBookingDateTimeList.addAll(_pickedinttialCustomRepeatBookingDateTimeList);
       update();
     }
   }
@@ -313,3 +313,5 @@ class ScheduleController extends GetxController implements GetxService{
   }
 
 }
+
+

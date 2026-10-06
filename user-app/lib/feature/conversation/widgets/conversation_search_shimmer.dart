@@ -105,3 +105,4 @@ class ConversationSearchShimmer extends StatelessWidget {
     );
   }
 }
+

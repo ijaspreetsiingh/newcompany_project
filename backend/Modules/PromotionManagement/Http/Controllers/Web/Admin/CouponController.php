@@ -64,7 +64,7 @@ class CouponController extends Controller
         $discountType = $request->has('discount_type') ? $request['discount_type'] : 'all';
         $queryParam = ['search' => $search, 'discount_type' => $discountType];
 
-        $coupons = $this->coupon->with(['discount', 'discount.category_types', 'discount.service_types', 'discount.zone_types'])
+        $coupons = $this->coupon->with(['discount', 'discount.category_types', 'discount.service_types', 'discount.zone_types', 'discount.provider_types'])
             ->when($request->has('search'), function ($query) use ($request) {
                 $keys = explode(' ', $request['search']);
                 return $query->where(function ($query) use ($keys) {
@@ -125,8 +125,11 @@ class CouponController extends Controller
             'limit_per_user' => $request['coupon_type'] != 'first_booking' ? 'numeric' : '',
 
             'customer_user_ids' => $request['coupon_type'] == 'customer_wise' ? 'required|array' : '',
-            'customer_user_ids.*' => $request['coupon_type'] == 'customer_wise' ? 'uuid' : ''
+            'customer_user_ids.*' => $request['coupon_type'] == 'customer_wise' ? 'uuid' : '',
+            'provider_ids' => 'nullable|array',
         ]);
+
+        $request->merge(['provider_ids' => promotion_resolve_provider_ids($request)]);
 
         DB::transaction(function () use ($request) {
             $discount = $this->discount;
@@ -150,7 +153,7 @@ class CouponController extends Controller
             $coupon->is_active = 1;
             $coupon->save();
 
-            $disTypes = ['category', 'service', 'zone'];
+            $disTypes = ['category', 'service', 'zone', 'provider'];
             foreach ((array)$disTypes as $disType) {
                 $types = [];
                 foreach ((array)$request[$disType . '_ids'] as $id) {
@@ -222,7 +225,7 @@ class CouponController extends Controller
     public function edit(string $id): View|Factory|Application
     {
         $this->authorize('coupon_update');
-        $coupon = $this->coupon->with(['discount', 'discount.category_types', 'discount.service_types', 'discount.zone_types', 'coupon_customers'])->where('id', $id)->first();
+        $coupon = $this->coupon->with(['discount', 'discount.category_types', 'discount.service_types', 'discount.zone_types', 'discount.provider_types', 'coupon_customers'])->where('id', $id)->first();
         $discount = $this->discount->where('id', $coupon->discount_id)->withoutGlobalScope('translate')->first();
         $categories = $this->category->ofStatus(1)->ofType('main')->latest()->get();
         $zones = $this->zone->ofStatus(1)->latest()->get();
@@ -255,7 +258,10 @@ class CouponController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date',
             'limit_per_user' => $request['coupon_type'] != 'first_booking' ? 'numeric' : '',
+            'provider_ids' => 'nullable|array',
         ]);
+
+        $request->merge(['provider_ids' => promotion_resolve_provider_ids($request)]);
 
         DB::transaction(function () use ($request, $id) {
             $coupon = $this->coupon->where(['id' => $id])->first();
@@ -280,11 +286,11 @@ class CouponController extends Controller
             $this->discountType->where(['discount_id' => $discount['id']])->delete();
 
             if ($request['discount_type'] == 'service') {
-                $disTypes = ['service', 'zone'];
+                $disTypes = ['service', 'zone', 'provider'];
             } elseif ($request['discount_type'] == 'category') {
-                $disTypes = ['category', 'zone'];
+                $disTypes = ['category', 'zone', 'provider'];
             } else {
-                $disTypes = ['category', 'service', 'zone'];
+                $disTypes = ['category', 'service', 'zone', 'provider'];
             }
 
             foreach ($disTypes as $disType) {

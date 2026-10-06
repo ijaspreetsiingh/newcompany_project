@@ -8,8 +8,33 @@ class CheckoutHelper {
 
   static final ConfigModel configModel = Get.find<SplashController>().configModel;
 
+  static Map<String, dynamic>? _providerPaymentConfig() {
+    try {
+      if (Get.isRegistered<CheckOutController>()) {
+        return Get.find<CheckOutController>().providerPaymentConfig;
+      }
+    } catch (_) {}
+    return null;
+  }
+
   static double getAdditionalCharge(){
+    final Map<String, dynamic>? providerConfig = _providerPaymentConfig();
+    if (providerConfig != null) {
+      final num flag = num.tryParse('${providerConfig['booking_additional_charge']}') ?? 0;
+      if (flag != 1) return 0.0;
+      return double.tryParse('${providerConfig['additional_charge_fee_amount']}') ?? 0.0;
+    }
     return Get.find<SplashController>().configModel.content?.additionalCharge == 1 ? configModel.content?.additionalChargeFeeAmount ?? 0.0 : 0.0;
+  }
+
+  static bool shouldShowAdditionalCharge() {
+    final String label = Get.find<SplashController>().configModel.content?.additionalChargeLabelName ?? '';
+    final Map<String, dynamic>? providerConfig = _providerPaymentConfig();
+    if (providerConfig != null) {
+      final num flag = num.tryParse('${providerConfig['booking_additional_charge']}') ?? 0;
+      return flag == 1 && label != '';
+    }
+    return Get.find<SplashController>().configModel.content?.additionalCharge == 1 && label != '';
   }
 
 
@@ -79,7 +104,7 @@ class CheckoutHelper {
     return calculateGrandTotal(cartList: cartList, referralDiscount: referralDiscount, daysCount: daysCount) - (walletPaymentStatus ? calculatePaidAmount(walletBalance: walletBalance, bookingAmount: bookingAmount) : 0);
   }
 
-  static double calculateRemainingWalletBalance({required double walletBalance, required double bookingAmount}){
+  static double calculateRemaintngWalletBalance({required double walletBalance, required double bookingAmount}){
     return checkPartialPayment(walletBalance: walletBalance, bookingAmount: bookingAmount)  ? 0 : walletBalance - bookingAmount;
   }
 
@@ -191,8 +216,8 @@ class CheckoutHelper {
     List<CartModel> carts = Get.find<CartController>().cartList;
 
     if(carts.isNotEmpty && carts.first.couponCode != null){
-      if( carts.first.couponRemainingUses != null && pickedScheduleDays > carts.first.couponRemainingUses!){
-        numOfDays = carts.first.couponRemainingUses!;
+      if( carts.first.couponRemaintngUses != null && pickedScheduleDays > carts.first.couponRemaintngUses!){
+        numOfDays = carts.first.couponRemaintngUses!;
       }else{
         numOfDays = pickedScheduleDays;
       }
@@ -267,3 +292,4 @@ class CheckoutHelper {
     return addressModel;
   }
 }
+

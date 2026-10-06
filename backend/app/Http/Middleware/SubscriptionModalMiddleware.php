@@ -22,10 +22,14 @@ class SubscriptionModalMiddleware
             if ($user) {
                 $provider = Provider::where('user_id', $user->id)->first();
                 if ($provider) {
+                    // Provider Subscribe OFF -> koi subscription modal/redirect nahi
+                    if ((int) ($provider->subscription_required ?? 1) === 0) {
+                        return $next($request);
+                    }
                     $providerId = $provider->id;
                     $commissionStatus = (int)((business_config('provider_commision', 'provider_config'))?->live_values);
                     $subscriptionStatus = (int)((business_config('provider_subscription', 'provider_config'))?->live_values);
-                    $commission = $provider->commission_status == 1 ? $provider->commission_percentage : business_config('default_commission', 'business_information')->live_values;
+                    $commission = providerCommissionPercentage($provider);
 
                     $subscriptionPackages = SubscriptionPackage::with('subscriptionPackageFeature', 'subscriptionPackageLimit')
                         ->OfStatus(1)->get();

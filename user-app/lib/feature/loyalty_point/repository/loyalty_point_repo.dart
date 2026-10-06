@@ -1,4 +1,4 @@
-import 'package:jdds/api/remote/client_api.dart';
+﻿import 'package:jdds/api/remote/client_api.dart';
 import 'package:jdds/util/app_constants.dart';
 import 'package:get/get.dart';
 
@@ -14,3 +14,4 @@ class LoyaltyPointRepo{
     return await apiClient.getData("${AppConstants.loyaltyPointTransactionData}?limit=10&offset=$offset");
   }
 }
+

@@ -26,7 +26,7 @@ class _WalletScreenState extends State<WalletScreen> {
 
     Future.delayed(const Duration(seconds: 1)).then((value){
       if(widget.status != null && widget.status!.contains("success") && Get.find<WalletController>().getWalletAccessToken() != widget.token){
-        customSnackBar("message", customWidget: Row(children: [
+        customSnackBar("message", CustomWidget: Row(children: [
           const SizedBox(width: Dimensions.paddingSizeDefault,),
           const Icon(Icons.check_circle, color: Colors.white70,),
           const SizedBox(width: Dimensions.paddingSizeDefault,),

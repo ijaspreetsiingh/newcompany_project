@@ -239,3 +239,4 @@ class WebCampaignShimmer extends StatelessWidget {
     );
   }
 }
+

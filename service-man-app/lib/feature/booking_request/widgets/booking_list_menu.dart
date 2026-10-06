@@ -4,41 +4,25 @@ import 'package:demandium_serviceman/utils/core_export.dart';
 class BookingListMenu extends SliverPersistentHeaderDelegate {
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    Get.find<BookingRequestController>();
-
     return GetBuilder<BookingRequestController>(
-      builder: (bookingListController) {
+      builder: (_) {
         return Container(
-          color: Theme.of(context).scaffoldBackgroundColor,
+          color: context.kBackground,
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 36,
-                  child: ListView.builder(
-                    itemCount: BooingListStatus.values.length,
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, index) {
-                      return GetBuilder<BookingRequestController>(
-                        builder: (bookingListController) {
-                          return InkWell(
-                            child: BookingMenuItem(
-                              title: BooingListStatus.values.elementAt(index).name.toLowerCase().tr,
-                              index: index,
-                            ),
-                            onTap: () => bookingListController.updateBookingStatusState(
-                              BooingListStatus.values.elementAt(index),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: SizedBox(
+            height: 32,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: BooingListStatus.values.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                return BookingMenuItem(
+                  title: BooingListStatus.values.elementAt(index).name.toLowerCase().tr,
+                  index: index,
+                );
+              },
+            ),
           ),
         );
       },
@@ -46,10 +30,10 @@ class BookingListMenu extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 52;
+  double get maxExtent => 64;
 
   @override
-  double get minExtent => 52;
+  double get minExtent => 64;
 
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {

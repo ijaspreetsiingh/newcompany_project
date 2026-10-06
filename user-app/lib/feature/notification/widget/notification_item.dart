@@ -63,3 +63,4 @@ class NotificationItem extends StatelessWidget {
     );
   }
 }
+

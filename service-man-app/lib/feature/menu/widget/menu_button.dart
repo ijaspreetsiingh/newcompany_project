@@ -42,20 +42,26 @@ class MenuButton extends StatelessWidget {
       child: Column(children: [
         Container(
           decoration: BoxDecoration(
-            borderRadius: const BorderRadius.all(Radius.circular(Ios27Tokens.radiusSm)),
-            color: Get.isDarkMode ? Colors.grey.withValues(alpha: 0.2) : Theme.of(context).primaryColor.withValues(alpha: 0.08),
-            border: Border.all(color: Ios27Tokens.rim(context), width: 0.5),
+            borderRadius: const BorderRadius.all(Radius.circular(kRadiusMd)),
+            color: context.kCard,
+            border: Border.all(color: context.kBorder, width: 1),
           ),
           height: 60,
           padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
           margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
           alignment: Alignment.center,
           child: menu!.icon is IconData
-              ? Icon(menu!.icon as IconData, size: 28, color: Theme.of(context).primaryColor)
-              : Image.asset(menu!.icon!, width: 28, height: 28),
+              ? Icon(menu!.icon as IconData, size: 26, color: context.kForeground)
+              : Image.asset(menu!.icon!, width: 26, height: 26),
         ),
         const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-        Text(menu!.title!, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall), textAlign: TextAlign.center),
+        Text(menu!.title!,
+          style: robotoMedium.copyWith(
+            fontSize: Dimensions.fontSizeSmall,
+            color: context.kForeground,
+          ),
+          textAlign: TextAlign.center,
+        ),
       ]),
     );
   }

@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:jdds/api/local/cache_response.dart';
 import 'package:jdds/common/models/api_response_model.dart';
 import 'package:jdds/helper/db_helper.dart';
@@ -15,39 +15,58 @@ class DataSyncRepo {
 
   DataSyncRepo({required this.apiClient, required this.sharedPreferences});
 
-  Future<ApiResponseModel<T>> fetchData<T>(String uri, DataSourceEnum source, {dynamic body, ApiMethodType method = ApiMethodType.get} ) async {
+  Future<AptresponseModel<T>> fetchData<T>(String uri, DataSourceEnum source, {dynamic body, ApiMethodType method = ApiMethodType.get} ) async {
     try {
       return source == DataSourceEnum.client || _isACachesDisable() ? await _fetchFromClient<T>(uri, method: method, body: body) : await _fetchFromLocalCache<T>(uri);
     } catch (e) {
       debugPrint('DataSyncRepo: ===> $source $e ($uri)');
 
-      return ApiResponseModel.withError(e);
+      return AptresponseModel.withError(e);
     }
   }
 
-  Future<ApiResponseModel<T>> _fetchFromClient<T>(String uri, {dynamic body,ApiMethodType method = ApiMethodType.get}) async {
+  Future<AptresponseModel<T>> _fetchFromClient<T>(String uri, {dynamic body,ApiMethodType method = ApiMethodType.get}) async {
     final response = await _fetchResponseFromClient(uri, body: body, method: method);
     if(response.statusCode == 200) {
+      final cacheKey = _cacheKeyForZone(uri);
       final cacheData = CacheResponseCompanion(
-        endPoint: Value(uri),
+        endPoint: Value(cacheKey),
         header: Value(jsonEncode(response.headers)),
         response: Value(jsonEncode(response.body)),
       );
 
       // Cache the data based on the platform
       if (kIsWeb && _isWebCachesActive()) {
-        _cacheResponseWeb(uri, cacheData);
+        _cacheResponseWeb(cacheKey, cacheData);
       }
 
       if(!kIsWeb && _isAppCachesActive()) {
-        await DbHelper.insertOrUpdate(id: uri, data: cacheData);
+        await DbHelper.insertOrUpdate(id: cacheKey, data: cacheData);
       }
     }
 
     // Prepare the cache data
 
 
-    return ApiResponseModel.withSuccess(response as T);
+    return AptresponseModel.withSuccess(response as T);
+  }
+
+  /// Home screen se sab kuch selected location (zone) par based hai,
+  /// isliye cache key me zone_id shamil karo — location/zone badalne par
+  /// purane zone ka cached data dobara na mile.
+  String _cacheKeyForZone(String uri) {
+    try {
+      final addressJson = sharedPreferences?.getString(AppConstants.userAddress);
+      if (addressJson != null && addressJson.isNotEmpty) {
+        final zoneId = jsonDecode(addressJson)['zone_id'];
+        if (zoneId != null && zoneId.toString().isNotEmpty) {
+          return '$uri##zone_$zoneId';
+        }
+      }
+    } catch (_) {
+      // address parse fail → plain uri key (backward compatible)
+    }
+    return uri;
   }
 
   Future<Response> _fetchResponseFromClient (String uri,{dynamic body, ApiMethodType method = ApiMethodType.get}){
@@ -72,22 +91,25 @@ class DataSyncRepo {
     sharedPreferences?.setString(uri, jsonEncode(cacheJson));
   }
 
-  Future<ApiResponseModel<T>> _fetchFromLocalCache<T>(String uri) async {
+  Future<AptresponseModel<T>> _fetchFromLocalCache<T>(String uri) async {
     CacheResponseData? cacheData;
+    final cacheKey = _cacheKeyForZone(uri);
 
     if (kIsWeb) {
-      final cachedJson = sharedPreferences?.getString(uri);
+      final cachedJson = sharedPreferences?.getString(cacheKey);
       if (cachedJson != null) {
         cacheData = CacheResponseData.fromJson(jsonDecode(cachedJson));
       }
     } else {
-      cacheData = await database.getCacheResponseById(uri);
+      cacheData = await database.getCacheResponseById(cacheKey);
     }
 
     if (cacheData != null && jsonDecode(cacheData.response) != null) {
-      return ApiResponseModel.withSuccess(cacheData as T);
+      return AptresponseModel.withSuccess(cacheData as T);
     } else {
-      return ApiResponseModel.withError("No local data found for $uri");
+      return AptresponseModel.withError("No local data found for $uri");
     }
   }
 }
+
+

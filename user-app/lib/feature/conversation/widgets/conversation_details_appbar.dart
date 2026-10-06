@@ -5,8 +5,29 @@ class ConversationDetailsAppBar extends StatelessWidget implements PreferredSize
   final String? name;
   final String? image;
   final String? phone;
+  final String userType;
   final String fromNotification;
-  const ConversationDetailsAppBar({super.key, this.name, this.image, this.phone, this.fromNotification =""}) ;
+  const ConversationDetailsAppBar({super.key, this.name, this.image, this.phone, this.userType = "", this.fromNotification =""}) ;
+
+  String get _role {
+    switch (userType) {
+      case "customer":
+        return "customer".tr;
+      case "provider-serviceman":
+        return "partner".tr;
+      case "super-admin":
+        return "technical_support_team".tr;
+      case "provider-admin":
+        return "zone_admin".tr;
+      default:
+        return phone?.isNotEmpty == true ? phone! : "";
+    }
+  }
+
+  bool get _canCall {
+    if (userType == "super-admin") return false;
+    return phone != null && phone!.trim().isNotEmpty;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,19 +50,35 @@ class ConversationDetailsAppBar extends StatelessWidget implements PreferredSize
           ),
           const SizedBox(width: Dimensions.paddingSizeSmall),
 
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-            Text( name?.tr ??"", style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
+            Text( name?.tr ??"", maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault,
               color:  Colors.white,
             )),
 
-            if(phone !="") Padding(padding: const EdgeInsets.only(top: 3),
-              child: Text(phone ?? "", style: robotoLight.copyWith( fontSize: Dimensions.fontSizeSmall,
-                color:  Colors.white,
+            Padding(padding: const EdgeInsets.only(top: 3),
+              child: Text(phone != null && phone!.isNotEmpty ? _role : _role,
+                maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: robotoLight.copyWith( fontSize: Dimensions.fontSizeSmall,
+                color:  Colors.white.withValues(alpha: 0.85),
               )),
             ),
 
-          ]),
+          ])),
+
+          if (_canCall)
+            IconButton(
+              onPressed: () {
+                Get.to(() => ChatCallScreen(
+                      name: name ?? "",
+                      phone: phone ?? "",
+                      image: image ?? "",
+                      role: _role,
+                    ));
+              },
+              icon: const Icon(Icons.call_rounded, color: Colors.white, size: 22),
+            ),
         ],
       ),
       leading: IconButton(onPressed: () {
@@ -59,3 +96,4 @@ class ConversationDetailsAppBar extends StatelessWidget implements PreferredSize
   @override
   Size get preferredSize => const Size(double.maxFinite, 55);
 }
+

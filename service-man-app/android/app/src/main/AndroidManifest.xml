@@ -6,9 +6,10 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
    <application
-        android:label="JS Service"
+        android:label="JS Partner"
         android:name="${applicationName}"
         android:extractNativeLibs="true"
+        android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_launcher">
 
         <activity

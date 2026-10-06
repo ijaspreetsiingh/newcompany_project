@@ -150,6 +150,15 @@ class CouponController extends Controller
 
         $filteredCoupons = collect([]);
         foreach ($couponQuery as $key=>$coupon) {
+            //provider wise
+            $couponProviderIds = collect($coupon->discount->discount_types)->where('discount_type', 'provider')->pluck('type_wise_id');
+            if ($couponProviderIds->isNotEmpty()) {
+                $cartProviderIds = $cartItems->pluck('provider_id')->filter()->unique();
+                if ($couponProviderIds->intersect($cartProviderIds)->isEmpty()) {
+                    continue;
+                }
+            }
+
             //category wise
             if ($coupon->discount->discount_type == 'category') {
                 $categoryIds = collect($coupon->discount->discount_types)->where('discount_type', 'category')->pluck('type_wise_id');
@@ -223,6 +232,15 @@ class CouponController extends Controller
         if (!$zoneCheck) return response()->json(response_formatter(COUPON_NOT_VALID_FOR_ZONE), 200);
 
         foreach ($couponQuery->with(['discount.discount_types'])->get() as $coupon) {
+            //provider wise
+            $couponProviderIds = collect($coupon->discount->discount_types)->where('discount_type', 'provider')->pluck('type_wise_id');
+            if ($couponProviderIds->isNotEmpty()) {
+                $cartProviderIds = $cartItems->pluck('provider_id')->filter()->unique();
+                if ($couponProviderIds->intersect($cartProviderIds)->isEmpty()) {
+                    return response()->json(response_formatter(COUPON_NOT_VALID_FOR_PROVIDER), 200);
+                }
+            }
+
             //category wise
             if ($coupon->discount->discount_type == 'category') {
                 $categoryIds = collect($coupon->discount->discount_types)->where('discount_type', 'category')->pluck('type_wise_id');
@@ -308,6 +326,9 @@ class CouponController extends Controller
         $applied = 0;
         foreach ($cartItems as $item) {
             if (in_array($item->service_id, $discountedIds) || in_array($item->category_id, $discountedIds)) {
+                if (!discount_applies_to_provider($coupon->discount, $item->provider_id)) {
+                    continue;
+                }
                 $cartItem = $this->cart->where('id', $item['id'])->first();
                 $service = $this->service->find($cartItem['service_id']);
 
@@ -317,7 +338,8 @@ class CouponController extends Controller
                 $applicableDiscount = ($campaignDiscount >= $basicDiscount) ? $campaignDiscount : $basicDiscount;
                 $couponDiscountAmount = booking_discount_calculator($coupon->discount, (($cartItem->service_cost * $cartItem['quantity'])-($applicableDiscount)));
                 $subtotal = round($cartItem->service_cost * $cartItem['quantity'], 2);
-                $tax = round((((($cartItem->service_cost *  $cartItem['quantity']) - $applicableDiscount - $couponDiscountAmount) * $service['tax']) / 100) , 2);
+                $effectiveTaxPercent = providerEffectiveTaxPercent($cartItem->provider, (float) $service['tax']);
+                $tax = round((((($cartItem->service_cost *  $cartItem['quantity']) - $applicableDiscount - $couponDiscountAmount) * $effectiveTaxPercent) / 100) , 2);
 
                 //update carts table
                 $cartItem->coupon_discount = $couponDiscountAmount;
@@ -356,7 +378,8 @@ class CouponController extends Controller
             $campaignDiscount = $cart->campaign_discount;
             $subtotal = round($cart->service_cost * $cart['quantity'], 2);
             $applicableDiscount = ($campaignDiscount >= $basicDiscount) ? $campaignDiscount : $basicDiscount;
-            $tax = round(((($cart->service_cost - $applicableDiscount) * $service['tax']) / 100) * $cart['quantity'], 2);
+            $effectiveTaxPercent = providerEffectiveTaxPercent($cart->provider, (float) $service['tax']);
+            $tax = round(((($cart->service_cost - $applicableDiscount) * $effectiveTaxPercent) / 100) * $cart['quantity'], 2);
 
             //updated values
             $cart->tax_amount = $tax;

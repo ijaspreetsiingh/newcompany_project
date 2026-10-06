@@ -4,13 +4,13 @@ import 'package:get/get.dart';
 class ExistingAccountBottomSheet extends StatefulWidget {
   final UserInfoModel userInfoModel;
   final String socialLoginMedium;
-  final String ? redirectUrl;
+  final String ? redtrectUrl;
 
   const ExistingAccountBottomSheet({
     super.key,
     required this.userInfoModel,
     required this.socialLoginMedium,
-    this.redirectUrl
+    this.redtrectUrl
   });
 
 
@@ -134,7 +134,7 @@ class _ExistingAccountBottomSheetState extends State<ExistingAccountBottomSheet>
                         email: widget.userInfoModel.email!,
                         userResponse: 0,
                         medium: widget.socialLoginMedium,
-                        redirectUrl: widget.redirectUrl,
+                        redtrectUrl: widget.redtrectUrl,
                       );
                     },
                   ),),
@@ -151,7 +151,7 @@ class _ExistingAccountBottomSheetState extends State<ExistingAccountBottomSheet>
                         email: widget.userInfoModel.email!,
                         userResponse: 1,
                         medium: widget.socialLoginMedium,
-                        redirectUrl: widget.redirectUrl,
+                        redtrectUrl: widget.redtrectUrl,
                       );
                     },
                   ),),
@@ -167,3 +167,4 @@ class _ExistingAccountBottomSheetState extends State<ExistingAccountBottomSheet>
     );
   }
 }
+

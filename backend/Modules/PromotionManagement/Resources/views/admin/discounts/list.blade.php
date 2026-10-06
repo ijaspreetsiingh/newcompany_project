@@ -102,6 +102,7 @@
                                                 <th>{{translate('title')}}</th>
                                                 <th>{{translate('discount_type')}}</th>
                                                 <th>{{translate('zones')}}</th>
+                                                <th>{{translate('providers')}}</th>
                                                 @can('discount_manage_status')
                                                     <th>{{translate('status')}}</th>
                                                 @endcan
@@ -120,6 +121,15 @@
                                                         @foreach($discount->zone_types as $type)
                                                             {{$type->zone?$type->zone->name.',':''}}
                                                         @endforeach
+                                                    </td>
+                                                    <td>
+                                                        @if($discount->provider_types->isEmpty())
+                                                            {{translate('all')}}
+                                                        @else
+                                                            @foreach($discount->provider_types as $type)
+                                                                {{$type->provider?$type->provider->company_name.',':''}}
+                                                            @endforeach
+                                                        @endif
                                                     </td>
                                                     @can('discount_manage_status')
                                                         <td>

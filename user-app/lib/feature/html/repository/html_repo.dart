@@ -1,4 +1,4 @@
-import 'package:get/get_connect/http/src/response/response.dart';
+﻿import 'package:get/get_connect/http/src/response/response.dart';
 import 'package:jdds/api/remote/client_api.dart';
 import 'package:jdds/util/app_constants.dart';
 
@@ -11,3 +11,4 @@ class HtmlRepository{
   }
 
 }
+

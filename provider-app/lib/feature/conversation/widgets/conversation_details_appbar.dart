@@ -1,58 +1,67 @@
 import 'package:demandium_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
-class ConversationDetailsAppBar extends StatelessWidget implements PreferredSizeWidget{
+class ConversationDetailsAppBar extends StatelessWidget {
   final String? name;
   final String? image;
   final String? phone;
+  final String userType;
   final String fromNotification;
-  const ConversationDetailsAppBar({super.key, this.name, this.image, this.phone, this.fromNotification =""});
+  const ConversationDetailsAppBar({
+    super.key,
+    this.name,
+    this.image,
+    this.phone,
+    this.userType = "",
+    this.fromNotification = "",
+  });
 
-  @override
-  Widget build(BuildContext context) {
+  bool get _canCall {
+    if (userType == "super-admin" || userType == "provider-admin") return false;
+    return phone != null && phone!.trim().isNotEmpty;
+  }
 
-    return AppBar(
-      elevation: 5, titleSpacing: 0,
-      backgroundColor: Theme.of(context).cardColor, surfaceTintColor: Theme.of(context).cardColor,
-      shadowColor: Get.isDarkMode?Theme.of(context).primaryColor.withValues(alpha:0.5):Theme.of(context).primaryColor.withValues(alpha:0.1),
-
-      title: Row( children: [
-
-        ClipRRect(borderRadius: BorderRadius.circular(Dimensions.paddingSizeExtraLarge * 2),
-          child: CustomImage(
-            image: image, height: 30, width: 30,
-            placeholder: name == "admin" ? Images.adminPlaceHolder : Images.userPlaceHolder,
-          ),
-        ),
-        const SizedBox(width: Dimensions.paddingSizeSmall),
-
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-
-          Text( name?.tr ?? "", style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault)),
-
-          if(phone !="") Text(phone ?? "", style: robotoLight.copyWith( fontSize: Dimensions.fontSizeSmall)),
-
-        ]),
-      ]),
-
-      leading: Padding(
-        padding: const EdgeInsets.only(left: Dimensions.paddingSizeDefault),
-        child: IconButton(onPressed: () {
-          if(fromNotification == "fromNotification"){
-            Get.offNamed(RouteHelper.getInboxScreenRoute(fromNotification: fromNotification));
-          }else{
-            Get.back();
-          }
-        },
-          icon: Icon(Icons.arrow_back_ios,
-            color: Get.isDarkMode ? Theme.of(context).hintColor : Colors.black,
-            size: Dimensions.paddingSizeLarge,
-          ),
-        ),
-      ),
-    );
+  String get _role {
+    switch (userType) {
+      case "customer":
+        return "Customer";
+      case "provider-serviceman":
+        return "Serviceman";
+      case "super-admin":
+        return "technical_support_team".tr;
+      case "provider-admin":
+        return "You";
+      default:
+        return phone?.isNotEmpty == true ? phone! : "";
+    }
   }
 
   @override
-  Size get preferredSize => const Size(double.maxFinite, 55);
+  Widget build(BuildContext context) {
+    return InkTopBar(
+      title: name?.tr ?? "",
+      subtitle: _role,
+      right: _canCall
+          ? InkIconButton(
+              icon: Icons.call_rounded,
+              filled: true,
+              onTap: () {
+                Get.to(() => ChatCallScreen(
+                      name: name ?? "",
+                      phone: phone ?? "",
+                      image: image ?? "",
+                      role: _role,
+                    ));
+              },
+            )
+          : null,
+      onBack: () {
+        if (fromNotification == "fromNotification") {
+          Get.offNamed(RouteHelper.getInboxScreenRoute(fromNotification: fromNotification));
+        } else {
+          Get.back();
+        }
+      },
+    );
+  }
 }

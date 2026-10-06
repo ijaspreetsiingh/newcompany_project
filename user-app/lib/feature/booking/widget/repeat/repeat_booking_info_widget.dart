@@ -25,7 +25,7 @@ class RepeatBookingInfoWidget extends StatelessWidget {
 
               const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
               Container(
-                decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.green),
+                decoration: BoxDecoration(shape: BoxShape.circle, color: Get.theme.colorScheme.primary),
                 padding: const EdgeInsets.all(2),
                 child: const Icon(Icons.repeat, color: Colors.white,size: 12,),
               )
@@ -55,3 +55,5 @@ class RepeatBookingInfoWidget extends StatelessWidget {
     );
   }
 }
+
+

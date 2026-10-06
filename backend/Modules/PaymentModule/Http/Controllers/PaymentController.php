@@ -189,6 +189,9 @@ class PaymentController extends Controller
             $repeatBooking = BookingRepeat::where('id', $request['booking_repeat_id'])->first();
 
             if ($repeatBooking) {
+                if (providerRejectsPaymentMethod($repeatBooking->provider_id, $request['payment_method'])) {
+                    return redirect()->back()->withErrors(translate('payment_method_not_allowed_for_provider'));
+                }
                 $customer = User::find($customer_user_id);
                 $amount = $repeatBooking->total_booking_amount;
                 $payer = new Payer($customer['first_name'] . ' ' . $customer['last_name'], $customer['email'], $customer['phone'], '');
@@ -225,6 +228,10 @@ class PaymentController extends Controller
 
             if (!isset($booking)){
                 return redirect()->back()->withErrors(translate('Booking Not Found'));
+            }
+
+            if (providerRejectsPaymentMethod($booking->provider_id, $request['payment_method'])) {
+                return redirect()->back()->withErrors(translate('payment_method_not_allowed_for_provider'));
             }
 
             $payer = new Payer('first name' . ' ' . 'last name', 'first@last.com', '1234567890', '');
@@ -273,6 +280,16 @@ class PaymentController extends Controller
         }
 
         //==========>>>>>> IF Booking <<<<<<<==============
+
+        // Provider ke allowed payment methods (independent mode) — server-side gate
+        $checkoutProviderId = $request['provider_id']
+            ?: \Modules\CartModule\Entities\Cart::where('customer_id', $customer_user_id)->value('provider_id');
+        if (providerRejectsPaymentMethod($checkoutProviderId, $request['payment_method'])) {
+            if ($request->has('callback')) return redirect($request['callback'] . '?flag=fail');
+            return response()->json(response_formatter(DEFAULT_400, null, [
+                'payment_method' => [translate('payment_method_not_allowed_for_provider')],
+            ]), 400);
+        }
 
         //service address create (if no saved address)
         $service_address = json_decode(base64_decode($request['service_address']));

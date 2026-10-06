@@ -1,4 +1,4 @@
-import 'package:jdds/feature/service/controller/service_controller.dart';
+﻿import 'package:jdds/feature/service/controller/service_controller.dart';
 import 'package:get/get.dart';
 import '../../service/model/service_model.dart';
 
@@ -44,3 +44,4 @@ class ExampleData {
       serviceList: Get.find<ServiceController>().trendingServiceList??[]
   );
 }
+

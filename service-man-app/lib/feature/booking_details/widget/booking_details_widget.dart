@@ -23,48 +23,41 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
         final bookingDetails = bookingDetailsController.bookingDetails?.bookingContent?.bookingDetailsContent;
 
         bool showDeliveryConfirmImage = bookingDetailsController.showPhotoEvidenceField;
-        ConfigModel? configModel = Get.find<SplashController>().configModel;
 
-        int isGuest = bookingDetails?.isGuest ?? 0;
-        bool isPartial =  (bookingDetails !=null && bookingDetails.partialPayments !=null && bookingDetails.partialPayments!.isNotEmpty) ? true : false ;
-        String bookingStatus = bookingDetails?.bookingStatus ?? "";
-        bool subBookingPaid = widget.isSubBooking && bookingDetails?.isPaid == 1;
+        if (bookingDetailsModel == null && bookingDetailsModel?.bookingContent == null) {
+          return const BookingDetailsShimmer();
+        }
+        if (bookingDetailsModel != null && bookingDetailsModel.bookingContent == null) {
+          return SizedBox(height: Get.height * 0.7, child:  BookingEmptyScreen (bookingId: widget.bookingId ?? ""));
+        }
+        if (bookingDetails == null) {
+          return const BookingDetailsShimmer();
+        }
 
-        bool isEditBooking = (configModel?.content?.serviceManCanEditBooking == 1
-            && bookingDetailsController.bookingDetails?.bookingContent?.providerServicemanCanEditBooking == 1)
-            && (!subBookingPaid && !isPartial && (bookingStatus == "accepted" || bookingStatus == "ongoing")
-                && ((isGuest == 1 && bookingDetails?.paymentMethod != "cash_after_service") ? false : true));
-
-        return bookingDetailsModel == null && bookingDetailsModel?.bookingContent == null ? const BookingDetailsShimmer() :
-        bookingDetailsModel != null && bookingDetailsModel.bookingContent == null ? SizedBox(height: Get.height * 0.7, child:  BookingEmptyScreen (bookingId: widget.bookingId ?? "",)): Column(
+        return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(child: SingleChildScrollView(
               controller: bookingDetailsController.scrollController,
-              child: Column(
-                children: [
-                  const SizedBox(height:Dimensions.paddingSizeSmall),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
 
+                    BookingInformationView(bookingDetails: bookingDetails, isSubBooking: widget.isSubBooking,),
 
-                  Row( mainAxisAlignment: MainAxisAlignment.center, children: [
+                    const SizedBox(height: 16),
 
-                    const SizedBox(width:Dimensions.paddingSizeDefault),
-                    Expanded(
-                      child: CustomButton(
-                        btnTxt: "edit_booking".tr, icon: Icons.edit,
-                        onPressed: isEditBooking ? (){
-                          Get.to(()=>  BookingEditScreen(isSubBooking: widget.isSubBooking,));
-                        }: null,
-                      ),),
-                    const SizedBox(width:Dimensions.paddingSizeSmall),
-
-                    CustomButton(
-                      width: 120, btnTxt: "invoice".tr,  icon: Icons.file_present,
-                      color: Colors.blue,
-                      onPressed: () async {
+                    KButton(
+                      label: "invoice".tr,
+                      icon: Icons.receipt_long_outlined,
+                      outline: true,
+                      onTap: () async {
                         Get.dialog(const CustomLoader(), barrierDismissible: false);
                         String languageCode = Get.find<LocalizationController>().locale.languageCode;
-                        String uri = "${AppConstants.baseUrl}${widget.isSubBooking ? AppConstants.singleRepeatBookingInvoiceUrl : AppConstants.regularBookingInvoiceUrl}${bookingDetails?.id}/$languageCode";
+                        String uri = "${AppConstants.baseUrl}${widget.isSubBooking ? AppConstants.singleRepeatBookingInvoiceUrl : AppConstants.regularBookingInvoiceUrl}${bookingDetails.id}/$languageCode";
                         if (kDebugMode) {
                           print("Uri : $uri");
                         }
@@ -72,33 +65,26 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                         Get.back();
                       },
                     ),
-                    const SizedBox(width:Dimensions.paddingSizeDefault),
-                  ]),
 
-                  const SizedBox(height:Dimensions.paddingSizeExtraSmall),
+                    const SizedBox(height: 16),
 
-                  BookingInformationView(bookingDetails: bookingDetails!, isSubBooking: widget.isSubBooking,),
+                    BookingSummeryView(bookingDetails: bookingDetails),
 
-                  BookingSummeryView(bookingDetails: bookingDetails),
+                    const SizedBox(height: 16),
 
-                  BookingDetailsProviderInfo(bookingDetails: bookingDetails),
+                    BookingDetailsProviderInfo(bookingDetails: bookingDetails),
 
-                  BookingDetailsCustomerInfo(bookingDetails: bookingDetails),
+                    if (bookingDetails.photoEvidenceFullPath != null &&  bookingDetails.photoEvidenceFullPath!.isNotEmpty) ...[
+                      const SizedBox(height: 16,),
+                      CaptionTitle('completed_service_picture'.tr),
 
-
-                  bookingDetails.photoEvidenceFullPath != null &&  bookingDetails.photoEvidenceFullPath!.isNotEmpty ?
-                  Padding( padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-
-                      const SizedBox(height: Dimensions.paddingSizeDefault,),
-                      Text('completed_service_picture'.tr,  style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).primaryColor),),
-                      const SizedBox(height: Dimensions.paddingSizeSmall),
+                      const SizedBox(height: 12),
 
                       Container(
-                        height: 90,
+                        height: 94,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withValues(alpha:0.05),
-                          borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                          color: context.kMuted,
+                          borderRadius: BorderRadius.circular(kRadiusMd),
                         ),
                         padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
                         child: ListView.builder(
@@ -112,7 +98,7 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                                  borderRadius: BorderRadius.circular(kRadiusSm),
                                   child: GestureDetector(
                                     onTap: (){
                                       Get.to(ImageDetailScreen(
@@ -134,21 +120,19 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                           },
                         ),
                       ),
-                    ]),
-                  ):
-                  const SizedBox(),
+                    ],
 
-                  Get.find<SplashController>().configModel?.content?.bookingImageVerification == 1 && showDeliveryConfirmImage && bookingDetails.bookingStatus != 'completed' ? Padding(
-                    padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('completed_service_picture'.tr,  style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault, color: Theme.of(context).primaryColor),),
-                      const SizedBox(height: Dimensions.paddingSizeSmall),
+                    if (Get.find<SplashController>().configModel?.content?.bookingImageVerification == 1 && showDeliveryConfirmImage && bookingDetails.bookingStatus != 'completed') ...[
+                      const SizedBox(height: 16,),
+                      CaptionTitle('completed_service_picture'.tr),
+
+                      const SizedBox(height: 12),
 
                       Container(
-                        height: 90,
+                        height: 94,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withValues(alpha:0.05),
-                          borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                          color: context.kMuted,
+                          borderRadius: BorderRadius.circular(kRadiusMd),
                         ),
                         padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
                         child: ListView.builder(
@@ -164,21 +148,22 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                                 },
                                 child: Container(
                                   height: 60, width: 70, alignment: Alignment.center, decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                                  color: Theme.of(context).primaryColor.withValues(alpha:0.1),
+                                  borderRadius: BorderRadius.circular(kRadiusMd),
+                                  color: context.kCard,
+                                  border: Border.all(color: context.kBorder, width: 1),
                                 ),
-                                  child:  Icon(Icons.camera_alt_sharp, color: Theme.of(context).primaryColor, size: 32),
+                                  child:  Icon(Icons.add_a_photo_outlined, color: context.kForeground, size: 24),
                                 ),
                               );
                             }
                             return file != null ? Container(
                               margin: const EdgeInsets.only(right: Dimensions.paddingSizeSmall),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                                borderRadius: BorderRadius.circular(kRadiusSm),
                               ),
                               child: Stack(children: [
                                 ClipRRect(
-                                  borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                                  borderRadius: BorderRadius.circular(kRadiusSm),
                                   child: GetPlatform.isWeb ? Image.network(
                                     file.path, width: 120, height: 70, fit: BoxFit.cover,
                                   ) : Image.file(
@@ -190,11 +175,11 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                           },
                         ),
                       ),
-                    ]),
-                  ) : const SizedBox(),
+                    ],
 
-                  const SizedBox(height:Dimensions.paddingSizeExtraLarge),
-                ],
+                    const SizedBox(height:25),
+                  ],
+                ),
               ),
             ),),
             bookingDetails.bookingStatus == "accepted" ||  bookingDetails.bookingStatus == "ongoing" ?
@@ -239,22 +224,15 @@ class BookingEmptyScreen extends StatelessWidget {
       Text("information_not_found".tr, style: robotoRegular,),
       const SizedBox(height: Dimensions.paddingSizeLarge,),
 
-      CustomButton(
-        height: 35, width: 120, radius: Dimensions.radiusExtraLarge,
-        btnTxt: "go_back".tr, onPressed: () {
-        //Get.find<BookingRequestController>().removeBookingItemFromList(bookingId ?? "", shouldUpdate: true , bookingStatus: "");
-        Get.back();
-      },)
+      KButton(
+        label: "go_back".tr,
+        outline: true,
+        height: 40,
+        expanded: false,
+        onTap: () {
+          Get.back();
+        },)
 
     ],),);
   }
 }
-
-
-
-
-
-
-
-
-

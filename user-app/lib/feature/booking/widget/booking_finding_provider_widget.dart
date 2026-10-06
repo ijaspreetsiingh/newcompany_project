@@ -12,10 +12,10 @@ class BookingFindingProviderWidget extends StatefulWidget {
   const BookingFindingProviderWidget({super.key, required this.bookingId});
 
   @override
-  State<BookingFindingProviderWidget> createState() => _BookingFindingProviderWidgetState();
+  State<BookingFindingProviderWidget> createState() => _BookingFindingProviderwidgetstate();
 }
 
-class _BookingFindingProviderWidgetState extends State<BookingFindingProviderWidget> {
+class _BookingFindingProviderwidgetstate extends State<BookingFindingProviderWidget> {
   @override
   void initState() {
     super.initState();
@@ -89,7 +89,7 @@ class _ProviderFoundCard extends StatelessWidget {
       child: Column(mainAxisSize: MainAxisSize.min, children: [
 
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(Icons.check_circle, color: Colors.green, size: 24),
+          Icon(Icons.check_circle, color: Theme.of(Get.context!).colorScheme.primary, size: 24),
           const SizedBox(width: Dimensions.paddingSizeExtraSmall),
           Text('provider_found'.tr, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge)),
         ]),
@@ -109,7 +109,7 @@ class _ProviderFoundCard extends StatelessWidget {
               Text(provider?.companyName ?? '', style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault), maxLines: 1, overflow: TextOverflow.ellipsis),
               const SizedBox(height: Dimensions.paddingSizeExtraSmall),
               Row(children: [
-                Icon(Icons.star, color: Colors.orange, size: 16),
+                Icon(Icons.star, color: Theme.of(context).textTheme.bodyLarge!.color, size: 16),
                 const SizedBox(width: Dimensions.paddingSizeExtraSmall),
                 Text('${provider?.avgRating ?? 0} (${provider?.ratingCount ?? 0})', style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall)),
               ]),
@@ -131,3 +131,5 @@ class _ProviderFoundCard extends StatelessWidget {
     );
   }
 }
+
+

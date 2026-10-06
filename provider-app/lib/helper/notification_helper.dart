@@ -32,7 +32,7 @@ class NotificationHelper {
 
             Get.toNamed(RouteHelper.getChatScreenRoute(
               notificationBody.channelId??"",
-              notificationBody.userType == "supper-admin" ? "admin" : notificationBody.userName??"",
+              notificationBody.userType == "supper-admin" ? "technical_support_team".tr : notificationBody.userName??"",
               notificationBody.userProfileImage??"",
               notificationBody.userPhone??"",
               notificationBody.userType??"",
@@ -180,7 +180,7 @@ class NotificationHelper {
             }
             Get.toNamed(RouteHelper.getChatScreenRoute(
               notificationBody.channelId??"",
-              notificationBody.userType == "supper-admin" ? "admin" : notificationBody.userName??"",
+              notificationBody.userType == "supper-admin" ? "technical_support_team".tr : notificationBody.userName??"",
               notificationBody.userProfileImage??"",
               notificationBody.userPhone??"",
               notificationBody.userType??"",

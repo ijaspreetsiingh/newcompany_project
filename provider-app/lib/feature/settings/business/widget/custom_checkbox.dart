@@ -14,16 +14,17 @@ class CustomCheckBox extends StatelessWidget {
         child: Checkbox(
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(2)),
-            activeColor: Theme.of(context).colorScheme.primary,
+            activeColor: InkColors.foreground,
             value: value,
-            side: BorderSide(width: 0.7, color: Theme.of(context).textTheme.bodySmall!.color!),
+            side:  BorderSide(width: 1, color: InkColors.mutedForeground),
             onChanged: onTap != null ?  (bool? isActive) => onTap!() : null
         ),
       ),
       const SizedBox(width: Dimensions.paddingSizeSmall,),
       Text(title.tr,
-        style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: value == true
-            ? Theme.of(context).primaryColor  : Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.7)),
+        style: value == true
+            ? robotoSemiBold.copyWith(fontSize: Dimensions.fontSizeDefault, color: InkColors.foreground)
+            : robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault, color: InkColors.mutedForeground),
       ),
     ]);
   }

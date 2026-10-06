@@ -130,7 +130,7 @@ class AcceptProviderRequestView extends StatelessWidget {
                     ],)
 
                   ],),
-                  Image.asset(Images.messageIcon,height: 22,width: 22,),
+                  Image.asset(Images.messagetcon,height: 22,width: 22,),
                 ],
               ),
             )
@@ -140,3 +140,6 @@ class AcceptProviderRequestView extends StatelessWidget {
     });
   }
 }
+
+
+

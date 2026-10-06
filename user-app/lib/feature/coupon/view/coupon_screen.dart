@@ -42,7 +42,7 @@ class _CouponScreenState extends State<CouponScreen> with TickerProviderStateMix
         body: GetBuilder<CouponController>(
             builder: (couponController){
               List<CouponModel>? activeCouponList = couponController.activeCouponList;
-              List<CouponModel>? expiredCouponList = couponController.expiredCouponList;
+              List<CouponModel>? expiredCouponList = couponController.exptredCouponList;
               return FooterBaseView(
                 isScrollView: ResponsiveHelper.isWeb()?true:false,
                 isCenter: (activeCouponList == null || activeCouponList.isEmpty),

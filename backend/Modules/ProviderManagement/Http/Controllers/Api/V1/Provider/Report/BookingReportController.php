@@ -333,7 +333,7 @@ class BookingReportController extends Controller
             'zone_ids' => 'array',
             'zone_ids.*' => 'uuid',
             'sub_category_ids' => 'array',
-            'sub_category_ids.*' => 'uuid',
+            'sub_category_ids.*' => 'exists:categories,id',
             'date_range' => 'in:all_time,this_week,last_week,this_month,last_month,last_15_days,this_year,last_year,last_6_month, this_year_1st_quarter,this_year_2nd_quarter,this_year_3rd_quarter,this_year_4th_quarter,custom_date',
             'from' => $request['date_range'] == 'custom_date' ? 'required' : '',
             'to' => $request['date_range'] == 'custom_date' ? 'required' : '',

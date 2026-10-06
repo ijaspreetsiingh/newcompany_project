@@ -1,4 +1,4 @@
-
+﻿
 class PagesModel {
   String? responseCode;
   String? message;
@@ -34,7 +34,7 @@ class PagesContent {
   AboutUs? refundPolicy;
   AboutUs? returnPolicy;
   AboutUs? cancellationPolicy;
-  PageImages? images;
+  Pagetmages? images;
 
   PagesContent({
     this.aboutUs,
@@ -64,7 +64,7 @@ class PagesContent {
         ? AboutUs.fromJson(json['cancellation_policy'])
         : null;
     images  = json['images'] != null
-        ? PageImages.fromJson(json['images'])
+        ? Pagetmages.fromJson(json['images'])
         : null;
   }
 
@@ -135,7 +135,7 @@ class AboutUs {
   }
 }
 
-class PageImages {
+class Pagetmages {
   String? aboutUs;
   String? termsAndConditions;
   String? refundPolicy;
@@ -143,7 +143,7 @@ class PageImages {
   String? cancellationPolicy;
   String? privacyPolicy;
 
-  PageImages(
+  Pagetmages(
       {this.aboutUs,
         this.termsAndConditions,
         this.refundPolicy,
@@ -151,7 +151,7 @@ class PageImages {
         this.cancellationPolicy,
         this.privacyPolicy});
 
-  PageImages.fromJson(Map<String, dynamic> json) {
+  Pagetmages.fromJson(Map<String, dynamic> json) {
     aboutUs = json['about_us'];
     termsAndConditions = json['terms_and_conditions'];
     refundPolicy = json['refund_policy'];
@@ -171,3 +171,4 @@ class PageImages {
     return data;
   }
 }
+

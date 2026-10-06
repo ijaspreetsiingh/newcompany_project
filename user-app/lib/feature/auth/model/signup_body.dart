@@ -33,3 +33,4 @@ class SignUpBody {
     return data;
   }
 }
+

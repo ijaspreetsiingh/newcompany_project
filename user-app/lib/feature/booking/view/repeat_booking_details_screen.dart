@@ -36,7 +36,7 @@ class _RepeatBookingDetailsScreenState extends State<RepeatBookingDetailsScreen>
     return CustomPopWidget(
       onPopInvoked: (){
         if(widget.fromPage == 'fromNotification') {
-          Get.offAllNamed(RouteHelper.getInitialRoute());
+          Get.offAllNamed(RouteHelper.getinitialRoute());
         }
       },
       child: Scaffold(
@@ -47,12 +47,12 @@ class _RepeatBookingDetailsScreenState extends State<RepeatBookingDetailsScreen>
           title: "repeat_booking_details".tr,
           onBackPressed: () {
             if(widget.fromPage == 'fromNotification'){
-              Get.offAllNamed(RouteHelper.getInitialRoute());
+              Get.offAllNamed(RouteHelper.getinitialRoute());
             }else{
               if(Navigator.canPop(context)){
                 Get.back();
               }else{
-                Get.offAllNamed(RouteHelper.getInitialRoute());
+                Get.offAllNamed(RouteHelper.getinitialRoute());
               }
             }
           },
@@ -335,3 +335,6 @@ class RepeatBookingTabBar extends StatelessWidget {
     }
   }
 }
+
+
+

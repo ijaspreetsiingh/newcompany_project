@@ -22,3 +22,4 @@ class DiscountTagWidget extends StatelessWidget {
     );
   }
 }
+

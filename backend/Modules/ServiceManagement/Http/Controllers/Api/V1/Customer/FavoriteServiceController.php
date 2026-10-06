@@ -42,7 +42,7 @@ class FavoriteServiceController extends Controller
             ->whereHas('favorites', function($query){
                 $query->where('customer_user_id', auth('api')->user()->id);
             })
-            ->active()->latest()
+            ->active()->visibleInCurrentZone()->latest()
             ->paginate($request['limit'], ['*'], 'offset', $request['offset'])->withPath('');
 
         return response()->json(response_formatter(DEFAULT_200, self::variationMapper($services)), 200);

@@ -12,7 +12,7 @@ class _MenuScreenState extends State<MenuScreen> {
   @override
   void initState() {
     super.initState();
-    Get.find<BottomNavController>().updateMenuPageIndex(0);
+    Get.find<BottomNavController>().updateMenuPagetndex(0);
   }
 
   @override
@@ -24,7 +24,7 @@ class _MenuScreenState extends State<MenuScreen> {
     final List<MenuModel> accountMenuList = [
       MenuModel(icon: Images.profileIcon, title: 'profile'.tr, route: RouteHelper.getProfileRoute()),
       MenuModel(icon: Images.translate, title: 'language'.tr, route: RouteHelper.getLanguageScreen('fromSettingsPage')),
-      MenuModel(icon: Images.chatImage, title: 'inbox'.tr, route: RouteHelper.getInboxScreenRoute()),
+      MenuModel(icon: Images.offerMenu, title: 'offers'.tr, route: RouteHelper.getOffersRoute()),
 
       MenuModel(
         icon: Images.bookingsIcon,
@@ -74,7 +74,7 @@ class _MenuScreenState extends State<MenuScreen> {
         icon: page.pageKey == HtmlType.termsAndCondition.value
             ? Images.termsIcon : page.pageKey == HtmlType.privacyPolicy.value
             ? Images.privacyPolicyIcon : page.pageKey == HtmlType.cancellationPolicy.value
-            ? Images.cancellationPolicy : page.pageKey == HtmlType.refundPolicy.value ? Images.refundPolicy : Images.othersPageIcon,
+            ? Images.cancellationPolicy : page.pageKey == HtmlType.refundPolicy.value ? Images.refundPolicy : Images.othersPagetcon,
         title: _getPageTitle(page),
         route: _getPageRoute(page),
       )),
@@ -188,14 +188,14 @@ class _ProfileHeaderCard extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
         decoration: BoxDecoration(
+          /// nest. style : flat bordered card
           color: isDark ? Theme.of(context).cardColor : Colors.white,
           borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
-          border: isDark ? Border.all(color: Theme.of(context).primaryColorLight.withValues(alpha:0.15)) : null,
-          boxShadow: Get.find<ThemeController>().darkTheme ? null : searchBoxShadow,
+          border: Border.all(color: Theme.of(context).primaryColorLight.withValues(alpha: isDark ? 0.4 : 1)),
         ),
         child: Row(children: [
 
-          /// Avatar - SS layout
+          /// Avatar - nest. layout
           Container(
             height: 54, width: 54,
             alignment: Alignment.center,
@@ -253,10 +253,10 @@ class _MenuGroupCard extends StatelessWidget {
         vertical: Dimensions.paddingSizeSmall,
       ),
       decoration: BoxDecoration(
+        /// nest. style : flat bordered card
         color: Get.isDarkMode ? Theme.of(context).cardColor : Colors.white,
         borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
-        border: Get.isDarkMode ? Border.all(color: Theme.of(context).primaryColorLight.withValues(alpha:0.15)) : null,
-        boxShadow: Get.find<ThemeController>().darkTheme ? null : searchBoxShadow,
+        border: Border.all(color: Theme.of(context).primaryColorLight.withValues(alpha: Get.isDarkMode ? 0.4 : 1)),
       ),
       child: Column(children: List.generate(menuList.length, (index) {
         return _MenuTile(menu: menuList[index]);
@@ -337,7 +337,7 @@ class _MenuTile extends StatelessWidget {
               Get.find<AuthController>().googleLogout();
               Get.find<AuthController>().signOutWithFacebook();
               Get.find<LocationController>().updateSelectedAddress(null);
-              Get.offAllNamed(RouteHelper.getInitialRoute());
+              Get.offAllNamed(RouteHelper.getinitialRoute());
             }), useSafeArea: false);
       }else {
         Get.toNamed(RouteHelper.getSignInRoute());
@@ -357,3 +357,6 @@ class _MenuTile extends StatelessWidget {
     }
   }
 }
+
+
+

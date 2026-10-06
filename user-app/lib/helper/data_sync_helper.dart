@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:jdds/api/local/cache_response.dart';
 import 'package:jdds/common/models/api_response_model.dart';
 import 'package:jdds/util/core_export.dart';
@@ -8,8 +8,8 @@ import 'package:get/get.dart';
 class DataSyncHelper {
   /// Generic method to fetch data from local and remote sources
   static Future<void> fetchAndSyncData({
-    required Future<ApiResponseModel<CacheResponseData>> Function() fetchFromLocal,
-    required Future<ApiResponseModel<Response>> Function() fetchFromClient,
+    required Future<AptresponseModel<CacheResponseData>> Function() fetchFromLocal,
+    required Future<AptresponseModel<Response>> Function() fetchFromClient,
     required Function(dynamic, DataSourceEnum source) onResponse,
   }) async {
 
@@ -36,3 +36,5 @@ class DataSyncHelper {
     });
   }
 }
+
+

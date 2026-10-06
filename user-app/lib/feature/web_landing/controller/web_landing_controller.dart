@@ -1,4 +1,4 @@
-import 'package:jdds/api/local/cache_response.dart';
+﻿import 'package:jdds/api/local/cache_response.dart';
 import 'package:jdds/helper/data_sync_helper.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:jdds/feature/web_landing/model/web_landing_model.dart';
@@ -39,9 +39,10 @@ class WebLandingController extends GetxController implements GetxService {
     }
   }
 
-  void setPageIndex(int index){
+  void setPagetndex(int index){
     _currentPage = index;
     update();
   }
 
 }
+

@@ -1,24 +1,11 @@
-import 'package:demandium_provider/helper/extension_helper.dart';
-import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
 import 'package:demandium_provider/feature/booking_requests/controller/calendar_controller.dart';
+import 'package:demandium_provider/util/core_export.dart';
+import 'package:get/get.dart';
 
-/// Booking item card widget that displays booking information
-/// 
-/// This widget displays comprehensive booking details including:
-/// - Booking ID and header
-/// - Service date
-/// - Service location (provider/customer location)
-/// - Booking status badge
-/// - Total booking amount
-/// 
-/// **Usage Example:**
-/// ```dart
-/// BookingItemCard(
-///   booking: calenderBooking,
-///   controller: bookingCalendarController,
-/// )
-/// ```
+/// Compact booking row used inside the calendar day list dialog.
+///
+/// Mirrors the design calendar row: time block, avatar, booking code,
+/// amount and status chip. Tapping opens the existing booking details route.
 class BookingItemCard extends StatelessWidget {
   /// The booking data to display
   final CalenderBooking booking;
@@ -34,8 +21,12 @@ class BookingItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+    final String timeLabel = DateConverter.convertDateTimeToTime(booking.serviceSchedule);
+    final List<String> timeParts = timeLabel.split(' ');
+
+    return InkCard(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       onTap: (){
         if(booking.isRepeatBooking ?? false){
           Get.toNamed(RouteHelper.getRepeatBookingDetailsRoute(bookingId : booking.id));
@@ -43,260 +34,65 @@ class BookingItemCard extends StatelessWidget {
           Get.toNamed(RouteHelper.getBookingDetailsRoute(bookingId : booking.id));
         }
       },
-      child: Container(
-        padding: const EdgeInsets.only(top: Dimensions.paddingSizeDefault),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-            border: Border.all(
-              color: Theme.of(context).hintColor.withValues(alpha: 0.08),
-            ),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: 0.05),
-              blurRadius: 9,
-              offset: Offset(0, 5),
-            ),
-            BoxShadow(
-              color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: 0.05),
-              blurRadius: 4,
-              offset: Offset(0, 0),
-            )
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _BookingCardHeader(booking: booking),
-            Divider(
-              height: Dimensions.paddingSizeLarge,
-              color: Theme.of(context).hintColor.withValues(alpha: 0.2),
-            ),
-
-            _BookingCardServiceDate(booking: booking),
-            const SizedBox(height: Dimensions.paddingSizeSmall),
-
-            _BookingCardServiceLocation(booking: booking),
-            const SizedBox(height: Dimensions.paddingSizeDefault),
-
-            _BookingCardFooter(booking: booking),
-          ],
-        ),
-      ),
-    );
-  }
-
-
-}
-
-/// Service date row widget
-///
-/// Displays the scheduled service date in a formatted manner.
-class _BookingCardServiceDate extends StatelessWidget {
-  final CalenderBooking booking;
-
-  const _BookingCardServiceDate({
-    required this.booking,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
       child: Row(
         children: [
-          Text(
-            '${'service_date'.tr} :',
-            style: robotoRegular.copyWith(
-              fontSize: Dimensions.fontSizeDefault,
-              color: Theme.of(context).hintColor,
+          SizedBox(
+            width: 56,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  timeParts.first,
+                  style: displayBold.copyWith(fontSize: 13, height: 1.1, color: InkColors.foreground),
+                ),
+                if (timeParts.length > 1)
+                  Text(
+                    timeParts.sublist(1).join(' '),
+                    style: robotoRegular.copyWith(fontSize: 10, height: 1.2, color: InkColors.mutedForeground),
+                  ),
+              ],
             ),
           ),
-          const SizedBox(width: Dimensions.paddingSizeSmall),
 
+          const SizedBox(width: 8),
+          InkAvatar(name: booking.readableId.toString(), size: 36),
+          const SizedBox(width: 12),
 
-          Expanded(child: Text(
-            DateConverter.dateMonthYearLocalTime(booking.serviceSchedule.toLocal()),
-            style: robotoMedium.copyWith(
-              fontSize: Dimensions.fontSizeDefault,
-              color: Theme.of(context).textTheme.bodyLarge?.color,
-            ),
-            textAlign: TextAlign.end,
-          )),
-        ],
-      ),
-    );
-  }
-}
-
-/// Service location widget with badge
-///
-/// Displays the service location (provider or customer location)
-/// with an icon and colored badge.
-class _BookingCardServiceLocation extends StatelessWidget {
-  final CalenderBooking booking;
-
-  const _BookingCardServiceLocation({
-    required this.booking,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-      child: Row(
-        children: [
-          Text(
-            '${'service_location'.tr} :',
-            style: robotoRegular.copyWith(
-              fontSize: Dimensions.fontSizeDefault,
-              color: Theme.of(context).hintColor,
-            ),
-          ),
-          const SizedBox(width: Dimensions.paddingSizeSmall),
           Expanded(
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: Dimensions.paddingSizeDefault,
-                  vertical: Dimensions.paddingSizeExtraSmall,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "${'booking'.tr} # ${booking.readableId}",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: robotoSemiBold.copyWith(fontSize: 13.5, height: 1.25, color: InkColors.foreground),
                 ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+                Text(
+                  (booking.isRepeatBooking ?? false) ? "repeat_booking".tr : "regular_booking".tr,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: robotoRegular.copyWith(fontSize: 11.5, height: 1.3, color: InkColors.mutedForeground),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.location_on,
-                      size: Dimensions.paddingSizeDefault,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    const SizedBox(width: Dimensions.paddingSizeTini),
-                    Text(
-                      booking.serviceLocation == ServiceLocation.provider
-                          ? 'at_provider_location'.tr
-                          : 'at_customer_location'.tr,
-                      style: robotoMedium.copyWith(
-                        fontSize: Dimensions.fontSizeSmall,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                    ),
-                  ],
-                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              InkMoney(
+                booking.totalBookingAmount,
+                style:  TextStyle(fontSize: 13, height: 1.2, color: InkColors.foreground),
               ),
-            ),
+              const SizedBox(height: 4),
+              InkStatusChip(status: booking.bookingStatus),
+            ],
           ),
         ],
       ),
     );
   }
 }
-
-/// Footer widget showing status badge and price
-///
-/// Displays:
-/// - Booking status with color-coded badge
-/// - Total booking amount
-class _BookingCardFooter extends StatelessWidget {
-  final CalenderBooking booking;
-
-  const _BookingCardFooter({
-    required this.booking,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-      decoration: BoxDecoration(
-        color: Theme.of(context).hintColor.withValues(alpha: 0.03),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Dimensions.paddingSizeDefault,
-              vertical: Dimensions.paddingSizeExtraSmall,
-            ),
-            decoration: BoxDecoration(
-              color: context.customThemeColors.buttonBackgroundColorMap[booking.bookingStatus]?.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-            ),
-            child: Text(
-              booking.bookingStatus.tr,
-              style: robotoMedium.copyWith(
-                fontSize: Dimensions.fontSizeSmall,
-                color: context.customThemeColors.buttonTextColorMap[booking.bookingStatus],
-              ),
-            ),
-          ),
-          Text(
-            PriceConverter.convertPrice(booking.totalBookingAmount),
-            style: robotoBold.copyWith(
-              fontSize: Dimensions.fontSizeExtraLarge,
-              color: Theme.of(context).primaryColor,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-}
-
-// ========== Private Widget Classes ==========
-
-/// Private widget for booking card header
-class _BookingCardHeader extends StatelessWidget {
-  final CalenderBooking booking;
-
-  const _BookingCardHeader({
-    required this.booking,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-      child: Row(
-        children: [
-          Text(
-            '${"booking".tr} # ',
-            style: robotoMedium.copyWith(
-              fontSize: Dimensions.fontSizeLarge,
-              color: Theme.of(context).textTheme.bodySmall!.color!.withValues(alpha: 0.7),
-            ),
-          ),
-          Text(
-            booking.readableId.toString(),
-            style: robotoBold.copyWith(
-              color: Theme.of(context).textTheme.bodyLarge?.color,
-              fontSize: Dimensions.fontSizeLarge,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-
-          if(booking.isRepeatBooking ?? false) Container(
-            decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.green),
-            padding: const EdgeInsets.all(2),
-            margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
-            child: const Icon(Icons.repeat, color: Colors.white,size: 12,),
-          ),
-
-          Spacer(),
-
-          Text(DateConverter.convertDateTimeToTime(
-            DateConverter.isoUtcStringToLocalDate(booking.createdAt.toIso8601String()),
-          )),
-        ],
-      ),
-    );
-  }
-}
-
-

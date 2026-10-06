@@ -103,3 +103,6 @@ class _AreaMapViewScreenState extends State<AreaMapViewScreen> {
     );
   }
 }
+
+
+

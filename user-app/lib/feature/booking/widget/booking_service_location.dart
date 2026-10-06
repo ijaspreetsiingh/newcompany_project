@@ -13,18 +13,30 @@ class BookingServiceLocation extends StatelessWidget {
         decoration: BoxDecoration(
           boxShadow: Get.find<ThemeController>().darkTheme ? null : searchBoxShadow,
           color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+          borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
         ),
-        padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall, horizontal: Dimensions.paddingSizeDefault),
+        padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault, horizontal: Dimensions.paddingSizeDefault),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-            Text('service_location'.tr,
-              overflow: TextOverflow.ellipsis,
-              style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault,
-                color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9),
+            Row(children: [
+              Container(
+                height: 30, width: 30,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                ),
+                child: Icon(Icons.location_on_rounded, size: 17, color: Theme.of(context).colorScheme.primary),
               ),
-            ),
+              const SizedBox(width: Dimensions.paddingSizeSmall),
+              Expanded(child: Text('service_location'.tr,
+                overflow: TextOverflow.ellipsis,
+                style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault,
+                  color: Theme.of(context).textTheme.bodyLarge!.color?.withValues(alpha:0.9),
+                ),
+              )),
+            ]),
 
             const SizedBox(height: Dimensions.paddingSizeSmall),
 
@@ -152,7 +164,7 @@ void _checkPermission(Function onTap) async {
 class MapUtils {
   MapUtils._();
   static Future<void> openMap(double destinationLatitude, double destinationLongitude, double userLatitude, double userLongitude) async {
-    String googleUrl = 'https://www.google.com/maps/dir/?api=1&origin=$userLatitude,$userLongitude'
+    String googleUrl = 'https://www.google.com/maps/dtr/?api=1&origin=$userLatitude,$userLongitude'
         '&destination=$destinationLatitude,$destinationLongitude&mode=d';
     if (await canLaunchUrl(Uri.parse(googleUrl))) {
       await launchUrl(Uri.parse(googleUrl), mode: LaunchMode.externalApplication);
@@ -161,4 +173,6 @@ class MapUtils {
     }
   }
 }
+
+
 

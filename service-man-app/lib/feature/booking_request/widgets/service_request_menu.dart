@@ -7,36 +7,22 @@ class BookingHistorySectionMenu extends SliverPersistentHeaderDelegate {
     return GetBuilder<BookingRequestController>(
       builder: (bookingRequestController) {
         return Container(
-          color: Theme.of(context).scaffoldBackgroundColor,
+          color: context.kBackground,
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 36,
-                  child: ListView.builder(
-                    itemCount: bookingRequestController.bookingHistoryStatus.length,
-                    scrollDirection: Axis.horizontal,
-                    itemBuilder: (context, index) {
-                      return InkWell(
-                        child: CategoryTabItem(
-                          title: bookingRequestController.bookingHistoryStatus[index].toLowerCase().tr,
-                          index: index,
-                        ),
-                        onTap: () {
-                          bookingRequestController.updateBookingHistorySelectedIndex(index);
-                          bookingRequestController.getBookingHistory(
-                            bookingRequestController.bookingHistoryStatus[index],
-                            1,
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: SizedBox(
+            height: 32,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: bookingRequestController.bookingHistoryStatus.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                return CategoryTabItem(
+                  title: bookingRequestController.bookingHistoryStatus[index].toLowerCase().tr,
+                  index: index,
+                );
+              },
+            ),
           ),
         );
       },
@@ -44,10 +30,10 @@ class BookingHistorySectionMenu extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 52;
+  double get maxExtent => 64;
 
   @override
-  double get minExtent => 52;
+  double get minExtent => 64;
 
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {

@@ -70,3 +70,4 @@ class _ProviderWithdrawBidDialogState extends State<ProviderWithdrawBidDialog> {
     );
   }
 }
+

@@ -1,121 +1,100 @@
-import 'package:demandium_provider/helper/extension_helper.dart';
 import 'package:get/get.dart';
 import 'package:demandium_provider/util/core_export.dart';
 
 class RecentActivityCardItem extends StatelessWidget {
   final DashboardRecentActivityModel dashboardRecentActivityModel;
+  final VoidCallback? onTap;
+  final bool showDivider;
+
   const RecentActivityCardItem({
     super.key,
     required this.dashboardRecentActivityModel,
+    this.onTap,
+    this.showDivider = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
-      margin: const EdgeInsets.symmetric(
-        horizontal: Dimensions.paddingSizeSmall,
-      ),
+    final DashboardRecentActivityModel booking = dashboardRecentActivityModel;
 
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-            child: CustomImage(
-              height: 60,
-              width: 60,
-              fit: BoxFit.cover,
-              image:
-                  "${dashboardRecentActivityModel.detail![0].service != null ? dashboardRecentActivityModel.detail![0].service!.thumbnailFullPath : ""}",
-            ),
+    String serviceName = '';
+    if (booking.detail != null && booking.detail!.isNotEmpty) {
+      serviceName = booking.detail!.first.service?.name ?? '';
+    }
+
+    final DateTime? createdAt = booking.createdAt == null
+        ? null
+        : DateConverter.isoUtcStringToLocalDate(booking.createdAt!);
+    final String dateLabel = createdAt == null
+        ? ''
+        : DateConverter.dateStringMonthYear(createdAt, format: 'd MMM');
+    final double amount =
+        double.tryParse(booking.totalBookingAmount ?? '') ?? 0;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            border: showDivider
+                ?  Border(bottom: BorderSide(color: InkColors.border))
+                : null,
           ),
-
-          const SizedBox(width: Dimensions.paddingSizeDefault),
-          Expanded(
-            child: SizedBox(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              InkAvatar(name: serviceName, size: 38),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      serviceName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: robotoSemiBold.copyWith(
+                        fontSize: 13.5,
+                        height: 1.3,
+                        color: InkColors.foreground,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "${'booking'.tr}#${booking.readableId ?? ''} · $dateLabel",
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: robotoRegular.copyWith(
+                        fontSize: 11.5,
+                        height: 1.3,
+                        color: InkColors.mutedForeground,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        "${'booking'.tr}#  ${dashboardRecentActivityModel.readableId}",
-                        style: robotoBold.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: Theme.of(
-                            context,
-                          ).textTheme.bodyLarge!.color!.withValues(alpha: 0.6),
-                        ),
-                      ),
-                      if (dashboardRecentActivityModel.isRepeatBooking == 1)
-                        Container(
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.green,
-                          ),
-                          padding: const EdgeInsets.all(2),
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: Dimensions.paddingSizeExtraSmall,
-                          ),
-                          child: const Icon(
-                            Icons.repeat,
-                            color: Colors.white,
-                            size: 10,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-                  Text(
-                    DateConverter.dateMonthYearTime(
-                      DateConverter.isoUtcStringToLocalDate(
-                        dashboardRecentActivityModel.createdAt!,
-                      ),
+                  InkMoney(
+                    amount,
+                    style:  TextStyle(
+                      fontSize: 13,
+                      color: InkColors.foreground,
                     ),
-                    style: robotoRegular.copyWith(
-                      fontSize: Dimensions.fontSizeSmall,
-                      color: Theme.of(
-                        context,
-                      ).textTheme.bodyLarge!.color!.withValues(alpha: 0.6),
-                    ),
-                    textDirection: TextDirection.ltr,
                   ),
+                  const SizedBox(height: 6),
+                  InkStatusChip(status: booking.bookingStatus ?? ''),
                 ],
               ),
-            ),
+            ],
           ),
-
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: Dimensions.fontSizeSmall,
-              vertical: Dimensions.paddingSizeExtraSmall,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(50),
-              color: Get.isDarkMode
-                  ? Colors.grey.withValues(alpha: 0.2)
-                  : context
-                        .customThemeColors
-                        .buttonBackgroundColorMap[dashboardRecentActivityModel
-                        .bookingStatus],
-            ),
-            child: Text(
-              dashboardRecentActivityModel.bookingStatus!.tr,
-              style: robotoMedium.copyWith(
-                fontWeight: FontWeight.w500,
-                fontSize: Dimensions.fontSizeSmall,
-                color: Get.isDarkMode
-                    ? Theme.of(context).primaryColorLight
-                    : context
-                          .customThemeColors
-                          .buttonTextColorMap[dashboardRecentActivityModel
-                          .bookingStatus],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

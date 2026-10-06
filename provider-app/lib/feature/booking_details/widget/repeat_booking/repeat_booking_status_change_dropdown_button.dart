@@ -70,7 +70,7 @@ class RepeatBookingChangeStatusDropdownButton extends StatelessWidget {
                 fontSize: Dimensions.fontSizeDefault,
                 isLoading: bookingDetailsController.isAcceptButtonLoading,
                 onPressed: bookingDetailsController.isIgnoreButtonLoading ? (){} :   (){
-                  if(Get.find<UserProfileController>().providerModel?.content?.subscriptionInfo?.subscribedPackageDetails?.isCanceled == 1){
+                  if(Get.find<UserProfileController>().isSubscriptionRequired && Get.find<UserProfileController>().providerModel?.content?.subscriptionInfo?.subscribedPackageDetails?.isCanceled == 1){
                     showCustomSnackBar("your_subscription_plan_has_been_cancelled_you_will_not_able_to_accept_any_booking_request".tr, type : ToasterMessageType.info);
                   }else{
                     Get.find<BusinessSubscriptionController>().openTrialEndBottomSheet().then((isTrial){

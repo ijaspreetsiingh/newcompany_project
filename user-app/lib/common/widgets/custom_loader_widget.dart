@@ -20,10 +20,10 @@ class CustomLoaderWidget extends StatefulWidget {
   final AnimationController? controller;
 
   @override
-  State<CustomLoaderWidget> createState() => _CustomLoaderWidgetState();
+  State<CustomLoaderWidget> createState() => _CustomLoaderwidgetstate();
 }
 
-class _CustomLoaderWidgetState extends State<CustomLoaderWidget> with SingleTickerProviderStateMixin {
+class _CustomLoaderwidgetstate extends State<CustomLoaderWidget> with SingleTickerProviderStateMixin {
   final List<double> delays = [.0, -1.1, -1.0, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1];
   late AnimationController _controller;
 
@@ -85,4 +85,7 @@ class DelayTween extends Tween<double> {
   @override
   double evaluate(Animation<double> animation) => lerp(animation.value);
 }
+
+
+
 

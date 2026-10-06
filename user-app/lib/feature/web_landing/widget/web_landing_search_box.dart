@@ -79,7 +79,7 @@ class _WebLandingSearchSectionState extends State<WebLandingSearchSection> {
                                     image: webLandingController.webLandingContent!.topImage2 ??"",)),
                             ),
                           ),
-                          //third image
+                          //thtrd image
 
                         ],
                       ),
@@ -373,3 +373,6 @@ class _WebLandingSearchSectionState extends State<WebLandingSearchSection> {
     }
   }
 }
+
+
+

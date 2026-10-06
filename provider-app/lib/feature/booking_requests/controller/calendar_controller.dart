@@ -547,17 +547,17 @@ class BookingCalendarController extends GetxController implements GetxService {
   Color getColorForBookingStatus(String? status) {
     switch (status?.toLowerCase()) {
       case 'pending':
-        return const Color(0xFFFF9800); // Orange
+        return const Color(0xFFD4D4D4);
       case 'accepted':
-        return const Color(0xFF2196F3); // Blue
+        return const Color(0xFF111111);
       case 'ongoing':
-        return const Color(0xFF9C27B0); // Purple
+        return const Color(0xFF71717A);
       case 'completed':
-        return const Color(0xFF4CAF50); // Green
+        return const Color(0xFF374151);
       case 'canceled':
-        return const Color(0xFFF44336); // Red
+        return const Color(0xFFDC2626);
       default:
-        return const Color(0xFF757575); // Gray
+        return const Color(0xFF9CA3AF);
     }
   }
 

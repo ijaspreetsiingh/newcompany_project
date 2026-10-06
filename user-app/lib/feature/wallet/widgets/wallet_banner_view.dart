@@ -45,3 +45,4 @@ class WalletBannerView extends StatelessWidget {
     );
   }
 }
+

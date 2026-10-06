@@ -119,6 +119,20 @@ class BookingController extends Controller
 
         $customerUserId = $this->customerUserId;
 
+        // Provider ke allowed payment methods (independent mode) — server-side gate
+        $checkoutProviderId = null;
+        if (!empty($request['post_id'])) {
+            $checkoutProviderId = $request['provider_id'] ?? null;
+        } else {
+            $checkoutProviderId = \Modules\CartModule\Entities\Cart::where('customer_id', $customerUserId)->value('provider_id')
+                ?: ($request['provider_id'] ?? null);
+        }
+        if (providerRejectsPaymentMethod($checkoutProviderId, $request['payment_method'])) {
+            return response()->json(response_formatter(DEFAULT_400, null, [
+                'payment_method' => [translate('payment_method_not_allowed_for_provider')],
+            ]), 400);
+        }
+
         if (is_null($request['service_address_id'])) {
             $request['service_address_id'] = $this->add_address(json_decode($request['service_address']), null, !$this->isCustomerLoggedIn, $request->service_location);
         }
@@ -206,7 +220,13 @@ class BookingController extends Controller
         if ($response['flag'] == 'success') {
             return response()->json(response_formatter(BOOKING_PLACE_SUCCESS_200, $response), 200);
         } else {
-            return response()->json(response_formatter(BOOKING_PLACE_FAIL_200), 200);
+            $failureResponse = response_formatter(BOOKING_PLACE_FAIL_200);
+            if (!empty($response['message']) && $response['message'] != 'no data found') {
+                $failureResponse['message'] = $response['message'];
+                $failureResponse['errors'] = [['code' => 'serviceability', 'message' => $response['message']]];
+            }
+
+            return response()->json($failureResponse, 200);
         }
     }
 
@@ -542,6 +562,12 @@ class BookingController extends Controller
             return response()->json(response_formatter(DEFAULT_204), 204);
         }
 
+        if (providerRejectsPaymentMethod($booking->provider_id, 'offline_payment')) {
+            return response()->json(response_formatter(DEFAULT_400, null, [
+                'payment_method' => [translate('payment_method_not_allowed_for_provider')],
+            ]), 400);
+        }
+
         $offlinePaymentData = $this->offlinePayment->find($request['offline_payment_id']);
         if (!$offlinePaymentData) {
             return response()->json(response_formatter(DEFAULT_400, null, 'Invalid offline payment ID.'), 400);
@@ -633,6 +659,12 @@ class BookingController extends Controller
         $booking = $this->booking->find($request->booking_id);
         if (!$booking) {
             return response()->json(response_formatter(DEFAULT_204), 204);
+        }
+
+        if (providerRejectsPaymentMethod($booking->provider_id, $request['payment_method'])) {
+            return response()->json(response_formatter(DEFAULT_400, null, [
+                'payment_method' => [translate('payment_method_not_allowed_for_provider')],
+            ]), 400);
         }
 
         // Handle partial payment if applicable

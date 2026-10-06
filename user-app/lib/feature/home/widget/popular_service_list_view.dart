@@ -24,6 +24,7 @@ class _PopularServiceListViewState extends State<PopularServiceListView> {
     }
 
     final List<CategoryModel> categories = Get.find<CategoryController>().categoryList ?? [];
+    final bool isDark = Get.isDarkMode;
 
     /// Filter services by selected category chip
     List<Service> filteredServices = _selectedChipIndex == -1
@@ -36,9 +37,32 @@ class _PopularServiceListViewState extends State<PopularServiceListView> {
       /// Title
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-        child: TitleWidget(
-          title: 'most_popular_services',
-          onTap: () => Get.toNamed(RouteHelper.getSearchResultRoute(fromPage: "popular")),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Popular near you',
+              style: robotoBold.copyWith(fontSize: 16, color: Theme.of(context).textTheme.bodyLarge?.color),
+            ),
+            InkWell(
+              onTap: () => Get.toNamed(RouteHelper.getSearchResultRoute(fromPage: "popular")),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'See all',
+                    style: robotoMedium.copyWith(fontSize: 12, color: primaryAccent),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward,
+                    size: 14,
+                    color: primaryAccent,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
       const SizedBox(height: Dimensions.paddingSizeSmall),
@@ -63,17 +87,20 @@ class _PopularServiceListViewState extends State<PopularServiceListView> {
                   padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeExtraSmall + 1),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
+                    /// nest. style chip : selected = black fill, unselected = hatrline border
                     color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
-                    borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
+                    borderRadius: BorderRadius.circular(Dimensions.radiusExtraMoreLarge),
                     border: Border.all(
-                      color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).hintColor.withValues(alpha:0.4),
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).primaryColorLight.withValues(alpha: Get.isDarkMode ? 0.6 : 1),
                       width: 1,
                     ),
                   ),
                   child: Text(
                     label,
                     style: isSelected
-                        ? robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall, color: Colors.white)
+                        ? robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall, color: isDark ? Colors.black : Colors.white)
                         : robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).textTheme.bodySmall?.color),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -132,12 +159,10 @@ class PopularServiceCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
         decoration: BoxDecoration(
+          /// nest. style card : flat surface + hatrline border, no colored shadow
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
-          border: Get.isDarkMode
-              ? Border.all(color: Theme.of(context).primaryColorLight.withValues(alpha:0.15))
-              : Border.all(color: Theme.of(context).shadowColor.withValues(alpha:0.15)),
-          boxShadow: Get.find<ThemeController>().darkTheme ? null : searchBoxShadow,
+          border: Border.all(color: Theme.of(context).primaryColorLight.withValues(alpha: Get.isDarkMode ? 0.4 : 1)),
         ),
         child: Row(children: [
 
@@ -189,9 +214,9 @@ class PopularServiceCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
 
-              /// Rating row
+              /// Rating row - neutral monochrome (nest. style)
               Row(children: [
-                Icon(Icons.star_rounded, color: const Color(0xFFFF9900), size: 16),
+                Icon(Icons.star_rounded, color: Theme.of(context).textTheme.bodyLarge?.color, size: 16),
                 const SizedBox(width: 2),
                 Text(
                   (service.avgRating ?? 0).toStringAsFixed(1),
@@ -297,3 +322,5 @@ class PopularServiceListShimmer extends StatelessWidget {
     );
   }
 }
+
+

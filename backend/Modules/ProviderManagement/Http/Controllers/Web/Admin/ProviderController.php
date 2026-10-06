@@ -25,6 +25,7 @@ use Modules\BusinessSettingsModule\Entities\PackageSubscriber;
 use Modules\BusinessSettingsModule\Entities\PackageSubscriberFeature;
 use Modules\BusinessSettingsModule\Entities\PackageSubscriberLimit;
 use Modules\BusinessSettingsModule\Entities\SubscriptionPackage;
+use Modules\CategoryManagement\Entities\Category;
 use Modules\PaymentModule\Entities\PaymentRequest;
 use Modules\PaymentModule\Traits\SubscriptionTrait;
 use Modules\ProviderManagement\Emails\AccountSuspendMail;
@@ -34,6 +35,7 @@ use Modules\ProviderManagement\Emails\RegistrationApprovedMail;
 use Modules\ProviderManagement\Emails\RegistrationDeniedMail;
 use Modules\ProviderManagement\Entities\BankDetail;
 use Modules\ProviderManagement\Entities\Provider;
+use Modules\ProviderManagement\Entities\ProviderCategoryRequest;
 use Modules\ProviderManagement\Entities\ProviderSetting;
 use Modules\ProviderManagement\Entities\SubscribedService;
 use Modules\ReviewModule\Entities\Review;
@@ -66,6 +68,7 @@ class ProviderController extends Controller
     protected PaymentRequest $paymentRequest;
     protected BookingRepeat $bookingRepeat;
     private BookingStatusHistory $bookingStatusHistory;
+    protected Category $category;
 
     use AuthorizesRequests;
     use SubscriptionTrait;
@@ -89,7 +92,8 @@ class ProviderController extends Controller
         PackageSubscriberLimit $packageSubscriberLimit,
         PaymentRequest $paymentRequest,
         BookingRepeat $bookingRepeat,
-        BookingStatusHistory $bookingStatusHistory
+        BookingStatusHistory $bookingStatusHistory,
+        Category $category
     )
     {
         $this->provider = $provider;
@@ -110,6 +114,7 @@ class ProviderController extends Controller
         $this->paymentRequest = $paymentRequest;
         $this->bookingRepeat = $bookingRepeat;
         $this->bookingStatusHistory = $bookingStatusHistory;
+        $this->category = $category;
     }
 
     /**
@@ -153,7 +158,168 @@ class ProviderController extends Controller
         $topCards['total_onboarding_requests'] = $this->provider->ofApproval(2)->count();
         $topCards['total_active_providers'] = $this->provider->ofApproval(1)->ofStatus(1)->count();
         $topCards['total_inactive_providers'] = $this->provider->ofApproval(1)->ofStatus(0)->count();
-        return view('providermanagement::admin.provider.index', compact('providers', 'topCards', 'search', 'status'));
+
+        // P2: pending category-assignment requests (page + banner)
+        $pendingCategoryRequests = ProviderCategoryRequest::with('provider:id,company_name,contact_person_name')
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+        $pendingCategoryRequestMap = $pendingCategoryRequests->keyBy('provider_id');
+        $categoryNames = $this->category->pluck('name', 'id');
+
+        return view('providermanagement::admin.provider.index', compact('providers', 'topCards', 'search', 'status', 'pendingCategoryRequests', 'pendingCategoryRequestMap', 'categoryNames'));
+    }
+
+    /**
+     * Provider ki category-assignment request approve / deny.
+     * Approve = naya assignment apply, Deny = koi badlav nahi.
+     * POST admin/provider/category-request-update
+     */
+    public function categoryRequestUpdate(Request $request): RedirectResponse
+    {
+        $this->authorize('provider_update');
+
+        Validator::make($request->all(), [
+            'request_id' => 'required|string',
+            'status' => 'required|in:approve,deny',
+            'admin_note' => 'nullable|string|max:500',
+        ]);
+
+        $categoryRequest = ProviderCategoryRequest::with('provider')->find($request['request_id']);
+
+        if (!$categoryRequest || !$categoryRequest->provider) {
+            Toastr::error(translate('Request not found'));
+            return back();
+        }
+
+        if ($categoryRequest->status != 'pending') {
+            Toastr::error(translate('This request has already been processed'));
+            return back();
+        }
+
+        if ($request['status'] == 'deny') {
+            $categoryRequest->update(['status' => 'denied', 'admin_note' => $request['admin_note'] ?? null]);
+            Toastr::success(translate('Category request denied'));
+            return back();
+        }
+
+        $provider = $categoryRequest->provider;
+        $requestedSubIds = array_values(array_filter((array) ($categoryRequest->requested_sub_category_ids ?? [])));
+
+        // exclusivity: same zone me kisi aur provider ke paas requested sub nahi hona chahiye
+        if (!empty($requestedSubIds)) {
+            $taken = $this->subscribedService
+                ->whereIn('sub_category_id', $requestedSubIds)
+                ->where('zone_id', $provider->zone_id)
+                ->where('provider_id', '!=', $provider->id)
+                ->with('provider:id,company_name,contact_person_name', 'sub_category:id,name')
+                ->first();
+
+            if ($taken) {
+                $ownerName = $taken->provider?->contact_person_name ?: $taken->provider?->company_name ?: translate('another provider');
+                Toastr::error(translate('This sub-category is already assigned to') . ' "' . $ownerName . '"'
+                    . ($taken->sub_category?->name ? ' (' . $taken->sub_category->name . ')' : ''));
+                return back();
+            }
+        }
+
+        DB::beginTransaction();
+        try {
+            $this->subscribedService
+                ->where('provider_id', $provider->id)
+                ->when($provider->zone_id, function ($query) use ($provider) {
+                    $query->where('zone_id', $provider->zone_id);
+                })
+                ->delete();
+
+            foreach ($requestedSubIds as $subCategoryId) {
+                $subCategory = $this->category->find($subCategoryId);
+                if (!$subCategory) {
+                    continue;
+                }
+
+                $this->subscribedService->create([
+                    'provider_id' => $provider->id,
+                    'sub_category_id' => $subCategoryId,
+                    'category_id' => $subCategory->parent_id,
+                    'zone_id' => $provider->zone_id,
+                    'assign_type' => 'specific',
+                    'is_subscribed' => 1,
+                ]);
+            }
+
+            $provider->category_assignment_mode = empty($requestedSubIds) ? 0 : 1;
+            $provider->assigned_main_category_id = $requestedSubIds
+                ? $this->category->find($requestedSubIds[0])->parent_id ?? null
+                : null;
+            $provider->save();
+
+            $categoryRequest->update(['status' => 'approved', 'admin_note' => $request['admin_note'] ?? null]);
+            DB::commit();
+            Toastr::success(translate('Category assignment applied successfully'));
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            Toastr::error(translate('something_went_wrong'));
+        }
+
+        return back();
+    }
+
+    /**
+     * Provider list ke "View" button ke liye poora stats popup.
+     * GET admin/provider/view-stats/{id}
+     */
+    public function viewStats($id): View|Factory|Application
+    {
+        $this->authorize('provider_view');
+
+        $provider = $this->provider->with('owner.account')->withCount(['subscribed_services', 'bookings'])->find($id);
+
+        if (!$provider) {
+            abort(404);
+        }
+
+        $bookingOverview = DB::table('bookings')->where('provider_id', $id)
+            ->select('booking_status', DB::raw('count(*) as total'))
+            ->groupBy('booking_status')->get()->pluck('total', 'booking_status');
+
+        $monthBookings = DB::table('bookings')
+            ->where('provider_id', $id)
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->select('booking_status', DB::raw('count(*) as total'))
+            ->groupBy('booking_status')->get()->pluck('total', 'booking_status');
+
+        $monthEarning = (float) DB::table('bookings')
+            ->where('provider_id', $id)
+            ->where('booking_status', 'completed')
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->sum('total_booking_amount');
+
+        $servicemen = $this->serviceman->with('user:id,first_name,last_name,phone,is_active')
+            ->where('provider_id', $id)
+            ->latest()
+            ->get();
+
+        $account = $provider->owner?->account;
+        $totalEarning = (float) (($account->received_balance ?? 0) + ($account->total_withdrawn ?? 0));
+
+        $stats = [
+            'total_bookings' => (int) $provider->bookings_count,
+            'completed' => (int) ($bookingOverview['completed'] ?? 0),
+            'canceled' => (int) ($bookingOverview['canceled'] ?? 0),
+            'hold' => (int) (($bookingOverview['pending'] ?? 0) + ($bookingOverview['accepted'] ?? 0)),
+            'ongoing' => (int) ($bookingOverview['ongoing'] ?? 0),
+            'month_completed' => (int) ($monthBookings['completed'] ?? 0),
+            'month_canceled' => (int) ($monthBookings['canceled'] ?? 0),
+            'month_hold' => (int) (($monthBookings['pending'] ?? 0) + ($monthBookings['accepted'] ?? 0)),
+            'month_earning' => $monthEarning,
+            'total_earning' => $totalEarning,
+            'serviceman_total' => $servicemen->count(),
+            'serviceman_active' => $servicemen->filter(fn ($item) => $item->user?->is_active == 1)->count(),
+            'sub_categories' => (int) $provider->subscribed_services_count,
+        ];
+
+        return view('providermanagement::admin.provider.view-stats', compact('provider', 'stats', 'servicemen'));
     }
 
     /**
@@ -173,7 +339,146 @@ class ProviderController extends Controller
         $formattedPackages = $subscriptionPackages->map(function ($subscriptionPackage) {
             return formatSubscriptionPackage($subscriptionPackage, PACKAGE_FEATURES);
         });
-        return view('providermanagement::admin.provider.create', compact('zones','commission','subscription','formattedPackages', 'duration', 'freeTrialStatus'));
+
+        // Get main categories and sub-categories for category assignment
+        $mainCategories = $this->category->ofType('main')->ofStatus(1)->get();
+        $subCategories = $this->category->ofType('sub')->ofStatus(1)->get();
+
+        return view('providermanagement::admin.provider.create', compact('zones','commission','subscription','formattedPackages', 'duration', 'freeTrialStatus', 'mainCategories', 'subCategories'));
+    }
+
+    /**
+     * Exclusivity pre-check: ek zone me ek sub-category sirf ek provider ko.
+     * MySQL unique index tak pahunchne se PEHLE check karte hain, warna
+     * QueryException -> 500 page aata tha. Conflict par friendly message,
+     * koi conflict nahi to NULL.
+     *
+     * complete main liya = uske SAARE children free hone chahiye
+     * specific sub liya = woh sub free hona chahiye
+     *
+     * @param  string|null  $excludeProviderId  update me khud ko exclude karne ke liye
+     */
+    private function categoryAssignmentConflictError(Request $request, ?string $excludeProviderId = null): ?string
+    {
+        $zoneId = $request->input('zone_id');
+        if (!$zoneId) {
+            return null;
+        }
+
+        $completeMains = $this->normalizeUuidList($request->input('complete_main_category_ids'));
+        $specificSubs = $this->normalizeUuidList($request->input('sub_category_ids'));
+
+        if (empty($completeMains) && empty($specificSubs)) {
+            return null;
+        }
+
+        // complete main = uske saare children ko cover karte hain
+        $candidateSubIds = [];
+        if (!empty($completeMains)) {
+            $candidateSubIds = $this->category->whereIn('parent_id', $completeMains)->pluck('id')->all();
+        }
+        $candidateSubIds = array_values(array_unique(array_merge($candidateSubIds, $specificSubs)));
+
+        if (empty($candidateSubIds)) {
+            return null;
+        }
+
+        // Kisi aur provider ne inme se koi sub already le rakha hai (same zone)
+        $takenSub = $this->subscribedService
+            ->whereIn('sub_category_id', $candidateSubIds)
+            ->where('zone_id', $zoneId)
+            ->when($excludeProviderId, function ($query) use ($excludeProviderId) {
+                $query->where('provider_id', '!=', $excludeProviderId);
+            })
+            ->with('provider:id,company_name,contact_person_name', 'sub_category:id,name')
+            ->first();
+
+        if ($takenSub) {
+            $owner = $takenSub->provider;
+            $ownerName = $owner?->contact_person_name ?: $owner?->company_name ?: translate('another provider');
+            $subName = $takenSub->sub_category?->name ?: '';
+
+            return translate('This sub-category is already assigned to')
+                . ' "' . $ownerName . '"'
+                . ($subName ? ' (' . $subName . ')' : '')
+                . ' ' . translate('in the same zone') . '.';
+        }
+
+        return null;
+    }
+
+    /**
+     * UI se aaye uuid arrays ko clean karta hai (null/''/duplicate hatake).
+     */
+    private function normalizeUuidList($value): array
+    {
+        return array_values(array_unique(array_filter((array) $value, function ($item) {
+            return is_string($item) && $item !== '';
+        })));
+    }
+
+    /**
+     * Naya assignment likhta hai:
+     *  - purani rows DELETE (slot free, warna unique index block karta rahega)
+     *  - complete mains -> har main ke saare children rows (assign_type=complete)
+     *  - specific subs  -> single row (assign_type=specific)
+     * Duplicate (jo complete main ke children me already aa chuke) skip hote hain.
+     */
+    private function saveCategoryAssignment($provider, Request $request): void
+    {
+        $completeMains = $this->normalizeUuidList($request->input('complete_main_category_ids'));
+        $specificSubs = $this->normalizeUuidList($request->input('sub_category_ids'));
+
+        $this->subscribedService
+            ->where('provider_id', $provider->id)
+            ->when($provider->zone_id, function ($query) use ($provider) {
+                $query->where('zone_id', $provider->zone_id);
+            })
+            ->delete();
+
+        $coveredChildIds = [];
+
+        foreach ($completeMains as $mainCategoryId) {
+            if (!$this->category->find($mainCategoryId)) {
+                continue;
+            }
+
+            foreach ($this->category->where('parent_id', $mainCategoryId)->pluck('id') as $childId) {
+                $this->subscribedService->create([
+                    'provider_id'    => $provider->id,
+                    'sub_category_id' => $childId,
+                    'category_id'    => $mainCategoryId,
+                    'zone_id'        => $provider->zone_id,
+                    'assign_type'    => 'complete',
+                    'is_subscribed'  => 1,
+                ]);
+                $coveredChildIds[] = $childId;
+            }
+        }
+
+        foreach ($specificSubs as $subCategoryId) {
+            if (in_array($subCategoryId, $coveredChildIds, true)) {
+                continue;
+            }
+
+            $subCategory = $this->category->find($subCategoryId);
+            if (!$subCategory) {
+                continue;
+            }
+
+            $this->subscribedService->create([
+                'provider_id'    => $provider->id,
+                'sub_category_id' => $subCategoryId,
+                'category_id'    => $subCategory->parent_id,
+                'zone_id'        => $provider->zone_id,
+                'assign_type'    => 'specific',
+                'is_subscribed'  => 1,
+            ]);
+        }
+
+        // backward-compat columns (koi purana code/padhe to toote na)
+        $provider->category_assignment_mode = empty($completeMains) ? 0 : 1;
+        $provider->assigned_main_category_id = $completeMains[0] ?? null;
     }
 
     /**
@@ -215,7 +520,36 @@ class ProviderController extends Controller
             'longitude' => 'required',
 
             'zone_id' => 'required|uuid',
+
+            'independent_mode' => 'nullable|in:0,1',
+            'admin_commission_percent' => 'nullable|numeric|min:0|max:100',
+            'provider_commission_percent' => 'nullable|numeric|min:0|max:100',
+            'platform_fee_amount' => 'nullable|numeric|min:0',
+            'platform_fee_label' => 'nullable|string|max:191',
+            'tax_percent' => 'nullable|numeric|min:0|max:100',
+            'booking_fee' => 'nullable|numeric|min:0',
+            'allowed_payment_methods' => 'nullable|array',
+            'allowed_payment_methods.*' => 'string|max:191',
+
+            'complete_main_category_ids' => 'nullable|array',
+            'complete_main_category_ids.*' => 'exists:categories,id',
+            'sub_category_ids' => 'nullable|array',
+            'sub_category_ids.*' => 'exists:categories,id',
         ]);
+
+        // Provider ko kam se kam ek category deni hi padegi (warna booking hi nahi aayegi)
+        if (empty($this->normalizeUuidList($request->input('complete_main_category_ids')))
+            && empty($this->normalizeUuidList($request->input('sub_category_ids')))) {
+            Toastr::error(translate('Please select at least one main category or sub-category'));
+            return back()->withInput();
+        }
+
+        // Exclusivity: unique index pe chadhne se pehle roko (warna 500 aata tha)
+        $categoryConflict = $this->categoryAssignmentConflictError($request);
+        if ($categoryConflict !== null) {
+            Toastr::error($categoryConflict);
+            return back()->withInput();
+        }
 
 
         if ($request->plan_type == 'subscription_based'){
@@ -251,6 +585,15 @@ class ProviderController extends Controller
         $provider->contact_person_email = $request->contact_person_email;
         $provider->is_approved = 1;
         $provider->is_active = 1;
+        $provider->subscription_required = $request->has('subscription_required') ? 0 : 1;
+        $provider->independent_mode = $request->has('independent_mode') ? 1 : 0;
+        $provider->admin_commission_percent = (float) $request->input('admin_commission_percent', 0);
+        $provider->provider_commission_percent = (float) $request->input('provider_commission_percent', 0);
+        $provider->platform_fee_amount = (float) $request->input('platform_fee_amount', 0);
+        $provider->platform_fee_label = $request->input('platform_fee_label');
+        $provider->tax_percent = $request->filled('tax_percent') ? (float) $request->input('tax_percent') : null;
+        $provider->booking_fee = (float) $request->input('booking_fee', 0);
+        $provider->allowed_payment_methods = json_encode(array_values(array_filter((array) $request->input('allowed_payment_methods', []))));
         $provider->zone_id = $request['zone_id'];
         $provider->coordinates = ['latitude' => $request['latitude'], 'longitude' => $request['longitude']];
 
@@ -280,6 +623,10 @@ class ProviderController extends Controller
                 'mode'          => 'live',
                 'is_active'     => 1,
             ]);
+
+            // Category assignment: purani rows delete + nayi likho
+            $this->saveCategoryAssignment($provider, $request);
+            $provider->save();
         });
 
         $emailStatus = business_config('email_config_status', 'email_config')->live_values;
@@ -487,7 +834,7 @@ class ProviderController extends Controller
             $provider = $this->provider->where('id', $id)->first();
             $providerId = $provider->id;
             $subscriptionStatus = (int)((business_config('provider_subscription', 'provider_config'))->live_values);
-            $commission = $provider->commission_status == 1 ? $provider->commission_percentage : (business_config('default_commission', 'business_information'))->live_values;
+            $commission = providerCommissionPercentage($provider);
             $subscriptionDetails = $this->packageSubscriber->where('provider_id', $id)->first();
 
             if ($subscriptionDetails){
@@ -572,8 +919,8 @@ class ProviderController extends Controller
      */
     public function updateSubscription($id): JsonResponse
     {
-        $subscribedService = $this->subscribedService->find($id);
-        $this->subscribedService->where('id', $id)->update(['is_subscribed' => !$subscribedService->is_subscribed]);
+        // row existence = assignment -> toggle-off par DELETE (slot free)
+        $this->subscribedService->find($id)?->delete();
 
         return response()->json(response_formatter(DEFAULT_STATUS_UPDATE_200), 200);
     }
@@ -589,7 +936,7 @@ class ProviderController extends Controller
         $this->authorize('provider_update');
 
         $zones = $this->zone->ofStatus(1)->get();
-        $provider = $this->provider->with(['owner', 'zone'])->find($id);
+        $provider = $this->provider->with(['owner', 'zone', 'assignedMainCategory'])->find($id);
         $commission = (int)((business_config('provider_commision', 'provider_config'))->live_values ?? null);
         $subscription = (int)((business_config('provider_subscription', 'provider_config'))->live_values ?? null);
         $duration = (int)((business_config('free_trial_period', 'subscription_Setting'))->live_values ?? null);
@@ -599,7 +946,12 @@ class ProviderController extends Controller
             return formatSubscriptionPackage($subscriptionPackage, PACKAGE_FEATURES);
         });
         $packageSubscription = $this->packageSubscriber->where('provider_id', $id)->first();
-        return view('providermanagement::admin.provider.edit', compact('provider', 'zones', 'commission','subscription','formattedPackages', 'duration', 'freeTrialStatus', 'packageSubscription'));
+
+        // Get main categories and sub-categories for category assignment
+        $mainCategories = $this->category->ofType('main')->ofStatus(1)->get();
+        $subCategories = $this->category->ofType('sub')->ofStatus(1)->get();
+
+        return view('providermanagement::admin.provider.edit', compact('provider', 'zones', 'commission','subscription','formattedPackages', 'duration', 'freeTrialStatus', 'packageSubscription', 'mainCategories', 'subCategories'));
     }
 
 
@@ -642,8 +994,37 @@ class ProviderController extends Controller
             'latitude' => 'required',
             'longitude' => 'required',
 
-            'zone_id' => 'required|uuid'
+            'zone_id' => 'required|uuid',
+
+            'independent_mode' => 'nullable|in:0,1',
+            'admin_commission_percent' => 'nullable|numeric|min:0|max:100',
+            'provider_commission_percent' => 'nullable|numeric|min:0|max:100',
+            'platform_fee_amount' => 'nullable|numeric|min:0',
+            'platform_fee_label' => 'nullable|string|max:191',
+            'tax_percent' => 'nullable|numeric|min:0|max:100',
+            'booking_fee' => 'nullable|numeric|min:0',
+            'allowed_payment_methods' => 'nullable|array',
+            'allowed_payment_methods.*' => 'string|max:191',
+
+            'complete_main_category_ids' => 'nullable|array',
+            'complete_main_category_ids.*' => 'exists:categories,id',
+            'sub_category_ids' => 'nullable|array',
+            'sub_category_ids.*' => 'exists:categories,id',
         ])->validate();
+
+        // Provider ko kam se kam ek category deni hi padegi (warna booking hi nahi aayegi)
+        if (empty($this->normalizeUuidList($request->input('complete_main_category_ids')))
+            && empty($this->normalizeUuidList($request->input('sub_category_ids')))) {
+            Toastr::error(translate('Please select at least one main category or sub-category'));
+            return back()->withInput();
+        }
+
+        // Exclusivity: unique index pe chadhne se pehle roko (warna 500 aata tha)
+        $categoryConflict = $this->categoryAssignmentConflictError($request, $provider->id);
+        if ($categoryConflict !== null) {
+            Toastr::error($categoryConflict);
+            return back()->withInput();
+        }
 
         if (User::where('email', $request['company_email'])->where('id', '!=', $provider->user_id)->exists()) {
             Toastr::error(translate('Email already taken'));
@@ -686,6 +1067,19 @@ class ProviderController extends Controller
         $provider->contact_person_name = $request->contact_person_name;
         $provider->contact_person_phone = $request->contact_person_phone;
         $provider->contact_person_email = $request->contact_person_email;
+        $provider->subscription_required = $request->has('subscription_required') ? 0 : 1;
+        $provider->independent_mode = $request->has('independent_mode') ? 1 : 0;
+        $provider->admin_commission_percent = (float) $request->input('admin_commission_percent', 0);
+        $provider->provider_commission_percent = (float) $request->input('provider_commission_percent', 0);
+        $provider->platform_fee_amount = (float) $request->input('platform_fee_amount', 0);
+        $provider->platform_fee_label = $request->input('platform_fee_label');
+        $provider->tax_percent = $request->filled('tax_percent') ? (float) $request->input('tax_percent') : null;
+        $provider->booking_fee = (float) $request->input('booking_fee', 0);
+        $provider->allowed_payment_methods = json_encode(array_values(array_filter((array) $request->input('allowed_payment_methods', []))));
+        // Step 6: Service Permission (checkbox present = on, missing = off)
+        $provider->allow_service_create = $request->has('allow_service_create') ? 1 : 0;
+        $provider->allow_service_edit = $request->has('allow_service_edit') ? 1 : 0;
+        $provider->service_approval_required = $request->has('service_approval_required') ? 1 : 0;
         $provider->zone_id = $request['zone_id'];
         $provider->coordinates = ['latitude' => $request['latitude'], 'longitude' => $request['longitude']];
 
@@ -720,6 +1114,10 @@ class ProviderController extends Controller
         DB::transaction(function () use ($provider, $owner, $request) {
             $owner->save();
             $owner->zones()->sync($request->zone_id);
+            $provider->save();
+
+            // Category assignment: purani rows delete + nayi likho
+            $this->saveCategoryAssignment($provider, $request);
             $provider->save();
         });
 

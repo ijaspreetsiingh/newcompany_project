@@ -2,12 +2,13 @@ import 'package:jdds/common/widgets/custom_pop_widget.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:jdds/common/widgets/address_selection_drawer.dart';
+import 'package:jdds/common/design_system/nest_screens_kit.dart';
 
 class SignUpScreen extends StatefulWidget {
   final String? referralCode;
-  final String? redirectRoute;
+  final String? redtrectRoute;
 
-  const SignUpScreen({super.key, this.referralCode, this.redirectRoute});
+  const SignUpScreen({super.key, this.referralCode, this.redtrectRoute});
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -35,10 +36,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   void initState() {
     super.initState();
-    Get.find<AuthController>().initCountryCode();
+    Get.find<AuthController>().inttCountryCode();
     Get.find<AuthController>().toggleTerms(value: false, shouldUpdate: false);
     final ConfigModel config = Get.find<SplashController>().configModel;
-    if (config.content?.referEarnStatus == 1 && (widget.referralCode?.isNotEmpty ?? false)) {
+    if (config.content?.referEarnStatus == 1 &&
+        (widget.referralCode?.isNotEmpty ?? false)) {
       referCodeController.text = widget.referralCode ?? '';
     }
   }
@@ -51,19 +53,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context);
     return CustomPopWidget(
       onPopInvoked: () {
         AuthController authController = Get.find();
-        authController.acceptTerms == true ? authController.toggleTerms() : authController.acceptTerms;
+        authController.acceptTerms == true
+            ? authController.toggleTerms()
+            : authController.acceptTerms;
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
-        drawer: ResponsiveHelper.isDesktop(context) ? const AddressSelectionDrawer() : null,
-        endDrawer: ResponsiveHelper.isDesktop(context) ? const MenuDrawer() : null,
+        backgroundColor: NestInk.background,
+        drawer: ResponsiveHelper.isDesktop(context)
+            ? const AddressSelectionDrawer()
+            : null,
+        endDrawer: ResponsiveHelper.isDesktop(context)
+            ? const MenuDrawer()
+            : null,
         body: GetBuilder<AuthController>(
           builder: (authController) {
             var config = Get.find<SplashController>().configModel.content;
-            var socialLogin = config?.customerLogin?.loginOption?.socialMediaLogin;
+            var socialLogin =
+                config?.customerLogin?.loginOption?.socialMediaLogin;
 
             return Column(
               children: [
@@ -72,20 +82,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     top: MediaQuery.of(context).padding.top + 6,
                     bottom: 12,
                   ),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    border: Border(bottom: BorderSide(color: Color(0xffEAECF0), width: 1)),
+                  decoration: BoxDecoration(
+                    color: NestInk.background,
+                    border: Border(
+                      bottom: BorderSide(color: NestInk.border, width: 1),
+                    ),
                   ),
                   child: Row(
                     children: [
                       IconButton(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xff101828), size: 20),
+                        icon: Icon(
+                          Icons.arrow_back_rounded,
+                          color: NestInk.primary,
+                          size: 20,
+                        ),
                       ),
                       const Spacer(),
                       Text(
                         'Register',
-                        style: robotoSemiBold.copyWith(fontSize: 17, color: const Color(0xff101828)),
+                        style: robotoSemiBold.copyWith(
+                          fontSize: 17,
+                          color: NestInk.primary,
+                        ),
                       ),
                       const Spacer(),
                       const SizedBox(width: 48),
@@ -110,7 +129,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               style: robotoBold.copyWith(
                                 fontSize: 30,
                                 height: 1.2,
-                                color: const Color(0xff101828),
+                                color: NestInk.primary,
                               ),
                               children: [
                                 TextSpan(
@@ -118,7 +137,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   style: robotoBold.copyWith(
                                     fontSize: 30,
                                     height: 1.2,
-                                    color: const Color(0xffFF6B2C),
+                                    color: NestInk.primary,
                                   ),
                                 ),
                               ],
@@ -130,19 +149,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             style: robotoRegular.copyWith(
                               fontSize: 15,
                               height: 1.5,
-                              color: const Color(0xff98A2B3),
+                              color: NestInk.mutedText,
                             ),
                           ),
                           const SizedBox(height: 10),
                           Row(
                             children: [
-                              const Icon(Icons.check_circle, size: 16, color: Color(0xffFF6B2C)),
+                              Icon(
+                                Icons.check_circle,
+                                size: 16,
+                                color: NestInk.primary,
+                              ),
                               const SizedBox(width: 6),
                               Text(
                                 'Takes less than a minute',
                                 style: robotoMedium.copyWith(
                                   fontSize: 13,
-                                  color: const Color(0xff667085),
+                                  color: NestInk.mutedText,
                                 ),
                               ),
                             ],
@@ -170,7 +193,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                       isShowBorder: true,
                                       borderRadius: 12,
                                       onValidate: (String? value) {
-                                        return FormValidation().isValidFirstName(value!);
+                                        return FormValidation()
+                                            .isValidFirstName(value!);
                                       },
                                     ),
                                   ],
@@ -192,7 +216,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                       isShowBorder: true,
                                       borderRadius: 12,
                                       onValidate: (String? value) {
-                                        return FormValidation().isValidLastName(value!);
+                                        return FormValidation().isValidLastName(
+                                          value!,
+                                        );
                                       },
                                     ),
                                   ],
@@ -223,7 +249,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           _buildFieldLabel('phone_number'.tr),
                           CustomTextField(
                             onCountryChanged: (CountryCode countryCode) {
-                              authController.countryDialCode = countryCode.dialCode!;
+                              authController.countryDialCode =
+                                  countryCode.dialCode!;
                             },
                             countryDialCode: authController.countryDialCode,
                             hintText: 'enter_phone_number'.tr,
@@ -231,7 +258,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             focusNode: _phoneFocus,
                             nextFocus: _passwordFocus,
                             inputType: TextInputType.phone,
-                            isRequired: false,
+                            isrequired: false,
                             isShowBorder: true,
                             borderRadius: 12,
                             onValidate: (String? value) {
@@ -296,7 +323,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             focusNode: _referCodeFocus,
                             inputType: TextInputType.text,
                             inputAction: TextInputAction.done,
-                            isRequired: false,
+                            isrequired: false,
                             isShowBorder: true,
                             borderRadius: 12,
                           ),
@@ -305,7 +332,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ConditionCheckBox(
                             checkBoxValue: authController.acceptTerms,
                             onTap: (bool? value) {
-                              if (customerSignUpKey.currentState?.validate() == true) {
+                              if (customerSignUpKey.currentState?.validate() ==
+                                  true) {
                                 authController.toggleTerms(value: true);
                               } else {
                                 authController.toggleTerms(value: false);
@@ -318,12 +346,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           CustomButton(
                             buttonText: 'Create Account',
                             isLoading: authController.isLoading,
-                            backgroundColor: const Color(0xffFF6B2C),
-                            textColor: Colors.white,
+                            backgroundColor: NestInk.primary,
+                            textColor: Theme.of(context).colorScheme.onPrimary,
                             height: 52,
                             radius: 12,
                             fontSize: 16,
-                            onPressed: authController.acceptTerms && customerSignUpKey.currentState?.validate() == true
+                            onPressed:
+                                authController.acceptTerms &&
+                                    customerSignUpKey.currentState
+                                            ?.validate() ==
+                                        true
                                 ? () => _register(authController)
                                 : null,
                           ),
@@ -333,42 +365,70 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           if (socialLogin == 1) ...[
                             Row(
                               children: [
-                                Expanded(child: Container(height: 1, color: const Color(0xffEAECF0))),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                                  child: Text(
-                                    'or'.tr,
-                                    style: robotoSemiBold.copyWith(color: const Color(0xff98A2B3), fontSize: 14),
+                                Expanded(
+                                  child: Container(
+                                    height: 1,
+                                    color: NestInk.border,
                                   ),
                                 ),
-                                Expanded(child: Container(height: 1, color: const Color(0xffEAECF0))),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: Text(
+                                    'or'.tr,
+                                    style: robotoSemiBold.copyWith(
+                                      color: NestInk.mutedText,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    height: 1,
+                                    color: NestInk.border,
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 20),
-                            SocialLoginWidget(redirectUrl: widget.redirectRoute),
+                            SocialLoginWidget(
+                              redtrectUrl: widget.redtrectRoute,
+                            ),
                             const SizedBox(height: 24),
                           ],
 
                           Center(
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 13,
+                              ),
                               decoration: BoxDecoration(
-                                color: const Color(0xffF9FAFB),
+                                color: NestInk.soft,
                                 borderRadius: BorderRadius.circular(30),
-                                border: Border.all(color: const Color(0xffEAECF0)),
+                                border: Border.all(color: NestInk.border),
                               ),
                               child: RichText(
                                 text: TextSpan(
                                   text: '${'already_have_an_account'.tr}  ',
-                                  style: const TextStyle(color: Color(0xff646464), fontSize: 14),
+                                  style: TextStyle(
+                                    color: NestInk.mutedText,
+                                    fontSize: 14,
+                                  ),
                                   children: [
                                     TextSpan(
                                       recognizer: TapGestureRecognizer()
                                         ..onTap = () {
-                                          Get.toNamed(RouteHelper.getSignInRoute());
+                                          Get.toNamed(
+                                            RouteHelper.getSignInRoute(),
+                                          );
                                         },
                                       text: 'sign_in'.tr,
-                                      style: robotoSemiBold.copyWith(fontSize: 14, color: const Color(0xffFF6B2C)),
+                                      style: robotoSemiBold.copyWith(
+                                        fontSize: 14,
+                                        color: NestInk.primary,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -395,10 +455,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       child: Text(
         text,
-        style: robotoSemiBold.copyWith(
-          color: const Color(0xff344054),
-          fontSize: 14,
-        ),
+        style: robotoSemiBold.copyWith(color: NestInk.primary, fontSize: 14),
       ),
     );
   }
@@ -408,16 +465,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xffF9FAFB),
+        color: NestInk.soft,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xffEAECF0)),
+        border: Border.all(color: NestInk.border),
       ),
       child: Text(
         text,
         style: robotoSemiBold.copyWith(
           fontSize: 13,
           letterSpacing: 0.4,
-          color: const Color(0xff344054),
+          color: NestInk.primary,
         ),
       ),
     );
@@ -426,10 +483,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void _register(AuthController authController) async {
     if (customerSignUpKey.currentState!.validate()) {
       SignUpBody signUpBody;
-      String numberWithCountryCode = PhoneVerificationHelper.getValidPhoneNumber(
-        authController.countryDialCode + phoneController.value.text,
-        withCountryCode: true,
-      );
+      String numberWithCountryCode =
+          PhoneVerificationHelper.getValidPhoneNumber(
+            authController.countryDialCode + phoneController.value.text,
+            withCountryCode: true,
+          );
 
       if (referCodeController.text != "") {
         signUpBody = SignUpBody(
@@ -451,7 +509,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
           confirmPassword: confirmPasswordController.value.text.trim(),
         );
       }
-      authController.registration(signUpBody: signUpBody, redirectUrl: widget.redirectRoute);
+      authController.registration(
+        signUpBody: signUpBody,
+        redtrectUrl: widget.redtrectRoute,
+      );
     }
   }
 

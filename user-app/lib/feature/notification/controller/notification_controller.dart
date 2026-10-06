@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 
 class NotificationController extends GetxController implements GetxService{
@@ -17,6 +17,11 @@ class NotificationController extends GetxController implements GetxService{
   int _offset = 1;
   int get offset => _offset;
   final ScrollController scrollController = ScrollController();
+
+  /// nest. "Read all" â€” marks every notification as seen (clears badge)
+  void markAllAsRead(int total) {
+    notificationRepo.saveSeenNotificationCount(total);
+  }
 
 
 
@@ -61,3 +66,6 @@ class NotificationController extends GetxController implements GetxService{
     update();
   }
 }
+
+
+

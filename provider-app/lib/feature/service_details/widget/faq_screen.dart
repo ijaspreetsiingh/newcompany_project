@@ -19,7 +19,7 @@ class FaqScreen extends StatelessWidget {
           itemBuilder: (context, index) {
             return CustomExpansionTile(
 
-              collapsedTextColor: dark.colorScheme.surface,
+              collapsedTextColor: Theme.of(context).textTheme.bodyLarge?.color ?? InkColors.foreground,
               title: Text(faqList![index].question??"",
                   style: robotoRegular.copyWith(
                       fontSize: Dimensions.fontSizeDefault,

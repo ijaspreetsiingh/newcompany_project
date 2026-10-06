@@ -1,6 +1,5 @@
 import 'package:get/get.dart';
 import 'package:demandium_serviceman/utils/core_export.dart';
-import 'package:demandium_serviceman/feature/booking_details/model/booking_details_model.dart';
 
 /// AUTO-ASSIGN: serviceman incoming booking popup ka countdown timer controller.
 /// Backend se remaining seconds lekar countdown chalata hai,
@@ -19,6 +18,7 @@ class BookingTimerController extends GetxController implements GetxService {
   String? _bookingId;
   BookingDetailsContent? _bookingDetails;
   BookingContent? _bookingContent;
+  List<dynamic> _team = [];
 
   int get remainingSeconds => _remainingSeconds;
   bool get isLoading => _isLoading;
@@ -27,6 +27,7 @@ class BookingTimerController extends GetxController implements GetxService {
   bool get rejected => _rejected;
   String? get bookingId => _bookingId;
   BookingDetailsContent? get bookingDetails => _bookingDetails;
+  List<dynamic> get team => _team;
 
   Future<void> startTimer(String bookingId) async {
     _bookingId = bookingId;
@@ -38,11 +39,19 @@ class BookingTimerController extends GetxController implements GetxService {
     if (response.statusCode == 200) {
       _bookingContent = BookingDetailsModel.fromJson(response.body).bookingContent;
       _bookingDetails = _bookingContent?.bookingDetailsContent;
+
+      // backend se apna accept deadline lo (provider wait_time ke hisab se seconds)
+      final dynamic content = response.body['content'];
+      if (content is Map) {
+        _remainingSeconds = (num.tryParse(content['accept_remaining_seconds']?.toString() ?? '0') ?? 0).round();
+        if (content['team'] is List) {
+          _team = content['team'];
+        }
+      }
     }
     _isLoading = false;
 
-    // serviceman ke liye fixed 30 sec timer (plan ke according)
-    _remainingSeconds = 30;
+    // remaining = 0 ka matlab deadline already over -> pehla tick hi expire karega
 
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {

@@ -124,6 +124,8 @@ class ZoneController extends Controller
             'name' => 'required|unique:zones|max:191',
             'name.0' => 'required',
             'coordinates' => 'required',
+            'provider_search_radius' => 'required|numeric|min:1|max:100',
+            'max_search_radius' => 'required|numeric|min:1|max:100|gte:provider_search_radius',
         ],
         [
             'name.0.required' => translate('default_name_is_required'),
@@ -143,6 +145,8 @@ class ZoneController extends Controller
             $zone = $this->zone;
             $zone->name = $request->name[array_search('default', $request->lang)];
             $zone->coordinates = new Polygon([new LineString($polygon)]);
+            $zone->provider_search_radius = $request->provider_search_radius;
+            $zone->max_search_radius = $request->max_search_radius;
             $zone->save();
 
             $defaultLang = str_replace('_', '-', app()->getLocale());
@@ -262,6 +266,8 @@ class ZoneController extends Controller
             'name' => 'required',
             'name.0' => 'required',
             'coordinates' => 'required',
+            'provider_search_radius' => 'required|numeric|min:1|max:100',
+            'max_search_radius' => 'required|numeric|min:1|max:100|gte:provider_search_radius',
         ],
         [
             'name.0.required' => translate('default_name_is_required'),
@@ -286,6 +292,8 @@ class ZoneController extends Controller
 
         $zone->name = $request->name[array_search('default', $request->lang)];
         $zone->coordinates = new Polygon([new LineString($polygon)]);
+        $zone->provider_search_radius = $request->provider_search_radius;
+        $zone->max_search_radius = $request->max_search_radius;
         $zone->save();
 
         $defaultLang = str_replace('_', '-', app()->getLocale());

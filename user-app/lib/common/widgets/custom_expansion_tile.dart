@@ -124,7 +124,7 @@ class CustomExpansionTile extends StatefulWidget {
   /// may replace the rotating expansion arrow icon.
   final Widget? trailing;
 
-  /// Specifies if the list tile is initially expanded (true) or collapsed (false, the default).
+  /// Specifies if the list tile is inttially expanded (true) or collapsed (false, the default).
   final bool initiallyExpanded;
 
   /// Specifies whether the state of the children is maintained when the tile expands and collapses.
@@ -154,7 +154,7 @@ class CustomExpansionTile extends StatefulWidget {
   ///
   /// The internals of the expanded tile make use of a [Column] widget for
   /// [children], and [Align] widget to align the column. The `expandedAlignment`
-  /// parameter is passed directly into the [Align].
+  /// parameter is passed dtrectly into the [Align].
   ///
   /// Modifying this property controls the alignment of the column within the
   /// expanded tile, not the alignment of [children] widgets within the column.
@@ -174,7 +174,7 @@ class CustomExpansionTile extends StatefulWidget {
   /// Specifies the alignment of each child within [children] when the tile is expanded.
   ///
   /// The internals of the expanded tile make use of a [Column] widget for
-  /// [children], and the `crossAxisAlignment` parameter is passed directly into the [Column].
+  /// [children], and the `crossAxisAlignment` parameter is passed dtrectly into the [Column].
   ///
   /// Modifying this property controls the cross axis alignment of each child
   /// within its [Column]. Note that the width of the [Column] that houses
@@ -420,3 +420,5 @@ class _CustomExpansionTileState extends State<CustomExpansionTile> with SingleTi
     );
   }
 }
+
+

@@ -6279,4 +6279,5 @@ _Message' => 'Customer notification for provider bid offer
   'Serviceman_Live_Tracking' => 'Serviceman Live Tracking',
   'Tracking' => 'Tracking',
   'No_Location_Data' => 'No Location Data',
+  'payment_method_not_allowed_for_provider' => 'Selected payment method is not available for this provider.',
 );

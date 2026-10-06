@@ -348,6 +348,10 @@ const COUPON_NOT_VALID_FOR_SERVICE = [
     'response_code' => 'coupon_not_valid_for_service',
     'message' => 'only applicable for chosen service'
 ];
+const COUPON_NOT_VALID_FOR_PROVIDER = [
+    'response_code' => 'coupon_not_valid_for_provider',
+    'message' => 'only applicable for chosen provider'
+];
 
 const CAMPAIGN_UPDATE_200 = [
     'response_code' => 'coupon_update_200',
@@ -501,6 +505,32 @@ const BOOKING_ALREADY_COMPLETED = [
 const BOOKING_ALREADY_EDITED = [
     'response_code' => 'booking_already_edited_200',
     'message' => 'You can not cancel this booking. Please contact with admin'
+];
+
+//booking recheck (15 din ka window)
+const RECHECK_REQUEST_SUCCESS_200 = [
+    'response_code' => 'recheck_request_success_200',
+    'message' => 'Recheck requested successfully. The serviceman will revisit this booking within 15 days.'
+];
+
+const RECHECK_ONLY_COMPLETED_400 = [
+    'response_code' => 'recheck_only_completed_400',
+    'message' => 'Recheck can only be requested for a completed booking.'
+];
+
+const RECHECK_WINDOW_CLOSED_400 = [
+    'response_code' => 'recheck_window_closed_400',
+    'message' => 'The 15 day recheck window for this booking has ended.'
+];
+
+const RECHECK_ALREADY_REQUESTED_400 = [
+    'response_code' => 'recheck_already_requested_400',
+    'message' => 'A recheck is already in progress for this booking.'
+];
+
+const RECHECK_ALREADY_CLOSED_400 = [
+    'response_code' => 'recheck_already_closed_400',
+    'message' => 'This recheck has already been closed.'
 ];
 
 

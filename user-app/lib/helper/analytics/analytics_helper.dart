@@ -7,11 +7,11 @@ import 'google_tag_manager.dart';
 
 class AnalyticsHelper {
 
-  static Future<void> init() async {
+  static Future<void> intt() async {
     if (kIsWeb) {
       return;
     }
-    await TikTokAnalyticsService.init();
+    await TikTokAnalyticsService.intt();
   }
 
   static Future<void> logAddToCart({
@@ -61,3 +61,4 @@ class AnalyticsHelper {
     }
   }
 }
+

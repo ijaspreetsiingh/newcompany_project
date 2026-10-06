@@ -80,20 +80,26 @@ class AccountController extends Controller
         $data = $promotionalCosts->where('key_name', 'coupon_cost_bearer')->first()->live_values;
         $promotionalCostPercentage['coupon'] = $data['provider_percentage'];
 
-        $transactionsCount = $this->transaction
-            ->whereIn('trx_type', ['subscription_purchase', 'subscription_renew', 'subscription_shift', 'subscription_refund'])
-            ->where('from_user_id', $provider->id)
-            ->orWhere('to_user_id', $provider->id)->count();
-        $packageSubscriber = $this->packageSubscriber->where('provider_id', $provider->id)
-            ->with('feature', 'limits', 'package', 'payment')
-            ->first();
-
+        $subscriptionRequired = (int) ($provider->subscription_required ?? 1);
         $formattedPackage = null;
         $renewal = null;
-        if ($packageSubscriber) {
-            $formattedPackage = apiPackageSubscriber($packageSubscriber, PACKAGE_FEATURES);
+        $transactionsCount = 0;
 
-            $renewal = $this->subscriptionPackage->where('id', $packageSubscriber?->subscription_package_id)->first();
+        // Provider Subscribe OFF -> subscription queries skip (fast dashboard)
+        if ($subscriptionRequired !== 0) {
+            $transactionsCount = $this->transaction
+                ->whereIn('trx_type', ['subscription_purchase', 'subscription_renew', 'subscription_shift', 'subscription_refund'])
+                ->where('from_user_id', $provider->id)
+                ->orWhere('to_user_id', $provider->id)->count();
+            $packageSubscriber = $this->packageSubscriber->where('provider_id', $provider->id)
+                ->with('feature', 'limits', 'package', 'payment')
+                ->first();
+
+            if ($packageSubscriber) {
+                $formattedPackage = apiPackageSubscriber($packageSubscriber, PACKAGE_FEATURES);
+
+                $renewal = $this->subscriptionPackage->where('id', $packageSubscriber?->subscription_package_id)->first();
+            }
         }
 
         $totalSubscription = 0;
@@ -110,7 +116,8 @@ class AccountController extends Controller
             'status' => $status,
             'subscribed_package_details' => $formattedPackage,
             'renewal_package_details' => $renewal,
-            'applicable_vat' => $vat
+            'applicable_vat' => $vat,
+            'subscription_required' => (int) ($provider->subscription_required ?? 1)
         ];
 
         return response()->json(response_formatter(DEFAULT_200, [

@@ -46,7 +46,7 @@ class CategoryController extends Controller
             return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
         }
 
-        $categories = $this->category->with(['zones'])->ofStatus(1)->ofType('main')->latest()
+        $categories = $this->category->with(['zones'])->ofStatus(1)->ofType('main')->visibleInCurrentZone()->latest()
             ->paginate($request['limit'], ['*'], 'offset', $request['offset'])->withPath('');
 
         return response()->json(response_formatter(DEFAULT_200, $categories), 200);
@@ -77,6 +77,7 @@ class CategoryController extends Controller
         }
 
         $childes = $this->category->ofStatus(1)->ofType('sub')->withoutGlobalScopes(['zone_wise_data'])
+            ->visibleInCurrentZone()
             ->withCount(['services' => function ($query) {
                 $query->where('is_active', 1);
             }])
@@ -119,6 +120,7 @@ class CategoryController extends Controller
 
         $categories = $this->category->with(['zones', 'services_by_category.variations', 'services_by_category' => function ($query) {
             $query->ofStatus(1)
+                ->visibleInCurrentZone()
                 ->where(function ($query) {
                     $query->whereDoesntHave('service_discount')
                         ->orWhereHas('service_discount');
@@ -132,6 +134,7 @@ class CategoryController extends Controller
             ->ofStatus(1)
             ->ofFeatured(1)
             ->ofType('main')
+            ->visibleInCurrentZone()
             ->latest()
             ->paginate($request['limit'], ['*'], 'offset', $request['offset'])->withPath('');
 

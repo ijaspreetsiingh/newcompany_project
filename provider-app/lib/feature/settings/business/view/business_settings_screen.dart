@@ -1,5 +1,4 @@
 import 'package:demandium_provider/feature/settings/business/widget/business_info_tab_item_widget.dart';
-import 'package:demandium_provider/helper/extension_helper.dart';
 import 'package:get/get.dart';
 import 'package:demandium_provider/util/core_export.dart';
 
@@ -25,36 +24,43 @@ class _BusinessSettingScreenState extends State<BusinessSettingScreen> {
   @override
   Widget build(BuildContext context) {
 
-    return GetBuilder<BusinessSettingController>(builder: (businessSettingController){
-      return Scaffold( backgroundColor: Theme.of(context).colorScheme.surface,
-        appBar: CustomAppBar(title: "business_settings".tr),
+    return Scaffold( backgroundColor: InkColors.background,
+      body: SafeArea(
+        bottom: false,
+        child: GetBuilder<BusinessSettingController>(builder: (businessSettingController){
+          return DefaultTabController(length: 3, initialIndex: widget.tabIndex ?? 0, child: Column(children: [
 
-        body:  SafeArea(
-          child: DefaultTabController(length: 3, initialIndex: widget.tabIndex ?? 0, child: Column(children: [
-            SizedBox(height: Dimensions.paddingSizeDefault),
+            InkTopBar(
+              title: "business_settings".tr,
+              onBack: () => Get.back(),
+              right: const InkIconButton(icon: Icons.more_horiz),
+            ),
+
+            const SizedBox(height: 16),
 
             Container(
               height: 45,
-              margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+              margin: const EdgeInsets.symmetric(horizontal: 16),
               child: TabBar(
                 isScrollable: true,
                 indicator: BoxDecoration(
                   borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
-                  color: Theme.of(context).primaryColor,
+                  color: InkColors.foreground,
                 ),
                 indicatorSize: TabBarIndicatorSize.tab,
                 labelColor: Colors.white,
-                labelStyle: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault),
+                unselectedLabelColor: InkColors.mutedForeground,
+                labelStyle: robotoSemiBold.copyWith(fontSize: Dimensions.fontSizeDefault),
                 unselectedLabelStyle: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault),
                 tabAlignment: TabAlignment.start,
                 dividerHeight: 0,
-                labelPadding: EdgeInsets.symmetric(horizontal: 10),
+                labelPadding: const EdgeInsets.symmetric(horizontal: 10),
                 splashBorderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
                 tabs: [
                   Tab(child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      color: InkColors.secondary,
                     ),
                     alignment: Alignment.center,
                     padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
@@ -64,7 +70,7 @@ class _BusinessSettingScreenState extends State<BusinessSettingScreen> {
                   Tab(child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      color: InkColors.secondary,
                     ),
                     alignment: Alignment.center,
                     child: Padding(
@@ -76,7 +82,7 @@ class _BusinessSettingScreenState extends State<BusinessSettingScreen> {
                   Tab(child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      color: InkColors.secondary,
                     ),
                     alignment: Alignment.center,
                     padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
@@ -97,10 +103,10 @@ class _BusinessSettingScreenState extends State<BusinessSettingScreen> {
             )),
 
 
-          ])),
-        ),
-      );
-    });
+          ]));
+        }),
+      ),
+    );
   }
 }
 
@@ -117,15 +123,17 @@ class SwitchButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault,vertical: Dimensions.paddingSizeSmall),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-        border: showOutSideBorder ? Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.7)) : null,
-        boxShadow: context.customThemeColors.lightShadow,
-      ),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,children: [ Row(children: [
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: showOutSideBorder
+          ? BoxDecoration(
+              color: InkColors.card,
+              borderRadius: BorderRadius.circular(19),
+              border: Border.all(color: InkColors.border),
+            )
+          : null,
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [ Row(children: [
 
-        Text( titleText.tr, style: titleTextStyle ?? robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault),),
+        Text( titleText.tr, style: titleTextStyle ?? robotoSemiBold.copyWith(fontSize: 14, height: 1.3, color: InkColors.foreground),),
         const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
 
         if(tooltipController !=null)
@@ -135,17 +143,16 @@ class SwitchButton extends StatelessWidget {
             child:  Text(tootTipText.tr, style: robotoRegular.copyWith(color: Colors.white,)),
           ),
           child:  InkWell( onTap: ()=> tooltipController?.showTooltip(),
-            child: Icon(Icons.info_outline_rounded, color: Theme.of(context).colorScheme.primary, size: 18,),
+            child:  Icon(Icons.info_outline_rounded, color: InkColors.mutedForeground, size: 18,),
           )
         )]),
 
-        FlutterSwitch(
-          width: 40, height: 22, valueFontSize: Dimensions.fontSizeExtraSmall, showOnOff: true,
-          activeText: "", inactiveText: "", activeColor: Theme.of(context).primaryColor,
-          value: value == 1 ?  true : false,
-          padding: 1.5,
-          toggleSize: 19,
-          onToggle: (value) => onTap(value),
+        Switch.adaptive(
+          value: value == 1,
+          activeTrackColor: InkColors.foreground,
+          inactiveTrackColor: InkColors.accent,
+          thumbColor: const WidgetStatePropertyAll<Color>(Colors.white),
+          onChanged: (bool newValue) => onTap(newValue),
         ),
       ],),
     );

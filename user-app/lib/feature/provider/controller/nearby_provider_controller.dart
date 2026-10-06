@@ -75,6 +75,13 @@ class NearbyProviderController extends GetxController implements GetxService {
          "rating" : _selectedRating ?? "0",
       };
 
+      final userAddress = Get.find<LocationController>().getUserAddress();
+      final double? userLat = double.tryParse(userAddress?.latitude ?? "");
+      final double? userLng = double.tryParse(userAddress?.longitude ?? "");
+      if(userLat != null && userLng != null){
+        body.addAll({'latitude': userLat, 'longitude': userLng});
+      }
+
       if(selectedCategoryId.isNotEmpty){
         body.addAll({'category_ids': selectedCategoryId});
       }
@@ -93,13 +100,13 @@ class NearbyProviderController extends GetxController implements GetxService {
             _providerModel = ProviderModel.fromJson(data);
             _providerList = [];
             _providerList!.addAll(ProviderModel.fromJson(data).content?.data??[]);
-            _sortProviderListAndInitMap(initialPosition: initialPosition);
+            _sortProviderListAndinttMap(initialPosition: initialPosition);
             update();
           },
         );
 
       }else{
-        ApiResponseModel response = await providerBookingRepo.getProviderList(offset,body, limit: 30, source: DataSourceEnum.client);
+        AptresponseModel response = await providerBookingRepo.getProviderList(offset,body, limit: 30, source: DataSourceEnum.client);
         if (response.response.statusCode == 200) {
           if(reload){
             _providerList = [];
@@ -108,7 +115,7 @@ class NearbyProviderController extends GetxController implements GetxService {
           if(_providerModel != null ){
             _providerList!.addAll(ProviderModel.fromJson(response.response.body).content?.data??[]);
           }
-          _sortProviderListAndInitMap(initialPosition: initialPosition);
+          _sortProviderListAndinttMap(initialPosition: initialPosition);
 
         } else {
           ApiChecker.checkApi(response.response);
@@ -119,14 +126,19 @@ class NearbyProviderController extends GetxController implements GetxService {
     }
   }
 
-  void _sortProviderListAndInitMap({ LatLng? initialPosition}){
+  void _sortProviderListAndinttMap({ LatLng? initialPosition}){
+    final userAddress = Get.find<LocationController>().getUserAddress();
     _providerList?.forEach((element) {
-      double distance = MapHelper.getDistanceBetweenUserCurrentLocationAndProvider(Get.find<LocationController>().getUserAddress()!, element);
-      element.distance = distance;
+      if(element.distance != null){
+        return;
+      }
+      if(userAddress != null){
+        element.distance = MapHelper.getDistanceBetweenUserCurrentLocationAndProvider(userAddress, element);
+      }
     });
 
     if(_selectedSortBy == "default"){
-      _providerList?.sort((a, b) => a.distance!.compareTo(b.distance!));
+      _providerList?.sort((a, b) => (a.distance ?? double.maxFinite).compareTo(b.distance ?? double.maxFinite));
     }
     selectedProviderIndex = -1;
 
@@ -262,7 +274,7 @@ class NearbyProviderController extends GetxController implements GetxService {
             ),
             child: Text("my_location".tr, style: robotoMedium.copyWith(fontSize: 8)),
           ),
-          Icon(Icons.my_location, color: Colors.green, size: 25),
+          Icon(Icons.my_location, color: Get.theme.colorScheme.primary, size: 25),
         ],
       ),
       width: 80,
@@ -325,7 +337,7 @@ class NearbyProviderController extends GetxController implements GetxService {
             ),
             child: Text("my_location".tr, style: robotoMedium.copyWith(fontSize: 8)),
           ),
-          Icon(Icons.my_location, color: Colors.green, size: 25),
+          Icon(Icons.my_location, color: Get.theme.colorScheme.primary, size: 25),
         ],
       ),
       width: 80,
@@ -433,3 +445,6 @@ class NearbyProviderController extends GetxController implements GetxService {
   }
 
 }
+
+
+

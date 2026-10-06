@@ -1,5 +1,4 @@
 import 'package:demandium_provider/helper/booking_helper.dart';
-import 'package:demandium_provider/helper/extension_helper.dart';
 import 'package:get/get.dart';
 import 'package:demandium_provider/util/core_export.dart';
 
@@ -45,7 +44,12 @@ class BookingSummeryView extends StatelessWidget{
           ),
 
           Container(
-            decoration: BoxDecoration(color: Theme.of(context).cardColor, boxShadow: context.customThemeColors.lightShadow),
+            decoration: BoxDecoration(
+              color: InkColors.card,
+              borderRadius: BorderRadius.circular(19),
+              border: Border.all(color: InkColors.border),
+              boxShadow: InkColors.cardShadow,
+            ),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
               const SizedBox(height: Dimensions.paddingSizeDefault,),
@@ -586,7 +590,7 @@ class ServiceInfoItem extends StatelessWidget {
 }
 
 
-Widget priceText(String title,var amount,context){
+Widget priceText(String title, dynamic amount, context){
   return Column(children: [
     Row(
       children: [

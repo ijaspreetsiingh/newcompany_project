@@ -23,12 +23,17 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Web\Admin',
         Route::get('request/list', [ServiceRequestController::class, 'requestList'])->name('request.list');
         Route::post('request/update/{id}', [ServiceRequestController::class, 'updateStatus'])->name('request.update');
 
+        Route::any('provider-services', [AdminServiceController::class, 'providerServices'])->name('provider-services');
+        Route::post('provider-service-update', [AdminServiceController::class, 'providerServiceStatusUpdate'])->name('provider-service-update');
+
         Route::any('review-status-update/{id}', [AdminServiceController::class, 'reviewStatusUpdate'])->name('review-status-update');
 
         //ajax routes
         Route::any('ajax-add-variant', [AdminServiceController::class, 'ajaxAddVariant'])->name('ajax-add-variant')->withoutMiddleware('csrf');
         Route::any('ajax-remove-variant/{variant_key}', [AdminServiceController::class, 'ajaxRemoveVariant'])->name('ajax-remove-variant')->withoutMiddleware('csrf');
         Route::any('ajax-delete-db-variant/{variant_key}/{service_id}', [AdminServiceController::class, 'ajaxDeleteDbVariant'])->name('ajax-delete-db-variant')->withoutMiddleware('csrf');
+        Route::any('ajax-subcategories/{category_id}', [AdminServiceController::class, 'ajaxGetSubcategories'])->name('ajax-subcategories')->withoutMiddleware('csrf');
+        Route::get('ajax-get-subcategories/{category_id}', [AdminServiceController::class, 'ajaxGetSubcategories'])->name('ajax-get-subcategories')->withoutMiddleware('csrf');
     });
 
     Route::group(['prefix' => 'faq', 'as' => 'faq.'], function () {

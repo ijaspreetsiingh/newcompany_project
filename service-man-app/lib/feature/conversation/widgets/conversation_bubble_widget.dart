@@ -83,13 +83,42 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
           bool isSameUserWithNextMessage = conversationController.isSameUserWithNextMessage(widget.conversationData, widget.nextConversationData);
           String previousMessageHasChatTime = widget.previousConversationData != null? conversationController.getChatTime(widget.previousConversationData!.createdAt!, widget.conversationData.createdAt) : "";
 
+          final bool joinTop = isSameUserWithNextMessage && chatTime == "";
+          final bool joinBottom = isSameUserWithPreviousMessage && previousMessageHasChatTime == "";
+          final bool tailOnRight = widget.isRightMessage == isLTR;
+          final Radius tight = Radius.circular(4);
+          final Radius base = Radius.circular(kRadiusMd);
+          final BorderRadius bubbleRadius = tailOnRight
+              ? BorderRadius.only(
+            topRight: joinTop ? tight : base,
+            bottomRight: tight,
+            topLeft: base,
+            bottomLeft: joinBottom ? tight : base,
+          )
+              : BorderRadius.only(
+            topLeft: joinTop ? tight : base,
+            bottomLeft: tight,
+            topRight: base,
+            bottomRight: joinBottom ? tight : base,
+          );
+
+          String bubbleTime = '';
+          if(widget.conversationData.createdAt != null){
+            bubbleTime = DateConverter.convertStringTimeToDate(
+                DateConverter.isoUtcStringToLocalDate(widget.conversationData.createdAt!));
+          }
+
           return Column(crossAxisAlignment: widget.isRightMessage ? CrossAxisAlignment.end : CrossAxisAlignment.start, children: [
 
 
             if(chatTime != "")
               Align(alignment: Alignment.center,
                 child: Padding(padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeDefault, top: 5),
-                  child: Text(conversationController.getChatTime(widget.conversationData.createdAt!, widget.nextConversationData?.createdAt),
+                  child: Text(chatTime,
+                    style: robotoRegular.copyWith(
+                      fontSize: 11,
+                      color: context.kMutedForeground,
+                    ),
                   ),
                 ),
               ),
@@ -118,38 +147,44 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
 
                   Flexible(child: Column(crossAxisAlignment: widget.isRightMessage? CrossAxisAlignment.end:CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
 
-                    if(widget.conversationData.message != null) Flexible(child: Container(
-                      decoration: BoxDecoration(
-                        color: widget.isRightMessage
-                            ? Theme.of(context).primaryColor
-                            : Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    if(widget.conversationData.message != null) Flexible(child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.82),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: widget.isRightMessage ? context.kPrimary : context.kMuted,
+                          borderRadius: bubbleRadius,
+                        ),
 
-                        borderRadius: widget.isRightMessage && (isSameUserWithNextMessage || isSameUserWithPreviousMessage) ? BorderRadius.only(
-                          topRight: Radius.circular(isSameUserWithNextMessage && isLTR && chatTime =="" ? Dimensions.radiusSmall : Dimensions.radiusExtraLarge + 5),
-                          bottomRight: Radius.circular(isSameUserWithPreviousMessage && isLTR && previousMessageHasChatTime =="" ? Dimensions.radiusSmall : Dimensions.radiusExtraLarge + 5),
-                          topLeft: Radius.circular(isSameUserWithNextMessage && !isLTR && chatTime ==""? Dimensions.radiusSmall : Dimensions.radiusExtraLarge + 5),
-                          bottomLeft: Radius.circular(isSameUserWithPreviousMessage && !isLTR && previousMessageHasChatTime ==""? Dimensions.radiusSmall :Dimensions.radiusExtraLarge + 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        child: InkWell(
+                          onTap: (){
+                            conversationController.toggleOnClickMessage(onMessageTimeShowID :
+                            widget.conversationData.id!);
+                          },
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.end, mainAxisSize: MainAxisSize.min, children: [
 
-                        ) : !widget.isRightMessage && (isSameUserWithNextMessage || isSameUserWithPreviousMessage) ? BorderRadius.only(
-                          topLeft: Radius.circular(isSameUserWithNextMessage && isLTR && chatTime ==""? Dimensions.radiusSmall : Dimensions.radiusExtraLarge + 5),
-                          bottomLeft: Radius.circular( isSameUserWithPreviousMessage && isLTR && previousMessageHasChatTime =="" ? Dimensions.radiusSmall : Dimensions.radiusExtraLarge + 5),
-                          topRight: Radius.circular(isSameUserWithNextMessage && !isLTR && chatTime ==""? Dimensions.radiusSmall : Dimensions.radiusExtraLarge + 5),
-                          bottomRight: Radius.circular(isSameUserWithPreviousMessage && !isLTR && previousMessageHasChatTime ==""? Dimensions.radiusSmall :Dimensions.radiusExtraLarge + 5),
+                            Text(widget.conversationData.message??'', style: robotoRegular.copyWith(
+                                fontSize: Dimensions.fontSizeDefault,
+                                color: widget.isRightMessage ? context.kPrimaryForeground : context.kForeground,
+                            )),
 
-                        ) : BorderRadius.circular(Dimensions.radiusExtraLarge + 5),
+                            if(bubbleTime.isNotEmpty)...[
+                              const SizedBox(height: 2),
+                              Text(bubbleTime,
+                                textDirection: TextDirection.ltr,
+                                style: robotoRegular.copyWith(
+                                  fontSize: 9,
+                                  color: widget.isRightMessage
+                                      ? context.kPrimaryForeground.withValues(alpha: 0.55)
+                                      : context.kMutedForeground,
+                                ),
+                              ),
+                            ],
+
+                          ]),
+                        ),
+
                       ),
-
-                      padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeLarge, vertical: 10),
-                      child: InkWell(
-                        onTap: (){
-                          conversationController.toggleOnClickMessage(onMessageTimeShowID :
-                          widget.conversationData.id!);
-                        },
-                        child: Text(widget.conversationData.message??'', style: robotoRegular.copyWith(
-                            color: !Get.isDarkMode && !widget.isRightMessage? Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.8)  : Colors.white.withValues(alpha:0.8)
-                        )),
-                      ),
-
                     )),
 
                     AnimatedContainer(
@@ -161,9 +196,12 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
                           top: conversationController.onMessageTimeShowID == widget.conversationData.id ?
                           Dimensions.paddingSizeExtraSmall : 0.0,
                         ),
-                        child: Text(conversationController.getOnPressChatTime(widget.conversationData) ?? "", style: robotoRegular.copyWith(
-                            fontSize: Dimensions.fontSizeSmall
-                        ),),
+                        child: Text(conversationController.getOnPressChatTime(widget.conversationData) ?? "",
+                          style: robotoRegular.copyWith(
+                              fontSize: Dimensions.fontSizeSmall,
+                              color: context.kMutedForeground,
+                          ),
+                        ),
                       ),
                     ),
 
@@ -208,7 +246,7 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
                                     imageList: imagePathList,
                                     index: index,
                                     createdAt:  DateConverter.dateMonthYearTime(DateConverter.isoUtcStringToLocalDate(widget.conversationData.createdAt!)),
-                                    appbarTitle: widget.conversationData.user?.userType=="super-admin" ? 'admin'.tr :
+                                    appbarTitle: widget.conversationData.user?.userType=="super-admin" ? 'technical_support_team'.tr :
                                     widget.conversationData.user?.userType=="provider-serviceman"? "you".tr :
                                     widget.conversationData.user?.userType == 'provider-admin' ? widget.name ?? "" :
                                     "${widget.conversationData.user?.firstName??""} ${widget.conversationData.user?.lastName??""}",
@@ -225,13 +263,13 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
 
 
                                     SizedBox(height: double.infinity, width: double.infinity,
-                                        child: ClipRRect(borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+                                        child: ClipRRect(borderRadius: BorderRadius.circular(kRadiusMd),
                                           child: CustomImage(image: imageUrl, fit: BoxFit.contain,),
                                         )),
 
                                     Container(decoration: BoxDecoration(
                                         color: Colors.black.withValues(alpha:0.6),
-                                        borderRadius: BorderRadius.circular(Dimensions.radiusLarge)
+                                        borderRadius: BorderRadius.circular(kRadiusMd)
                                     )),
 
 
@@ -257,7 +295,7 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
                                       imageList: imagePathList,
                                       index: index,
                                       createdAt:  DateConverter.dateMonthYearTime(DateConverter.isoUtcStringToLocalDate(widget.conversationData.createdAt!)),
-                                      appbarTitle: widget.conversationData.user?.userType=="super-admin" ? 'admin'.tr :
+                                      appbarTitle: widget.conversationData.user?.userType=="super-admin" ? 'technical_support_team'.tr :
                                       widget.conversationData.user?.userType=="provider-serviceman"? "you".tr :
                                       widget.conversationData.user?.userType == 'provider-admin' ? widget.name ?? "" :
                                       "${widget.conversationData.user?.firstName??""} ${widget.conversationData.user?.lastName??""}",
@@ -270,7 +308,7 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
                                   },
                                   child: Hero(
                                     tag: imageList[index].storedFileNameFullPath??"",
-                                    child: ClipRRect(borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+                                    child: ClipRRect(borderRadius: BorderRadius.circular(kRadiusMd),
                                         child: CustomImage(image: imageUrl, fit: BoxFit.fill)),
                                   ),
                                 );
@@ -326,8 +364,8 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
                                       onImageOrFileTimeShowID : widget.conversationData.id!);
                                 },
                                 child: Container(width: 200, height: 60,
-                                    decoration: BoxDecoration(color: Theme.of(context).hintColor.withValues(alpha:0.2),
-                                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),),
+                                    decoration: BoxDecoration(color: context.kMuted,
+                                      borderRadius: BorderRadius.circular(kRadiusMd),),
                                     child: Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeSmall),
                                         child: Directionality(
                                           textDirection: TextDirection.ltr,
@@ -348,13 +386,16 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
                                                 Text(fileList[index].originalFileName.toString().capitalizeFirst ?? "",
                                                   maxLines: 1,
                                                   overflow: TextOverflow.ellipsis,
-                                                  style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault),
+                                                  style: robotoBold.copyWith(
+                                                      fontSize: Dimensions.fontSizeDefault,
+                                                      color: context.kForeground,
+                                                  ),
                                                 ),
 
 
                                                 Text("${fileList[index].filSize}", style: robotoRegular.copyWith(
                                                     fontSize: Dimensions.fontSizeDefault,
-                                                    color: Theme.of(context).hintColor)
+                                                    color: context.kMutedForeground)
                                                 ),
 
 
@@ -381,9 +422,12 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
                             top: conversationController.onImageOrFileTimeShowID == widget.conversationData.id ?
                             Dimensions.paddingSizeExtraSmall : 0.0,
                           ),
-                          child: Text(conversationController.getOnPressChatTime(widget.conversationData) ?? "", style: robotoRegular.copyWith(
-                              fontSize: Dimensions.fontSizeSmall
-                          ),),
+                          child: Text(conversationController.getOnPressChatTime(widget.conversationData) ?? "",
+                            style: robotoRegular.copyWith(
+                                fontSize: Dimensions.fontSizeSmall,
+                                color: context.kMutedForeground,
+                            ),
+                          ),
                         ),
                       ),
 
@@ -400,6 +444,3 @@ class _ConversationBubbleWidgetState extends State<ConversationBubbleWidget> {
     );
   }
 }
-
-
-

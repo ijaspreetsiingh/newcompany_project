@@ -62,7 +62,7 @@ class SubscriptionPackageController extends Controller
 
         $provider = $this->provider->where('user_id', auth()->user()->id)->first();
         $providerId = $provider->id;
-        $commission = $provider->commission_status == 1 ? $provider->commission_percentage : (business_config('default_commission', 'business_information'))->live_values;
+        $commission = providerCommissionPercentage($provider);
         $subscriptionDetails = $this->packageSubscriber->where('provider_id', $providerId)->first();
 
         if ($subscriptionDetails){

@@ -1,4 +1,4 @@
-import 'package:jdds/util/core_export.dart';
+﻿import 'package:jdds/util/core_export.dart';
 import 'package:jdds/feature/suggest_new_service/model/suggest_service_model.dart';
 import 'package:jdds/feature/suggest_new_service/repository/suggest_service_repo.dart';
 import 'package:get/get.dart';
@@ -14,9 +14,9 @@ class SuggestServiceController extends GetxController{
   bool _isShowInputField = false;
   bool get isShowInputField => _isShowInputField;
 
-  double initialButtonPadding = 230;
-  double initialContainerOpacity = 0.0;
-  double initialImageSize = 100.0;
+  double inttialButtonPadding = 230;
+  double inttialContainerOpacity = 0.0;
+  double inttialImageSize = 100.0;
   String selectedCategoryName= "";
   String selectedCategoryId= "";
 
@@ -95,9 +95,9 @@ class SuggestServiceController extends GetxController{
     _isShowInputField = true;
     update();
     if(_isShowInputField){
-      initialButtonPadding = 570;
-      initialImageSize = 70;
-      initialContainerOpacity = 1.0;
+      inttialButtonPadding = 570;
+      inttialImageSize = 70;
+      inttialContainerOpacity = 1.0;
     }
     update();
   }
@@ -115,3 +115,5 @@ class SuggestServiceController extends GetxController{
   }
 
 }
+
+

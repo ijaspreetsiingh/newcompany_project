@@ -1,4 +1,4 @@
-import 'package:jdds/util/core_export.dart';
+﻿import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 
 class AreaTopWidget extends StatelessWidget {
@@ -16,10 +16,11 @@ class AreaTopWidget extends StatelessWidget {
         Text("we_are_available_in_these_areas".tr, style: robotoMedium.copyWith( fontSize: Dimensions.fontSizeDefault), textAlign: TextAlign.center),
         const SizedBox(height: Dimensions.paddingSizeSmall),
 
-        Text("get_you_desired_service".tr, style: robotoMedium.copyWith( fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).hintColor), textAlign: TextAlign.center),
+        Text("get_you_destred_service".tr, style: robotoMedium.copyWith( fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).hintColor), textAlign: TextAlign.center),
         const SizedBox(height: Dimensions.paddingSizeLarge),
         ],
       ),
     );
   }
 }
+

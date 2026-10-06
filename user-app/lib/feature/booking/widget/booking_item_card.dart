@@ -3,6 +3,7 @@ import 'package:jdds/feature/booking/widget/booking_status_widget.dart';
 import 'package:jdds/helper/booking_helper.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class BookingItemCard extends StatelessWidget {
   final BookingModel bookingModel;
@@ -12,6 +13,12 @@ class BookingItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String bookingStatus = bookingModel.bookingStatus!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
+    final bgColor = isDark ? const Color(0xFF171717) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF333333) : const Color(0xFFE5E5E5);
+
     return InkWell(
       onTap: () {
         if(bookingModel.isRepeatBooking == 1){
@@ -23,39 +30,44 @@ class BookingItemCard extends StatelessWidget {
 
       child: GetBuilder<ServiceBookingController>(builder: (serviceBookingController){
         return Container(
-          decoration: BoxDecoration(color: Theme.of(context).cardColor , borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-              border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1), width: 0.5),
-              boxShadow: Get.find<ThemeController>().darkTheme ? null : lightShadow
-          ),//boxShadow: shadow),
-          padding:  const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeEight,horizontal: Dimensions.paddingSizeDefault),
-          margin:  const EdgeInsets.symmetric(horizontal: 2,),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: borderColor),
+          ),
+          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.symmetric(horizontal: 2),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
 
-
               Row( mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                 Row(
                   children: [
-                    Text('${'booking'.tr}# ${bookingModel.readableId}', style: robotoBold.copyWith()),
+                    Text('${'booking'.tr}# ${bookingModel.readableId}', 
+                      style: GoogleFonts.dmSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: primaryColor,
+                      )),
                     if(bookingModel.isRepeatBooking == 1)Container(
-                      decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.green),
+                      decoration: BoxDecoration(shape: BoxShape.circle, color: primaryColor),
                       padding: const EdgeInsets.all(2),
-                      margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall),
-                      child: const Icon(Icons.repeat, color: Colors.white,size: 10,),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      child: const Icon(Icons.repeat, color: Colors.white, size: 10),
                     )
                   ],
                 ),
 
                 PopupMenuButton<PopupMenuModel>(
-                  shape:  RoundedRectangleBorder(
-                    borderRadius: const BorderRadius.all(Radius.circular(Dimensions.radiusDefault,)),
-                    side: BorderSide(color: Theme.of(context).hintColor.withValues(alpha: 0.1)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(16)),
+                    side: BorderSide(color: borderColor),
                   ),
-                  surfaceTintColor: Theme.of(context).cardColor,
+                  surfaceTintColor: bgColor,
                   position: PopupMenuPosition.under, elevation: 8,
-                  shadowColor: Theme.of(context).hintColor.withValues(alpha: 0.3),
+                  shadowColor: mutedColor.withValues(alpha: 0.3),
                   itemBuilder: (BuildContext context) {
                     return serviceBookingController.getPopupMenuList(
                       status: bookingStatus,
@@ -76,9 +88,7 @@ class BookingItemCard extends StatelessWidget {
                           }
                           if(option.title == "rebook"){
                             serviceBookingController.updateRebookIndex(index);
-
                            await serviceBookingController.checkCartSubcategory(bookingModel.id!, bookingModel.subCategoryId!);
-
                           }
 
                           else if(option.title == "download_invoice"){
@@ -125,48 +135,74 @@ class BookingItemCard extends StatelessWidget {
                         },
                         child: Row(
                           children: [
-                            const SizedBox(width: Dimensions.paddingSizeExtraSmall,),
-                            Icon(option.icon, size: Dimensions.fontSizeLarge,),
-                            const SizedBox(width: Dimensions.paddingSizeSmall,),
-                            Text(option.title.tr, style: robotoRegular.copyWith(
-                                fontSize: Dimensions.fontSizeSmall
-                            ),),
+                            const SizedBox(width: 8),
+                            Icon(option.icon, size: 18, color: primaryColor),
+                            const SizedBox(width: 8),
+                            Text(option.title.tr, style: GoogleFonts.dmSans(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w400,
+                                color: primaryColor
+                            )),
                           ],
                         ),
                       );
                     }).toList();
                   },
-                  child:  Icon(Icons.more_vert_sharp, color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.6),),
+                  child: Icon(Icons.more_vert_sharp, color: mutedColor),
                 ),
               ]),
-              const SizedBox(height: Dimensions.paddingSizeEight,),
+              const SizedBox(height: 12),
 
               Row( children: [
-                Text('${'booking_date'.tr} : ', style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,  color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: .6))),
-                Text(DateConverter.dateMonthYearTimeTwentyFourFormat(DateConverter.isoUtcStringToLocalDate(bookingModel.createdAt.toString())),textDirection: TextDirection.ltr,
-                    style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,  color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: .6))),],),
-              const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
-
-              Row( children: [
-                Text('${'service_date'.tr} : ', style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,  color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: .6))),
-                if(BookingHelper.getRepeatBookingCurrentSchedule(bookingModel) !=null) Text(DateConverter.dateMonthYearTimeTwentyFourFormat(DateTime.tryParse(BookingHelper.getRepeatBookingCurrentSchedule(bookingModel)!)!),
-                  style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall,  color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: .6)),
+                Text('${'booking_date'.tr} : ', style: GoogleFonts.dmSans(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w400,
+                  color: mutedColor,
+                )),
+                Text(DateConverter.dateMonthYearTimeTwentyFourFormat(DateConverter.isoUtcStringToLocalDate(bookingModel.createdAt.toString())),
                   textDirection: TextDirection.ltr,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w400,
+                    color: primaryColor,
+                  ),
                 ),
               ]),
-              const SizedBox(height: Dimensions.paddingSizeSmall,),
+              const SizedBox(height: 4),
 
-              Row( mainAxisAlignment: MainAxisAlignment.spaceBetween,  children: [
+              Row( children: [
+                Text('${'service_date'.tr} : ', style: GoogleFonts.dmSans(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w400,
+                  color: mutedColor,
+                )),
+                if(BookingHelper.getRepeatBookingCurrentSchedule(bookingModel) !=null) 
+                  Text(DateConverter.dateMonthYearTimeTwentyFourFormat(DateTime.tryParse(BookingHelper.getRepeatBookingCurrentSchedule(bookingModel)!)!),
+                    style: GoogleFonts.dmSans(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w400,
+                      color: primaryColor,
+                    ),
+                    textDirection: TextDirection.ltr,
+                  ),
+              ]),
+              const SizedBox(height: 12),
+
+              Row( mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
 
                 BookingStatusButtonWidget(bookingStatus: bookingModel.bookingStatus,),
 
                 Directionality(
                   textDirection: TextDirection.ltr,
                   child: Text(PriceConverter.convertPrice(bookingModel.totalBookingAmount!.toDouble()),
-                    style: robotoBold.copyWith(color: Get.isDarkMode ? Theme.of(context).textTheme.bodyLarge?.color : Theme.of(context).colorScheme.primary),
+                    style: GoogleFonts.manrope(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: primaryColor,
+                    ),
                   ),
                 ),
-              ],),
+              ]),
             ],
           ),
         );
@@ -180,3 +216,6 @@ class BookingItemCard extends StatelessWidget {
     }
   }
 }
+
+
+

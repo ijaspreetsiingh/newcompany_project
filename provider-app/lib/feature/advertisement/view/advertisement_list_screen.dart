@@ -76,7 +76,7 @@ class _AdvertisementListScreenState extends State<AdvertisementListScreen>{
           Get.find<AdvertisementController>().resetAllValues();
           Get.to(()=>const CreateAdvertisementScreen(isEditScreen: false));
         },
-        child: Icon(Icons.add, color: light.cardColor),
+        child: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
       ),
 
     );

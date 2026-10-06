@@ -1,226 +1,160 @@
-import 'package:demandium_provider/feature/dashboard/widgets/caash_in_hand_widget.dart';
-import 'package:demandium_provider/helper/extension_helper.dart';
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 import 'package:demandium_provider/util/core_export.dart';
 
-class TopCardSection extends StatelessWidget {
-  final JustTheController? toolTip;
-  const TopCardSection({super.key, this.toolTip});
+class BusinessSummarySection extends StatelessWidget {
+  const BusinessSummarySection({super.key});
+
+  void _openReports(int tabIndex) {
+    Get.find<BusinessReportController>().businessReportTabController?.index =
+        tabIndex;
+    Get.to(() => const BusinessReport());
+  }
 
   @override
   Widget build(BuildContext context) {
     return GetBuilder<UserProfileController>(
       builder: (userProfileController) {
-        double receivableAmount =
-            double.tryParse(
-              userProfileController
-                      .providerModel
-                      ?.content
-                      ?.providerInfo
-                      ?.owner
-                      ?.account
-                      ?.accountReceivable ??
-                  "0",
-            ) ??
-            0;
-        double payableAmount =
-            double.tryParse(
-              userProfileController
-                      .providerModel
-                      ?.content
-                      ?.providerInfo
-                      ?.owner
-                      ?.account
-                      ?.accountPayable ??
-                  "0",
-            ) ??
-            0;
+        final providerInfo =
+            userProfileController.providerModel?.content?.providerInfo;
+        final double rating = providerInfo?.avgRating ?? 0;
+        final int reviews = providerInfo?.ratingCount ?? 0;
+        final String dateLabel = DateConverter.dateStringMonthYear(
+          DateTime.now(),
+          format: 'd MMM',
+        );
 
-        TransactionType transactionType = userProfileController
-            .getTransactionType(payableAmount, receivableAmount);
-
-        return GetBuilder<DashboardController>(
-          builder: (dashboardController) =>
-              dashboardController.dashboardTopCards == null
-              ? const DashboardShimmer()
-              : Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: Dimensions.paddingSizeDefault,
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(
-                        Dimensions.radiusExtraLarge,
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: InkSurface(
+            padding: EdgeInsets.zero,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Stack(
+                clipBehavior: Clip.hardEdge,
+                children: [
+                  Positioned(
+                    right: -40,
+                    top: -40,
+                    child: Container(
+                      height: 144,
+                      width: 144,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: <Color>[
+                            Colors.white.withValues(alpha: 0.14),
+                            Colors.white.withValues(alpha: 0),
+                          ],
+                        ),
                       ),
-                      boxShadow: context.customThemeColors.cardShadow,
                     ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const SizedBox(height: Dimensions.paddingSizeDefault),
-
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: Dimensions.paddingSizeDefault,
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                height: 22,
-                                width: 5,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Theme.of(context).primaryColor,
-                                      Color.lerp(
-                                        Theme.of(context).primaryColor,
-                                        const Color(0xFF1E40AF),
-                                        0.5,
-                                      )!,
-                                    ],
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                  ),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              const SizedBox(
-                                width: Dimensions.paddingSizeSmall,
-                              ),
-                              Text(
-                                "business_summery".tr,
-                                style: robotoBold.copyWith(
-                                  fontSize: Dimensions.fontSizeDefault,
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .bodyLarge!
-                                      .color!
-                                      .withValues(alpha: 0.9),
-                                ),
-                              ),
-                            ],
+                        InkEyebrow(
+                          'Overview · $dateLabel',
+                          color: Colors.white.withValues(alpha: 0.55),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'dashboard'.tr,
+                          style: displayBold.copyWith(
+                            fontSize: 26,
+                            height: 1.1,
+                            color: Colors.white,
                           ),
                         ),
-
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: Dimensions.paddingSizeDefault,
-                            vertical: Dimensions.paddingSizeSmall,
+                        if (providerInfo != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Rating ${rating.toStringAsFixed(1)} · $reviews reviews',
+                            style: robotoRegular.copyWith(
+                              fontSize: 12,
+                              color: Colors.white.withValues(alpha: 0.65),
+                            ),
                           ),
-                          width: Get.width,
-                          child: Column(
-                            children: [
-                              Row(
-                                spacing: Dimensions.paddingSizeSmall,
+                        ],
+                        const SizedBox(height: 20),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  TopCardItem(
-                                    height: 100,
-                                    curveColor: Colors.green,
-                                    cardColor: Colors.green,
-                                    amount: PriceConverter.convertPrice(
-                                      dashboardController.dashboardTopCards !=
-                                              null
-                                          ? dashboardController
-                                                .dashboardTopCards!
-                                                .totalEarning
-                                          : 0,
-                                      isShowLongPrice: false,
+                                  Text(
+                                    'Earnings this week',
+                                    style: robotoRegular.copyWith(
+                                      fontSize: 11,
+                                      color: Colors.white.withValues(
+                                        alpha: 0.60,
+                                      ),
                                     ),
-                                    title: "total_earning".tr,
-                                    iconData: Images.earning,
                                   ),
-
-                                  TopCardItem(
-                                    height: 100,
-                                    curveColor: Theme.of(
-                                      context,
-                                    ).colorScheme.secondary,
-                                    cardColor: Theme.of(
-                                      context,
-                                    ).colorScheme.secondary,
-                                    amount:
-                                        dashboardController.dashboardTopCards !=
-                                                null &&
-                                            dashboardController
-                                                    .dashboardTopCards!
-                                                    .totalSubscribedServices !=
-                                                null
-                                        ? dashboardController
-                                              .dashboardTopCards!
-                                              .totalSubscribedServices
-                                              .toString()
-                                        : "0",
-                                    title: "subscribed_services".tr,
-                                    iconData: Images.topCardService,
+                                  const SizedBox(height: 2),
+                                  GetBuilder<DashboardController>(
+                                    builder: (dashboardController) => InkMoney(
+                                      dashboardController
+                                              .earningDataModel
+                                              ?.thisWeek
+                                              ?.total ??
+                                          0,
+                                      style: const TextStyle(
+                                        fontSize: 30,
+                                        height: 1.1,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(
-                                height: Dimensions.paddingSizeSmall,
+                            ),
+                            const SizedBox(width: 12),
+                            GestureDetector(
+                              onTap: () => _openReports(0),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(50),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.auto_awesome_outlined,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Insights',
+                                      style: robotoSemiBold.copyWith(
+                                        fontSize: 12,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-
-                              Row(
-                                spacing: Dimensions.paddingSizeSmall,
-                                children: [
-                                  TopCardItem(
-                                    height: 100,
-                                    cardColor: Theme.of(
-                                      context,
-                                    ).colorScheme.tertiary,
-                                    amount:
-                                        dashboardController.dashboardTopCards !=
-                                                null &&
-                                            dashboardController
-                                                    .dashboardTopCards!
-                                                    .totalServiceMan !=
-                                                null
-                                        ? dashboardController
-                                              .dashboardTopCards!
-                                              .totalServiceMan
-                                              .toString()
-                                        : "0",
-                                    title: "total_service_men".tr,
-                                    iconData: Images.serviceMan,
-                                  ),
-
-                                  TopCardItem(
-                                    height: 100,
-                                    cardColor: Theme.of(context).primaryColor,
-                                    amount:
-                                        dashboardController.dashboardTopCards !=
-                                                null &&
-                                            dashboardController
-                                                    .dashboardTopCards!
-                                                    .totalBookingServed !=
-                                                null
-                                        ? dashboardController
-                                              .dashboardTopCards!
-                                              .totalBookingServed
-                                              .toString()
-                                        : "0",
-                                    title: "total_booking_served".tr,
-                                    iconData: Images.serviceMan,
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(
-                                height: Dimensions.paddingSizeSmall,
-                              ),
-
-                              (transactionType == TransactionType.payable ||
-                                      transactionType ==
-                                          TransactionType.adjustAndPayable)
-                                  ? TotalCashInHandWidget(toolTip: toolTip)
-                                  : const SizedBox(),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: Dimensions.paddingSizeSmall),
                       ],
                     ),
                   ),
-                ),
+                ],
+              ),
+            ),
+          ),
         );
       },
     );

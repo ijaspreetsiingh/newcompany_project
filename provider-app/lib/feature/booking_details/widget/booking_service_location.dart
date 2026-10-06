@@ -1,5 +1,5 @@
 import 'package:demandium_provider/feature/booking_details/widget/update_service_location_widget.dart';
-import 'package:demandium_provider/helper/extension_helper.dart';
+import 'package:demandium_provider/helper/booking_helper.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:demandium_provider/util/core_export.dart';
@@ -22,10 +22,12 @@ class BookingServiceLocation extends StatelessWidget {
 
       return Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          boxShadow: context.customThemeColors.lightShadow,
+          color: InkColors.card,
+          borderRadius: BorderRadius.circular(19),
+          border: Border.all(color: InkColors.border),
+          boxShadow: InkColors.cardShadow,
         ),
-        margin: EdgeInsets.only(top: Dimensions.paddingSizeDefault),
+        margin: EdgeInsets.zero,
         padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall, horizontal: Dimensions.paddingSizeDefault),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -105,7 +107,10 @@ class BookingServiceLocation extends StatelessWidget {
                 Row(spacing: Dimensions.paddingSizeDefault ,children: [
                   Expanded(child: Text(
                     serviceLocation == "customer"
-                        ? bookingDetails.serviceAddress?.address ?? bookingDetails.subBooking?.serviceAddress?.address ?? 'address_not_found'.tr
+                        ? BookingHelper.composeServiceAddress(
+                            bookingDetails.serviceAddress ?? bookingDetails.subBooking?.serviceAddress,
+                            fallback: 'address_not_found'.tr,
+                          )
                         : Get.find<UserProfileController>().providerModel?.content?.providerInfo?.companyAddress ?? 'address_not_found'.tr,
                     maxLines: 1, overflow: TextOverflow.ellipsis,
                   )),
@@ -115,14 +120,18 @@ class BookingServiceLocation extends StatelessWidget {
                       _checkPermission(() async {
                         if(bookingDetails.serviceAddress!= null  || bookingDetails.subBooking?.serviceAddress != null){
                           showCustomDialog(child: const CustomLoader());
-                          await Geolocator.getCurrentPosition().then((position) {
-                            MapUtils.openMap(
+                          try {
+                            final position = await Geolocator.getCurrentPosition();
+                            await MapUtils.openMap(
                               bookingDetails.serviceAddress?.lat ?? bookingDetails.subBooking?.serviceAddress?.lat ?? 23.8103,
                               bookingDetails.serviceAddress?.lon ?? bookingDetails.subBooking?.serviceAddress?.lon ?? 90.4125,
                               position.latitude , position.longitude,
                             );
-                          });
-                          Get.back();
+                          } catch (_) {
+                            showCustomSnackBar('something_went_wrong'.tr, type: ToasterMessageType.error);
+                          } finally {
+                            Get.back();
+                          }
                         }else{
                           showCustomSnackBar("service_address_not_found".tr);
                         }
@@ -169,10 +178,17 @@ class MapUtils {
   static Future<void> openMap(double destinationLatitude, double destinationLongitude, double userLatitude, double userLongitude) async {
     String googleUrl = 'https://www.google.com/maps/dir/?api=1&origin=$userLatitude,$userLongitude'
         '&destination=$destinationLatitude,$destinationLongitude&mode=d';
-    if (await canLaunchUrl(Uri.parse(googleUrl))) {
-      await launchUrl(Uri.parse(googleUrl), mode: LaunchMode.externalApplication);
-    } else {
-      throw 'Could not open the map.';
+    bool opened = false;
+    try {
+      final Uri uri = Uri.parse(googleUrl);
+      if (await canLaunchUrl(uri)) {
+        opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {
+      opened = false;
+    }
+    if (!opened) {
+      showCustomSnackBar('something_went_wrong'.tr, type: ToasterMessageType.error);
     }
   }
 }

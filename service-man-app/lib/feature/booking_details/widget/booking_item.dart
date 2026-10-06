@@ -26,7 +26,7 @@ class BookingItem extends StatelessWidget {
                 child: Text(title.tr,
                   style: robotoRegular.copyWith(
                     fontSize: Dimensions.fontSizeSmall + 1,
-                    color:Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.65),
+                    color: context.kMutedForeground,
                   ),
                   maxLines: 2, overflow: TextOverflow.ellipsis,
                 ),
@@ -34,7 +34,7 @@ class BookingItem extends StatelessWidget {
               Text(subTitle,
                 style: subtitleTextStyle ?? robotoRegular.copyWith(
                   fontSize: Dimensions.fontSizeSmall + 1,
-                  color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.65),
+                  color: context.kForeground,
                 ),
                 maxLines: 2, overflow: TextOverflow.ellipsis, textDirection: TextDirection.ltr,
               ),

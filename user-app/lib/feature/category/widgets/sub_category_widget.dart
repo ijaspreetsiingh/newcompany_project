@@ -65,3 +65,5 @@ class SubCategoryWidget extends GetView<ServiceController> {
     );
   }
 }
+
+

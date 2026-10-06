@@ -70,7 +70,7 @@ class FavoriteServiceItemView extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor ,
                   borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-                  boxShadow: Get.isDarkMode ? null: searchBoxShadow,
+                  
                   //border: Border.all(color: Theme.of(context).hintColor.withValues(alpha: 0.2)),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal : Dimensions.paddingSizeDefault, vertical: 10),
@@ -206,3 +206,5 @@ class FavoriteServiceItemView extends StatelessWidget {
     );
   }
 }
+
+

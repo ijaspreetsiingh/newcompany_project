@@ -42,3 +42,4 @@ Future<bool?> onDemandToast(String message,Color color){
       fontSize: 16.0
   );
 }
+

@@ -14,7 +14,7 @@ class ConversationListShimmer extends StatelessWidget {
             top: Dimensions.paddingSizeDefault,
             right:Dimensions.paddingSizeDefault
         ),
-          child: Column(children: [
+          child: ListView(children: [
 
 
             Container(height: 50, width: double.infinity,
@@ -267,3 +267,4 @@ class ConversationListShimmer extends StatelessWidget {
     );
   }
 }
+

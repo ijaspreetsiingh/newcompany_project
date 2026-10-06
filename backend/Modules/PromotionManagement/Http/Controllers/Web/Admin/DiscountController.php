@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 use Modules\CategoryManagement\Entities\Category;
 use Modules\PromotionManagement\Entities\Discount;
 use Modules\PromotionManagement\Entities\DiscountType;
+use Modules\ProviderManagement\Entities\Provider;
+use Modules\ProviderManagement\Entities\SubscribedService;
 use Modules\ServiceManagement\Entities\Service;
 use Modules\ZoneManagement\Entities\Zone;
 use Rap2hpoutre\FastExcel\FastExcel;
@@ -52,7 +54,7 @@ class DiscountController extends Controller
         $type = $request->has('type') ? $request['type'] : 'all';
         $queryParam = ['search' => $search, 'type' => $type];
 
-        $discounts = $this->discountQuery->with(['category_types', 'service_types', 'zone_types'])
+        $discounts = $this->discountQuery->with(['category_types', 'service_types', 'zone_types', 'provider_types'])
             ->when($request->has('search'), function ($query) use ($request) {
                 $keys = explode(' ', $request['search']);
                 return $query->where(function ($query) use ($keys) {
@@ -85,6 +87,74 @@ class DiscountController extends Controller
     }
 
     /**
+     * Get providers filtered by selected zones + categories/services (cascading dropdown).
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getProviders(Request $request): JsonResponse
+    {
+        $providerIds = promotion_filtered_provider_ids(
+            (array)$request->input('category_ids', []),
+            (array)$request->input('service_ids', []),
+            (array)$request->input('zone_ids', []),
+            (string)$request->input('discount_type', 'category')
+        );
+
+        $providers = Provider::whereIn('id', $providerIds)
+            ->orderBy('company_name')
+            ->get(['id', 'company_name']);
+
+        // Har provider ki assigned categories: owned services + subscriptions
+        $providerCategoryIds = [];
+        if ($providers->isNotEmpty()) {
+            $ids = $providers->pluck('id')->all();
+
+            Service::where(function ($query) use ($ids) {
+                $query->whereIn('provider_id', $ids)->orWhereIn('single_provider_id', $ids);
+            })->get(['provider_id', 'single_provider_id', 'category_id'])
+                ->each(function ($service) use (&$providerCategoryIds) {
+                    foreach ([$service->provider_id, $service->single_provider_id] as $pid) {
+                        if ($pid && $service->category_id) {
+                            $providerCategoryIds[$pid][$service->category_id] = true;
+                        }
+                    }
+                });
+
+            SubscribedService::whereIn('provider_id', $ids)
+                ->where('is_subscribed', 1)
+                ->get(['provider_id', 'category_id'])
+                ->each(function ($sub) use (&$providerCategoryIds) {
+                    if ($sub->provider_id && $sub->category_id) {
+                        $providerCategoryIds[$sub->provider_id][$sub->category_id] = true;
+                    }
+                });
+        }
+
+        $allCategoryIds = collect($providerCategoryIds)->flatMap(fn($set) => array_keys($set))->unique()->values()->all();
+        $categoryNames = !empty($allCategoryIds)
+            ? Category::whereIn('id', $allCategoryIds)->pluck('name', 'id')
+            : collect();
+
+        $result = $providers->map(function ($provider) use ($providerCategoryIds, $categoryNames) {
+            $categoryIds = array_keys($providerCategoryIds[$provider->id] ?? []);
+            $categories = collect($categoryIds)
+                ->map(fn($id) => $categoryNames[$id] ?? null)
+                ->filter()
+                ->sort()
+                ->values()
+                ->all();
+
+            return [
+                'id' => $provider->id,
+                'name' => $provider->company_name,
+                'categories' => $categories,
+            ];
+        });
+
+        return response()->json(['providers' => $result]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      * @param Request $request
      * @return RedirectResponse
@@ -105,7 +175,10 @@ class DiscountController extends Controller
             'category_ids' => 'array',
             'service_ids' => 'array',
             'zone_ids' => 'required|array',
+            'provider_ids' => 'nullable|array',
         ]);
+
+        $request->merge(['provider_ids' => promotion_resolve_provider_ids($request)]);
 
         DB::transaction(function () use ($request) {
             $discount = $this->discount;
@@ -121,7 +194,7 @@ class DiscountController extends Controller
             $discount->is_active = 1;
             $discount->save();
 
-            $disTypes = ['category', 'service', 'zone'];
+            $disTypes = ['category', 'service', 'zone', 'provider'];
             foreach ((array)$disTypes as $disType) {
                 $types = [];
                 foreach ((array)$request[$disType . '_ids'] as $id) {
@@ -150,7 +223,7 @@ class DiscountController extends Controller
     public function edit(string $id): View|Factory|Application
     {
         $this->authorize('discount_update');
-        $discount = $this->discountQuery->with(['category_types', 'service_types', 'zone_types'])->where('id', $id)->first();
+        $discount = $this->discountQuery->with(['category_types', 'service_types', 'zone_types', 'provider_types'])->where('id', $id)->first();
         $categories = $this->category->ofStatus(1)->ofType('main')->latest()->get();
         $zones = $this->zone->withoutGlobalScope('translate')->ofStatus(1)->latest()->get();
         $services = $this->service->active()->latest()->get();
@@ -180,7 +253,10 @@ class DiscountController extends Controller
             'category_ids' => 'array',
             'service_ids' => 'array',
             'zone_ids' => 'required|array',
+            'provider_ids' => 'nullable|array',
         ]);
+
+        $request->merge(['provider_ids' => promotion_resolve_provider_ids($request)]);
 
         $discount = $this->discountQuery->where(['id' => $id])->first();
         if (isset($discount)) {
@@ -201,11 +277,13 @@ class DiscountController extends Controller
                 $discount->discount_types()->delete();
 
                 if ($request['discount_type'] == 'category') {
-                    $disTypes = ['category', 'zone'];
+                    $disTypes = ['category', 'zone', 'provider'];
                 } elseif ($request['discount_type'] == 'service') {
-                    $disTypes = ['service', 'zone'];
+                    $disTypes = ['service', 'zone', 'provider'];
                 } elseif ($request['discount_type'] == 'mixed') {
-                    $disTypes = ['category', 'service', 'zone'];
+                    $disTypes = ['category', 'service', 'zone', 'provider'];
+                } else {
+                    $disTypes = ['zone', 'provider'];
                 }
 
                 foreach ((array)$disTypes as $disType) {
@@ -271,7 +349,7 @@ class DiscountController extends Controller
     public function download(Request $request)
     {
         $this->authorize('discount_export');
-        $items = $this->discountQuery->with(['category_types', 'service_types', 'zone_types'])
+        $items = $this->discountQuery->with(['category_types', 'service_types', 'zone_types', 'provider_types'])
             ->when($request->has('search'), function ($query) use ($request) {
                 $keys = explode(' ', $request['search']);
                 return $query->where(function ($query) use ($keys) {
@@ -287,6 +365,9 @@ class DiscountController extends Controller
                 'ID'                   => $item->id ?? '',
                 'Discount Title'       => $item->discount_title ?? '',
                 'Discount Type'        => $item->discount_type ? ucfirst($item->discount_type) : '',
+                'Providers'            => $item->provider_types->count() > 0
+                    ? $item->provider_types->pluck('provider.company_name')->filter()->implode(', ')
+                    : 'All',
                 'Discount Amount'      => $item->discount_amount ?? '0',
                 'Amount Type'          => $item->discount_amount_type ? ucfirst($item->discount_amount_type) : '',
                 'Min Purchase'         => $item->min_purchase ?? '0',

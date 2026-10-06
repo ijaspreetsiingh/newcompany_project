@@ -1,4 +1,4 @@
-import 'package:facebook_app_events/facebook_app_events.dart';
+﻿import 'package:facebook_app_events/facebook_app_events.dart';
 
 class FacebookAnalyticsService {
   static final FacebookAppEvents _instance = FacebookAppEvents();
@@ -19,3 +19,4 @@ class FacebookAnalyticsService {
     );
   }
 }
+

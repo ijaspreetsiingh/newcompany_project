@@ -71,7 +71,7 @@ class BookingHistory extends StatelessWidget {
                            children: [
                              TextSpan(text: '${bookingDetails.isPaid == 0 ? 'unpaid'.tr: 'paid'.tr} ',
                                  style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,
-                                     color: bookingDetails.isPaid == 0?Theme.of(context).colorScheme.error : Colors.green,decoration: TextDecoration.none)),
+                                     color: bookingDetails.isPaid == 0?Theme.of(context).colorScheme.error : Theme.of(Get.context!).colorScheme.primary,decoration: TextDecoration.none)),
                            ],
                          ),
                        ),
@@ -87,6 +87,12 @@ class BookingHistory extends StatelessWidget {
                            ],
                          ),
                        ),
+
+                       if (bookingDetails.bookingStatus?.toLowerCase() == 'completed') ...[
+                         const SizedBox(height: Dimensions.paddingSizeSmall,),
+                         const RecheckSectionWidget(),
+                       ],
+
                        Gaps.verticalGapOf(Dimensions.paddingSizeDefault),
                      ],
                    ),
@@ -278,3 +284,4 @@ class HistoryStatus extends StatelessWidget {
     );
   }
 }
+

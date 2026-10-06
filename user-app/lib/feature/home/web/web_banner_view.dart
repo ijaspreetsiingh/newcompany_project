@@ -27,7 +27,7 @@ class WebBannerView extends GetView<BannerController> {
                     InkWell(
                       onTap: () {
                         BannerModel bannerModel = bannerController.banners![0];
-                        String link = bannerModel.redirectLink != null ? bannerModel.redirectLink! : '';
+                        String link = bannerModel.redtrectLink != null ? bannerModel.redtrectLink! : '';
                         String id = bannerModel.category != null ? bannerModel.category!.id! : '';
                         String name = bannerModel.category != null ? bannerModel.category!.name! : "";
                         bannerController.navigateFromBanner(
@@ -65,7 +65,7 @@ class WebBannerView extends GetView<BannerController> {
                                       child: InkWell(
                                         onTap: () {
                                           BannerModel bannerModel = bannerController.banners![index1];
-                                          String link = bannerModel.redirectLink != null ? bannerModel.redirectLink! : '';
+                                          String link = bannerModel.redtrectLink != null ? bannerModel.redtrectLink! : '';
                                           String id = bannerModel.category != null ? bannerModel.category!.id! : '';
                                           String name = bannerModel.category != null ? bannerModel.category!.name! : "";
 
@@ -91,7 +91,7 @@ class WebBannerView extends GetView<BannerController> {
                                     InkWell(
                                       onTap: () {
                                         BannerModel bannerModel = bannerController.banners![index2];
-                                        String link = bannerModel.redirectLink != null ? bannerModel.redirectLink! : '';
+                                        String link = bannerModel.redtrectLink != null ? bannerModel.redtrectLink! : '';
                                         String id = bannerModel.category != null ? bannerModel.category!.id! : '';
                                         String name = bannerModel.category != null ? bannerModel.category!.name! : "";
                                         bannerController.navigateFromBanner(
@@ -112,7 +112,7 @@ class WebBannerView extends GetView<BannerController> {
                                     InkWell(
                                       onTap: () {
                                         BannerModel bannerModel = bannerController.banners![0];
-                                        String link = bannerModel.redirectLink != null ? bannerModel.redirectLink! : '';
+                                        String link = bannerModel.redtrectLink != null ? bannerModel.redtrectLink! : '';
                                         String id = bannerModel.category != null ? bannerModel.category!.id! : '';
                                         String name = bannerModel.category != null ? bannerModel.category!.name! : "";
                                         bannerController.navigateFromBanner(
@@ -195,6 +195,7 @@ class WebBannerView extends GetView<BannerController> {
     );
   }
 }
+
 
 
 

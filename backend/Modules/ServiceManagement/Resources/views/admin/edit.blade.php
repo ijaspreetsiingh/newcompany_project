@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="{{asset('public/assets/admin-module')}}/plugins/dataTables/select.dataTables.min.css"/>
     <link rel="stylesheet" href="{{asset('public/assets/admin-module')}}/plugins/wysiwyg-editor/froala_editor.min.css"/>
     <link rel="stylesheet" href="{{asset('public/assets/admin-module')}}/css/tags-input.min.css"/>
-    <link rel="stylesheet" href="{{asset('public/assets/admin-module')}}/plugins/cropper/cropper.min.css"/>
 
     {{--AI--}}
     <link rel="stylesheet" href="{{asset('public/assets/admin-module/css/ai-sidebar.css') }}"/>
@@ -306,7 +305,7 @@
 
                                             </div>
                                             <div class="col-xxl-3 col-lg-4 mb-5 mb-sm-0">
-                                                <div class="card">
+                                                <div class="card h-100">
                                                     <div class="card-body">
                                                         <div class="bg-light rounded w-100 mb-30">
                                                             <div class="d-flex flex-column align-items-center gap-0 text-center px-2 py-5">
@@ -364,51 +363,43 @@
                                                                 </p>
                                                             </div>
                                                         </div>
-
-
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <!-- Gallery Images Section - Full Width -->
-                                        <div class="general_wrapper mt-4 mb-4">
-                                            <div class="outline-wrapper">
-                                                <div class="card bg-animate">
-                                                    <div class="card-body">
-                                                        <div class="mb-20">
-                                                            <h3 class="mb-1 text-dark">{{translate('gallery_image')}}</h3>
-                                                            <p class="fs-12 text-color">{{ translate('Upload gallery images (multiple)') }}</p>
-                                                        </div>
+                                        <!-- Gallery Images Section -->
+                                        <div class="card mt-4">
+                                            <div class="card-body">
+                                                <h5 class="mb-1 fs-14 font-semibold text-dark">{{translate('gallery_image')}}</h5>
+                                                <span class="fs-12 text-color d-block mb-3">{{ translate('Upload gallery images (multiple)') }}</span>
 
-                                                        <div class="row g-2 mb-3" id="galleryPreviewWrap">
-                                                            @if($service->gallery && is_array($service->gallery) && count($service->gallery))
-                                                                @foreach($service->gallery as $galleryImage)
-                                                                    <div class="col-md-2 col-4 gallery-item position-relative">
-                                                                        <img src="{{ asset('storage/' . $galleryImage) }}" class="w-100 rounded border" style="height:120px;object-fit:cover" alt="gallery">
-                                                                        <input type="hidden" name="existing_gallery[]" value="{{ $galleryImage }}">
-                                                                        <button type="button" class="btn btn-sm btn-danger position-absolute" style="top:4px;right:4px;padding:0 6px;line-height:1.4"
-                                                                                onclick="this.closest('.gallery-item').remove();">&times;</button>
-                                                                    </div>
-                                                                @endforeach
-                                                            @endif
-                                                        </div>
-
-                                                        <div id="galleryNewPreview" class="row g-2 mb-3"></div>
-
-                                                        <div class="bg-light rounded p-4 text-center" onclick="document.getElementById('galleryInput').click();" style="cursor:pointer;border:2px dashed #dee2e6;border-radius:8px;">
-                                                            <span class="material-icons mb-1" style="font-size:36px;color:#999">add_photo_alternate</span>
-                                                            <p class="mb-0 fs-12 text-color">{{ translate('Click to select multiple images') }}</p>
-                                                            <p class="mb-0 fs-10 text-color">{{ implode(', ', array_column(IMAGEEXTENSION, 'key')) }} | Max {{ readableUploadMaxFileSize('image') }}</p>
-                                                        </div>
-                                                        <input type="file" class="d-none"
-                                                               name="gallery[]"
-                                                               id="galleryInput"
-                                                               multiple
-                                                               accept=".{{ implode(',.', array_column(IMAGEEXTENSION, 'key')) }}, |image/*"
-                                                               data-maxFileSize="{{ readableUploadMaxFileSize('image') }}">
+                                                @if($service->gallery_images && count($service->gallery_images) > 0)
+                                                    <div class="row g-2 mb-3" id="galleryPreviewWrap">
+                                                        @foreach($service->gallery_images as $image)
+                                                            <div class="col-md-2 col-4 gallery-item position-relative">
+                                                                <img src="{{ $image['image_full_path'] ?? '' }}" class="w-100 rounded border" style="height:120px;object-fit:cover" alt="gallery">
+                                                                <button type="button" class="btn btn-sm btn-danger position-absolute" style="top:4px;right:4px;padding:0 6px;line-height:1.4" onclick="this.closest('.gallery-item').remove()">&times;</button>
+                                                            </div>
+                                                        @endforeach
                                                     </div>
-                                                </div>
+                                                @else
+                                                    <div class="row g-2 mb-3" id="galleryPreviewWrap"></div>
+                                                @endif
+
+                                                <label for="galleryInput" class="d-block" style="cursor:pointer">
+                                                    <div class="border-dashed rounded p-4 text-center" style="border:2px dashed #dee2e6;background:#f8f9fa;border-radius:8px">
+                                                        <span class="material-icons mb-1" style="font-size:36px;color:#999">add_photo_alternate</span>
+                                                        <p class="mb-0 fs-12 text-color">{{ translate('Click to select multiple images') }}</p>
+                                                        <p class="mb-0 fs-10 text-color">{{ implode(', ', array_column(IMAGEEXTENSION, 'key')) }} | Max {{ readableUploadMaxFileSize('image') }}</p>
+                                                    </div>
+                                                </label>
+                                                <input type="file" class="d-none"
+                                                       name="gallery[]"
+                                                       id="galleryInput"
+                                                       multiple
+                                                       accept=".{{ implode(',.', array_column(IMAGEEXTENSION, 'key')) }}, |image/*"
+                                                       data-maxFileSize="{{ readableUploadMaxFileSize('image') }}">
                                             </div>
                                         </div>
 
@@ -480,109 +471,6 @@
                                                                                value="{{implode(",",$tagNames)}}"
                                                                                data-role="tagsinput">
                                                                     </div>
-                                                                </div>
-                                                                <div class="col-12">
-                                                                    <div class="bg-white border rounded p-3">
-                                                                        <div class="form-check form-switch mb-2">
-                                                                            <input type="hidden" name="is_single_provider" value="0">
-                                                                            <input class="form-check-input" type="checkbox"
-                                                                                   name="is_single_provider" value="1"
-                                                                                   id="is-single-provider"
-                                                                                   onchange="window.__toggleSingleProviderOptions && window.__toggleSingleProviderOptions()"
-                                                                                   onclick="window.__toggleSingleProviderOptions && window.__toggleSingleProviderOptions()"
-                                                                                   {{ old('is_single_provider', $service->is_single_provider) == 1 ? 'checked' : '' }}>
-                                                                            <label class="form-check-label fw-semibold" for="is-single-provider">
-                                                                                {{translate('single_provider_only')}}
-                                                                            </label>
-                                                                        </div>
-                                                                        <p class="fs-12 text-color mt-0 mb-2">
-                                                                            {{translate('single_provider_only_hint')}}
-                                                                        </p>
-
-                                                                        @php($editMode = old('single_provider_mode', $service->single_provider_mode))
-                                                                        <div id="single-provider-options" class="ps-2 border-start" style="display:none;">
-                                                                            <div class="form-check mb-2">
-                                                                                <input class="form-check-input" type="radio"
-                                                                                       name="single_provider_mode" value="any_first"
-                                                                                       id="mode-any-first"
-                                                                                       onchange="window.__toggleSingleProviderOptions && window.__toggleSingleProviderOptions()"
-                                                                                       {{ ($editMode == 'any_first' || !$editMode) ? 'checked' : '' }}>
-                                                                                <label class="form-check-label" for="mode-any-first">
-                                                                                    {{translate('any_first_provider')}}
-                                                                                </label>
-                                                                                <p class="fs-12 text-color m-0">
-                                                                                    {{translate('any_first_provider_hint')}}
-                                                                                </p>
-                                                                            </div>
-                                                                            <div class="form-check mb-2">
-                                                                                <input class="form-check-input" type="radio"
-                                                                                       name="single_provider_mode" value="specific"
-                                                                                       id="mode-specific"
-                                                                                       onchange="window.__toggleSingleProviderOptions && window.__toggleSingleProviderOptions()"
-                                                                                       {{ $editMode == 'specific' ? 'checked' : '' }}>
-                                                                                <label class="form-check-label" for="mode-specific">
-                                                                                    {{translate('select_any_existing_provider')}}
-                                                                                </label>
-                                                                                <p class="fs-12 text-color m-0">
-                                                                                    {{translate('select_any_existing_provider_hint')}}
-                                                                                </p>
-                                                                            </div>
-                                                                            <div id="specific-provider-wrapper" class="mt-2" style="display:none;">
-                                                                                <div class="form-floating form-floating__icon">
-                                                                                    <select class="form-control" name="single_provider_id" id="single-provider-id">
-                                                                                        <option value="">{{translate('choose_provider')}}</option>
-                                                                                        @foreach(($providers ?? collect()) as $providerOption)
-                                                                                            @php($selectedProviderId = old('single_provider_id', $service->single_provider_id))
-                                                                                            <option value="{{ $providerOption->id }}"
-                                                                                                {{ $selectedProviderId == $providerOption->id ? 'selected' : '' }}>
-                                                                                                {{ $providerOption->company_name }}
-                                                                                                @if($providerOption->owner)
-                                                                                                    ({{ $providerOption->owner->first_name }} {{ $providerOption->owner->last_name }})
-                                                                                                @endif
-                                                                                            </option>
-                                                                                        @endforeach
-                                                                                    </select>
-                                                                                    <label>{{translate('choose_provider')}} *</label>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <script>
-                                                                        (function () {
-                                                                            function toggleSingleProviderOptions() {
-                                                                                var isOn = document.getElementById('is-single-provider');
-                                                                                var optionsEl = document.getElementById('single-provider-options');
-                                                                                var specificEl = document.getElementById('specific-provider-wrapper');
-                                                                                var on = !!(isOn && isOn.checked);
-                                                                                if (optionsEl) optionsEl.style.display = on ? 'block' : 'none';
-                                                                                if (!on) {
-                                                                                    if (specificEl) specificEl.style.display = 'none';
-                                                                                    return;
-                                                                                }
-                                                                                var modeEl = document.querySelector('input[name="single_provider_mode"]:checked');
-                                                                                var mode = modeEl ? modeEl.value : 'any_first';
-                                                                                if (specificEl) specificEl.style.display = (mode === 'specific') ? 'block' : 'none';
-                                                                            }
-                                                                            window.__toggleSingleProviderOptions = toggleSingleProviderOptions;
-                                                                            document.addEventListener('change', function (e) {
-                                                                                if (!e.target) return;
-                                                                                if (e.target.id === 'is-single-provider' || (e.target.name === 'single_provider_mode')) {
-                                                                                    toggleSingleProviderOptions();
-                                                                                }
-                                                                            }, true);
-                                                                            document.addEventListener('click', function (e) {
-                                                                                if (!e.target) return;
-                                                                                if (e.target.id === 'is-single-provider' || (e.target.name === 'single_provider_mode')) {
-                                                                                    toggleSingleProviderOptions();
-                                                                                }
-                                                                            }, true);
-                                                                            if (document.readyState === 'loading') {
-                                                                                document.addEventListener('DOMContentLoaded', toggleSingleProviderOptions);
-                                                                            } else {
-                                                                                toggleSingleProviderOptions();
-                                                                            }
-                                                                        })();
-                                                                    </script>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -689,28 +577,6 @@
             </div>
         </div>
     </div>
-
-    {{-- Service image crop modal (thumbnail 1:1 / cover 3:1) --}}
-    <div class="modal fade" id="serviceImageCropModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">{{ translate('Crop Your Image') }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="mb-2 text-muted" id="serviceCropRatioHint">Required ratio: 1:1</p>
-                    <div style="max-height:60vh; overflow:hidden; background:#f5f5f5; border-radius:8px;">
-                        <img id="serviceCropImage" src="" alt="crop" style="max-width:100%; display:block;">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" id="serviceCropCancelBtn" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="serviceCropApplyBtn">Crop &amp; Use</button>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @push('script')
@@ -719,7 +585,6 @@
     <script src="{{asset('public/assets/admin-module')}}/plugins/jquery-steps/jquery.steps.min.js"></script>
     <script src="{{asset('public/assets/admin-module/plugins/tinymce/tinymce.min.js')}}"></script>
     <script src="{{asset('public/assets/ckeditor/jquery.js')}}"></script>
-    <script src="{{asset('public/assets/admin-module')}}/plugins/cropper/cropper.min.js"></script>
 
     {{--AI--}}
     <script src="{{ asset('public/assets/admin-module/js/AI/products/ai-sidebar.js') }}"></script>
@@ -736,23 +601,6 @@
 
         $(document).ready(function () {
             $('.js-select').select2();
-
-            function toggleSingleProviderOptions() {
-                const isOn = $('#is-single-provider').is(':checked');
-                const optionsEl = document.getElementById('single-provider-options');
-                const specificEl = document.getElementById('specific-provider-wrapper');
-                if (optionsEl) optionsEl.style.display = isOn ? 'block' : 'none';
-                if (!isOn) {
-                    if (specificEl) specificEl.style.display = 'none';
-                    return;
-                }
-                const mode = ($('input[name="single_provider_mode"]:checked').val()) || 'any_first';
-                if (specificEl) specificEl.style.display = (mode === 'specific') ? 'block' : 'none';
-            }
-            window.__toggleSingleProviderOptions = toggleSingleProviderOptions;
-
-            $(document).on('change click', '#is-single-provider, input[name="single_provider_mode"]', toggleSingleProviderOptions);
-            toggleSingleProviderOptions();
         });
 
         $("#form-wizard").steps({
@@ -956,122 +804,7 @@
                 $(".from_part_2").addClass('d-none');
             }
         });
-
-        /* Gallery Image block - multi file preview + new image remove */
-        document.getElementById('galleryInput')?.addEventListener('change', function (e) {
-            const preview = document.getElementById('galleryNewPreview');
-            [...e.target.files].forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function (ev) {
-                    const div = document.createElement('div');
-                    div.className = 'col-md-2 col-4 gallery-item position-relative gallery-new-item';
-                    div.innerHTML = `<img src="${ev.target.result}" class="w-100 rounded border" style="height:120px;object-fit:cover" alt="gallery">
-                        <button type="button" class="btn btn-sm btn-danger position-absolute" style="top:4px;right:4px;padding:0 6px;line-height:1.4"
-                            onclick="this.closest('.gallery-item').remove()">&times;</button>`;
-                    preview.appendChild(div);
-                };
-                reader.readAsDataURL(file);
-            });
-        });
-
-    </script>
-
-    <script>
-        (function () {
-            if (typeof bootstrap === 'undefined' || typeof Cropper === 'undefined') {
-                console.error('bootstrap/cropper not loaded');
-                return;
-            }
-            var cropRules = { thumbnail: 1, cover_image: 3 };
-            var cropper = null, activeInput = null, pendingFile = null, savedPreviewSrc = '';
-
-            document.addEventListener('change', function (e) {
-                var input = e.target;
-                if (!input || !input.matches || !input.matches('.upload-file__input')) return;
-                var fieldName = input.getAttribute('name');
-                if (!cropRules[fieldName]) return;
-                if (!input.files || !input.files[0]) return;
-                var file = input.files[0];
-                if (file.type && file.type.indexOf('image/') !== 0) return;
-
-                var card = input.closest('.upload-file');
-                var previewImg = card ? card.querySelector('.upload-file__img img') : null;
-                savedPreviewSrc = previewImg ? (previewImg.getAttribute('src') || '') : '';
-                openServiceImageCropper(input, file, cropRules[fieldName]);
-            }, true);
-
-            function openServiceImageCropper(input, file, aspect) {
-                activeInput = input;
-                pendingFile = file;
-                var modalEl = document.getElementById('serviceImageCropModal');
-                var imgEl = document.getElementById('serviceCropImage');
-                var hintEl = document.getElementById('serviceCropRatioHint');
-                if (!modalEl || !imgEl) return;
-                hintEl.textContent = aspect === 1
-                    ? 'Required ratio: 1:1 (square thumbnail)'
-                    : 'Required ratio: 3:1 (wide cover banner)';
-                var reader = new FileReader();
-                reader.onload = function (ev) {
-                    imgEl.src = ev.target.result;
-                    bootstrap.Modal.getOrCreateInstance(modalEl).show();
-                    modalEl.addEventListener('shown.bs.modal', function onShown() {
-                        modalEl.removeEventListener('shown.bs.modal', onShown);
-                        if (cropper) { cropper.destroy(); cropper = null; }
-                        cropper = new Cropper(imgEl, {
-                            aspectRatio: aspect,
-                            viewMode: 1,
-                            autoCropArea: 1,
-                            responsive: true,
-                            background: false
-                        });
-                    });
-                };
-                reader.readAsDataURL(file);
-            }
-
-            var applyBtn = document.getElementById('serviceCropApplyBtn');
-            if (applyBtn) applyBtn.addEventListener('click', function () {
-                if (!cropper || !activeInput || !pendingFile) return;
-                var mime = pendingFile.type === 'image/png' ? 'image/png' : 'image/jpeg';
-                cropper.getCroppedCanvas().toBlob(function (blob) {
-                    if (!blob || !activeInput) return;
-                    var ext = mime === 'image/png' ? 'png' : 'jpg';
-                    var base = (pendingFile.name || 'image').replace(/\.[^.]+$/, '');
-                    var croppedFile = new File([blob], base + '_crop.' + ext, { type: mime });
-                    var dt = new DataTransfer();
-                    dt.items.add(croppedFile);
-                    activeInput.files = dt.files;
-                    var card = activeInput.closest('.upload-file');
-                    var previewImg = card ? card.querySelector('.upload-file__img img') : null;
-                    if (previewImg) {
-                        var r = new FileReader();
-                        r.onload = function (ev2) { previewImg.src = ev2.target.result; };
-                        r.readAsDataURL(croppedFile);
-                    }
-                    bootstrap.Modal.getOrCreateInstance(document.getElementById('serviceImageCropModal')).hide();
-                    if (typeof toastr !== 'undefined') toastr.success('Image cropped successfully');
-                }, mime, 0.92);
-            });
-
-            var cancelBtn = document.getElementById('serviceCropCancelBtn');
-            if (cancelBtn) cancelBtn.addEventListener('click', function () {
-                if (activeInput) {
-                    activeInput.value = '';
-                    var card = activeInput.closest('.upload-file');
-                    var previewImg = card ? card.querySelector('.upload-file__img img') : null;
-                    if (previewImg && savedPreviewSrc) previewImg.src = savedPreviewSrc;
-                }
-            });
-
-            var cropModalEl = document.getElementById('serviceImageCropModal');
-            if (cropModalEl) cropModalEl.addEventListener('hidden.bs.modal', function () {
-                if (cropper) { cropper.destroy(); cropper = null; }
-                activeInput = null;
-                pendingFile = null;
-                savedPreviewSrc = '';
-                var imgEl = document.getElementById('serviceCropImage');
-                if (imgEl) imgEl.removeAttribute('src');
-            });
-        })();
     </script>
 @endpush
+
+

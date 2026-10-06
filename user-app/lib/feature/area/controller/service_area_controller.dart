@@ -157,3 +157,5 @@ class ServiceAreaController extends GetxController implements GetxService{
   }
 
 }
+
+

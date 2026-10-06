@@ -1,4 +1,4 @@
-import 'package:jdds/util/core_export.dart';
+﻿import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 
 
@@ -22,3 +22,4 @@ class CouponRepo {
     return await apiClient.getData("${AppConstants.removeCoupon}?guest_id=${Get.find<SplashController>().getGuestId()}");
   }
 }
+

@@ -1,151 +1,165 @@
-import 'package:demandium_provider/helper/extension_helper.dart';
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 import 'package:demandium_provider/util/core_export.dart';
 
-class AdvertisementSection extends StatelessWidget {
+class AdvertisementSection extends StatefulWidget {
   const AdvertisementSection({super.key});
 
   @override
+  State<AdvertisementSection> createState() => _AdvertisementSectionState();
+}
+
+class _AdvertisementSectionState extends State<AdvertisementSection> {
+  bool _fetched = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final AdvertisementController advertisementController =
+        Get.find<AdvertisementController>();
+    if (advertisementController.advertisementDataList != null) {
+      _fetched = true;
+      return;
+    }
+    advertisementController.getAdvertisementList('all', 1).then((_) {
+      if (mounted) setState(() => _fetched = true);
+    });
+  }
+
+  void _createAdvertisement() {
+    Get.find<BusinessSubscriptionController>()
+        .openTrialEndBottomSheet()
+        .then((bool isTrial) {
+          if (!isTrial) return;
+          if (Get.find<UserProfileController>().checkAvailableFeatureInSubscriptionPlan(
+            featureType: 'advertisement',
+          )) {
+            Get.find<AdvertisementController>().resetAllValues();
+            Get.to(() => const CreateAdvertisementScreen(isEditScreen: false));
+          }
+        });
+  }
+
+  String _dateLabel(String? date) {
+    final DateTime? parsed = DateTime.tryParse(date ?? '');
+    if (parsed == null) return '';
+    return DateConverter.dateStringMonthYear(parsed, format: 'd MMM');
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final Color primary = Theme.of(context).primaryColor;
+    return InkSection(
+      title: 'Advertisements'.tr,
+      action: 'Create'.tr,
+      onAction: _createAdvertisement,
+      child: GetBuilder<AdvertisementController>(
+        builder: (advertisementController) {
+          final List<AdvertisementData>? ads =
+              advertisementController.advertisementDataList;
 
-    return GetBuilder<UserProfileController>(
-      builder: (userProfileController) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(
-            Dimensions.paddingSizeDefault,
-            Dimensions.paddingSizeDefault,
-            Dimensions.paddingSizeDefault,
-            0,
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  primary.withValues(alpha: 0.10),
-                  Theme.of(
-                    context,
-                  ).colorScheme.secondary.withValues(alpha: 0.08),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
-              border: Border.all(color: primary.withValues(alpha: 0.15)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(
-                    Dimensions.paddingSizeSmall - 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(
-                      Dimensions.radiusDefault,
+          if (ads == null && !_fetched) return const _AdsShimmer();
+
+          if (ads == null || ads.isEmpty) {
+            return InkEmptyState('create_ads_to_reach_more_customers'.tr);
+          }
+
+          return SizedBox(
+            height: 132,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: ads.length,
+              separatorBuilder: (BuildContext context, int index) =>
+                  const SizedBox(width: 12),
+              itemBuilder: (BuildContext context, int index) {
+                final AdvertisementData ad = ads[index];
+                final String status = ad.status ?? '';
+                final String startDate = _dateLabel(ad.startDate);
+                final String endDate = _dateLabel(ad.endDate);
+                final String dateRange = [
+                  if (startDate.isNotEmpty) startDate,
+                  if (endDate.isNotEmpty) endDate,
+                ].join(' – ');
+
+                return SizedBox(
+                  height: 132,
+                  width: 230,
+                  child: InkCard(
+                    onTap: () => Get.toNamed(
+                      RouteHelper.getAdvertisementDetailsScreen(
+                        advertisementId: ad.id,
+                      ),
                     ),
-                  ),
-                  child: Image.asset(
-                    Images.dashboardAdsIcon,
-                    height: 34,
-                    width: 34,
-                  ),
-                ),
-
-                const SizedBox(width: Dimensions.paddingSizeSmall),
-
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'want_to_get_highlighted'.tr,
-                        style: robotoBold.copyWith(
-                          fontSize: Dimensions.fontSizeDefault,
-                        ),
-                      ),
-                      const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-
-                      Text(
-                        'create_ads_to_reach_more_customers'.tr,
-                        style: robotoRegular.copyWith(
-                          fontSize: Dimensions.fontSizeSmall,
-                          color: Theme.of(
-                            context,
-                          ).textTheme.bodyLarge?.color?.withValues(alpha: 0.6),
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: Dimensions.paddingSizeSmall),
-
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(50),
-                    onTap: () {
-                      Get.find<BusinessSubscriptionController>()
-                          .openTrialEndBottomSheet()
-                          .then((isTrial) {
-                            if (isTrial) {
-                              if (Get.find<UserProfileController>()
-                                  .checkAvailableFeatureInSubscriptionPlan(
-                                    featureType: 'advertisement',
-                                  )) {
-                                Get.find<AdvertisementController>()
-                                    .resetAllValues();
-                                Get.to(
-                                  () => const CreateAdvertisementScreen(
-                                    isEditScreen: false,
-                                  ),
-                                );
-                              }
-                            }
-                          });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: Dimensions.paddingSizeDefault,
-                        vertical: Dimensions.paddingSizeSmall - 1,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            primary,
-                            Color.lerp(primary, const Color(0xFF1E40AF), 0.45)!,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(50),
-                        boxShadow: [
-                          BoxShadow(
-                            color: primary.withValues(alpha: 0.30),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (status.isNotEmpty)
+                          InkEyebrow(
+                            status,
+                            color: InkColors.mutedForeground,
                           ),
-                        ],
-                      ),
-                      child: Text(
-                        'create_ads'.tr,
-                        style: robotoBold.copyWith(
-                          fontSize: Dimensions.fontSizeSmall,
-                          color: Colors.white,
+                        const SizedBox(height: 8),
+                        Text(
+                          ad.title ?? '',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: robotoBold.copyWith(
+                            fontSize: 14,
+                            height: 1.35,
+                            color: InkColors.foreground,
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 12),
+                        if (dateRange.isNotEmpty)
+                          Text(
+                            dateRange,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: robotoRegular.copyWith(
+                              fontSize: 11,
+                              color: InkColors.mutedForeground,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _AdsShimmer extends StatelessWidget {
+  const _AdsShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer(
+      duration: const Duration(seconds: 3),
+      interval: const Duration(milliseconds: 1500),
+      colorOpacity: 0,
+      enabled: true,
+      direction: const ShimmerDirection.fromLTRB(),
+      child: SizedBox(
+        height: 132,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: 3,
+          separatorBuilder: (BuildContext context, int index) =>
+              const SizedBox(width: 12),
+          itemBuilder: (BuildContext context, int index) => Container(
+            height: 132,
+            width: 230,
+            decoration: BoxDecoration(
+              color: Theme.of(context).shadowColor,
+              borderRadius: BorderRadius.circular(19),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

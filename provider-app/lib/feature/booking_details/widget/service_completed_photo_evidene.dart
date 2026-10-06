@@ -1,4 +1,3 @@
-import 'package:demandium_provider/helper/extension_helper.dart';
 import 'package:demandium_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
@@ -13,8 +12,10 @@ class ServiceCompletedPhotoEvidence extends StatelessWidget {
       bool showDeliveryConfirmImage = bookingDetailsController.showPhotoEvidenceField;
       return Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          boxShadow: context.customThemeColors.lightShadow,
+          color: InkColors.card,
+          borderRadius: BorderRadius.circular(19),
+          border: Border.all(color: InkColors.border),
+          boxShadow: InkColors.cardShadow,
         ),
         margin:  EdgeInsets.only(bottom:
         Get.find<SplashController>().configModel.content?.bookingImageVerification == 1 && showDeliveryConfirmImage && bookingDetails.bookingStatus != 'completed'? 50 :

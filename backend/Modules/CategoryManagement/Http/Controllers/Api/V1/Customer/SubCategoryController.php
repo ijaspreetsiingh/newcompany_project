@@ -34,7 +34,7 @@ class SubCategoryController extends Controller
         }
 
         $subCategories = $this->category->withCount('services')->with(['parent'])
-            ->ofStatus(1)->ofType('sub')->latest()->paginate($request['limit'], ['*'], 'offset', $request['offset'])->withPath('');
+            ->ofStatus(1)->ofType('sub')->visibleInCurrentZone()->latest()->paginate($request['limit'], ['*'], 'offset', $request['offset'])->withPath('');
 
         return response()->json(response_formatter(DEFAULT_200, $subCategories), 200);
     }

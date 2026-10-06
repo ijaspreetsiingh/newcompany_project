@@ -360,8 +360,7 @@ if (!function_exists('completeBookingTransactionForDigitalPayment')) {
         }else{
             //admin commission
             $provider = Provider::find($booking['provider_id']);
-            $commission_percentage = $provider->commission_status == 1 ? $provider->commission_percentage : (business_config('default_commission', 'business_information'))->live_values;
-            $admin_commission = ($provider_receivable_total_booking_amount*$commission_percentage)/100;
+            $admin_commission = providerAdminCommission($provider, $provider_receivable_total_booking_amount);
 
             $admin_commission -= $promotional_cost_by_admin;
         }
@@ -504,8 +503,7 @@ if (!function_exists('completeBookingRepeatTransactionForDigitalPayment')) {
         }else{
             //admin commission
             $provider = Provider::find($booking['provider_id']);
-            $commission_percentage = $provider->commission_status == 1 ? $provider->commission_percentage : (business_config('default_commission', 'business_information'))->live_values;
-            $admin_commission = ($provider_receivable_total_booking_amount*$commission_percentage)/100;
+            $admin_commission = providerAdminCommission($provider, $provider_receivable_total_booking_amount);
 
             $admin_commission -= $promotional_cost_by_admin;
         }
@@ -654,8 +652,7 @@ if (!function_exists('completeBookingTransactionForCashAfterService')) {
         }else{
             //admin commission
             $provider = Provider::find($booking['provider_id']);
-            $commission_percentage = $provider->commission_status == 1 ? $provider->commission_percentage : (business_config('default_commission', 'business_information'))->live_values;
-            $admin_commission = ($provider_receivable_total_booking_amount*$commission_percentage)/100;
+            $admin_commission = providerAdminCommission($provider, $provider_receivable_total_booking_amount);
             $admin_commission -= $promotional_cost_by_admin;
         }
         //admin promotional cost will be deducted from admin commission
@@ -803,8 +800,7 @@ if (!function_exists('completeBookingRepeatTransactionForCashAfterService')) {
         }else{
             //admin commission
             $provider = Provider::find($booking['provider_id']);
-            $commission_percentage = $provider->commission_status == 1 ? $provider->commission_percentage : (business_config('default_commission', 'business_information'))->live_values;
-            $admin_commission = ($provider_receivable_total_booking_amount*$commission_percentage)/100;
+            $admin_commission = providerAdminCommission($provider, $provider_receivable_total_booking_amount);
             $admin_commission -= $promotional_cost_by_admin;
         }
         //admin promotional cost will be deducted from admin commission
@@ -983,8 +979,7 @@ if (!function_exists('completeBookingTransactionForPartialCas')) {
         }else{
             //admin commission
             $provider = Provider::find($booking['provider_id']);
-            $commission_percentage = $provider->commission_status == 1 ? $provider->commission_percentage : (business_config('default_commission', 'business_information'))->live_values;
-            $admin_commission = ($provider_receivable_total_booking_amount*$commission_percentage)/100;
+            $admin_commission = providerAdminCommission($provider, $provider_receivable_total_booking_amount);
 
             $admin_commission -= $promotional_cost_by_admin;
         }
@@ -1190,8 +1185,7 @@ if (!function_exists('completeBookingTransactionForPartialDigital')) {
         }else{
             //admin commission
             $provider = Provider::find($booking['provider_id']);
-            $commission_percentage = $provider->commission_status == 1 ? $provider->commission_percentage : (business_config('default_commission', 'business_information'))->live_values;
-            $admin_commission = ($provider_receivable_total_booking_amount*$commission_percentage)/100;
+            $admin_commission = providerAdminCommission($provider, $provider_receivable_total_booking_amount);
 
             $admin_commission -= $promotional_cost_by_admin;
         }
@@ -1314,8 +1308,7 @@ if (!function_exists('completeBookingTransactionForDigitalPaymentAndExtraService
         }else{
             //admin commission
             $provider = Provider::find($booking['provider_id']);
-            $commission_percentage = $provider->commission_status == 1 ? $provider->commission_percentage : (business_config('default_commission', 'business_information'))->live_values;
-            $admin_commission = ($provider_receivable_total_booking_amount*$commission_percentage)/100;
+            $admin_commission = providerAdminCommission($provider, $provider_receivable_total_booking_amount);
 
             $admin_commission -= $promotional_cost_by_admin;
         }
@@ -1533,8 +1526,7 @@ if (!function_exists('completeBookingRepeatTransactionForDigitalPaymentAndExtraS
         }else{
             //admin commission
             $provider = Provider::find($booking['provider_id']);
-            $commission_percentage = $provider->commission_status == 1 ? $provider->commission_percentage : (business_config('default_commission', 'business_information'))->live_values;
-            $admin_commission = ($provider_receivable_total_booking_amount*$commission_percentage)/100;
+            $admin_commission = providerAdminCommission($provider, $provider_receivable_total_booking_amount);
 
             $admin_commission -= $promotional_cost_by_admin;
         }

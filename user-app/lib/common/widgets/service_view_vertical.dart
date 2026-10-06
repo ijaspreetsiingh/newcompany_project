@@ -72,3 +72,5 @@ class ServiceViewVertical extends GetView<ServiceController> {
     ]);
   }
 }
+
+

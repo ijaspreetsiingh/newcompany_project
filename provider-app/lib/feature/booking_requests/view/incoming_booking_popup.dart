@@ -1,9 +1,12 @@
 import 'package:get/get.dart';
 import 'package:demandium_provider/util/core_export.dart';
 import 'package:demandium_provider/feature/booking_details/model/bookings_details_model.dart';
+import 'package:demandium_provider/feature/booking_details/model/assign_suggestion_model.dart';
 import 'package:demandium_provider/feature/booking_requests/controller/booking_timer_controller.dart';
 
-/// AUTO-ASSIGN: full-screen booking popup jab provider ko new booking request aati hai
+/// AUTO-ASSIGN: full-screen booking popup jab provider ko new booking request aati hai.
+/// Decision window ke andar provider distance-sorted serviceman list se
+/// 1-5 servicemen select karke assign kar sakta hai, ya reject kar sakta hai.
 class IncomingBookingPopup extends StatefulWidget {
   final String bookingId;
   const IncomingBookingPopup({super.key, required this.bookingId});
@@ -47,14 +50,19 @@ class _IncomingBookingPopupState extends State<IncomingBookingPopup> {
 
                   Expanded(
                     child: controller.bookingDetails != null
-                        ? SingleChildScrollView(child: _BookingSummaryCard(bookingDetails: controller.bookingDetails!))
-                        : (controller.expired || controller.accepted || controller.rejected)
+                        ? SingleChildScrollView(child: Column(children: [
+                            _BookingSummaryCard(bookingDetails: controller.bookingDetails!),
+                            const SizedBox(height: Dimensions.paddingSizeDefault),
+                            if (!controller.expired && !controller.assigned && !controller.rejected)
+                              _TeamAssignSection(controller: controller),
+                          ]))
+                        : (controller.expired || controller.assigned || controller.rejected)
                             ? _StatusCard(controller: controller)
                             : const Center(child: CustomLoader()),
                   ),
 
                   // countdown timer
-                  if (!controller.expired && !controller.accepted && !controller.rejected) ...[
+                  if (!controller.expired && !controller.assigned && !controller.rejected) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeSmall),
                       decoration: BoxDecoration(
@@ -76,8 +84,8 @@ class _IncomingBookingPopupState extends State<IncomingBookingPopup> {
                     const SizedBox(height: Dimensions.paddingSizeDefault),
                   ],
 
-                  // action buttons
-                  if (!controller.expired && !controller.accepted && !controller.rejected)
+                  // action buttons: Reject (auto-assign chalu) | Assign team
+                  if (!controller.expired && !controller.assigned && !controller.rejected)
                     Row(children: [
                       Expanded(
                         child: OutlinedButton.icon(
@@ -99,14 +107,23 @@ class _IncomingBookingPopupState extends State<IncomingBookingPopup> {
                             backgroundColor: Theme.of(context).primaryColor,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Dimensions.radiusDefault)),
                           ),
-                          icon: const Icon(Icons.check, color: Colors.white),
-                          label: Text('accept'.tr, style: robotoMedium.copyWith(color: Colors.white)),
-                          onPressed: controller.isLoading ? null : () => controller.acceptBooking(),
+                          icon: controller.assigning
+                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              : const Icon(Icons.group_add, color: Colors.white),
+                          label: Text(
+                            controller.selectedIds.isEmpty
+                                ? 'select_serviceman'.tr
+                                : '${'assign'.tr} (${controller.selectedIds.length})',
+                            style: robotoMedium.copyWith(color: Colors.white),
+                          ),
+                          onPressed: (controller.assigning || controller.selectedIds.isEmpty)
+                              ? null
+                              : () => controller.assignSelected(),
                         ),
                       ),
                     ]),
 
-                  if (controller.expired || controller.accepted || controller.rejected) ...[
+                  if (controller.expired || controller.assigned || controller.rejected) ...[
                     const SizedBox(height: Dimensions.paddingSizeDefault),
                     CustomButton(
                       btnTxt: 'ok'.tr,
@@ -130,6 +147,127 @@ class _IncomingBookingPopupState extends State<IncomingBookingPopup> {
     final int minutes = totalSeconds ~/ 60;
     final int seconds = totalSeconds % 60;
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+}
+
+/// Distance-sorted serviceman list + multi-select (team 1-5)
+class _TeamAssignSection extends StatelessWidget {
+  final BookingTimerController controller;
+  const _TeamAssignSection({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+        border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.2)),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(Icons.group_outlined, size: 18, color: Theme.of(context).primaryColor),
+          const SizedBox(width: Dimensions.paddingSizeExtraSmall),
+          Text('${'select_serviceman'.tr} (${controller.selectedIds.length}/5)',
+              style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault)),
+        ]),
+        const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+        Text('select_team_hint'.tr,
+            style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeExtraSmall, color: Theme.of(context).hintColor)),
+        const SizedBox(height: Dimensions.paddingSizeSmall),
+
+        if (controller.suggestionsLoading)
+          const Padding(
+            padding: EdgeInsets.all(Dimensions.paddingSizeDefault),
+            child: Center(child: CustomLoader()),
+          )
+        else if (controller.suggestions.isEmpty)
+          Text('no_serviceman_available'.tr,
+              style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).hintColor))
+        else
+          ...controller.suggestions.map((s) => _ServicemanTile(suggestion: s, controller: controller)),
+      ]),
+    );
+  }
+}
+
+class _ServicemanTile extends StatelessWidget {
+  final AssignSuggestion suggestion;
+  final BookingTimerController controller;
+  const _ServicemanTile({required this.suggestion, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final bool selected = controller.selectedIds.contains(suggestion.id);
+
+    return InkWell(
+      onTap: () => controller.toggleSuggestion(suggestion.id),
+      borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: Dimensions.paddingSizeExtraSmall),
+        padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeExtraSmall),
+        decoration: BoxDecoration(
+          color: selected ? Theme.of(context).primaryColor.withValues(alpha: 0.07) : Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+          border: Border.all(color: selected ? Theme.of(context).primaryColor : Theme.of(context).dividerColor),
+        ),
+        child: Row(children: [
+          Checkbox(
+            value: selected,
+            activeColor: Theme.of(context).primaryColor,
+            onChanged: (_) => controller.toggleSuggestion(suggestion.id),
+          ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(50),
+            child: CustomImage(
+              height: 36, width: 36, fit: BoxFit.cover,
+              image: suggestion.image,
+              placeholder: Images.userPlaceHolder,
+            ),
+          ),
+          const SizedBox(width: Dimensions.paddingSizeSmall),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(suggestion.name, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall), maxLines: 1, overflow: TextOverflow.ellipsis),
+              if (suggestion.slotStatus != null && suggestion.slotStatus!.isNotEmpty)
+                Text(suggestion.slotStatus!.tr,
+                    style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeExtraSmall, color: _slotStatusColor(context, suggestion.slotStatus!))),
+            ]),
+          ),
+          const SizedBox(width: Dimensions.paddingSizeExtraSmall),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeExtraSmall, vertical: 2),
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+            ),
+            child: Row(children: [
+              const Icon(Icons.near_me, size: 11),
+              const SizedBox(width: 3),
+              Text(
+                suggestion.distanceKm != null ? '${suggestion.distanceKm} km' : '--',
+                style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeExtraSmall),
+              ),
+            ]),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Color _slotStatusColor(BuildContext context, String status) {
+    switch (status) {
+      case 'accepted':
+        return Colors.green;
+      case 'pending':
+        return Colors.orange;
+      case 'rejected':
+        return Colors.red;
+      case 'expired':
+        return Colors.grey;
+      default:
+        return Theme.of(context).hintColor;
+    }
   }
 }
 
@@ -214,19 +352,25 @@ class _StatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String message = controller.accepted
-        ? 'booking_accepted_successfully'.tr
-        : controller.rejected
-            ? 'booking_rejected'.tr
-            : 'booking_request_expired'.tr;
+    final String message = controller.assigned
+        ? 'assigned_successfully'.tr
+        : controller.accepted
+            ? 'booking_accepted_successfully'.tr
+            : controller.rejected
+                ? 'booking_rejected'.tr
+                : 'booking_request_expired'.tr;
 
-    final IconData icon = controller.accepted
-        ? Icons.check_circle
-        : controller.rejected
-            ? Icons.cancel
-            : Icons.timer_off;
+    final IconData icon = controller.assigned
+        ? Icons.group_add
+        : controller.accepted
+            ? Icons.check_circle
+            : controller.rejected
+                ? Icons.cancel
+                : Icons.timer_off;
 
-    final Color color = controller.accepted ? Colors.green : (controller.rejected ? Colors.red : Colors.orange);
+    final Color color = (controller.assigned || controller.accepted)
+        ? Colors.green
+        : (controller.rejected ? Colors.red : Colors.orange);
 
     return Center(
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [

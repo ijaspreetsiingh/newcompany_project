@@ -1,4 +1,4 @@
-import 'package:jdds/util/core_export.dart';
+﻿import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 
 
@@ -91,4 +91,6 @@ class MyFavoriteController extends GetxController implements GetxService{
 
 
 }
+
+
 

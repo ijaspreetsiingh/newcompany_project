@@ -32,10 +32,10 @@ class _CreateAccountInputWidget extends StatefulWidget {
   const _CreateAccountInputWidget(this.checkoutController);
 
   @override
-  State<_CreateAccountInputWidget> createState() => _CreateAccountInputWidgetState();
+  State<_CreateAccountInputWidget> createState() => _CreateAccountInputwidgetstate();
 }
 
-class _CreateAccountInputWidgetState extends State<_CreateAccountInputWidget> {
+class _CreateAccountInputwidgetstate extends State<_CreateAccountInputWidget> {
 
   final passwordFocus = FocusNode();
   final confirmPasswordFocus = FocusNode();
@@ -102,4 +102,5 @@ class _CreateAccountInputWidgetState extends State<_CreateAccountInputWidget> {
     );
   }
 }
+
 

@@ -204,9 +204,74 @@ class ConfigController extends Controller
         ]), 200);
     }
 
-    public function pages(): JsonResponse
+    /**
+     * Per-provider checkout payment config (user app payment step).
+     * Independent mode ON -> allowed gateways + cash/wallet/offline toggles +
+     * booking fee sirf us provider ke liye; OFF/empty -> global behaviour.
+     */
+    public function providerPaymentConfig(Request $request): JsonResponse
     {
+        $validator = Validator::make($request->all(), [
+            'provider_id' => 'nullable|string|max:191',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
+        }
+
+        $provider = null;
+        if (!empty($request['provider_id'])) {
+            $provider = \Modules\ProviderManagement\Entities\Provider::find($request['provider_id']);
+        }
+
+        $isPublished = 0;
+        try {
+            $full_data = include('Modules/Gateways/Addon/info.php');
+            $isPublished = $full_data['is_published'] == 1 ? 1 : 0;
+        } catch (\Exception $exception) {
+        }
+
+        $payment_gateways = collect($this->getPaymentMethods())
+            ->filter(function ($query) use ($isPublished) {
+                if (!$isPublished) {
+                    return in_array($query['gateway'], array_column(PAYMENT_METHODS, 'key'));
+                } else return $query;
+            })->map(function ($query) {
+                $query['label'] = ucwords(str_replace('_', ' ', $query['gateway_title']));
+                return $query;
+            })->values()->all();
+
+        $payment_gateways = filterPaymentGatewaysForProvider($payment_gateways, $provider);
+
+        $cashAfterService = ((int) ((business_config('cash_after_service', 'service_setup'))->live_values ?? 0)
+            && providerAllowsPaymentMethod($provider, 'cash_after_service')) ? 1 : 0;
+        $walletPayment = ((int) ((business_config('wallet_payment', 'service_setup'))->live_values ?? 0)
+            && providerAllowsPaymentMethod($provider, 'wallet_payment')) ? 1 : 0;
+        $offlinePayment = ((int) ((business_config('offline_payment', 'service_setup'))->live_values ?? 0)
+            && providerAllowsPaymentMethod($provider, 'offline_payment')) ? 1 : 0;
+        $digitalPayment = ((int) ((business_config('digital_payment', 'service_setup'))->live_values ?? 0)
+            && count($payment_gateways) > 0) ? 1 : 0;
+
+        $bookingAdditionalCharge = $provider !== null && providerBookingFee($provider) !== null
+            ? 1
+            : (int) (business_config('booking_additional_charge', 'booking_setup')?->live_values ?? 0);
+
         return response()->json(response_formatter(DEFAULT_200, [
+            'provider_id' => $provider?->id,
+            'independent_mode' => providerIsIndependent($provider) ? 1 : 0,
+            'payment_gateways' => $payment_gateways,
+            'cash_after_service' => $cashAfterService,
+            'digital_payment' => $digitalPayment,
+            'wallet_payment' => $walletPayment,
+            'offline_payment' => $offlinePayment,
+            'booking_additional_charge' => $bookingAdditionalCharge,
+            'additional_charge_label_name' => (string) (business_config('additional_charge_label_name', 'booking_setup')?->live_values ?? ''),
+            'additional_charge_fee_amount' => bookingExtraFee($provider),
+        ]), 200);
+    }
+
+    public function pages(): JsonResponse
+    {        return response()->json(response_formatter(DEFAULT_200, [
             'about_us' => DataSetting::where('type', 'pages_setup')->where('key', 'about_us')->first(),
             'terms_and_conditions' => DataSetting::where('type', 'pages_setup')->where('key', 'terms_and_conditions')->first(),
             'refund_policy' => DataSetting::where('type', 'pages_setup')->where('key', 'refund_policy')->first(),
@@ -276,7 +341,7 @@ class ConfigController extends Controller
         $searchText = $request->input('search_text');
         $url = 'https://nominatim.openstreetmap.org/search?q=' . urlencode($searchText) . '&format=json&limit=8&addressdetails=1';
         $response = Http::withHeaders([
-            'User-Agent' => 'JassBookingServiceApp/1.0',
+            'User-Agent' => 'YOVOServiceApp/1.0',
             'Accept-Language' => 'en',
         ])->get($url);
 
@@ -322,7 +387,7 @@ class ConfigController extends Controller
         $url = "https://router.project-osrm.org/route/v1/driving/{$originLng},{$originLat};{$destLng},{$destLat}?overview=false";
 
         $response = Http::withHeaders([
-            'User-Agent' => 'JassBookingServiceApp/1.0',
+            'User-Agent' => 'YOVOServiceApp/1.0',
         ])->get($url);
 
         $data = $response->json();
@@ -396,7 +461,7 @@ class ConfigController extends Controller
         $placeId = $request['placeid'];
         $url = "https://nominatim.openstreetmap.org/lookup?osm_ids={$placeId}&format=json&addressdetails=1&extratags=1";
         $response = Http::withHeaders([
-            'User-Agent' => 'JassBookingServiceApp/1.0',
+            'User-Agent' => 'YOVOServiceApp/1.0',
             'Accept-Language' => 'en',
         ])->get($url);
 
@@ -494,7 +559,7 @@ class ConfigController extends Controller
 
         $url = "https://nominatim.openstreetmap.org/reverse?lat={$request->lat}&lon={$request->lng}&format=json&addressdetails=1&zoom=18";
         $response = Http::withHeaders([
-            'User-Agent' => 'JassBookingServiceApp/1.0',
+            'User-Agent' => 'YOVOServiceApp/1.0',
             'Accept-Language' => 'en',
         ])->get($url);
 
@@ -596,3 +661,5 @@ class ConfigController extends Controller
     }
 
 }
+
+

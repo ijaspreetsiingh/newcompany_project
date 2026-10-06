@@ -7,10 +7,10 @@ class PaymentMethodListWidget extends StatefulWidget {
   const PaymentMethodListWidget({super.key}) ;
 
   @override
-  State<PaymentMethodListWidget> createState() => _PaymentMethodListWidgetState();
+  State<PaymentMethodListWidget> createState() => _PaymentMethodListwidgetstate();
 }
 
-class _PaymentMethodListWidgetState extends State<PaymentMethodListWidget> {
+class _PaymentMethodListwidgetstate extends State<PaymentMethodListWidget> {
 
   final TextEditingController inputAmountController = TextEditingController();
   final FocusNode focusNode = FocusNode();
@@ -242,3 +242,5 @@ class _PaymentMethodListWidgetState extends State<PaymentMethodListWidget> {
     }
   }
 }
+
+

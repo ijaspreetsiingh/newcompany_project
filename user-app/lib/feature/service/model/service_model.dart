@@ -136,12 +136,12 @@ class Service {
     name = json['name'];
     shortDescription = json['short_description'];
     description = json['description'];
-    coverImage = json['cover_image'];
-    coverImageFullPath = json['cover_image_full_path'];
-    thumbnail = json['thumbnail'];
-    thumbnailFullPath = json['thumbnail_full_path'];
-    categoryId = json['category_id'];
-    subCategoryId = json['sub_category_id'];
+    coverImage = json['cover_image']?.toString();
+    coverImageFullPath = (json['cover_image_full_path'] ?? json['cover_url'] ?? json['image_full_path'])?.toString();
+    thumbnail = json['thumbnail']?.toString() ?? json['image']?.toString();
+    thumbnailFullPath = (json['thumbnail_full_path'] ?? json['thumbnail_url'] ?? json['image_full_path'] ?? json['image_url'] ?? json['cover_image_full_path'])?.toString();
+    categoryId = json['category_id']?.toString() ?? json['group_id']?.toString();
+    subCategoryId = json['sub_category_id']?.toString() ?? json['subgroup_id']?.toString();
     tax = double.tryParse(json['tax'].toString());
     orderCount = json['order_count'];
     isActive = json['is_active'];
@@ -168,8 +168,9 @@ class Service {
       });
     }
 
-    category = json['category'] != null
-        ? ServiceCategory.fromJson(json['category'])
+    final dynamic categoryJson = json['category'] ?? json['group'] ?? json['parent_group'];
+    category = categoryJson is Map
+        ? ServiceCategory.fromJson(Map<String, dynamic>.from(categoryJson))
         : null;
     if (json['faqs'] != null) {
       faqs = <Faqs>[];
@@ -394,14 +395,23 @@ class ServiceCategory {
         this.campaignDiscount,
       });
 
+  static String? _asText(dynamic value) {
+    if (value == null) return null;
+    if (value is Map) {
+      final selected = value['en'] ?? value['name'] ?? (value.isEmpty ? null : value.values.first);
+      return selected?.toString();
+    }
+    return value.toString();
+  }
+
   ServiceCategory.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    parentId = json['parent_id'];
-    name = json['name'];
-    image = json['image'];
-    position = json['position'];
-    description = json['description'];
-    isActive = json['is_active'];
+    id = _asText(json['id'] ?? json['group_id'] ?? json['category_id']);
+    parentId = _asText(json['parent_id']);
+    name = _asText(json['name'] ?? json['group_name'] ?? json['category_name'] ?? json['title']);
+    image = _asText(json['image'] ?? json['image_full_path']);
+    position = int.tryParse('${json['position']}');
+    description = _asText(json['description']);
+    isActive = int.tryParse('${json['is_active']}') ?? ((json['is_active'] == true) ? 1 : 0);
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
 
@@ -573,3 +583,4 @@ class ServiceDiscount {
     return data;
   }
 }
+

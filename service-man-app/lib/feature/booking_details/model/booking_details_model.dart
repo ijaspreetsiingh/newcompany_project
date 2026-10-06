@@ -458,6 +458,8 @@ class ServiceAddress {
   String? zipCode;
   String? country;
   String? address;
+  String? house;
+  String? floor;
   String? createdAt;
   String? updatedAt;
   String? addressType;
@@ -475,6 +477,8 @@ class ServiceAddress {
         this.zipCode,
         this.country,
         this.address,
+        this.house,
+        this.floor,
         this.createdAt,
         this.updatedAt,
         this.addressType,
@@ -492,6 +496,8 @@ class ServiceAddress {
     zipCode = json['zip_code'];
     country = json['country'];
     address = json['address'];
+    house = json['house'];
+    floor = json['floor'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
     addressType = json['address_type'];
@@ -511,6 +517,8 @@ class ServiceAddress {
     data['zip_code'] = zipCode;
     data['country'] = country;
     data['address'] = address;
+    data['house'] = house;
+    data['floor'] = floor;
     data['created_at'] = createdAt;
     data['updated_at'] = updatedAt;
     data['address_type'] = addressType;

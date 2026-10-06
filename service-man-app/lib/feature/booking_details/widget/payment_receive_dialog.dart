@@ -25,8 +25,9 @@ class _PaymentReceiveDialogState extends State<PaymentReceiveDialog>{
           left: Dimensions.paddingSizeDefault,
           bottom: Dimensions.paddingSizeDefault),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        color: context.kCard,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(kRadiusLg)),
+        border: Border(top: BorderSide(color: context.kBorder, width: 1)),
       ),
       child: GetBuilder<BookingDetailsController>(
           builder: (bookingDetailsController) {
@@ -37,11 +38,11 @@ class _PaymentReceiveDialogState extends State<PaymentReceiveDialog>{
                   children: [
                     InkWell(
                         onTap: () => Get.back(),
-                        child: const Padding(
-                          padding: EdgeInsets.only(
+                        child: Padding(
+                          padding: const EdgeInsets.only(
                               top: Dimensions.paddingSizeDefault,
                               right: Dimensions.paddingSizeDefault),
-                          child: Icon(Icons.close),
+                          child: Icon(Icons.close_rounded, color: context.kForeground,),
                         )),
                     Padding(
                       padding: EdgeInsets.only(
@@ -59,14 +60,16 @@ class _PaymentReceiveDialogState extends State<PaymentReceiveDialog>{
                               child: Image.asset(Images.money),
                             ),
                             const SizedBox(height: Dimensions.paddingSizeExtraLarge),
-                            Text("collected_money_from_customer".tr,style: robotoBold,),
+                            Text("collected_money_from_customer".tr,
+                              style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge, color: context.kForeground),),
                             const SizedBox(height: Dimensions.paddingSizeLarge,),
 
                             Row( crossAxisAlignment: CrossAxisAlignment.center,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text('${"order_amount".tr} : ',style: robotoBold,),
-                                Text(PriceConverter.convertPrice(double.parse(widget.orderAmount)),style: robotoBold,),
+                                Text('${"order_amount".tr} : ',style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault, color: context.kMutedForeground),),
+                                Text(PriceConverter.convertPrice(double.parse(widget.orderAmount)),
+                                  style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge, color: context.kForeground),),
                               ],),
                             const SizedBox(height: Dimensions.paddingSizeLarge,),
 

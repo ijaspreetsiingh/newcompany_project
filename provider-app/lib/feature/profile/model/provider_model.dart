@@ -416,7 +416,8 @@ class SubscriptionInfo {
   SubscribedPackageDetails? subscribedPackageDetails;
   RenewalPackageDetails? renewalPackageDetails;
   double? applicableVat;
-  SubscriptionInfo({this.totalSubscription, this.status, this.subscribedPackageDetails, this.renewalPackageDetails, this.applicableVat});
+  int? subscriptionRequired;
+  SubscriptionInfo({this.totalSubscription, this.status, this.subscribedPackageDetails, this.renewalPackageDetails, this.applicableVat, this.subscriptionRequired});
 
   SubscriptionInfo.fromJson(Map<String, dynamic> json) {
     totalSubscription = json['total_subscription'];
@@ -424,6 +425,7 @@ class SubscriptionInfo {
     subscribedPackageDetails = json['subscribed_package_details'] !=null ? SubscribedPackageDetails.fromJson(json['subscribed_package_details']) : null;
     renewalPackageDetails = json['renewal_package_details'] !=null ? RenewalPackageDetails.fromJson(json['renewal_package_details']) : null;
     applicableVat = double.tryParse(json['applicable_vat'].toString());
+    subscriptionRequired = int.tryParse(json['subscription_required'].toString()) ?? 1;
   }
 
   Map<String, dynamic> toJson() {

@@ -18,10 +18,18 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color bg = onPressed == null
+        ? Theme.of(context).disabledColor
+        : transparent!
+        ? Colors.transparent
+        : color ?? Theme.of(context).colorScheme.primary;
+    final Color fg = transparent!
+        ? Theme.of(context).colorScheme.primary
+        : _onColor(bg);
     final ButtonStyle flatButtonStyle = TextButton.styleFrom(
       elevation: 0,
-      backgroundColor: onPressed == null ? Theme.of(context).disabledColor : transparent!
-          ? Colors.transparent :color ?? Theme.of(context).primaryColor,
+      backgroundColor: bg,
+      foregroundColor: fg,
       minimumSize: Size(width != null ? width! : Dimensions.webMaxWidth, height != null ? height! : Ios27Tokens.controlHeight),
       padding: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
@@ -37,21 +45,29 @@ class CustomButton extends StatelessWidget {
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           icon != null ? Padding(
             padding: const EdgeInsets.only(right: Dimensions.paddingSizeExtraSmall),
-            child: Icon(icon, color: transparent! ? Theme.of(context).primaryColor : Colors.white, size: fontSize ?? Dimensions.fontSizeLarge,),
+            child: Icon(icon, color: fg, size: fontSize ?? Dimensions.fontSizeLarge,),
           ) : const SizedBox(),
 
           isLoading ? Padding( padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
             child: SizedBox(height: fontSize ?? Dimensions.fontSizeDefault , width: fontSize ?? Dimensions.fontSizeDefault,
-              child: CircularProgressIndicator(color:  transparent! ? Theme.of(context).primaryColor : Colors.white, strokeWidth: 2,),
+              child: CircularProgressIndicator(color: fg, strokeWidth: 2,),
             ),
           ): const SizedBox(),
 
           Text( isLoading ? "loading".tr :btnTxt, textAlign: TextAlign.center, style: robotoMedium.copyWith(
-            color: transparent! ? Theme.of(context).primaryColor : Colors.white,
+            color: fg,
             fontSize: fontSize ?? Dimensions.fontSizeLarge,
           )),
         ]),
       ),
     )));
+  }
+
+  static Color _onColor(Color bg) {
+    try {
+      return bg.computeLuminance() > 0.5 ? const Color(0xFF070707) : const Color(0xFFFCFCFC);
+    } catch (_) {
+      return Colors.white;
+    }
   }
 }

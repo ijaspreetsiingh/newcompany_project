@@ -83,3 +83,4 @@ class _FeatheredCategoryViewState extends State<FeatheredCategoryView> {
     });
   }
 }
+

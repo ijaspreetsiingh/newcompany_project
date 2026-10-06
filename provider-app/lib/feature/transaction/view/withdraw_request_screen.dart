@@ -2,14 +2,22 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:demandium_provider/feature/payement_information/widgets/payment_info_card.dart';
 import 'package:demandium_provider/feature/transaction/model/dropdown_method_method.dart';
-import 'package:demandium_provider/helper/extension_helper.dart';
 import 'package:demandium_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 class WithdrawRequestScreen extends StatefulWidget {
   final double? amount;
+  final String? initialAmount;
+  final String? initialMethodId;
+  final String? initialMethodName;
 
-   const WithdrawRequestScreen({super.key, this.amount = 0.0});
+   const WithdrawRequestScreen({
+     super.key,
+     this.amount = 0.0,
+     this.initialAmount,
+     this.initialMethodId,
+     this.initialMethodName,
+   });
   @override
   State<WithdrawRequestScreen> createState() => _WithdrawRequestScreenState();
 }
@@ -65,20 +73,48 @@ class _WithdrawRequestScreenState extends State<WithdrawRequestScreen> {
   }
 
   void loadData() async {
-    Get.find<TransactionController>().getDropdownMethodList();
+    final TransactionController transactionController = Get.find<TransactionController>();
 
-    await Get.find<TransactionController>().getWithdrawMethods(isReload: true);
-    _selectedMethodId = Get.find<TransactionController>().defaultPaymentMethodId!;
-    _selectedMethodName = Get.find<TransactionController>().defaultPaymentMethodName!;
-    selectPaymentMethodField(_selectedMethodId,_selectedMethodName, Get.find<TransactionController>());
+    await transactionController.getWithdrawMethods(isReload: true);
+    transactionController.getDropdownMethodList();
 
+    String methodId = widget.initialMethodId ?? "";
+    String methodName = widget.initialMethodName ?? "";
 
+    bool methodIdExists = methodId.isNotEmpty && (transactionController.withdrawModel?.withdrawalMethods ?? [])
+        .any((method) => method.id == methodId);
+
+    if (!methodIdExists) {
+      methodId = transactionController.defaultPaymentMethodId ?? "";
+      methodName = transactionController.defaultPaymentMethodName ?? "";
+      methodIdExists = methodId.isNotEmpty && (transactionController.withdrawModel?.withdrawalMethods ?? [])
+          .any((method) => method.id == methodId);
+    }
+
+    if (methodIdExists) {
+      _selectedMethodId = methodId;
+      _selectedMethodName = methodName;
+      await selectPaymentMethodField(methodId, methodName, transactionController);
+
+      for (final DropdownMethodModel method in transactionController.othersMethodList) {
+        if (method.id == methodId) {
+          transactionController.onChangeMethod(method);
+          break;
+        }
+      }
+    } else {
+      _selectedMethodId = "";
+      _selectedMethodName = "";
+    }
   }
 
 
   @override
   void initState() {
     super.initState();
+    if((widget.initialAmount ?? "").isNotEmpty){
+      _inputAmountController.text = widget.initialAmount!;
+    }
     loadData();
   }
 
@@ -99,38 +135,39 @@ class _WithdrawRequestScreenState extends State<WithdrawRequestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: 'withdraw_request'.tr),
-      body: GetBuilder<TransactionController>(
-        builder: (transactionMoneyController) {
-          return SingleChildScrollView(
-            child: Column( children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                  boxShadow: context.customThemeColors.lightShadow,
-                  color: Theme.of(context).cardColor,
-                ),
-                padding: const EdgeInsets.symmetric(horizontal : Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeLarge),
-                margin: const EdgeInsets.fromLTRB(Dimensions.paddingSizeSmall,Dimensions.paddingSizeSmall,Dimensions.paddingSizeSmall,3),
-                child: Form(
-                  key: transactionMoneyController.formKey,
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      backgroundColor: InkColors.background,
+      body: SafeArea(
+        child: Column(children: [
 
-                    Text("business_information".tr,
-                      style: robotoBold.copyWith(color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha:0.8), fontSize: Dimensions.fontSizeLarge),
-                    ),
-                    const SizedBox(height: Dimensions.paddingSizeLarge,),
+          InkTopBar(title: 'withdraw_request'.tr, onBack: () => Get.back()),
 
-                    TextFieldTitle(title:'select_withdraw_method'.tr,
-                      requiredMark: true,
-                      fontSize: Dimensions.fontSizeExtraSmall,
-                      isPadding: false,
-                    ),
+          Expanded(
+            child: GetBuilder<TransactionController>(
+              builder: (transactionMoneyController) {
+                return SingleChildScrollView(
+                  child: Column( children: [
+                    InkCard(
+                      padding: const EdgeInsets.symmetric(horizontal : Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeLarge),
+                      margin: const EdgeInsets.fromLTRB(Dimensions.paddingSizeSmall,Dimensions.paddingSizeSmall,Dimensions.paddingSizeSmall,3),
+                      child: Form(
+                        key: transactionMoneyController.formKey,
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
-                    Container(width: Get.width, height: 40,
-                      decoration: BoxDecoration(
-                        border: Border(bottom: BorderSide(color: Theme.of(context).hintColor)),
-                      ),
+                          Text("business_information".tr,
+                            style: robotoBold.copyWith(color: InkColors.foreground, fontSize: Dimensions.fontSizeLarge),
+                          ),
+                          const SizedBox(height: Dimensions.paddingSizeLarge,),
+
+                          TextFieldTitle(title:'select_withdraw_method'.tr,
+                            requiredMark: true,
+                            fontSize: Dimensions.fontSizeExtraSmall,
+                            isPadding: false,
+                          ),
+
+                          Container(width: Get.width, height: 40,
+                            decoration:  BoxDecoration(
+                              border: Border(bottom: BorderSide(color: InkColors.border)),
+                            ),
                       child: DropdownButtonHideUnderline(
                         child: Builder(
                           builder: (context) {
@@ -146,10 +183,10 @@ class _WithdrawRequestScreenState extends State<WithdrawRequestScreen> {
                             return DropdownButton<DropdownMethodModel>(
                               borderRadius: BorderRadius.circular(5),
                               menuMaxHeight: Get.height * 0.5,
-                              dropdownColor: Theme.of(context).cardColor,
+                              dropdownColor: InkColors.card,
                               hint: Text('select_a_method'.tr, style: robotoRegular.copyWith(
                                 fontSize: Dimensions.fontSizeDefault,
-                                color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.8),
+                                color: InkColors.mutedForeground,
                               )),
                               value: validValue,
                               icon: const Icon(Icons.keyboard_arrow_down),
@@ -161,7 +198,7 @@ class _WithdrawRequestScreenState extends State<WithdrawRequestScreen> {
                                    child: Padding(
                                      padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
                                      child: Text('my_methods'.tr, style: robotoMedium.copyWith(
-                                       color: Theme.of(context).primaryColor,
+                                       color: InkColors.foreground,
                                      )),
                                    ),
                                  ),
@@ -176,10 +213,10 @@ class _WithdrawRequestScreenState extends State<WithdrawRequestScreen> {
                                          padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall,vertical: 3),
                                          decoration: BoxDecoration(
                                            borderRadius: BorderRadius.circular(50),
-                                           border: Border.all(color: Theme.of(context).primaryColorLight),
+                                           border: Border.all(color: InkColors.foreground),
                                          ),
                                          child: Text('default'.tr, style: robotoRegular.copyWith(
-                                           color: Theme.of(context).primaryColorLight,
+                                           color: InkColors.foreground,
                                            fontSize: Dimensions.fontSizeSmall,
                                          )),
                                        ),
@@ -196,7 +233,7 @@ class _WithdrawRequestScreenState extends State<WithdrawRequestScreen> {
                                   child: Padding(
                                     padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
                                     child: Text('others'.tr, style: robotoMedium.copyWith(
-                                      color: Theme.of(context).primaryColor,
+                                      color: InkColors.foreground,
                                     )),
                                   ),
                                 ),
@@ -213,10 +250,10 @@ class _WithdrawRequestScreenState extends State<WithdrawRequestScreen> {
                                           padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall,vertical: 3),
                                           decoration: BoxDecoration(
                                             borderRadius: BorderRadius.circular(50),
-                                            border: Border.all(color: Theme.of(context).primaryColorLight),
+                                            border: Border.all(color: InkColors.foreground),
                                           ),
                                           child: Text('default'.tr, style: robotoRegular.copyWith(
-                                            color: Theme.of(context).primaryColorLight,
+                                            color: InkColors.foreground,
                                             fontSize: Dimensions.fontSizeSmall,
                                           )),
                                         ),
@@ -305,24 +342,30 @@ class _WithdrawRequestScreenState extends State<WithdrawRequestScreen> {
               ),
               const SizedBox(height: Dimensions.paddingSizeExtraLarge*4,),
 
-            ]),
-          );
-        }
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+                    ]),
+                  );
+                }
+              ),
+            ),
+          ]),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: GetBuilder<TransactionController>(
         builder: (transactionMoneyController) {
           return Container(
             height: 70,
-            color: Theme.of(context).cardColor,
+            decoration:  BoxDecoration(
+              color: InkColors.card,
+              border: Border(top: BorderSide(color: InkColors.border)),
+            ),
             child: Center(
               child: Container(
                 height: 50,
                 padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeExtraSmall),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
-                  border: Border.all(color: Theme.of(context).primaryColorLight.withValues(alpha:.5)),
-                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(50),
+                  border: Border.all(color: InkColors.border),
+                  color: InkColors.card,
                 ),
                 child: Transform.rotate(
                   angle: Get.find<LocalizationController>().isLtr ? pi * 2 : pi, // in radians
@@ -338,25 +381,21 @@ class _WithdrawRequestScreenState extends State<WithdrawRequestScreen> {
                           'send_withdraw_request'.tr,
                           style: robotoMedium.copyWith(
                             fontSize: Dimensions.fontSizeLarge,
-                            color: Theme.of(context).primaryColor,
+                            color: InkColors.foreground,
                           ),
                         ),
                       ),
                       alignLabel: Alignment.center,
                       dismissThresholds: 0.5,
-                      icon: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Image.asset(Images.arrowButton),
-                        ),
+                      icon:  Center(
+                        child: Icon(Icons.arrow_forward_rounded, size: 22, color: InkColors.background),
                       ),
-                      radius: 10,
+                      radius: 50,
                       boxShadow: const BoxShadow(blurRadius: 0.0),
-                      buttonColor: Theme.of(context).primaryColor,
-                      backgroundColor: Theme.of(context).cardColor,
-                      baseColor: Theme.of(context).primaryColorLight.withValues(
-                        alpha: Get.isDarkMode ? 0.7 : 1,
-                      ),
+                      buttonColor: InkColors.foreground,
+                      backgroundColor: InkColors.card,
+                      baseColor: InkColors.mutedForeground,
+                      highlightedColor: InkColors.foreground,
                     ),
                   ),
                 ),

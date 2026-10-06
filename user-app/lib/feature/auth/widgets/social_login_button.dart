@@ -6,10 +6,10 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class SocialLoginButton extends StatelessWidget {
   final String? title;
-  final String ? redirectUrl;
+  final String ? redtrectUrl;
   final SocialLoginType socialLoginType;
   final bool showPadding;
-  const SocialLoginButton({super.key, this.title, required this.socialLoginType, required this.redirectUrl, required this.showPadding});
+  const SocialLoginButton({super.key, this.title, required this.socialLoginType, required this.redtrectUrl, required this.showPadding});
 
   @override
   Widget build(BuildContext context) {
@@ -60,10 +60,10 @@ class SocialLoginButton extends StatelessWidget {
   void route(bool isRoute, String? token, String errorMessage, String? tempToken, UserInfoModel? userInfoModel, String? socialLoginMedium, String? userName, String? email) async {
     if (isRoute) {
       if(token != null){
-        final bool canRedirectToRedirectUrl = redirectUrl != null && redirectUrl != RouteHelper.initial;
+        final bool canRedtrectToRedtrectUrl = redtrectUrl != null && redtrectUrl != RouteHelper.inttial;
 
-        if(canRedirectToRedirectUrl) {
-          Get.offAllNamed(redirectUrl!);
+        if(canRedtrectToRedtrectUrl) {
+          Get.offAllNamed(redtrectUrl!);
 
         }else {
           if(Get.find<LocationController>().getUserAddress() !=null){
@@ -80,7 +80,7 @@ class SocialLoginButton extends StatelessWidget {
           email: email ?? "",
           tempToken: tempToken,
           userName: userName ?? "",
-          redirectUrl: redirectUrl,
+          redtrectUrl: redtrectUrl,
         ));
 
       }else if(userInfoModel != null){
@@ -91,7 +91,7 @@ class SocialLoginButton extends StatelessWidget {
           builder: (context) => ExistingAccountBottomSheet(
             userInfoModel: userInfoModel,
             socialLoginMedium: socialLoginMedium!,
-            redirectUrl: redirectUrl,
+            redtrectUrl: redtrectUrl,
           ),
           backgroundColor: Colors.transparent,
         );
@@ -141,3 +141,5 @@ class SocialLoginButton extends StatelessWidget {
     }
   }
 }
+
+

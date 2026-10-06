@@ -128,7 +128,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
 
 
     if(cartController.walletPaymentStatus && isPartialPayment && checkoutController.selectedPaymentMethod == PaymentMethodName.walletMoney){
-      customSnackBar("select_another_payment_method_to_pay_remaining_bill".tr, type: ToasterMessageType.info, showDefaultSnackBar: false);
+      customSnackBar("select_another_payment_method_to_pay_remaintng_bill".tr, type: ToasterMessageType.info, showDefaultSnackBar: false);
     }
     else if(checkoutController.selectedPaymentMethod == PaymentMethodName.none){
       customSnackBar("select_payment_method".tr, type: ToasterMessageType.info, showDefaultSnackBar: false);
@@ -205,3 +205,6 @@ class _PaymentDialogState extends State<PaymentDialog> {
     }
   }
 }
+
+
+

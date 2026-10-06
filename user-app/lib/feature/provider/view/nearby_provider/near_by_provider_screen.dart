@@ -35,7 +35,7 @@ class _NearByProviderScreenState extends State<NearByProviderScreen> with Single
   Future<void> _loadDart() async {
     await Get.find<CategoryController>().getCategoryList( false);
     Get.find<NearbyProviderController>().resetCategoryCheckedList(shouldUpdate: false);
-    Get.find<NearbyProviderController>().getProviderList(1, false);
+    Get.find<NearbyProviderController>().getProviderList(1, true);
 
   }
 
@@ -134,3 +134,5 @@ class _NearByProviderScreenState extends State<NearByProviderScreen> with Single
     );
   }
 }
+
+

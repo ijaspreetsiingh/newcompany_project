@@ -70,7 +70,7 @@ class CartSummery extends StatelessWidget {
                       RowText(title: 'referral_discount'.tr, price: referDisCount),
                     RowText(title: 'vat'.tr, price: vat),
 
-                    (configModel.content?.additionalChargeLabelName != "" && configModel.content?.additionalCharge == 1) ?
+                    CheckoutHelper.shouldShowAdditionalCharge() ?
                     GetBuilder<CheckOutController>(builder: (controller){
                       return  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,children: [
                         Expanded(
@@ -109,3 +109,4 @@ class CartSummery extends StatelessWidget {
     });
   }
 }
+

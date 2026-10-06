@@ -1,7 +1,5 @@
 import 'package:get/get.dart';
 import 'package:demandium_serviceman/utils/core_export.dart';
-import 'package:demandium_serviceman/feature/booking_details/model/booking_details_model.dart';
-import 'package:demandium_serviceman/feature/booking_request/controller/booking_timer_controller.dart';
 
 /// AUTO-ASSIGN: serviceman ko new booking assignment aane par full-screen popup
 class IncomingBookingPopup extends StatefulWidget {
@@ -23,97 +21,112 @@ class _IncomingBookingPopupState extends State<IncomingBookingPopup> {
     controller.startTimer(widget.bookingId);
   }
 
+  String _badgeStatus(BookingTimerController controller) {
+    if (controller.accepted) return 'accepted';
+    if (controller.rejected) return 'rejected';
+    if (controller.expired) return 'expired';
+    return 'pending';
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false, // back button se popup dismiss na ho
       child: Scaffold(
-        backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.95),
+        backgroundColor: context.kBackground,
         body: SafeArea(
           child: GetBuilder<BookingTimerController>(
             builder: (controller) {
-              return Container(
-                margin: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+              final bool active = !controller.expired && !controller.accepted && !controller.rejected;
+
+              return Padding(
                 padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                ),
                 child: Column(children: [
 
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Icon(Icons.notifications_active, color: Theme.of(context).primaryColor),
+                    Icon(Icons.notifications_active_rounded, size: 20, color: context.kForeground),
                     const SizedBox(width: Dimensions.paddingSizeExtraSmall),
-                    Text('new_booking_request'.tr, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge)),
+                    Flexible(
+                      child: Text(
+                        'new_booking_request'.tr,
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: robotoBold.copyWith(fontSize: 16, color: context.kForeground),
+                      ),
+                    ),
                   ]),
                   const SizedBox(height: Dimensions.paddingSizeDefault),
 
                   Expanded(
-                    child: controller.bookingDetails != null
-                        ? SingleChildScrollView(child: _BookingSummaryCard(bookingDetails: controller.bookingDetails!))
-                        : (controller.expired || controller.accepted || controller.rejected)
-                            ? _StatusCard(controller: controller)
-                            : const Center(child: CustomLoader()),
+                    child: SingleChildScrollView(
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: context.kCard,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: context.kBorder, width: 1),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+
+                            if (controller.bookingDetails != null)
+                              _BookingSummaryCard(
+                                bookingDetails: controller.bookingDetails!,
+                                bookingId: widget.bookingId,
+                                status: _badgeStatus(controller),
+                              )
+                            else if (active)
+                              const SizedBox(
+                                height: 160,
+                                child: Center(child: CustomLoader()),
+                              )
+                            else
+                              _StatusCard(controller: controller),
+
+                            // AUTO-ASSIGN: team members (1 se zyada ho toh)
+                            if (active && controller.team.length > 1)
+                              _TeamSection(team: controller.team),
+
+                            if (active) ...[
+                              const SizedBox(height: Dimensions.paddingSizeDefault),
+                              _CountdownTimer(seconds: controller.remainingSeconds),
+                              const SizedBox(height: Dimensions.paddingSizeSmall),
+                              Row(children: [
+                                Expanded(
+                                  child: Opacity(
+                                    opacity: controller.isLoading ? 0.6 : 1,
+                                    child: KButton(
+                                      label: 'reject'.tr,
+                                      outline: true,
+                                      onTap: controller.isLoading ? null : () => controller.rejectBooking(),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Opacity(
+                                    opacity: controller.isLoading ? 0.6 : 1,
+                                    child: KButton(
+                                      label: 'accept_job'.tr,
+                                      onTap: controller.isLoading ? null : () => controller.acceptBooking(),
+                                    ),
+                                  ),
+                                ),
+                              ]),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
 
-                  // countdown timer
-                  if (!controller.expired && !controller.accepted && !controller.rejected) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeSmall),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                      ),
-                      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(Icons.timer, color: controller.remainingSeconds <= 10 ? Colors.red : Theme.of(context).primaryColor),
-                        const SizedBox(width: Dimensions.paddingSizeSmall),
-                        Text(
-                          '${controller.remainingSeconds}s',
-                          style: robotoBold.copyWith(
-                            fontSize: Dimensions.fontSizeOverLarge,
-                            color: controller.remainingSeconds <= 10 ? Colors.red : Theme.of(context).primaryColor,
-                          ),
-                        ),
-                      ]),
-                    ),
+                  if (!active) ...[
                     const SizedBox(height: Dimensions.paddingSizeDefault),
-                  ],
-
-                  // action buttons
-                  if (!controller.expired && !controller.accepted && !controller.rejected)
-                    Row(children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
-                            side: const BorderSide(color: Colors.red),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Dimensions.radiusDefault)),
-                          ),
-                          icon: const Icon(Icons.close, color: Colors.red),
-                          label: Text('reject'.tr, style: robotoMedium.copyWith(color: Colors.red)),
-                          onPressed: controller.isLoading ? null : () => controller.rejectBooking(),
-                        ),
-                      ),
-                      const SizedBox(width: Dimensions.paddingSizeDefault),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
-                            backgroundColor: Theme.of(context).primaryColor,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Dimensions.radiusDefault)),
-                          ),
-                          icon: const Icon(Icons.check, color: Colors.white),
-                          label: Text('accept'.tr, style: robotoMedium.copyWith(color: Colors.white)),
-                          onPressed: controller.isLoading ? null : () => controller.acceptBooking(),
-                        ),
-                      ),
-                    ]),
-
-                  if (controller.expired || controller.accepted || controller.rejected) ...[
-                    const SizedBox(height: Dimensions.paddingSizeDefault),
-                    CustomButton(
-                      btnTxt: 'ok'.tr,
-                      onPressed: () {
+                    KButton(
+                      label: 'ok'.tr,
+                      onTap: () {
                         final BookingRequestController bookingRequestController = Get.find<BookingRequestController>();
                         bookingRequestController.getBookingList(
                           bookingRequestController.bookingStatusState.name.toLowerCase(), 1,
@@ -134,54 +147,123 @@ class _IncomingBookingPopupState extends State<IncomingBookingPopup> {
 
 class _BookingSummaryCard extends StatelessWidget {
   final BookingDetailsContent bookingDetails;
-  const _BookingSummaryCard({required this.bookingDetails});
+  final String bookingId;
+  final String status;
+  const _BookingSummaryCard({
+    required this.bookingDetails,
+    required this.bookingId,
+    required this.status,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-        border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.2)),
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    final String readableId = bookingDetails.readableId ?? '';
+    final String displayId = readableId.isNotEmpty && readableId != 'null'
+        ? '#$readableId'
+        : '#$bookingId';
 
-        Row(children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
-            child: CustomImage(
-              height: 60, width: 60, fit: BoxFit.cover,
-              image: bookingDetails.details?[0].service?.thumbnailFullPath ?? '',
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+
+      Row(children: [
+        StatusBadge(status: status),
+        const Spacer(),
+        Text(
+          displayId,
+          maxLines: 1, overflow: TextOverflow.ellipsis,
+          style: robotoMedium.copyWith(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: context.kMutedForeground,
+          ),
+        ),
+      ]),
+      const SizedBox(height: Dimensions.paddingSizeDefault),
+
+      Row(children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(kRadiusMd),
+          child: CustomImage(
+            height: 60, width: 60, fit: BoxFit.cover,
+            image: bookingDetails.details?[0].service?.thumbnailFullPath ?? '',
+          ),
+        ),
+        const SizedBox(width: Dimensions.paddingSizeDefault),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(
+              bookingDetails.details?[0].serviceName ?? bookingDetails.details?[0].service?.name ?? '',
+              style: robotoBold.copyWith(fontSize: 16, color: context.kForeground),
+              maxLines: 2, overflow: TextOverflow.ellipsis,
             ),
-          ),
-          const SizedBox(width: Dimensions.paddingSizeDefault),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(
-                bookingDetails.details?[0].serviceName ?? bookingDetails.details?[0].service?.name ?? '',
-                style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault),
-                maxLines: 2, overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-              Text(
-                bookingDetails.totalBookingAmount != null
-                    ? PriceConverter.convertPrice(bookingDetails.totalBookingAmount)
-                    : '',
-                style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge, color: Theme.of(context).primaryColor),
-              ),
-            ]),
-          ),
-        ]),
+            const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+            Text(
+              bookingDetails.totalBookingAmount != null
+                  ? PriceConverter.convertPrice(bookingDetails.totalBookingAmount)
+                  : '',
+              style: robotoBold.copyWith(fontSize: 16, color: context.kForeground),
+            ),
+          ]),
+        ),
+      ]),
 
+      const SizedBox(height: Dimensions.paddingSizeDefault),
+      Container(height: 1, color: context.kBorder),
+      const SizedBox(height: Dimensions.paddingSizeDefault),
+
+      _InfoRow(icon: Icons.location_on_outlined, label: 'address'.tr, value: bookingDetails.serviceAddress?.address ?? ''),
+      _InfoRow(icon: Icons.category_outlined, label: 'service'.tr, value: bookingDetails.details?[0].serviceName ?? bookingDetails.details?[0].service?.name ?? ''),
+      _InfoRow(icon: Icons.calendar_today_outlined, label: 'schedule'.tr, value: bookingDetails.serviceSchedule ?? ''),
+      _InfoRow(icon: Icons.payments_outlined, label: 'payment_method'.tr, value: (bookingDetails.paymentMethod ?? '').replaceAll('_', ' ')),
+    ]);
+  }
+}
+
+/// AUTO-ASSIGN: team members list (jab 1 se zyada servicemen assigned ho)
+class _TeamSection extends StatelessWidget {
+  final List<dynamic> team;
+  const _TeamSection({required this.team});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: Dimensions.paddingSizeDefault),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(height: 1, color: context.kBorder),
         const SizedBox(height: Dimensions.paddingSizeDefault),
-        Divider(color: Theme.of(context).dividerColor),
-        const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-
-        _InfoRow(icon: Icons.location_on_outlined, label: 'address'.tr, value: bookingDetails.serviceAddress?.address ?? ''),
-        _InfoRow(icon: Icons.category_outlined, label: 'service'.tr, value: bookingDetails.details?[0].serviceName ?? bookingDetails.details?[0].service?.name ?? ''),
-        _InfoRow(icon: Icons.calendar_today_outlined, label: 'schedule'.tr, value: bookingDetails.serviceSchedule ?? ''),
-        _InfoRow(icon: Icons.payments_outlined, label: 'payment_method'.tr, value: (bookingDetails.paymentMethod ?? '').replaceAll('_', ' ')),
+        Row(children: [
+          Icon(Icons.groups_outlined, size: 16, color: context.kMutedForeground),
+          const SizedBox(width: 6),
+          Text('${'team'.tr} (${team.length})',
+              style: robotoBold.copyWith(fontSize: 13, color: context.kForeground)),
+        ]),
+        const SizedBox(height: Dimensions.paddingSizeSmall),
+        ...team.map((member) {
+          final String name = member['name']?.toString() ?? '';
+          final String status = member['status']?.toString() ?? '';
+          final bool isMe = member['is_me'] == true;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeExtraSmall),
+            child: Row(children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(50),
+                child: CustomImage(
+                  height: 24, width: 24, fit: BoxFit.cover,
+                  image: member['image']?.toString() ?? '',
+                  placeholder: Images.userPlaceHolder,
+                ),
+              ),
+              const SizedBox(width: Dimensions.paddingSizeSmall),
+              Expanded(
+                child: Text(
+                  isMe ? '$name (You)' : name,
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: robotoMedium.copyWith(fontSize: 13, color: context.kForeground),
+                ),
+              ),
+              StatusBadge(status: status),
+            ]),
+          );
+        }),
       ]),
     );
   }
@@ -197,11 +279,56 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeSmall),
-      child: Row(children: [
-        Icon(icon, size: 18, color: Theme.of(context).primaryColor),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Icon(icon, size: 16, color: context.kMutedForeground),
+        ),
         const SizedBox(width: Dimensions.paddingSizeSmall),
-        Text('$label: ', style: robotoRegular.copyWith(color: Theme.of(context).hintColor)),
-        Expanded(child: Text(value, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall), maxLines: 2, overflow: TextOverflow.ellipsis)),
+        Expanded(
+          child: Text.rich(
+            TextSpan(children: [
+              TextSpan(
+                text: '$label: ',
+                style: robotoRegular.copyWith(fontSize: 13, color: context.kMutedForeground),
+              ),
+              TextSpan(
+                text: value,
+                style: robotoMedium.copyWith(fontSize: 14, color: context.kForeground),
+              ),
+            ]),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ]),
+    );
+  }
+}
+
+class _CountdownTimer extends StatelessWidget {
+  final int seconds;
+  const _CountdownTimer({required this.seconds});
+
+  @override
+  Widget build(BuildContext context) {
+    final bool warning = seconds <= 10;
+    final Color color = warning ? context.kDestructive : context.kForeground;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: context.kMuted,
+        borderRadius: BorderRadius.circular(kRadiusMd),
+      ),
+      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Icon(Icons.timer_outlined, size: 20, color: color),
+        const SizedBox(width: 8),
+        Text(
+          '${seconds}s',
+          style: robotoBold.copyWith(fontSize: 18, color: color),
+        ),
       ]),
     );
   }
@@ -220,19 +347,32 @@ class _StatusCard extends StatelessWidget {
             : 'booking_request_expired'.tr;
 
     final IconData icon = controller.accepted
-        ? Icons.check_circle
+        ? Icons.check_circle_rounded
         : controller.rejected
-            ? Icons.cancel
-            : Icons.timer_off;
+            ? Icons.cancel_rounded
+            : Icons.timer_off_rounded;
 
-    final Color color = controller.accepted ? Colors.green : (controller.rejected ? Colors.red : Colors.orange);
+    final Color color = controller.accepted
+        ? context.kSuccess
+        : (controller.rejected ? context.kDestructive : Ios27Tokens.systemOrange);
 
-    return Center(
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Icon(icon, color: color, size: 64),
-        const SizedBox(height: Dimensions.paddingSizeDefault),
-        Text(message, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge), textAlign: TextAlign.center),
-      ]),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+          Icon(icon, color: color, size: 64),
+          const SizedBox(height: Dimensions.paddingSizeDefault),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: robotoMedium.copyWith(
+              fontSize: Dimensions.fontSizeLarge,
+              color: context.kForeground,
+            ),
+          ),
+        ]),
+      ),
     );
   }
 }

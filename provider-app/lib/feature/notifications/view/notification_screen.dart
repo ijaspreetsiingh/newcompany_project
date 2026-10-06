@@ -1,3 +1,4 @@
+import 'package:demandium_provider/feature/notifications/model/notofication_model.dart';
 import 'package:demandium_provider/feature/notifications/widget/notification_shimmer.dart';
 import 'package:get/get.dart';
 import 'package:demandium_provider/util/core_export.dart';
@@ -18,152 +19,180 @@ class _NotificationScreenState extends State<NotificationScreen> {
     Get.find<NotificationController>().getNotifications(1, reload: true);
   }
 
+  void _onBack() {
+    if (widget.fromNotificationPage == "notification") {
+      Get.offAllNamed(RouteHelper.getInitialRoute());
+    } else if (Navigator.canPop(Get.context!)) {
+      Get.back();
+    } else {
+      Get.offNamed(RouteHelper.initial);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomPopScopeWidget(
       child: Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        appBar: CustomAppBar(
-          title: "notifications".tr,
-          onBackPressed: widget.fromNotificationPage == "notification" ? (){
-            Get.offAllNamed(RouteHelper.getInitialRoute());
-          } : null,
-        ),
-        body: GetBuilder<NotificationController>(builder: (controller) {
-          return controller.notificationModel == null ? const NotificationShimmer(): controller.dateList.isEmpty ?
-          NoDataScreen(text: 'empty_notifications'.tr,type: NoDataType.notification,):
-          RefreshIndicator(
-            color: Theme.of(context).primaryColor,
-            backgroundColor: Theme.of(context).cardColor,
-            onRefresh: () async {
-              controller.getNotifications(1);
-            },
-            child: Column(
+        backgroundColor: InkColors.background,
+        body: SafeArea(
+          child: GetBuilder<NotificationController>(builder: (controller) {
+
+            final int unseenCount = controller.unseenNotificationCount;
+            final bool isLoading = controller.notificationModel == null;
+
+            final List<Data> items = [];
+            for (final group in controller.notificationList) {
+              if (group is List) {
+                items.addAll(group.whereType<Data>());
+              }
+            }
+
+            return Column(
               children: [
+
+                InkTopBar(
+                  title: "Notifications",
+                  subtitle: isLoading ? null : (unseenCount > 0 ? "$unseenCount unseen" : null),
+                  onBack: _onBack,
+                ),
+
                 Expanded(
-                  child: ListView.builder(itemBuilder: (context, index0) {
-                    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Padding(padding:  const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault,
-                          vertical: Dimensions.paddingSizeDefault),
-                          child: Text(
-                            Get.find<NotificationController>().dateList[index0].toString(),
-                            style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge,
-                                color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.7)
+                  child: isLoading ? const NotificationShimmer() : items.isEmpty ?
+
+                  Center(
+                    child: NoDataScreen(text: 'empty_notifications'.tr, type: NoDataType.notification),
+                  ) :
+
+                  RefreshIndicator(
+              color: InkColors.foreground,
+              backgroundColor: InkColors.card,
+              onRefresh: () async {
+                controller.getNotifications(1);
+              },
+              child: ListView(
+                controller: controller.scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                children: [
+
+                  InkCard(
+                    padding: EdgeInsets.zero,
+                    child: items.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Text(
+                              'empty_notifications'.tr,
+                              textAlign: TextAlign.center,
+                              style: robotoRegular.copyWith(fontSize: 13, color: InkColors.mutedForeground),
                             ),
-                            textDirection: TextDirection.ltr,
                           )
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          boxShadow: Get.isDarkMode? null:[
-                            BoxShadow(
-                              offset: const Offset(0, 1),
-                              blurRadius: 3,
-                              color: Colors.black.withValues(alpha:0.08),
-                            )],
-                          color: Theme.of(context).cardColor,
-                        ),
+                        : Column(
+                            children: List.generate(items.length, (index) {
+                              final Data notification = items[index];
+                              final bool unseen = index < unseenCount;
 
-                        child: ListView.separated(itemBuilder: (context, index1) {
-                          return InkWell(
-                            onTap: () => showDialog(context: context, builder: (ctx)  =>
-                                ImageDialog(
-                                  imageUrl: '${controller.notificationList[index0][index1].coverImageFullPath}',
-                                  title: controller.notificationList[index0][index1].title.toString().trim(),
-                                  subTitle: "${controller.notificationList[index0][index1].description}",
-                                )
-                            ),
-                            child: Container(
-                                padding:  const EdgeInsets.symmetric(
-                                    horizontal: Dimensions.paddingSizeDefault,
-                                    vertical: Dimensions.paddingSizeSmall
-                                ),
-                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-
-                                  Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(50),
-                                        child: CustomImage(
-                                          image: '${controller.notificationList[index0][index1].coverImageFullPath}',
-                                          height: 30, width: 30, fit: BoxFit.cover,
-                                        ),
+                              return Column(
+                                children: [
+                                  if (index != 0)  Divider(height: 1, color: InkColors.border),
+                                  InkWell(
+                                    onTap: () => showDialog(
+                                      context: context,
+                                      builder: (ctx) => ImageDialog(
+                                        imageUrl: '${notification.coverImageFullPath}',
+                                        title: notification.title.toString().trim(),
+                                        subTitle: "${notification.description}",
                                       ),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
 
-                                      const SizedBox(width: Dimensions.paddingSizeDefault,),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(controller.notificationList[index0][index1].title.toString().trim(),
-                                              style: robotoMedium.copyWith(color: Theme.of(context).
-                                              textTheme.bodyLarge!.color!.withValues(alpha:0.7) ,
-                                                fontSize: Dimensions.fontSizeDefault,
+                                          Container(
+                                            height: 36,
+                                            width: 36,
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: unseen ? InkColors.foreground : InkColors.card,
+                                              border: unseen ? null : Border.all(color: InkColors.border),
+                                            ),
+                                            child: Icon(
+                                              Icons.notifications_none_rounded,
+                                              size: 16,
+                                              color: unseen ? InkColors.background : InkColors.mutedForeground,
+                                            ),
+                                          ),
+
+                                          const SizedBox(width: 12),
+
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  notification.title.toString().trim(),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: robotoSemiBold.copyWith(
+                                                    fontSize: 13.5,
+                                                    height: 1.3,
+                                                    color: InkColors.foreground,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  "${notification.description}",
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                  style: robotoRegular.copyWith(
+                                                    fontSize: 12,
+                                                    height: 1.3,
+                                                    color: InkColors.mutedForeground,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+
+                                          const SizedBox(width: 8),
+
+                                          if (notification.createdAt != null)
+                                            Text(
+                                              DateConverter.convertStringTimeOnly(
+                                                  DateConverter.isoUtcStringToLocalDate(notification.createdAt!)),
+                                              style: robotoRegular.copyWith(
+                                                fontSize: 10.5,
+                                                height: 1.3,
+                                                color: InkColors.mutedForeground,
                                               ),
+                                              textDirection: TextDirection.ltr,
                                             ),
-                                            const SizedBox(height: Dimensions.paddingSizeSmall,),
-                                            Text("${controller.notificationList[index0][index1].description}",
-                                              style: robotoRegular.copyWith(color: Theme.of(context).
-                                              textTheme.bodyLarge!.color!.withValues(alpha:0.5) ,
-                                                fontSize: Dimensions.fontSizeDefault,
-                                              ),
-                                              maxLines:2,
-                                            ),
-                                          ],
-                                        ),
+                                        ],
                                       ),
-
-                                      SizedBox(height: 40, width: 65,
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.end,
-                                          children: [
-                                            Text(DateConverter.convertStringTimeOnly(
-                                                DateConverter.isoUtcStringToLocalDate(
-                                                    controller.notificationList[index0][index1].createdAt)),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-
-
-                                    ],
+                                    ),
                                   ),
                                 ],
-                                )
-                            ),
-                          );},
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: controller.notificationList[index0].length,
-                          separatorBuilder: (BuildContext context, int index) {
-                            return  Divider(color: Theme.of(context).hintColor, thickness: 0.3,);
-                          },
-                        ),
-                      )
-                    ],
-                    );},
-                    shrinkWrap: true,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemCount: controller.dateList.length,
-                    padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeLarge),
-                    controller: controller.scrollController,
+                              );
+                            }),
+                          ),
                   ),
-                ),
-                controller.paginationLoading?
-                CircularProgressIndicator(color: Theme.of(context).hoverColor,
-                ):const SizedBox.shrink(),
-              ],
+
+                  if (controller.paginationLoading)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 16),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                ],
+              ),
             ),
-          );
-          },
-        )
+                ),
+              ],
+            );
+          }),
+        ),
       ),
     );
   }
 }
-
-
-
-

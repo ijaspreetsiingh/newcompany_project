@@ -95,7 +95,7 @@ class UserController extends GetxController implements GetxService {
       Get.find<AuthController>().clearSharedData();
       Get.find<AuthController>().googleLogout();
       Get.find<AuthController>().signOutWithFacebook();
-      Get.offAllNamed(RouteHelper.getInitialRoute());
+      Get.offAllNamed(RouteHelper.getinitialRoute());
     }else{
       Get.back();
       ApiChecker.checkApi(response);
@@ -140,4 +140,7 @@ class UserController extends GetxController implements GetxService {
   }
 
 }
+
+
+
 

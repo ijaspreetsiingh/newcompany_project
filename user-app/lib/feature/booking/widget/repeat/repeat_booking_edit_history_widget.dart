@@ -77,7 +77,7 @@ class RepeatBookingEditHistoryDialog extends StatelessWidget {
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
                             child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween ,children: [
-                              textWidget(text: "${editHistory[index].oldQuantity ?? ""} → ${editHistory[index].newQuantity ?? ""}".tr, textStyle: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault)),
+                              textWidget(text: "${editHistory[index].oldQuantity ?? ""} â†’ ${editHistory[index].newQuantity ?? ""}".tr, textStyle: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault)),
                               textWidget(text:  editHistory[index].isMultiple == 1 ? "edited_multiple_booking".tr : "edited_only_this_single_booking".tr.tr),
                             ]),
                           ),
@@ -239,5 +239,8 @@ class _SubTotalItemWidget extends StatelessWidget {
     );
   }
 }
+
+
+
 
 

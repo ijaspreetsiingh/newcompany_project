@@ -1,4 +1,4 @@
-import 'package:jdds/util/core_export.dart';
+﻿import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 
 class ServiceDetailsController extends GetxController implements GetxService {
@@ -21,13 +21,19 @@ class ServiceDetailsController extends GetxController implements GetxService {
     _isLoading = true;
     update();
 
+    int? responseStatus;
     try {
       Response response = await serviceDetailsRepo.getServiceDetails(serviceID, fromPage);
-      if (response.body['response_code'] == 'default_200') {
-        _service = Service.fromJson(response.body['content']);
+      responseStatus = response.statusCode;
+      final body = response.body;
+      if (response.statusCode == 200 && body is Map &&
+          body['response_code'] == 'default_200' && body['content'] is Map) {
+        _service = Service.fromJson(Map<String, dynamic>.from(body['content'] as Map));
 
         int length = _service!.faqs != null && _service!.faqs!.isNotEmpty ? 3 : 2;
-        Get.find<ServiceTabController>().initTabController(length: length);
+        if (Get.isRegistered<ServiceTabController>()) {
+          Get.find<ServiceTabController>().inttTabController(length: length);
+        }
       } else {
         _service = Service();
         if (response.statusCode != 200) {
@@ -35,7 +41,7 @@ class ServiceDetailsController extends GetxController implements GetxService {
         }
       }
     } catch (e) {
-      debugPrint('getServiceDetails error: $e');
+      debugPrint('getServiceDetails error for $serviceID (HTTP $responseStatus): $e');
       _service = Service();
     }
     _isLoading = false;
@@ -66,3 +72,6 @@ class ServiceDetailsController extends GetxController implements GetxService {
     update();
   }
 }
+
+
+

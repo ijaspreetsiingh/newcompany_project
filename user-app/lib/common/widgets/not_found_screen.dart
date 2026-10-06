@@ -47,17 +47,17 @@ class _NotFoundScreenState extends State<NotFoundScreen> {
 
   String _hasRedirectionUrl(String currentUrl){
     var config = Get.find<SplashController>().configModel.content;
-    String redirectUrl = "";
+    String redtrectUrl = "";
     if( config !=null && config.errorLogs !=null && config.errorLogs!.isNotEmpty){
       config.errorLogs!.any((element){
-        redirectUrl = element.url == currentUrl ? element.redirectUrl! : "";
+        redtrectUrl = element.url == currentUrl ? element.redtrectUrl! : "";
         return element.url == currentUrl;
       });
     }
     if (kDebugMode) {
-      print("Redirect Url : $redirectUrl");
+      print("Redtrect Url : $redtrectUrl");
     }
-    return redirectUrl;
+    return redtrectUrl;
   }
 
   bool _checkExternalRedirection(String url){
@@ -112,3 +112,5 @@ class _NotFoundScreenState extends State<NotFoundScreen> {
     );
   }
 }
+
+

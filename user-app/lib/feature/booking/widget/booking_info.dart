@@ -10,17 +10,22 @@ class BookingInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    /// nest. booking info card : flat bordered (no shadow)
     return Container(
-      decoration: BoxDecoration(color: Theme.of(context).cardColor , borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-        boxShadow: Get.find<ThemeController>().darkTheme ? null : searchBoxShadow,
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
+        border: Border.all(
+          color: Theme.of(context).primaryColorLight.withValues(alpha: Get.isDarkMode ? 0.4 : 1),
+        ),
       ),
       child: Padding(padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
         child: Column( crossAxisAlignment: CrossAxisAlignment.start, children: [
 
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.start ,children: [
             Column( crossAxisAlignment: CrossAxisAlignment.start ,children: [
-              Text('${'booking'.tr} #${bookingDetails.readableId}',
-                style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge,
+              Text('${'booking'.tr.toUpperCase()} #${bookingDetails.readableId}',
+                style: robotoBold.copyWith(fontSize: Dimensions.fontSizeExtraLarge,
                     color: Theme.of(context).textTheme.bodyLarge!.color,decoration: TextDecoration.none),
               ),
               const SizedBox(height: Dimensions.paddingSizeSmall),
@@ -93,3 +98,5 @@ class BookingInfo extends StatelessWidget {
   //   }
   // }
 }
+
+

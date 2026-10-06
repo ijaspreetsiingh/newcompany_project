@@ -70,7 +70,7 @@ class ConversationSendMessageWidget extends StatelessWidget {
               )),
 
               if(conversationController.pickedFIleCrossMaxLength)
-                Text( conversationController.pickedFIleCrossMaxLength ? "• ${"can_not_select_more_than".tr} ${AppConstants.maxLimitOfTotalFileSent.floor()} ${'files'.tr}" :"",
+                Text( conversationController.pickedFIleCrossMaxLength ? "â€¢ ${"can_not_select_more_than".tr} ${AppConstants.maxLimitOfTotalFileSent.floor()} ${'files'.tr}" :"",
                   style: robotoRegular.copyWith(
                     fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).colorScheme.error.withValues(alpha: 0.7),
                   ),
@@ -133,7 +133,7 @@ class ConversationSendMessageWidget extends StatelessWidget {
                 ),
               ),
               if(conversationController.pickedFIleCrossMaxLength)
-                Text( conversationController.pickedFIleCrossMaxLength ? "• ${"can_not_select_more_than".tr} ${AppConstants.maxLimitOfTotalFileSent.floor()} ${'files'.tr}" :"",
+                Text( conversationController.pickedFIleCrossMaxLength ? "â€¢ ${"can_not_select_more_than".tr} ${AppConstants.maxLimitOfTotalFileSent.floor()} ${'files'.tr}" :"",
                   style: robotoRegular.copyWith(
                     fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).colorScheme.error.withValues(alpha: 0.7),
                   ),
@@ -208,7 +208,7 @@ class ConversationSendMessageWidget extends StatelessWidget {
                     InkWell(onTap: conversationController.isLoading ? null : () async {
                       await conversationController.pickMultipleImage(false);
                     },
-                      child: Image.asset(Images.imageIcon,height: 18,width: 18),
+                      child: Image.asset(Images.imagetcon,height: 18,width: 18),
                     ),
                     const SizedBox(width: Dimensions.paddingSizeSmall,),
 
@@ -272,3 +272,6 @@ class ConversationSendMessageWidget extends StatelessWidget {
     });
   }
 }
+
+
+

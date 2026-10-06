@@ -2,10 +2,10 @@ import 'package:jdds/util/core_export.dart';
 
 class DigitalPayment extends StatelessWidget {
   final String paymentGateway;
-  final bool redirectDirectlyPaymentScreen;
+  final bool redtrectDtrectlyPaymentScreen;
 
   const DigitalPayment({super.key, required this.paymentGateway,
-    this.redirectDirectlyPaymentScreen = true})
+    this.redtrectDtrectlyPaymentScreen = true})
       ;
 
   @override
@@ -25,3 +25,5 @@ class DigitalPayment extends StatelessWidget {
     );
   }
 }
+
+

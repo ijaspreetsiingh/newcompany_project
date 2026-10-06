@@ -1,4 +1,4 @@
-<select class="js-select theme-input-style w-100" name="sub_category_id" id="sub-category-id">
+<select class="subcategory-select theme-input-style w-100" name="sub_category_id" id="sub-category-id">
     @foreach($categories as $category)
         <option value="{{$category->id}}" {{isset($subCategoryId) && $subCategoryId == $category->id ? 'selected' : ''}}>{{$category->name}}</option>
     @endforeach
@@ -6,6 +6,6 @@
 
 <script>
     $(document).ready(function () {
-        $('.js-select').select2();
+        $('.subcategory-select').select2();
     });
 </script>

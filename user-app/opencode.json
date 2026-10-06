@@ -1,0 +1,268 @@
+{
+    "$schema":  "https://opencode.ai/config.json",
+    "provider":  {
+                     "tokenin":  {
+                                     "npm":  "@ai-sdk/openai-compatible",
+                                     "name":  "Tokenin AI",
+                                     "options":  {
+                                                     "baseURL":  "https://tokenin.my.id/v1",
+                                                     "apiKey":  "sk-e4bf86be1868592dbeb3cc580581c99377078a80"
+                                                 },
+                                     "models":  {
+                                                    "deepseek-ai/DeepSeek-V4.1-Flash":  {
+                                                                                            "name":  "deepseek-ai/DeepSeek-V4.1-Flash"
+                                                                                        },
+                                                    "myt/claude-fable-5":  {
+                                                                               "name":  "myt/claude-fable-5"
+                                                                           },
+                                                    "myt/claude-fable-5-1":  {
+                                                                                 "name":  "myt/claude-fable-5-1"
+                                                                             },
+                                                    "myt/claude-haiku-4-5":  {
+                                                                                 "name":  "myt/claude-haiku-4-5"
+                                                                             },
+                                                    "myt/claude-opus-4-5":  {
+                                                                                "name":  "myt/claude-opus-4-5"
+                                                                            },
+                                                    "myt/claude-opus-4-6":  {
+                                                                                "name":  "myt/claude-opus-4-6"
+                                                                            },
+                                                    "myt/claude-opus-4-7":  {
+                                                                                "name":  "myt/claude-opus-4-7"
+                                                                            },
+                                                    "myt/claude-opus-4-8":  {
+                                                                                "name":  "myt/claude-opus-4-8"
+                                                                            },
+                                                    "myt/claude-opus-4-8-free":  {
+                                                                                     "name":  "myt/claude-opus-4-8-free"
+                                                                                 },
+                                                    "myt/claude-opus-5":  {
+                                                                              "name":  "myt/claude-opus-5"
+                                                                          },
+                                                    "myt/claude-sonnet-4-5":  {
+                                                                                  "name":  "myt/claude-sonnet-4-5"
+                                                                              },
+                                                    "myt/claude-sonnet-4-6":  {
+                                                                                  "name":  "myt/claude-sonnet-4-6"
+                                                                              },
+                                                    "myt/claude-sonnet-5":  {
+                                                                                "name":  "myt/claude-sonnet-5"
+                                                                            },
+                                                    "myt/deepseek-v4-flash":  {
+                                                                                  "name":  "myt/deepseek-v4-flash"
+                                                                              },
+                                                    "myt/DeepSeek-V4-Flash-0731":  {
+                                                                                       "name":  "myt/DeepSeek-V4-Flash-0731"
+                                                                                   },
+                                                    "myt/deepseek-v4-flash-vision-exp":  {
+                                                                                             "name":  "myt/deepseek-v4-flash-vision-exp"
+                                                                                         },
+                                                    "myt/deepseek-v4-pro-0813":  {
+                                                                                     "name":  "myt/deepseek-v4-pro-0813"
+                                                                                 },
+                                                    "myt/doubao-seedance-2-0-260128":  {
+                                                                                           "name":  "myt/doubao-seedance-2-0-260128"
+                                                                                       },
+                                                    "myt/gemini-3.1-flash-lite":  {
+                                                                                      "name":  "myt/gemini-3.1-flash-lite"
+                                                                                  },
+                                                    "myt/gemini-3.1-pro-preview":  {
+                                                                                       "name":  "myt/gemini-3.1-pro-preview"
+                                                                                   },
+                                                    "myt/gemini-3.5-flash":  {
+                                                                                 "name":  "myt/gemini-3.5-flash"
+                                                                             },
+                                                    "myt/gemini-3.5-flash-free":  {
+                                                                                      "name":  "myt/gemini-3.5-flash-free"
+                                                                                  },
+                                                    "myt/gemini-3.5-flash-lite":  {
+                                                                                      "name":  "myt/gemini-3.5-flash-lite"
+                                                                                  },
+                                                    "myt/gemini-3.6-flash":  {
+                                                                                 "name":  "myt/gemini-3.6-flash"
+                                                                             },
+                                                    "myt/gemini-3.7-flash":  {
+                                                                                 "name":  "myt/gemini-3.7-flash"
+                                                                             },
+                                                    "myt/gemini-3.8-flash":  {
+                                                                                 "name":  "myt/gemini-3.8-flash"
+                                                                             },
+                                                    "myt/gemini-3-flash-preview":  {
+                                                                                       "name":  "myt/gemini-3-flash-preview"
+                                                                                   },
+                                                    "myt/glm-4.7":  {
+                                                                        "name":  "myt/glm-4.7"
+                                                                    },
+                                                    "myt/glm-5":  {
+                                                                      "name":  "myt/glm-5"
+                                                                  },
+                                                    "myt/glm-5.1":  {
+                                                                        "name":  "myt/glm-5.1"
+                                                                    },
+                                                    "myt/glm-5.2":  {
+                                                                        "name":  "myt/glm-5.2"
+                                                                    },
+                                                    "myt/GLM-5.2-Fast":  {
+                                                                             "name":  "myt/GLM-5.2-Fast"
+                                                                         },
+                                                    "myt/glm-5.3":  {
+                                                                        "name":  "myt/glm-5.3"
+                                                                    },
+                                                    "myt/glm-5.3-flash":  {
+                                                                              "name":  "myt/glm-5.3-flash"
+                                                                          },
+                                                    "myt/glm-5.3-free":  {
+                                                                             "name":  "myt/glm-5.3-free"
+                                                                         },
+                                                    "myt/glm-5-turbo":  {
+                                                                            "name":  "myt/glm-5-turbo"
+                                                                        },
+                                                    "myt/gpt-5":  {
+                                                                      "name":  "myt/gpt-5"
+                                                                  },
+                                                    "myt/gpt-5.1":  {
+                                                                        "name":  "myt/gpt-5.1"
+                                                                    },
+                                                    "myt/gpt-5.2":  {
+                                                                        "name":  "myt/gpt-5.2"
+                                                                    },
+                                                    "myt/gpt-5.4":  {
+                                                                        "name":  "myt/gpt-5.4"
+                                                                    },
+                                                    "myt/gpt-5.4-mini":  {
+                                                                             "name":  "myt/gpt-5.4-mini"
+                                                                         },
+                                                    "myt/gpt-5.4-nano":  {
+                                                                             "name":  "myt/gpt-5.4-nano"
+                                                                         },
+                                                    "myt/gpt-5.5":  {
+                                                                        "name":  "myt/gpt-5.5"
+                                                                    },
+                                                    "myt/gpt-5.6-luna":  {
+                                                                             "name":  "myt/gpt-5.6-luna"
+                                                                         },
+                                                    "myt/gpt-5.6-sol":  {
+                                                                            "name":  "myt/gpt-5.6-sol"
+                                                                        },
+                                                    "myt/gpt-5.6-terra":  {
+                                                                              "name":  "myt/gpt-5.6-terra"
+                                                                          },
+                                                    "myt/gpt-5-mini":  {
+                                                                           "name":  "myt/gpt-5-mini"
+                                                                       },
+                                                    "myt/grok-4.20-multi-agent":  {
+                                                                                      "name":  "myt/grok-4.20-multi-agent"
+                                                                                  },
+                                                    "myt/grok-4.20-non-reasoning":  {
+                                                                                        "name":  "myt/grok-4.20-non-reasoning"
+                                                                                    },
+                                                    "myt/grok-4.20-reasoning":  {
+                                                                                    "name":  "myt/grok-4.20-reasoning"
+                                                                                },
+                                                    "myt/grok-4.3":  {
+                                                                         "name":  "myt/grok-4.3"
+                                                                     },
+                                                    "myt/grok-4.5":  {
+                                                                         "name":  "myt/grok-4.5"
+                                                                     },
+                                                    "myt/grok-4.6-free":  {
+                                                                              "name":  "myt/grok-4.6-free"
+                                                                          },
+                                                    "myt/grok-imagine-video-1.5":  {
+                                                                                       "name":  "myt/grok-imagine-video-1.5"
+                                                                                   },
+                                                    "myt/happyhorse-1.0-t2v":  {
+                                                                                   "name":  "myt/happyhorse-1.0-t2v"
+                                                                               },
+                                                    "myt/kimi-k2.5":  {
+                                                                          "name":  "myt/kimi-k2.5"
+                                                                      },
+                                                    "myt/kimi-k2.7-code":  {
+                                                                               "name":  "myt/kimi-k2.7-code"
+                                                                           },
+                                                    "myt/kimi-k2-thinking":  {
+                                                                                 "name":  "myt/kimi-k2-thinking"
+                                                                             },
+                                                    "myt/kimi-k3":  {
+                                                                        "name":  "myt/kimi-k3"
+                                                                    },
+                                                    "myt/kling-v2-5-turbo":  {
+                                                                                 "name":  "myt/kling-v2-5-turbo"
+                                                                             },
+                                                    "myt/kling-v2-6":  {
+                                                                           "name":  "myt/kling-v2-6"
+                                                                       },
+                                                    "myt/kling-v3":  {
+                                                                         "name":  "myt/kling-v3"
+                                                                     },
+                                                    "myt/mimo-v2.5-free":  {
+                                                                               "name":  "myt/mimo-v2.5-free"
+                                                                           },
+                                                    "myt/MiniMax-M2.1":  {
+                                                                             "name":  "myt/MiniMax-M2.1"
+                                                                         },
+                                                    "myt/MiniMax-M2.5":  {
+                                                                             "name":  "myt/MiniMax-M2.5"
+                                                                         },
+                                                    "myt/MiniMax-M2.7":  {
+                                                                             "name":  "myt/MiniMax-M2.7"
+                                                                         },
+                                                    "myt/MiniMax-M3":  {
+                                                                           "name":  "myt/MiniMax-M3"
+                                                                       },
+                                                    "myt/MiniMax-M3-free":  {
+                                                                                "name":  "myt/MiniMax-M3-free"
+                                                                            },
+                                                    "myt/qwen3.5-35b-a3b":  {
+                                                                                "name":  "myt/qwen3.5-35b-a3b"
+                                                                            },
+                                                    "myt/qwen3.5-plus":  {
+                                                                             "name":  "myt/qwen3.5-plus"
+                                                                         },
+                                                    "myt/qwen3.6-35b-a3b":  {
+                                                                                "name":  "myt/qwen3.6-35b-a3b"
+                                                                            },
+                                                    "myt/qwen3.6-flash":  {
+                                                                              "name":  "myt/qwen3.6-flash"
+                                                                          },
+                                                    "myt/qwen3.6-max-preview":  {
+                                                                                    "name":  "myt/qwen3.6-max-preview"
+                                                                                },
+                                                    "myt/qwen3.6-plus":  {
+                                                                             "name":  "myt/qwen3.6-plus"
+                                                                         },
+                                                    "myt/qwen3.7-flash":  {
+                                                                              "name":  "myt/qwen3.7-flash"
+                                                                          },
+                                                    "myt/qwen3.7-plus":  {
+                                                                             "name":  "myt/qwen3.7-plus"
+                                                                         },
+                                                    "myt/qwen3.8-flash":  {
+                                                                              "name":  "myt/qwen3.8-flash"
+                                                                          },
+                                                    "myt/qwen3.8-max":  {
+                                                                            "name":  "myt/qwen3.8-max"
+                                                                        },
+                                                    "myt/qwen3.8-max-free":  {
+                                                                                 "name":  "myt/qwen3.8-max-free"
+                                                                             },
+                                                    "myt/qwen3-max":  {
+                                                                          "name":  "myt/qwen3-max"
+                                                                      },
+                                                    "myt/qwen3-max-preview":  {
+                                                                                  "name":  "myt/qwen3-max-preview"
+                                                                              },
+                                                    "myt/qwen3-vl-plus":  {
+                                                                              "name":  "myt/qwen3-vl-plus"
+                                                                          },
+                                                    "myt/qwen-mt-flash":  {
+                                                                              "name":  "myt/qwen-mt-flash"
+                                                                          },
+                                                    "myt/qwen-mt-flash-sp":  {
+                                                                                 "name":  "myt/qwen-mt-flash-sp"
+                                                                             }
+                                                }
+                                 }
+                 },
+    "model": "tokenin/myt/qwen3.8-max-free"
+}

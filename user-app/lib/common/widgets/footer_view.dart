@@ -219,7 +219,7 @@ class _FooterViewState extends State<FooterView> {
 
                                         switch (item.media) {
                                           case 'facebook':  icon = Images.facebookIcon; break;
-                                          case 'linkedin':  icon = Images.linkedinIcon; break;
+                                          case 'linkedin':  icon = Images.linkedintcon; break;
                                           case 'youtube':   icon = Images.youtubeIcon; break;
                                           case 'twitter':   icon = Images.twitterIcon; break;
                                           case 'instagram': icon = Images.instagramIcon; break;
@@ -451,3 +451,5 @@ class FooterButton extends StatelessWidget {
     });
   }
 }
+
+

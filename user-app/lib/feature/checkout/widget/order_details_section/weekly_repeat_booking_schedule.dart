@@ -37,7 +37,7 @@ class WeeklyRepeatBookingSchedule extends StatelessWidget {
 
             InkWell(
               onTap: () async {
-                scheduleController.initWeeklySelectedSchedule();
+                scheduleController.inttWeeklySelectedSchedule();
                 if(ResponsiveHelper.isDesktop(context)){
                   Get.dialog(const _SelectDateWidget());
                 }else{
@@ -216,7 +216,7 @@ class _SelectDateWidget extends StatelessWidget {
                                   return InkWell(
                                     onTap: ()=> scheduleController.toggleDaysCheckedValue(index),
                                     child: CustomCheckBox(title:  scheduleController.daysList[index],
-                                      value: scheduleController.initialDaysCheckList[index],
+                                      value: scheduleController.inttialDaysCheckList[index],
                                       onTap: ()=> scheduleController.toggleDaysCheckedValue(index),
                                       isTitLeftAlign: false,
                                     ),
@@ -230,7 +230,7 @@ class _SelectDateWidget extends StatelessWidget {
                       
                             const SizedBox(height: Dimensions.paddingSizeDefault),
                       
-                            !scheduleController.isInitialRepeatWeeklyBooking ? Padding(
+                            !scheduleController.isinttialRepeatWeeklyBooking ? Padding(
                               padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeDefault),
                               child: RichText(
                                 textAlign: TextAlign.center,
@@ -256,13 +256,13 @@ class _SelectDateWidget extends StatelessWidget {
                               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                 CustomCheckBox(
                                   title: "repeat_this_every_week".tr,
-                                  value: scheduleController.isInitialRepeatWeeklyBooking , isTitLeftAlign: false,
+                                  value: scheduleController.isinttialRepeatWeeklyBooking , isTitLeftAlign: false,
                                   onTap: (){
                                     scheduleController.updateWeeklyRepeatBookingStatus();
                                   },
                                 ),
                       
-                                scheduleController.isInitialRepeatWeeklyBooking ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                scheduleController.isinttialRepeatWeeklyBooking ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                                   Text("from_to".tr, style: robotoMedium,),
                                   const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
                                   Text("select_the_date_range_you_want_to_repeat_this_cycle_every_week".tr, style: robotoLight.copyWith(fontSize: Dimensions.fontSizeSmall)),
@@ -270,11 +270,11 @@ class _SelectDateWidget extends StatelessWidget {
                                   CustomDateRangePicker(
                                     icon: Images.calendar2,
                                     onTimeChanged: (DateTimeRange? dateRange){
-                                      scheduleController.updateInitialWeeklyRepeatBookingDateRange = dateRange;
+                                      scheduleController.updateinttialWeeklyRepeatBookingDateRange = dateRange;
                                       scheduleController.update();
                                     },
-                                    dateTimeRange: scheduleController.initialPickedWeeklyRepeatBookingDateRange == null ? null :
-                                    DateConverter.convertDateTimeRangeToString(scheduleController.initialPickedWeeklyRepeatBookingDateRange!),
+                                    dateTimeRange: scheduleController.inttialPickedWeeklyRepeatBookingDateRange == null ? null :
+                                    DateConverter.convertDateTimeRangeToString(scheduleController.inttialPickedWeeklyRepeatBookingDateRange!),
                                   ),
                                   const SizedBox(height: Dimensions.paddingSizeDefault,),
                       
@@ -366,22 +366,24 @@ class _SelectDateWidget extends StatelessWidget {
   }
 
   void _onSaveTap(ScheduleController scheduleController){
-    if(scheduleController.getInitialWeeklyPickedDays().isEmpty){
+    if(scheduleController.getinttialWeeklyPickedDays().isEmpty){
       customSnackBar("select_your_service_booking_date".tr, type: ToasterMessageType.info, showDefaultSnackBar: false);
     }
-    else if(scheduleController.isInitialRepeatWeeklyBooking && scheduleController.initialPickedWeeklyRepeatBookingDateRange == null){
+    else if(scheduleController.isinttialRepeatWeeklyBooking && scheduleController.inttialPickedWeeklyRepeatBookingDateRange == null){
       customSnackBar("select_the_date_range_you_want_to_repeat_this_cycle_every_week".tr, type: ToasterMessageType.info, showDefaultSnackBar: false);
     }
-    else if(scheduleController.initialPickedWeeklyRepeatBookingDateRange != null && CheckoutHelper.calculateDaysCountBetweenDateRangeWithSpecificSelectedDay(
-        scheduleController.initialPickedWeeklyRepeatBookingDateRange, scheduleController.getInitialWeeklyPickedDays()) <= 0 ){
+    else if(scheduleController.inttialPickedWeeklyRepeatBookingDateRange != null && CheckoutHelper.calculateDaysCountBetweenDateRangeWithSpecificSelectedDay(
+        scheduleController.inttialPickedWeeklyRepeatBookingDateRange, scheduleController.getinttialWeeklyPickedDays()) <= 0 ){
       customSnackBar("no_scheduled_days_available_inside_picked_date_range".tr, type: ToasterMessageType.info, showDefaultSnackBar: false);
     }else{
-      scheduleController.initWeeklySelectedSchedule(isFirst: false);
+      scheduleController.inttWeeklySelectedSchedule(isFirst: false);
       scheduleController.calculateScheduleCountDays(repeatBookingType: RepeatBookingType.weekly);
       Get.back();
     }
   }
 }
+
+
 
 
 

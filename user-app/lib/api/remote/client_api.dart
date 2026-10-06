@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:jdds/common/models/errrors_model.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
@@ -48,12 +48,62 @@ class ApiClient extends GetxService {
     };
   }
 
+  /// Client/customer API calls me location context (latitude/longitude/radius)
+  /// append karta hai — backend ka ZoneAdder inhe request input se padh kar
+  /// geo-based provider search chalata hai. Sirf tab add hota hai jab param
+  /// pehle se maujood na ho (explicit lat/lng wale URIs jaise zone lookup
+  /// override nahi hote) aur saved address real ho (0,0 nahi).
+  Uri _requestUri(String? uri, {Map<String, dynamic>? extraQuery}) {
+    final Uri parsed = Uri.parse('${appBaseUrl!}${uri ?? ''}');
+    final String path = parsed.path;
+    final bool isGeoScoped =
+        path.contains('/client/') || path.contains('/customer/');
+    if (!isGeoScoped && (extraQuery == null || extraQuery.isEmpty)) {
+      return parsed;
+    }
+
+    final Map<String, dynamic> params = <String, dynamic>{};
+    params.addAll(parsed.queryParameters);
+    if (extraQuery != null) {
+      params.addAll(extraQuery);
+    }
+
+    if (isGeoScoped) {
+      final bool hasCoords =
+          params.containsKey('lat') || params.containsKey('latitude');
+      if (!hasCoords) {
+        double lat = 0;
+        double lng = 0;
+        try {
+          final String? addressJson =
+              sharedPreferences.getString(AppConstants.userAddress);
+          if (addressJson != null) {
+            final AddressModel address =
+                AddressModel.fromJson(jsonDecode(addressJson));
+            lat = double.tryParse(address.latitude ?? '') ?? 0;
+            lng = double.tryParse(address.longitude ?? '') ?? 0;
+          }
+        } catch (_) {}
+        if (lat != 0 || lng != 0) {
+          params['latitude'] = lat.toString();
+          params['longitude'] = lng.toString();
+        }
+      }
+      final double? radius = SearchRadiusState.activeRadius;
+      if (radius != null) {
+        params.putIfAbsent('radius', () => radius.toString());
+      }
+    }
+
+    return parsed.replace(queryParameters: params);
+  }
+
   Future<Response> getData(String uri, {Map<String, dynamic>? query, Map<String, String>? headers}) async {
 
     try {
       printLog('====> API Call: $uri\nHeader: $_mainHeaders');
       http.Response response = await http.get(
-        Uri.parse(appBaseUrl! + uri),
+        _requestUri(uri, extraQuery: query),
         headers: headers ?? _mainHeaders,
 
       ).timeout(Duration(seconds: timeoutInSeconds));
@@ -65,17 +115,20 @@ class ApiClient extends GetxService {
   }
 
   Future<Response> postData(String? uri, dynamic body, {Map<String, String>? headers, int? timeout}) async {
-    printLog('====> API Call: $uri\nHeader: $_mainHeaders');
-    printLog('====> body : ${body.toString()}');
-
-    http.Response response = await http.post(
-      Uri.parse(appBaseUrl! + uri!),
-      body: jsonEncode(body),
-      headers: headers ?? _mainHeaders,
-    ).timeout(Duration(seconds: timeout ?? timeoutInSeconds));
     try {
+      printLog('====> API Call: $uri\nHeader: $_mainHeaders');
+      printLog('====> body : ${body.toString()}');
+
+      http.Response response = await http.post(
+        _requestUri(uri),
+        body: jsonEncode(body),
+        headers: headers ?? _mainHeaders,
+      ).timeout(Duration(seconds: timeout ?? timeoutInSeconds));
       return handleResponse(response, uri);
     } catch (e) {
+      if (kDebugMode) {
+        print('POST request failed: $e');
+      }
       return Response(statusCode: 1, statusText: noInternetMessage);
     }
   }
@@ -140,7 +193,7 @@ class ApiClient extends GetxService {
     printLog('====> body : ${body.toString()}');
     try {
       http.Response response = await http.put(
-        Uri.parse(appBaseUrl!+uri!),
+        _requestUri(uri),
         body: jsonEncode(body),
         headers: headers ?? _mainHeaders,
       ).timeout(Duration(seconds: timeoutInSeconds));
@@ -153,7 +206,7 @@ class ApiClient extends GetxService {
   Future<Response> deleteData(String? uri, {Map<String, String>? headers}) async {
     try {
       http.Response response = await http.delete(
-        Uri.parse(appBaseUrl!+uri!),
+        _requestUri(uri),
         headers: headers ?? _mainHeaders,
       ).timeout(Duration(seconds: timeoutInSeconds));
       return handleResponse(response, uri);
@@ -200,3 +253,4 @@ class MultipartBody {
 
   MultipartBody(this.key, this.file);
 }
+

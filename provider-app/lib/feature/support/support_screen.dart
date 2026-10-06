@@ -1,11 +1,5 @@
-import 'package:demandium_provider/common/widgets/app_bar.dart';
-import 'package:demandium_provider/feature/splash/controller/splash_controller.dart';
-import 'package:demandium_provider/util/dimensions.dart';
-import 'package:demandium_provider/util/images.dart';
-import 'package:demandium_provider/util/styles.dart';
-import 'package:flutter/material.dart';
+import 'package:demandium_provider/util/core_export.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class SupportScreen extends StatelessWidget {
 
@@ -13,79 +7,103 @@ class SupportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).cardColor,
-      appBar: CustomAppBar(title: 'help_&_support'.tr),
-      body:  LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            physics: ClampingScrollPhysics(),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: constraints.maxHeight,
-              ),
-              child: IntrinsicHeight(
-                child: Column(mainAxisAlignment: MainAxisAlignment.spaceBetween,  children: [
-                  ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: Get.height * 0.4),
-                    child: Center(
-                      child: Column( children: [
-                        const SizedBox(height: Dimensions.paddingSizeExtraMoreLarge),
-                        Align( alignment: Alignment.center,
-                          child: Image.asset(Images.helpSupportImage, width: 172, height: 80),
-                        ),
-                        const SizedBox(height: Dimensions.paddingSizeExtraLarge),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                'contact_for_support'.tr,
-                                style: robotoBold.copyWith(fontSize: Dimensions.paddingSizeLarge),
+      backgroundColor: InkColors.background,
+      body: SafeArea(
+        bottom: false,
+        child: Column(children: [
+          InkTopBar(
+            title: 'help_&_support'.tr,
+            onBack: () => Get.back(),
+            right: const InkIconButton(icon: Icons.more_horiz),
+          ),
+
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: ClampingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(mainAxisAlignment: MainAxisAlignment.spaceBetween,  children: [
+                        ConstrainedBox(
+                          constraints: BoxConstraints(minHeight: Get.height * 0.4),
+                          child: Center(
+                            child: Column( children: [
+                              const SizedBox(height: Dimensions.paddingSizeExtraMoreLarge),
+                              Align( alignment: Alignment.center,
+                                child: Container(
+                                  height: 72,
+                                  width: 72,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: InkColors.secondary,
+                                    border: Border.all(color: InkColors.border),
+                                    borderRadius: BorderRadius.circular(19),
+                                  ),
+                                  child:  Icon(Icons.support_agent_rounded, size: 32, color: InkColors.foreground),
+                                ),
                               ),
-                              const SizedBox(height: Dimensions.paddingSizeDefault),
-                              Text(
-                                'were_here_to_help'.tr,
-                                style: robotoRegular.copyWith(color: Theme.of(context).hintColor),
-                                textAlign: TextAlign.center,
+                              const SizedBox(height: Dimensions.paddingSizeExtraLarge),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'contact_for_support'.tr,
+                                      style: displayBold.copyWith(
+                                        fontSize: 22,
+                                        height: 1.2,
+                                        color: InkColors.foreground,
+                                      ),
+                                    ),
+                                    const SizedBox(height: Dimensions.paddingSizeDefault),
+                                    Text(
+                                      'were_here_to_help'.tr,
+                                      style: robotoRegular.copyWith(
+                                        fontSize: 13,
+                                        color: InkColors.mutedForeground,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ],
+                            ]),
                           ),
+                        ),
+                        SizedBox(height: Dimensions.paddingSizeLarge),
+
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Column( children: [
+                            ContactWithEmailOrPhone(
+                              title: 'call_our_customer'.tr,
+                              subTitle: 'talk_with_our_customer'.tr,
+                              message: Get.find<SplashController>().configModel.content?.businessPhone ?? '',
+                              isPhone: true,
+                            ),
+                            const SizedBox(height: 12),
+                            ContactWithEmailOrPhone(
+                              title: 'send_us_email_through'.tr,
+                              subTitle: 'typically_the_support'.tr,
+                              message: Get.find<SplashController>().configModel.content?.businessEmail ?? '',
+                              isPhone: false,
+                            ),
+                          ]),
                         ),
                       ]),
                     ),
                   ),
-                  SizedBox(height: Dimensions.paddingSizeLarge),
-
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Get.isDarkMode ? Colors.grey.withValues(alpha: 0.2)
-                          : Theme.of(context).primaryColor.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.only(topLeft: Radius.circular(35), topRight: Radius.circular(35),),
-                    ),
-                    child: Column( children: [
-                      SizedBox(height: Dimensions.paddingSizeSmall),
-                      ContactWithEmailOrPhone(
-                        title: 'call_our_customer'.tr,
-                        subTitle: 'talk_with_our_customer'.tr,
-                        message: Get.find<SplashController>().configModel.content?.businessPhone ?? '',
-                        isPhone: true,
-                      ),
-                      ContactWithEmailOrPhone(
-                        title: 'send_us_email_through'.tr,
-                        subTitle: 'typically_the_support'.tr,
-                        message: Get.find<SplashController>().configModel.content?.businessEmail ?? '',
-                        isPhone: false,
-                      ),
-                      SizedBox(height: Dimensions.paddingSizeSmall),
-                    ]),
-                  ),
-                ]),
-              ),
+                );
+              },
             ),
-          );
-        },
+          ),
+        ]),
       ),
     );
   }
@@ -101,57 +119,55 @@ class ContactWithEmailOrPhone extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(Dimensions.paddingSizeDefault),
-      margin: EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeEight),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
-        color: Theme.of(context).cardColor,
-      ),
+    return InkCard(
+      padding: const EdgeInsets.all(16),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
         Container(
-          padding: EdgeInsets.all(Dimensions.paddingSizeSmall),
+          height: 34,
+          width: 34,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-            color: Get.isDarkMode? Colors.grey.withValues(alpha:0.2) : Theme.of(context).primaryColor.withValues(alpha:0.05),
+            color: InkColors.secondary,
+            borderRadius: BorderRadius.circular(10),
           ),
-          child: Image.asset(isPhone?? false ? Images.phoneIconBlue : Images.mailIconBlue, height: 15, width: 15),
+          child: Icon(isPhone ?? false ? Icons.call_rounded : Icons.mail_rounded, size: 17, color: InkColors.foreground),
         ),
-        SizedBox(width: Dimensions.paddingSizeSmall),
+        const SizedBox(width: 12),
 
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title!, style: robotoMedium.copyWith(color: Theme.of(context).textTheme.bodyLarge?.color?.withValues(alpha: 0.6), fontSize: Dimensions.paddingSizeLarge)),
-            const SizedBox(height: Dimensions.paddingSizeSmall),
+            Text(title!, style: robotoSemiBold.copyWith(fontSize: 14, height: 1.3, color: InkColors.foreground)),
+            const SizedBox(height: 4),
 
-            Text(subTitle!, style: robotoRegular.copyWith(color: Theme.of(context).hintColor), maxLines: 2, overflow: TextOverflow.ellipsis),
-            const SizedBox(height: Dimensions.paddingSizeDefault),
+            Text(subTitle!, style: robotoRegular.copyWith(fontSize: 12, height: 1.5, color: InkColors.mutedForeground), maxLines: 2, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 12),
 
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(isPhone! ?
-                (Get.find<SplashController>().configModel.content?.businessPhone ?? '') :
-                (Get.find<SplashController>().configModel.content?.businessEmail ?? ''),
-                    style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge)
+                Expanded(
+                  child: Text(message ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: robotoBold.copyWith(fontSize: 14, color: InkColors.foreground)
+                  ),
                 ),
 
-                InkWell(
+                const SizedBox(width: 8),
+
+                InkIconButton(
+                  icon: isPhone! ? Icons.call_rounded : Icons.mail_rounded,
+                  filled: true,
                   onTap: () async {
-                    if(isPhone!) {
-                      await launchUrl(launchUri);
-                    } else {
-                      await launchUrl(email);
+                    try {
+                      final bool ok = await launchUrl(isPhone! ? launchUri : email, mode: LaunchMode.externalApplication);
+                      if (!ok) {
+                        showCustomSnackBar('something_went_wrong'.tr, type: ToasterMessageType.error);
+                      }
+                    } catch (_) {
+                      showCustomSnackBar('something_went_wrong'.tr, type: ToasterMessageType.error);
                     }
                   },
-                  child: Container(
-                    padding: EdgeInsets.all(Dimensions.paddingSizeSmall),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
-                      color: Theme.of(context).primaryColor,
-                    ),
-                    child: Image.asset(isPhone! ? Images.phoneIconWhite : Images.mailIconWhite, height: 15, width: 15),
-                  ),
                 ),
               ],
             )

@@ -1,95 +1,73 @@
-import 'package:demandium_provider/feature/booking_requests/controller/calendar_controller.dart';
-import 'package:demandium_provider/helper/extension_helper.dart';
 import 'package:demandium_provider/util/core_export.dart';
-import 'package:get/get.dart';
-import 'package:syncfusion_flutter_calendar/calendar.dart';
 
+/// Single day cell of the redesigned month grid.
+///
+/// Renders the day number with a solid ink circle when selected and up to
+/// three booking-status dots underneath (confirmed / completed / cancelled).
 class MonthCellOrderCountWidget extends StatelessWidget {
-  final MonthCellDetails details;
-  final int count;
+  final DateTime day;
+  final bool isSelected;
+  final bool isWithinFilterRange;
+  final List<Color> dotColors;
+  final VoidCallback? onTap;
 
   const MonthCellOrderCountWidget({
     super.key,
-    required this.details,
-    required this.count,
+    required this.day,
+    required this.isSelected,
+    this.dotColors = const [],
+    this.isWithinFilterRange = true,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<BookingCalendarController>();
-    final bool isCurrentMonth = details.date.month == details.visibleDates[details.visibleDates.length ~/ 2].month;
-    final bool isToday = details.date.day == DateTime.now().day &&
-        details.date.month == DateTime.now().month &&
-        details.date.year == DateTime.now().year;
+    final Color numberColor = !isWithinFilterRange
+        ? InkColors.accent
+        : isSelected ? InkColors.background : InkColors.foreground;
 
-    // Check if the date is within the filter date range
-    final bool isWithinFilterRange = DateConverter.isDateWithinRange(
-      details.date,
-      startDate: controller.filterStartDate,
-      endDate: controller.filterEndDate,
-    );
-
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Theme.of(context).hintColor.withValues(alpha: 0.2),
-          width: 0.5,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: isWithinFilterRange ? onTap : null,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSelected ? InkColors.foreground : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
         ),
-        color: !isWithinFilterRange
-            ? Theme.of(context).hintColor.withValues(alpha: 0.2)
-            : isToday
-            ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
-            : null,
-      ),
-      child: Stack(
-        children: [
-          // Date number
-          Positioned(
-            top: 4,
-            left: 4,
-            child: Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isToday ? Theme.of(context).primaryColor : Colors.transparent,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '${day.day}',
+              style: robotoSemiBold.copyWith(
+                fontSize: 12.5,
+                height: 1.1,
+                color: numberColor,
               ),
-              alignment: Alignment.center,
-              child: Text(
-                details.date.day.toString(),
-                style: robotoMedium.copyWith(
-                  color: isToday
-                      ? Colors.white
-                      : isCurrentMonth
-                      ? Theme.of(context).textTheme.bodyLarge?.color
-                      : Theme.of(context).hintColor.withValues(alpha: 0.5),
-                  fontSize: Dimensions.fontSizeDefault,
+            ),
+            SizedBox(
+              height: 7,
+              child: Center(
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 2,
+                  runSpacing: 0,
+                  children: [
+                    for (final Color color in dotColors)
+                      Container(
+                        width: 4,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: isSelected ? InkColors.background : color,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
-          ),
-          // Order count badge
-          if (count > 0)
-            Positioned.fill(
-              child: Align(
-                alignment: Alignment.center,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: context.customThemeColors.warning.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    count.toString().padLeft(2, '0'),
-                    style: robotoMedium.copyWith(
-                      color: Colors.black,
-                      fontSize: Dimensions.fontSizeDefault,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

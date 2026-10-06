@@ -9,55 +9,69 @@ class NotificationDialog extends StatelessWidget{
   Widget build(BuildContext context) {
     return AlertDialog(
       elevation: 0,
-      backgroundColor: Theme.of(context).cardColor,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10.0))),
-      titlePadding: const EdgeInsets.all(0),
-      contentPadding: const EdgeInsets.all(0),
-      title:  Align(alignment: Alignment.topRight,
-        child: IconButton(icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+      backgroundColor: context.kCard,
+      shape: RoundedRectangleBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(kRadiusLg)),
+        side: BorderSide(color: context.kBorder, width: 1),
+      ),
+      titlePadding: const EdgeInsets.fromLTRB(20, 8, 8, 0),
+      contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      title: Row(
+        children: [
+          if (title != null)
+            Expanded(
+              child: Text(
+                title!,
+                style: robotoBold.copyWith(
+                  fontSize: 18,
+                  color: context.kForeground,
+                ),
+              ),
+            )
+          else
+            const Spacer(),
+          KIconButton(
+            icon: Icons.close_rounded,
+            iconSize: 18,
+            color: context.kMutedForeground,
+            onTap: () => Navigator.of(context).pop(),
+          ),
+        ],
       ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-            Padding(
-              padding:  const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-              child: Column(
-                children: [
-                  title!=null?Text(title!,style: robotoMedium.copyWith(color: Theme.of(context).
-                  textTheme.bodyLarge!.color!.withValues(alpha:0.7) ,
-                      fontSize: Dimensions.fontSizeDefault
-                  )): const SizedBox.shrink(),
-
-                  SizedBox(height: title!=null? Dimensions.paddingSizeDefault:0,),
-
-                  Container(
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Theme.of(context).primaryColor.withValues(alpha:0.20)),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: FadeInImage.assetNetwork(
-                        placeholder: Images.placeholder, image: imageUrl, fit: BoxFit.contain,
-                        imageErrorBuilder: (c, o, s) => Image.asset(
-                          Images.placeholder, height: MediaQuery.of(context).size.width - 130,
-                          width: MediaQuery.of(context).size.width, fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: subTitle!=null? Dimensions.paddingSizeDefault:0,),
-                  subTitle!=null?Text(subTitle!,style: robotoRegular.copyWith(color: Theme.of(context).
-                  textTheme.bodyLarge!.color!.withValues(alpha:0.5) ,
-                    fontSize: Dimensions.fontSizeDefault,
-                  ),textAlign: TextAlign.justify,):const SizedBox.shrink(),
-
-                  const SizedBox(height: Dimensions.paddingSizeDefault),
-                ],
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(kRadiusMd),
+                color: context.kMuted,
               ),
-            )
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(kRadiusMd),
+                child: FadeInImage.assetNetwork(
+                  placeholder: Images.placeholder, image: imageUrl, fit: BoxFit.contain,
+                  imageErrorBuilder: (c, o, s) => Image.asset(
+                    Images.placeholder, height: MediaQuery.of(context).size.width - 130,
+                    width: MediaQuery.of(context).size.width, fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+
+            if (subTitle != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                subTitle!,
+                style: robotoRegular.copyWith(
+                  fontSize: 14,
+                  color: context.kMutedForeground,
+                ),
+                textAlign: TextAlign.justify,
+              ),
+            ],
           ],
         ),
       ),

@@ -95,8 +95,8 @@ class ProviderBookingController extends GetxController implements GetxService {
   //       body.addAll({'category_ids': selectedCategoryId});
   //     }
   //
-  //     // 🟢 Debug request body
-  //     print('📤 Sending Request with Offset: $offset, Body: $body');
+  //     // ðŸŸ¢ Debug request body
+  //     print('ðŸ“¤ Sending Request with Offset: $offset, Body: $body');
   //
   //     if (offset == 1) {
   //       await DataSyncHelper.fetchAndSyncData(
@@ -111,33 +111,33 @@ class ProviderBookingController extends GetxController implements GetxService {
   //           source: DataSourceEnum.client,
   //         ),
   //         onResponse: (data, source) {
-  //           // 🟢 Debug raw response
-  //           print('📥 Response from $source: $data');
+  //           // ðŸŸ¢ Debug raw response
+  //           print('ðŸ“¥ Response from $source: $data');
   //
   //           _providerModel = ProviderModel.fromJson(data);
-  //           print('✅ Parsed ProviderModel: $_providerModel');
+  //           print('âœ… Parsed ProviderModel: $_providerModel');
   //
   //           _providerList = [];
   //           _providerList!.addAll(_providerModel?.content?.data ?? []);
   //
-  //           // 🟢 Debug provider list after parsing
-  //           print('📊 Provider List Count: ${_providerList!.length}');
-  //           print('📊 Providers: $_providerList');
+  //           // ðŸŸ¢ Debug provider list after parsing
+  //           print('ðŸ“Š Provider List Count: ${_providerList!.length}');
+  //           print('ðŸ“Š Providers: $_providerList');
   //
   //           _calculateDistance();
   //           update();
   //         },
   //       );
   //     } else {
-  //       ApiResponseModel response = await providerBookingRepo.getProviderList(
+  //       AptresponseModel response = await providerBookingRepo.getProviderList(
   //         offset,
   //         body,
   //         source: DataSourceEnum.client,
   //       );
   //
-  //       // 🟢 Debug raw response
-  //       print('📥 API Response: ${response.response.body}');
-  //       print('📥 Status Code: ${response.response.statusCode}');
+  //       // ðŸŸ¢ Debug raw response
+  //       print('ðŸ“¥ API Response: ${response.response.body}');
+  //       print('ðŸ“¥ Status Code: ${response.response.statusCode}');
   //
   //       if (response.response.statusCode == 200) {
   //         if (reload) {
@@ -145,15 +145,15 @@ class ProviderBookingController extends GetxController implements GetxService {
   //         }
   //         _providerModel = ProviderModel.fromJson(response.response.body);
   //
-  //         print('✅ Parsed ProviderModel: $_providerModel');
+  //         print('âœ… Parsed ProviderModel: $_providerModel');
   //
   //         if (_providerList != null) {
   //           _providerList!.addAll(_providerModel?.content?.data ?? []);
   //         }
   //
-  //         // 🟢 Debug provider list after parsing
-  //         print('📊 Provider List Count: ${_providerList!.length}');
-  //         print('📊 Providers: $_providerList');
+  //         // ðŸŸ¢ Debug provider list after parsing
+  //         print('ðŸ“Š Provider List Count: ${_providerList!.length}');
+  //         print('ðŸ“Š Providers: $_providerList');
   //
   //         _calculateDistance();
   //       } else {
@@ -181,6 +181,13 @@ class ProviderBookingController extends GetxController implements GetxService {
         'rating': selectedRatingIndex,
       };
 
+      final userAddress = Get.find<LocationController>().getUserAddress();
+      final double? userLat = double.tryParse(userAddress?.latitude ?? "");
+      final double? userLng = double.tryParse(userAddress?.longitude ?? "");
+      if(userLat != null && userLng != null){
+        body.addAll({'latitude': userLat, 'longitude': userLng});
+      }
+
       if(selectedCategoryId.isNotEmpty){
         body.addAll({'category_ids': selectedCategoryId});
       }
@@ -201,7 +208,7 @@ class ProviderBookingController extends GetxController implements GetxService {
         );
 
       }else{
-        ApiResponseModel response  = await providerBookingRepo.getProviderList(offset,body, source: DataSourceEnum.client);
+        AptresponseModel response  = await providerBookingRepo.getProviderList(offset,body, source: DataSourceEnum.client);
 
         if (response.response.statusCode == 200) {
           if(reload){
@@ -222,9 +229,14 @@ class ProviderBookingController extends GetxController implements GetxService {
   }
 
   void _calculateDistance (){
+    final userAddress = Get.find<LocationController>().getUserAddress();
     _providerList?.forEach((element) {
-      double distance = MapHelper.getDistanceBetweenUserCurrentLocationAndProvider(Get.find<LocationController>().getUserAddress()!, element);
-      element.distance = distance;
+      if(element.distance != null){
+        return;
+      }
+      if(userAddress != null){
+        element.distance = MapHelper.getDistanceBetweenUserCurrentLocationAndProvider(userAddress, element);
+      }
     });
   }
 
@@ -462,7 +474,7 @@ class ProviderBookingController extends GetxController implements GetxService {
               ),
               child: Text("my_location".tr, style: robotoMedium.copyWith(fontSize: 8)),
             ),
-            Icon(Icons.my_location, color: Colors.green, size: 25),
+            Icon(Icons.my_location, color: Get.theme.colorScheme.primary, size: 25),
           ],
         ),
       ),
@@ -529,7 +541,7 @@ class ProviderBookingController extends GetxController implements GetxService {
               ),
               child: Text("my_location".tr, style: robotoMedium.copyWith(fontSize: 8)),
             ),
-            Icon(Icons.my_location, color: Colors.green, size: 25),
+            Icon(Icons.my_location, color: Get.theme.colorScheme.primary, size: 25),
           ],
         ),
       ),
@@ -586,3 +598,5 @@ class ProviderBookingController extends GetxController implements GetxService {
 
 
 }
+
+

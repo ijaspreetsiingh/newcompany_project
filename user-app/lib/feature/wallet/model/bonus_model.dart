@@ -58,3 +58,4 @@ class BonusModel {
     return data;
   }
 }
+

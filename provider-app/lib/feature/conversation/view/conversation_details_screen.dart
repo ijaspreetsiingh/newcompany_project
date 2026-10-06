@@ -45,43 +45,64 @@ class _ConversationDetailsScreenState extends State<ConversationDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: InkColors.background,
 
-      appBar: ConversationDetailsAppBar(
-        fromNotification: widget.formNotification,
-        name: widget.name, phone: phone, image: widget.image,
+      body: SafeArea(
+        top: true,
+        bottom: false,
+        child: Column(children: [
+
+          ConversationDetailsAppBar(
+            fromNotification: widget.formNotification,
+            name: widget.name, phone: phone, image: widget.image,
+            userType: widget.userType,
+          ),
+
+          Expanded(
+            child: GetBuilder<ConversationController>( builder: (conversationController) {
+
+              if(conversationController.isFirst) return const ConversationDetailsShimmer();
+
+              return Column(children: [
+
+                conversationController.conversationList !=null && conversationController.conversationList!.isNotEmpty ?
+                Expanded(child: ListView.builder(
+                  controller: conversationController.messageScrollController,
+                  padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
+                  itemCount: conversationController.conversationList!.length,
+                  reverse: true,
+                  itemBuilder: (context, index) {
+
+                    bool isRightMessage = conversationController.conversationList!.elementAt(index).userId == providerId;
+                    return ConversationBubbleWidget(
+                      conversationData:conversationController.conversationList!.elementAt(index),
+                      isRightMessage: isRightMessage,
+                      nextConversationData: index == (conversationController.conversationList!.length - 1)  ?
+                      null : conversationController.conversationList?.elementAt(index+1),
+                      previousConversationData:  index == 0  ?
+                      null : conversationController.conversationList?.elementAt(index-1),
+                    );
+
+                  },
+                )) : Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: InkEmptyState('no_conversation_found'.tr),
+                    ),
+                  ),
+                ),
+
+
+                ConversationSendMessageWidget(channelId: widget.channelID,),
+
+
+              ]);
+            }),
+          ),
+
+        ]),
       ),
-
-      body: GetBuilder<ConversationController>( builder: (conversationController) {
-
-        return !conversationController.isFirst ? Column(children: [
-
-          conversationController.conversationList !=null && conversationController.conversationList!.isNotEmpty ?
-          Expanded(child: ListView.builder(
-            controller: conversationController.messageScrollController,
-            padding: const EdgeInsets.fromLTRB(10, 15, 10, 0),
-            itemCount: conversationController.conversationList!.length,
-            reverse: true,
-            itemBuilder: (context, index) {
-
-              bool isRightMessage = conversationController.conversationList!.elementAt(index).userId == providerId;
-              return ConversationBubbleWidget(
-                conversationData:conversationController.conversationList!.elementAt(index),
-                isRightMessage: isRightMessage,
-                nextConversationData: index == (conversationController.conversationList!.length - 1)  ?
-                null : conversationController.conversationList?.elementAt(index+1),
-                previousConversationData:  index == 0  ?
-                null : conversationController.conversationList?.elementAt(index-1),
-              );
-
-            },
-          )) : Expanded(child: Center(child: Text('no_conversation_found'.tr),)),
-
-
-          ConversationSendMessageWidget(channelId: widget.channelID,),
-
-
-        ]) : const ConversationDetailsShimmer();
-      }),
     );
   }
 }

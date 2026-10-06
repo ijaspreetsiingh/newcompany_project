@@ -23,6 +23,7 @@ class RouteHelper {
   static const String chatInbox = '/chat-inbox';
   static const String notification = '/notification';
   static const String bookingRequest = '/booking-request';
+  static const String recheckTasks = '/recheck-tasks';
   static const String incomingBookingPopup = '/incoming-booking-popup';
   static const String forgotPassword = '/forgot-password';
   static const String changePassword = '/change-password';
@@ -54,6 +55,7 @@ class RouteHelper {
   static String getBookingDetailsRoute({required String bookingId, bool? isSubBooking , String? fromPage}) =>
       '$bookingDetails?booking_id=$bookingId&fromPage=$fromPage&is_sub_booking=$isSubBooking';
   static String getBookingReqRoute() => bookingRequest;
+  static String getRecheckTasksRoute() => recheckTasks;
   static String getIncomingBookingPopupRoute({required String bookingId}) => '$incomingBookingPopup?booking_id=$bookingId';
   static String getForgotPasswordRoute() => forgotPassword;
 
@@ -103,6 +105,7 @@ class RouteHelper {
 
     GetPage(name: profileInformation, page: () => getRoute(const EditProfileScreen())),
     GetPage(name: bookingRequest, page: () => getRoute(const BookingListScreen())),
+    GetPage(name: recheckTasks, page: () => getRoute(const RecheckListScreen())),
 
     GetPage( name: chatScreen, page: () => getRoute(ConversationDetailsScreen(
       channelID: Get.parameters['channelID']!,

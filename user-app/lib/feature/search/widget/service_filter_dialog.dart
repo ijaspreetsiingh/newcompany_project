@@ -67,9 +67,9 @@ class _ServiceFilterDialogState extends State<ServiceFilterDialog> {
                     ),
 
                     FlutterSlider(
-                      values: [searchController.filteredMinPrice ?? searchController.initialMinPrice, searchController.filteredMaxPrice ?? searchController.initialMaxPrice],
+                      values: [searchController.filteredMinPrice ?? searchController.inttialMinPrice, searchController.filteredMaxPrice ?? searchController.inttialMaxPrice],
                       rangeSlider: true,
-                      max:  searchController.initialMaxPrice, min: searchController.initialMinPrice,
+                      max:  searchController.inttialMaxPrice, min: searchController.inttialMinPrice,
                       trackBar: FlutterSliderTrackBar(
                         activeTrackBarHeight: 7,
                         inactiveTrackBarHeight: 7,
@@ -250,3 +250,5 @@ class _ServiceFilterDialogState extends State<ServiceFilterDialog> {
     });
   }
 }
+
+

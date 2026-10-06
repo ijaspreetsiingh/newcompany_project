@@ -43,7 +43,7 @@ class MenuButton extends StatelessWidget {
                 Get.find<AuthController>().googleLogout();
                 Get.find<AuthController>().signOutWithFacebook();
                 Get.find<LocationController>().updateSelectedAddress(null);
-                Get.offAllNamed(RouteHelper.getInitialRoute());
+                Get.offAllNamed(RouteHelper.getinitialRoute());
                 // customSnackBar("logged_out_successfully".tr, type : ToasterMessageType.success);
               }), useSafeArea: false);
             }else {
@@ -66,4 +66,7 @@ class MenuButton extends StatelessWidget {
     );
   }
 }
+
+
+
 

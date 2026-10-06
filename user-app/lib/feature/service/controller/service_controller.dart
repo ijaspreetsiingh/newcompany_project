@@ -1,4 +1,4 @@
-
+﻿
 import 'package:jdds/api/local/cache_response.dart';
 import 'package:jdds/common/models/api_response_model.dart';
 import 'package:jdds/feature/service/model/recommendation_search_model.dart';
@@ -106,7 +106,7 @@ class ServiceController extends GetxController implements GetxService {
         );
       }else{
         try {
-          ApiResponseModel response = await serviceRepo.getAllServiceList(offset : offset, source: DataSourceEnum.client);
+          AptresponseModel response = await serviceRepo.getAllServiceList(offset : offset, source: DataSourceEnum.client);
           if (response.response.statusCode == 200) {
             if(reload){
               _allService = [];
@@ -152,7 +152,7 @@ class ServiceController extends GetxController implements GetxService {
 
       }else{
         try {
-          ApiResponseModel response = await serviceRepo.getPopularServiceList(offset: offset, source: DataSourceEnum.client);
+          AptresponseModel response = await serviceRepo.getPopularServiceList(offset: offset, source: DataSourceEnum.client);
           if (response.response.statusCode == 200) {
             _popularBasedServiceContent = ServiceModel.fromJson(response.response?.body).content;
 
@@ -196,7 +196,7 @@ class ServiceController extends GetxController implements GetxService {
 
       }else{
         try {
-          ApiResponseModel response = await serviceRepo.getTrendingServiceList(offset: offset, source: DataSourceEnum.client);
+          AptresponseModel response = await serviceRepo.getTrendingServiceList(offset: offset, source: DataSourceEnum.client);
           if (response.response.statusCode == 200) {
             if(reload){
               _trendingServiceList = [];
@@ -241,7 +241,7 @@ class ServiceController extends GetxController implements GetxService {
         );
       }else{
         try {
-          ApiResponseModel response =  await serviceRepo.getRecommendedServiceList(offset: offset, source: DataSourceEnum.client);
+          AptresponseModel response =  await serviceRepo.getRecommendedServiceList(offset: offset, source: DataSourceEnum.client);
           if (response.response.statusCode == 200) {
             if(reload){
               _recommendedServiceList = [];
@@ -284,7 +284,7 @@ class ServiceController extends GetxController implements GetxService {
         );
       }else{
         try {
-          ApiResponseModel response = await serviceRepo.getRecentlyViewedServiceList(offset: offset, source: DataSourceEnum.client);
+          AptresponseModel response = await serviceRepo.getRecentlyViewedServiceList(offset: offset, source: DataSourceEnum.client);
           if (response.response.statusCode == 200) {
             if(reload){
               _recentlyViewServiceList = [];
@@ -566,3 +566,6 @@ class ServiceController extends GetxController implements GetxService {
 
 
 }
+
+
+

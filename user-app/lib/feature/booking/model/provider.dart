@@ -1,4 +1,4 @@
-class Provider{
+﻿class Provider{
   final String name;
   final String address;
 
@@ -7,3 +7,5 @@ class Provider{
     required this.address,
   });
 }
+
+

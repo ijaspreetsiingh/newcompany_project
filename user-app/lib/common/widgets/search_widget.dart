@@ -29,7 +29,7 @@ class SearchWidget extends StatelessWidget {
                   borderRadius: BorderRadius.horizontal(right: Radius.circular(20,),left: Radius.circular(20)),
                   borderSide: BorderSide(style: BorderStyle.none, width: 0),
                 ),
-                fillColor: Get.isDarkMode? Theme.of(context).primaryColorDark:const Color(0xffFEFEFE),
+                fillColor: Theme.of(context).primaryColorLight,
                 isDense: true,
                 hintText: 'search_services'.tr,
                 hintStyle: Theme.of(context).textTheme.displayMedium!.copyWith(
@@ -75,3 +75,5 @@ class SearchWidget extends StatelessWidget {
     );
   }
 }
+
+

@@ -83,7 +83,7 @@ class FavoriteProviderController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'provider_id' => 'required|uuid',
+            'provider_id' => 'required|exists:providers,id',
         ]);
 
         if ($validator->fails()) {

@@ -1,19 +1,27 @@
 import 'package:jdds/feature/checkout/widget/coupon_bottom_sheet_widget.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ApplyVoucher extends StatelessWidget {
   const ApplyVoucher({super.key}) ;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF141414);
+    final mutedColor = isDark ? const Color(0xFFB3B3B3) : const Color(0xFF7D7D7D);
+    final bgColor = isDark ? const Color(0xFF171717) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF333333) : const Color(0xFFE5E5E5);
+
     return Container(
       width: MediaQuery.of(context).size.width,
-      padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault, horizontal: Dimensions.paddingSizeDefault),
-      margin: EdgeInsets.symmetric(horizontal: ResponsiveHelper.isDesktop(context) ? 0 :  Dimensions.paddingSizeDefault),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      margin: EdgeInsets.symmetric(horizontal: ResponsiveHelper.isDesktop(context) ? 0 : 16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(Dimensions.radiusSeven), color: Theme.of(context).cardColor,
-        border: Border.all(color: Theme.of(context).hintColor.withValues(alpha: 0.3), width: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        color: bgColor,
+        border: Border.all(color: borderColor),
       ),
       child: Center( child: GestureDetector(
         onTap: () async {
@@ -30,11 +38,17 @@ class ApplyVoucher extends StatelessWidget {
         },
 
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text('add_coupon'.tr, style: robotoMedium.copyWith()),
+          Text('add_coupon'.tr, style: GoogleFonts.dmSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: primaryColor,
+          )),
 
           Text('add_plus'.tr,
-            style: robotoBold.copyWith(
-              color:Get.isDarkMode ? Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: .6):Theme.of(context).primaryColor,
+            style: GoogleFonts.manrope(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: primaryColor,
             ),
           ),
           ]
@@ -43,3 +57,4 @@ class ApplyVoucher extends StatelessWidget {
     );
   }
 }
+

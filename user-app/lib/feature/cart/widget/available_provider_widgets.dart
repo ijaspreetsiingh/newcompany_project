@@ -75,7 +75,7 @@ class _ProductBottomSheetState extends State<AvailableProviderWidget> {
                     style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault),
                     textAlign: TextAlign.center, maxLines: 2,
                   ),
-                  const SizedBox(height: Dimensions.paddingSizeMini,),
+                  const SizedBox(height: Dimensions.paddingSizeMint,),
                   Text(
                     providerList.length > 1 ? "${providerList.length} ${'providers_available'.tr}" : "${providerList.length} ${'provider_available'.tr}",
                     style: robotoRegular.copyWith(
@@ -167,3 +167,6 @@ class _ProductBottomSheetState extends State<AvailableProviderWidget> {
     });
   }
 }
+
+
+

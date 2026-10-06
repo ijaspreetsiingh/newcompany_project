@@ -102,3 +102,5 @@ class AvailableAreaShimmer extends StatelessWidget {
     );
   }
 }
+
+

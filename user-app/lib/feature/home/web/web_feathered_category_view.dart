@@ -132,3 +132,4 @@ class _WebFeatheredCategoryViewState extends State<WebFeatheredCategoryView> {
     });
   }
 }
+

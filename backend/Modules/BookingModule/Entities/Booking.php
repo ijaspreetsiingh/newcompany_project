@@ -86,7 +86,8 @@ class Booking extends Model
         'auto_assigned',
         'auto_assign_expires_at',
         'assigned_provider_id',
-        'serviceman_assign_expires_at'
+        'serviceman_assign_expires_at',
+        'assignment_mode'
     ];
 
     protected $appends = ['evidence_photos_full_path'];
@@ -183,6 +184,11 @@ class Booking extends Model
     public function ignores(): HasMany
     {
         return $this->hasMany(BookingIgnore::class, 'booking_id');
+    }
+
+    public function servicemenAssignments(): HasMany
+    {
+        return $this->hasMany(BookingServiceman::class, 'booking_id');
     }
 
     public function customizeBooking(): BelongsTo

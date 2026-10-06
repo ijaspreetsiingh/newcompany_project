@@ -24,8 +24,11 @@ class StatusChangeDropdownButton extends StatelessWidget {
       }
 
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall, vertical: Dimensions.paddingSizeSmall),
-        height: 70,
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+        decoration: BoxDecoration(
+          color: context.kBackground,
+          border: Border(top: BorderSide(color: context.kBorder, width: 1)),
+        ),
         child: bookingDetailsController.dropDownValue == "completed" && bookingDetailsController.showPhotoEvidenceField && Get.find<SplashController>().configModel?.content?.bookingOtpVerification == 1?
         CustomButton(btnTxt: "request_for_otp".tr, onPressed: () {
           bookingDetailsController.sendBookingOTPNotification(bookingId, shouldUpdate: false);
@@ -33,24 +36,24 @@ class StatusChangeDropdownButton extends StatelessWidget {
         },) :
         Row(children: [
           Expanded(
-            child: Container(padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeLarge), height: 45,
+            child: Container(padding: const EdgeInsets.symmetric(horizontal: 14), height: 48,
               decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.all(Radius.circular(5)),
-                  border: Border.all(color: Get.isDarkMode? light.cardColor.withValues(alpha:0.3):
-                  Theme.of(context).primaryColor.withValues(alpha:0.30)
-                  )
+                  color: context.kCard,
+                  borderRadius: BorderRadius.circular(kRadiusMd),
+                  border: Border.all(color: context.kInputBorder, width: 1)
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton(
                   hint: bookingDetailsController.dropDownValue == ''?
-                  Text(bookingDetails.bookingStatus!.tr) :
-                  Text(bookingDetailsController.dropDownValue.tr),
-                  dropdownColor: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(5),
+                  Text(bookingDetails.bookingStatus!.tr, style: robotoRegular.copyWith(fontSize: 14, color: context.kForeground)) :
+                  Text(bookingDetailsController.dropDownValue.tr, style: robotoRegular.copyWith(fontSize: 14, color: context.kForeground)),
+                  dropdownColor: context.kCard,
+                  borderRadius: BorderRadius.circular(kRadiusSm),
                   elevation: 2,
-                  icon: const Icon(Icons.keyboard_arrow_down),
+                  icon: Icon(Icons.keyboard_arrow_down_rounded, color: context.kMutedForeground, size: 20,),
                   items: statusList.map((String items) {
-                    return DropdownMenuItem(value: items, child: Row(children: [Text(items.tr)]));
+                    return DropdownMenuItem(value: items, child: Text(items.tr,
+                      style: robotoRegular.copyWith(fontSize: 14, color: context.kForeground),));
                   }).toList(),
                   onChanged:(String? newValue) {
                     bookingDetailsController.setSelectedValue(newValue!);
@@ -78,12 +81,12 @@ class StatusChangeDropdownButton extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width:Dimensions.paddingSizeDefault),
+          const SizedBox(width: 12),
           bookingDetailsController.isUpdate ?
-          SizedBox(height: 45,width: 112,
-              child:Center(child: CircularProgressIndicator(color: Theme.of(context).hoverColor))
+          SizedBox(height: 48, width: 112,
+              child:Center(child: CircularProgressIndicator(color: context.kMutedForeground, strokeWidth: 2,))
           ) : CustomButton(
-            height: 45,width: 112,
+            height: 48, width: 112,
             btnTxt:"change".tr,
             onPressed: bookingDetails.bookingStatus == "canceled"
                 || bookingDetails.bookingStatus == "completed"

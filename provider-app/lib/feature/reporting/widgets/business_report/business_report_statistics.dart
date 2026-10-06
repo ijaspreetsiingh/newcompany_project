@@ -13,7 +13,7 @@ class BusinessReportStatistics extends StatelessWidget {
 
     List<String> title =[];
     List<String> titleAmount =[];
-    List<String> icon =[];
+    List<IconData> icon =[];
 
     if(fromPage=='expense'){
       titleAmount =[
@@ -23,7 +23,12 @@ class BusinessReportStatistics extends StatelessWidget {
         reportController.businessReportExpenseModel?.content?.totalPromotionalCost?.coupon.toString()??'0',
       ];
       title =['total_expense','normal_service_discount','campaign_discount','coupon_discount'];
-      icon = [Images.reportExpense1,Images.reportExpense2,Images.reportExpense3,Images.reportExpense4];
+      icon = [
+        Icons.account_balance_wallet_outlined,
+        Icons.percent_rounded,
+        Icons.campaign_outlined,
+        Icons.local_offer_outlined,
+      ];
     }
     else if(fromPage=='earning'){
 
@@ -43,19 +48,19 @@ class BusinessReportStatistics extends StatelessWidget {
       }
         titleAmount =[netProfit.toString(),totalEarning.toString(),totalExpense.toString()];
         title =['net_profit','total_earning','total_expense'];
-        icon = [Images.reportEarning1,Images.reportEarning2,Images.reportEarning3];
+        icon = [Icons.savings_outlined,Icons.trending_up_rounded,Icons.receipt_long_outlined];
     }
 
     if(fromPage!='overview'){
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-        margin: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
+        margin: const EdgeInsets.symmetric(vertical: 8),
         child: SizedBox(
-          height: 100,
+          height: 92,
           child: ListView.builder(
             shrinkWrap: true,
             physics: const AlwaysScrollableScrollPhysics(),
             scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(16, 0, 4, 0),
             itemBuilder: (context,index){
               return BusinessReportStatisticsCard(
                 icon: icon[index], titleAmount: titleAmount[index], title: title[index],
@@ -84,21 +89,21 @@ class BusinessReportStatistics extends StatelessWidget {
         });
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
-          margin: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
+          margin: const EdgeInsets.symmetric(vertical: 8),
           child: SizedBox(
             height: 125,
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(16, 0, 4, 0),
               child: Row(
                 children: [
                   BusinessReportStatisticsCard(
-                    icon: Images.reportOverview1,
+                    icon: Icons.savings_outlined,
                     titleAmount: (netProfit - totalExpense).toString(),
                     title: 'net_profit',
                   ),
                   BusinessReportStatisticsCard2(
-                    icon: Images.reportOverview2,
+                    iconData: Icons.account_balance_wallet_outlined,
                     titleAmount: totalExpense.toString(),
                     title: 'total_expense',
                     subtitle1: 'normal_discount',
@@ -110,7 +115,7 @@ class BusinessReportStatistics extends StatelessWidget {
                     withCurrencySymbol: true,
                   ),
                   BusinessReportStatisticsCard(
-                    icon: Images.reportEarning2,
+                    icon: Icons.account_balance_outlined,
                     titleAmount: taxCollected.toString(),
                     title: 'total_tax_calculated',
                   ),
@@ -123,5 +128,3 @@ class BusinessReportStatistics extends StatelessWidget {
     }
   }
 }
-
-

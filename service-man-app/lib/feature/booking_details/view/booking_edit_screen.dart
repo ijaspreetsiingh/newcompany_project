@@ -21,54 +21,77 @@ class _BookingEditScreenState extends State<BookingEditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: "edit_booking".tr),
-      body: GetBuilder<BookingEditController>(builder: (bookingEditController){
-        return Column( children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Padding( padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+      backgroundColor: context.kBackground,
+      body: SafeArea(
+        bottom: false,
+        child: GetBuilder<BookingEditController>(builder: (bookingEditController){
+
+          final BookingDetailsContent? bookingDetails = Get.find<BookingDetailsController>().bookingDetails?.bookingContent?.bookingDetailsContent;
+          final String readableId = bookingDetails?.readableId ?? '';
+          final DateTime? schedule = bookingEditController.scheduleTime != null ? DateTime.tryParse(bookingEditController.scheduleTime!) : null;
+          final bool canAddService = !(bookingEditController.cartList.length == 1 && bookingEditController.cartList[0].variantKey == null);
+
+          return Column( children: [
+
+            PageHeader(
+              title: 'update_booking_title'.tr,
+              subtitle: (readableId.isNotEmpty && readableId != 'null') ? '#$readableId' : '',
+              onBack: (){
+                if(Navigator.canPop(context)){
+                  Get.back();
+                }else{
+                  Get.offAllNamed(RouteHelper.getInitialRoute());
+                }
+              },
+            ),
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start,children: [
 
                   const PaymentStatusButton(),
-                  const SizedBox(height: Dimensions.paddingSizeDefault,),
+                  const SizedBox(height: 20),
 
-                  Container(width: Get.width,
-                    padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeLarge),
+                  Text('booking_status'.tr, style: robotoMedium.copyWith(
+                    fontSize: 12, fontWeight: FontWeight.w600, color: context.kMutedForeground,
+                  )),
+                  const SizedBox(height: 8),
+
+                  Container(
+                    width: double.infinity,
+                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor.withValues(alpha:0.1),
-                      borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
-                      border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha:0.2),width: 1),
+                      color: context.kCard,
+                      borderRadius: BorderRadius.circular(kRadiusMd),
+                      border: Border.all(color: context.kInputBorder, width: 1),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton(
-                        dropdownColor: Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(5),
+                        dropdownColor: context.kCard,
+                        borderRadius: BorderRadius.circular(kRadiusSm),
                         elevation: 2,
-                        hint: Text(bookingEditController.selectedBookingStatus ==''?
-                        "select_booking_status".tr : "${'booking_status'.tr} :   ${bookingEditController.selectedBookingStatus.tr}",
+                        hint: Text(bookingEditController.selectedBookingStatus == '' ?
+                        "select_booking_status".tr : bookingEditController.selectedBookingStatus.tr,
                           style: robotoRegular.copyWith(
-                              color: bookingEditController.selectedBookingStatus ==''?
-                              Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.6):
-                              Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8)
+                              fontSize: 14,
+                              color: bookingEditController.selectedBookingStatus == '' ?
+                              context.kMutedForeground : context.kForeground
                           ),
                         ),
-                        icon: const Icon(Icons.keyboard_arrow_down),
+                        icon: Icon(Icons.keyboard_arrow_down_rounded, color: context.kMutedForeground, size: 20,),
                         items: bookingEditController.statusTypeList.map((String items) {
-                          bool isDisabled = Get.find<BookingDetailsController>().bookingDetails?.bookingContent?.bookingDetailsContent?.bookingStatus == "ongoing" && 
-                                          (items.toLowerCase() == "accepted" || items == 'canceled');
+                          bool isDisabled = bookingDetails?.bookingStatus == "ongoing" &&
+                              (items.toLowerCase() == "accepted" || items == 'canceled');
                           return DropdownMenuItem(
                             value: items,
                             enabled: !isDisabled,
-                            child: Row(
-                              children: [
-                                Text(items.tr,
-                                  style: robotoRegular.copyWith(
-                                    color: isDisabled 
-                                      ? Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.4)
-                                      : Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.8),
-                                  ),
-                                ),
-                              ],
+                            child: Text(items.tr,
+                              style: robotoRegular.copyWith(
+                                fontSize: 14,
+                                color: isDisabled ? context.kMutedForeground.withValues(alpha:0.4) : context.kForeground,
+                              ),
                             ),
                           );
                         }).toList(),
@@ -81,119 +104,124 @@ class _BookingEditScreenState extends State<BookingEditScreen> {
                     ),
                   ),
 
-                  TextFieldTitle(title: "service_schedule".tr, fontSize: Dimensions.fontSizeLarge,),
-                  Container(
-                    decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor.withValues(alpha:0.1),
-                        borderRadius: BorderRadius.circular(Dimensions.paddingSizeSmall),
-                        border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha:0.2),width: 1)
-                    ),
-                    margin: const EdgeInsets.only(bottom : Dimensions.paddingSizeDefault),
-                    padding: const EdgeInsets.only(left : Dimensions.paddingSizeDefault),
-                    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,children: [
+                  const SizedBox(height: 20),
 
-                      (bookingEditController.scheduleTime != null)?
-                      Text(DateConverter.dateMonthYearTime(DateTime
-                          .tryParse(bookingEditController.scheduleTime!)),
-                        style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault),
-                        textDirection: TextDirection.ltr,
-                      ): const SizedBox(),
-                      const SizedBox(width: Dimensions.paddingSizeDefault,),
+                  Row(children: [
+                    Expanded(child: _scheduleBox(
+                      context: context,
+                      label: 'service_date'.tr,
+                      icon: Icons.calendar_today_outlined,
+                      value: schedule != null ? DateConverter.dateStringMonthYear(schedule) : '--',
+                      onTap: () => bookingEditController.selectDate(),
+                    )),
+                    const SizedBox(width: 12),
+                    Expanded(child: _scheduleBox(
+                      context: context,
+                      label: 'time_label'.tr,
+                      icon: Icons.access_time_rounded,
+                      value: schedule != null ? DateConverter.convertStringTimeToDate(schedule) : '--',
+                      onTap: () => bookingEditController.selectDate(),
+                    )),
+                  ]),
 
-                      IconButton(onPressed: ()=> bookingEditController.selectDate(),
-                        icon:  Icon(Icons.calendar_month_outlined, color: Theme.of(context).primaryColor.withValues(alpha:0.5),),
-                      )
+                  const SizedBox(height: 20),
 
-                    ],),
-                  ),
-
-                  Row(mainAxisAlignment : MainAxisAlignment.spaceBetween, children: [
-                    Text('service_list'.tr, style: robotoMedium.copyWith(color: Theme.of(context).primaryColor,fontSize: Dimensions.fontSizeLarge),),
-
-                    if(!widget.isSubBooking) TextButton(
-                      onPressed: bookingEditController.cartList.length == 1 &&  bookingEditController.cartList[0].variantKey == null ? null : (){
-                        showModalBottomSheet(
-                            useRootNavigator: true,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            context: context, builder: (context) => SubcategoryServiceView (
-                          categoryId: "", subCategoryId: '', serviceList: bookingEditController.serviceList??[],)
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                          side: BorderSide(color: bookingEditController.cartList.length == 1 &&  bookingEditController.cartList[0].variantKey == null?
-                          Theme.of(context).hintColor : Theme.of(context).primaryColor), // Customize the border color here
-                        ),
+                  SectionHeader(
+                    title: 'services'.tr,
+                    trailing: widget.isSubBooking ? null : Opacity(
+                      opacity: canAddService ? 1 : 0.4,
+                      child: KButton(
+                        label: 'add'.tr,
+                        icon: Icons.add_rounded,
+                        outline: true,
+                        height: 32,
+                        expanded: false,
+                        onTap: canAddService ? (){
+                          showModalBottomSheet(
+                              useRootNavigator: true,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              context: context, builder: (context) => SubcategoryServiceView (
+                                categoryId: "", subCategoryId: '', serviceList: bookingEditController.serviceList??[],)
+                          );
+                        } : null,
                       ),
-                      child: Row(mainAxisSize: MainAxisSize.min, children: [
-                        Icon(Icons.add, color: bookingEditController.cartList.length == 1 &&  bookingEditController.cartList[0].variantKey == null ?
-                        Theme.of(context).hintColor : Theme.of(context).primaryColor,
-                          size: Dimensions.fontSizeDefault,
-                        ),
-                        const SizedBox(width: 8.0), // Adjust the spacing between the icon and text here
-                        Text("add_service".tr, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,
-                          color: bookingEditController.cartList.length == 1 &&  bookingEditController.cartList[0].variantKey == null
-                              ? Theme.of(context).hintColor : Theme.of(context).primaryColor,
-                        ),),
-                      ]),
-                    )
-                  ],),
-
-                  const SizedBox(height: Dimensions.paddingSizeDefault,),
-
-                  GridView.builder(
-                    key: UniqueKey(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisSpacing: Dimensions.paddingSizeLarge,
-                      mainAxisSpacing: ResponsiveHelper.isDesktop(context) ?
-                      Dimensions.paddingSizeLarge :
-                      Dimensions.paddingSizeSmall,
-                      childAspectRatio: ResponsiveHelper.isMobile(context) ?  5 : 6 ,
-                      crossAxisCount: 1,
-                      mainAxisExtent: 110,
                     ),
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: bookingEditController.cartList.length,
-                    itemBuilder: (context, index) {
-                      bool disableQuantityButton  = bookingEditController.cartList.length == 1 &&  bookingEditController.cartList[0].variantKey == null;
-                      return  CartServiceWidget(cart: bookingEditController.cartList[index], cartIndex: index, disableQuantityButton: disableQuantityButton, isSubBooking: widget.isSubBooking,);
-                    },
                   ),
 
-                  const SizedBox(height: 90,),
+                  const SizedBox(height: 12),
 
+                  Column(children: [
+                    for (int index = 0; index < bookingEditController.cartList.length; index++) ...[
+                      CartServiceWidget(
+                        cart: bookingEditController.cartList[index],
+                        cartIndex: index,
+                        disableQuantityButton: !canAddService,
+                        isSubBooking: widget.isSubBooking,
+                      ),
+                      if (index != bookingEditController.cartList.length - 1) const SizedBox(height: 12),
+                    ],
+                  ]),
+
+                  const SizedBox(height: 100),
 
                 ],),
               ),
             ),
-          ),
 
-          GetBuilder<BookingEditController>(builder: (bookingEditController){
-
-            var bookingDetails = Get.find<BookingDetailsController>().bookingDetails?.bookingContent?.bookingDetailsContent;
-            return Padding( padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeSmall),
-              child:  SafeArea(
+            Padding( padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              child: SafeArea(
+                top: false,
                 child: CustomButton(
-                btnTxt: "update_status".tr,
-                isLoading: bookingEditController.statusUpdateLoading,
-                onPressed: (){
-                  bookingEditController.updateBooking(
-                    bookingId : bookingDetails?.subBooking?.id ?? bookingDetails?.id,
-                    subBookingId: bookingDetails?.id,
-                    zoneId : bookingDetails?.zoneId ?? bookingDetails?.subBooking?.zoneId ?? "",
-                    isSubBooking: widget.isSubBooking,
-                  );
-                },
-                            ),
+                  btnTxt: "update_booking_btn".tr,
+                  isLoading: bookingEditController.statusUpdateLoading,
+                  onPressed: (){
+                    bookingEditController.updateBooking(
+                      bookingId : bookingDetails?.subBooking?.id ?? bookingDetails?.id,
+                      subBookingId: bookingDetails?.id,
+                      zoneId : bookingDetails?.zoneId ?? bookingDetails?.subBooking?.zoneId ?? "",
+                      isSubBooking: widget.isSubBooking,
+                    );
+                  },
+                ),
               ),
-                        );
-          })
-        ]);
-      }),
+            )
+          ]);
+        }),
+      ),
 
+    );
+  }
+
+  Widget _scheduleBox({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: context.kCard,
+        borderRadius: BorderRadius.circular(kRadiusMd),
+        border: Border.all(color: context.kInputBorder, width: 1),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: InkWell(
+        onTap: onTap,
+        child: Row(children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(label, style: robotoRegular.copyWith(fontSize: 11, color: context.kMutedForeground)),
+              const SizedBox(height: 2),
+              Text(value, maxLines: 1, overflow: TextOverflow.ellipsis, textDirection: TextDirection.ltr,
+                style: robotoMedium.copyWith(fontSize: 13, color: context.kForeground)),
+            ]),
+          ),
+          const SizedBox(width: 8),
+          Icon(icon, size: 18, color: context.kMutedForeground),
+        ]),
+      ),
     );
   }
 }

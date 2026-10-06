@@ -1,0 +1,3 @@
+- [x] Build customer home and service catalog.
+- [x] Build service detail with date and time selection.
+- [x] Build booking summary and active booking tracker as a front-end demo.

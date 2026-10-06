@@ -182,3 +182,4 @@ class TimelineNode extends StatelessWidget with TimelineTileNode {
     return result;
   }
 }
+

@@ -47,45 +47,51 @@ class _ConversationDetailsScreenState extends State<ConversationDetailsScreen> {
   Widget build(BuildContext context) {
     return CustomPopScopeWidget(
       child: Scaffold(
+        backgroundColor: context.kBackground,
 
-        appBar: ConversationDetailsAppBar(
-          fromNotification: widget.formNotification,
-          name: widget.name, phone: phone, image: widget.image,
-        ),
+        body: Column(children: [
 
-        body: GetBuilder<ConversationController>( builder: (conversationController) {
+          ConversationDetailsAppBar(
+            fromNotification: widget.formNotification,
+            name: widget.name, phone: phone, image: widget.image,
+            userType: widget.userType,
+          ),
 
-          return !conversationController.isFirst ? Column(children: [
+          Expanded(child: GetBuilder<ConversationController>( builder: (conversationController) {
 
-            conversationController.conversationList !=null && conversationController.conversationList!.isNotEmpty ?
-            Expanded(child: ListView.builder(
-              controller: conversationController.messageScrollController,
-              padding: const EdgeInsets.fromLTRB(10, 15, 10, 0),
-              itemCount: conversationController.conversationList!.length,
-              reverse: true,
-              itemBuilder: (context, index) {
+            return !conversationController.isFirst ? Column(children: [
 
-                bool isRightMessage = conversationController.conversationList!.elementAt(index).userId == providerId;
-                return ConversationBubbleWidget(
-                  conversationData:conversationController.conversationList!.elementAt(index),
-                  isRightMessage: isRightMessage,
-                  nextConversationData: index == (conversationController.conversationList!.length - 1)  ?
-                  null : conversationController.conversationList?.elementAt(index+1),
-                  previousConversationData:  index == 0  ?
-                  null : conversationController.conversationList?.elementAt(index-1),
-                  image: widget.image,
-                  name: widget.name,
-                );
+              conversationController.conversationList !=null && conversationController.conversationList!.isNotEmpty ?
+              Expanded(child: ListView.builder(
+                controller: conversationController.messageScrollController,
+                padding: const EdgeInsets.fromLTRB(20, 15, 20, 0),
+                reverse: true,
+                itemCount: conversationController.conversationList!.length,
+                itemBuilder: (context, index) {
 
-              },
-            )) : Expanded(child: Center(child: Text('no_conversation_found'.tr),)),
+                  bool isRightMessage = conversationController.conversationList!.elementAt(index).userId == providerId;
+                  return ConversationBubbleWidget(
+                    conversationData:conversationController.conversationList!.elementAt(index),
+                    isRightMessage: isRightMessage,
+                    nextConversationData: index == (conversationController.conversationList!.length - 1)  ?
+                    null : conversationController.conversationList?.elementAt(index+1),
+                    previousConversationData:  index == 0  ?
+                    null : conversationController.conversationList?.elementAt(index-1),
+                    image: widget.image,
+                    name: widget.name,
+                  );
+
+                },
+              )) : Expanded(child: Center(child: Text('no_conversation_found'.tr),)),
 
 
-            ConversationSendMessageWidget(channelId: widget.channelID,),
+              ConversationSendMessageWidget(channelId: widget.channelID,),
 
 
-          ]) : const ConversationDetailsShimmer();
-        }),
+            ]) : const ConversationDetailsShimmer();
+          })),
+
+        ]),
       ),
     );
   }

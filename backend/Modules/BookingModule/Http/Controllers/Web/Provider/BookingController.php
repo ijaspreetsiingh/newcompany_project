@@ -1315,8 +1315,9 @@ class BookingController extends Controller
 
         $quantity = $request['quantity'];
         $variationPrice = $service?->variations[0]?->price;
+        $providerId = $request->user()?->provider?->id;
 
-        $basicDiscount = basic_discount_calculation($service, $variationPrice * $quantity);
+        $basicDiscount = basic_discount_calculation($service, $variationPrice * $quantity, $providerId);
         $campaignDiscount = campaign_discount_calculation($service, $variationPrice * $quantity);
         $subTotal = round($variationPrice * $quantity, 2);
 

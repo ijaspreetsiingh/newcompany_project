@@ -579,7 +579,7 @@ class _CreateAdvertisementScreenState extends State<CreateAdvertisementScreen> w
                 isShowReview: advertisementController.isReviewChecked,
               ), barrierDismissible: true);
             },
-            child: Icon(Icons.remove_red_eye_sharp, color: light.cardColor),
+            child: Icon(Icons.remove_red_eye_sharp, color: Theme.of(context).colorScheme.onPrimary),
           ),
         ),
       );

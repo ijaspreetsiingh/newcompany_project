@@ -2,7 +2,8 @@ import 'package:demandium_provider/util/core_export.dart';
 import 'package:get/get.dart';
 class BusinessReportStatisticsCard2 extends StatelessWidget {
   final bool withCurrencySymbol;
-  final String icon;
+  final String? icon;
+  final IconData? iconData;
   final String titleAmount;
   final String title;
   final String subtitle1;
@@ -16,92 +17,130 @@ class BusinessReportStatisticsCard2 extends StatelessWidget {
 
   const BusinessReportStatisticsCard2({
     super.key,
-    required this.icon,
+    this.icon,
+    this.iconData,
     required this.titleAmount,
-    required this.title, 
+    required this.title,
     required this.subtitle1,
     required this.subtitle2,
     this.subtitle3,
     required this.subtitleAmount1,
     required this.subtitleAmount2,
-    this.subtitleAmount3, 
+    this.subtitleAmount3,
     required this.withCurrencySymbol,
     this.subtitle4,
     this.subtitleAmount4
   });
+
+  Widget _iconTile() {
+    final IconData statIcon = iconData ?? Icons.bar_chart_rounded;
+    return Container(
+      height: 34,
+      width: 34,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: InkColors.secondary,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(statIcon, size: 17, color: InkColors.foreground),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 240,
       height: double.infinity,
-      margin: const EdgeInsets.only(right: Dimensions.paddingSizeDefault),
-      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-        color: Get.isDarkMode?Theme.of(context).cardColor.withValues(alpha:0.5) :Theme.of(context).cardColor,
+        color: InkColors.card,
+        borderRadius: BorderRadius.circular(19),
+        border: Border.all(color: InkColors.border),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Image.asset(icon,width: 35,),
-              const SizedBox(width: Dimensions.paddingSizeLarge,),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    withCurrencySymbol
-                        ? PriceConverter.convertPrice(double.tryParse(titleAmount))
-                        : titleAmount,
-                    style: robotoBold.copyWith(
-                      fontSize: Dimensions.fontSizeLarge,
-                      color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.7)
+              _iconTile(),
+              const SizedBox(width: 12,),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      withCurrencySymbol
+                          ? PriceConverter.convertPrice(double.tryParse(titleAmount))
+                          : titleAmount,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style:  TextStyle(
+                        fontFamily: 'SpaceGrotesk',
+                        fontSize: 16,
+                        height: 1.2,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                        color: InkColors.foreground,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: Dimensions.paddingSizeExtraSmall,),
-                  Text(
-                    title.tr,
-                    style: robotoRegular.copyWith(
-                      fontSize: Dimensions.fontSizeDefault,
-                      color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.6),
+                    const SizedBox(height: 4,),
+                    Text(
+                      title.tr.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style:  TextStyle(
+                        fontSize: 11,
+                        height: 1.25,
+                        fontWeight: FontWeight.w500,
+                        color: InkColors.mutedForeground,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              //SizedBox(width: Dimensions.PADDING_SIZE_DEFAULT,),
             ],
           ),
-          const SizedBox(height: Dimensions.paddingSizeSmall,),
+          const SizedBox(height: 12,),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              SubTitleView(
-                amount: subtitleAmount1,
-                subTitle: subtitle1,
-                titleColor: Theme.of(context).colorScheme.error,
-                withCurrencySymbol: withCurrencySymbol,
+              Expanded(
+                child: SubTitleView(
+                  amount: subtitleAmount1,
+                  subTitle: subtitle1,
+                  titleColor: InkColors.destructive,
+                  withCurrencySymbol: withCurrencySymbol,
+                ),
               ),
-              SubTitleView(
-                amount: subtitleAmount2,
-                subTitle: subtitle2,
-                titleColor: Theme.of(context).primaryColorLight,
-                withCurrencySymbol: withCurrencySymbol,
+              Expanded(
+                child: SubTitleView(
+                  amount: subtitleAmount2,
+                  subTitle: subtitle2,
+                  titleColor: InkColors.inkSoft,
+                  withCurrencySymbol: withCurrencySymbol,
+                ),
               ),
               if(subtitle3!=null)
-                SubTitleView(
-                  amount: subtitleAmount3!=null?subtitleAmount3!:'0',
-                  subTitle: subtitle3!,
-                  titleColor: Colors.blue,
-                  withCurrencySymbol: withCurrencySymbol,
+                Expanded(
+                  child: SubTitleView(
+                    amount: subtitleAmount3!=null?subtitleAmount3!:'0',
+                    subTitle: subtitle3!,
+                    titleColor: InkColors.mutedForeground,
+                    withCurrencySymbol: withCurrencySymbol,
+                  ),
                 ),
 
               if(subtitle4!=null)
-                SubTitleView(
-                  amount: subtitleAmount4!=null?subtitleAmount4!:'0',
-                  subTitle: subtitle4!,
-                  titleColor: Colors.green,
-                  withCurrencySymbol: withCurrencySymbol,
+                Expanded(
+                  child: SubTitleView(
+                    amount: subtitleAmount4!=null?subtitleAmount4!:'0',
+                    subTitle: subtitle4!,
+                    titleColor: InkColors.foreground,
+                    withCurrencySymbol: withCurrencySymbol,
+                  ),
                 )
             ],
           )
@@ -119,7 +158,7 @@ class SubTitleView extends StatelessWidget {
   const SubTitleView({
     super.key,
     required this.amount,
-    required this.subTitle, 
+    required this.subTitle,
     required this.titleColor,
     required this.withCurrencySymbol,
   });
@@ -127,24 +166,38 @@ class SubTitleView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding:  EdgeInsets.symmetric(horizontal: Dimensions.fontSizeSmall),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            withCurrencySymbol
-                ? PriceConverter.convertPrice(double.tryParse(amount),isShowLongPrice: true)
-                :amount,
-            style: robotoBold.copyWith(
-              fontSize: Dimensions.fontSizeDefault,
-              color: titleColor.withValues(alpha:0.8)
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              withCurrencySymbol
+                  ? PriceConverter.convertPrice(double.tryParse(amount),isShowLongPrice: true)
+                  :amount,
+              maxLines: 1,
+              style: TextStyle(
+                fontFamily: 'SpaceGrotesk',
+                fontSize: 12.5,
+                height: 1.2,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.2,
+                color: titleColor,
+              ),
             ),
           ),
-
+          const SizedBox(height: 2,),
           Text(
             subTitle.tr,
-            style: robotoRegular.copyWith(
-              fontSize: Dimensions.fontSizeSmall,
-              color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.5),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style:  TextStyle(
+              fontSize: 10,
+              height: 1.2,
+              fontWeight: FontWeight.w500,
+              color: InkColors.mutedForeground,
             ),
           ),
         ],

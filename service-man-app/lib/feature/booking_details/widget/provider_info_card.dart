@@ -7,27 +7,20 @@ class BookingDetailsProviderInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-          color: Theme.of(context).cardColor.withValues(alpha:0.5),
-          boxShadow: Get.find<ThemeController>().darkTheme ? null : lightShadow
-      ),
-      margin: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeSmall),
-      padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault, horizontal: Dimensions.paddingSizeDefault),
-      child: Column( crossAxisAlignment: CrossAxisAlignment.start ,children: [
+    return Column( crossAxisAlignment: CrossAxisAlignment.start ,children: [
 
-        Text("provider_info".tr,style:robotoMedium.copyWith(
-            fontSize: Dimensions.fontSizeDefault,color: Theme.of(context).primaryColorLight) ,
-        ),
-        const SizedBox(height:Dimensions.paddingSizeDefault),
+      CaptionTitle('zone_admin'.tr),
+      const SizedBox(height: 12),
 
-        BottomCard(
+      KCard(
+        padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+        child: BottomCard(
           name: bookingDetails.provider?.companyName ??  bookingDetails.subBooking?.provider?.companyName ?? "",
           phone: bookingDetails.provider?.companyPhone ?? bookingDetails.subBooking?.provider?.companyPhone ?? "",
           image:  bookingDetails.provider?.logoFullPath ?? bookingDetails.subBooking?.provider?.logoFullPath ?? "",
         ),
+      ),
 
-      ]),
-    );
+    ]);
   }
 }

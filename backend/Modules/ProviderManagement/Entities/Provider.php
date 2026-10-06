@@ -18,6 +18,7 @@ use Modules\UserManagement\Entities\Serviceman;
 use Modules\UserManagement\Entities\User;
 use App\Traits\HasUuid;
 use Modules\ZoneManagement\Entities\Zone;
+use Modules\CategoryManagement\Entities\Category;
 
 class Provider extends Model
 {
@@ -33,14 +34,21 @@ class Provider extends Model
         'avg_rating' => 'float',
         'commission_status' => 'integer',
         'commission_percentage' => 'float',
+        'independent_mode' => 'integer',
+        'admin_commission_percent' => 'float',
+        'provider_commission_percent' => 'float',
+        'platform_fee_amount' => 'float',
+        'tax_percent' => 'float',
+        'booking_fee' => 'float',
         'is_active' => 'integer',
         'is_approved' => 'integer',
         'auto_assign_mode' => 'integer',
         'auto_assign_wait_time' => 'integer',
-        'coordinates' => 'json'
+        'coordinates' => 'json',
+        'category_assignment_mode' => 'integer'
     ];
 
-    protected $fillable = ['auto_assign_mode', 'auto_assign_wait_time'];
+    protected $fillable = ['auto_assign_mode', 'auto_assign_wait_time', 'category_assignment_mode', 'assigned_main_category_id', 'allow_service_create', 'allow_service_edit', 'service_approval_required', 'independent_mode', 'admin_commission_percent', 'provider_commission_percent', 'platform_fee_amount', 'platform_fee_label', 'tax_percent', 'booking_fee', 'allowed_payment_methods'];
 
     protected $hidden = [];
 
@@ -68,6 +76,11 @@ class Provider extends Model
     public function zone(): BelongsTo
     {
         return $this->belongsTo(Zone::class, 'zone_id');
+    }
+
+    public function assignedMainCategory(): BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'assigned_main_category_id');
     }
 
     public function bank_detail(): HasOne

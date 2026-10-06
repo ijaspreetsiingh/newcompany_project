@@ -1,30 +1,25 @@
 import 'package:jdds/common/widgets/custom_pop_widget.dart';
-import 'package:jdds/helper/extension_helper.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 import 'package:jdds/common/widgets/address_selection_drawer.dart';
 
+/// nest. style All Categories screen (reference: design_refrence/home-harmony-hub)
+/// 3-col bordered cards, grey circle icon, bold label - overflow safe layout
 class AllCategoryScreen extends StatelessWidget {
   const AllCategoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Responsive sizing
     final bool isDesktop = ResponsiveHelper.isDesktop(context);
-    final double containerSize = isDesktop ? 80 : 65;
-    final double imageSize = isDesktop ? 50 : 40;
-    final double itemWidth = isDesktop ? 80 : 65;
-    final double? pageSizeWidth = ResponsiveHelper.isDesktop(context) ? Dimensions.webMaxWidth * 0.6 : null;
 
     return CustomPopWidget(
       child: Scaffold(
         drawer: ResponsiveHelper.isDesktop(context) ? const AddressSelectionDrawer() : null,
-
-        endDrawer: ResponsiveHelper.isDesktop(context) ? const MenuDrawer(): null,
+        endDrawer: ResponsiveHelper.isDesktop(context) ? const MenuDrawer() : null,
         appBar: CustomAppBar(title: 'all_categories'.tr),
         body: FooterBaseView(
           child: SizedBox(
-            width: pageSizeWidth,
+            width: isDesktop ? Dimensions.webMaxWidth : null,
             child: GetBuilder<CategoryController>(builder: (categoryController) {
               return Padding(
                 padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
@@ -34,7 +29,8 @@ class AllCategoryScreen extends StatelessWidget {
                       crossAxisCount: ResponsiveHelper.isMobile(context) ? 3 : 4,
                       crossAxisSpacing: Dimensions.paddingSizeSmall,
                       mainAxisSpacing: Dimensions.paddingSizeSmall,
-                      childAspectRatio: MediaQuery.of(context).size.width < 400 ? 0.85 : 0.95,
+                      /// generous height ratio - text 2 lines ke saath overflow safe
+                      childAspectRatio: MediaQuery.of(context).size.width < 400 ? 0.72 : 0.78,
                     ),
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: categoryController.categoryList?.length ?? 0,
@@ -46,61 +42,61 @@ class AllCategoryScreen extends StatelessWidget {
                             categoryController.categoryList?[index].name ?? '',
                             index.toString(),
                           )),
+                          borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
                           child: Container(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).cardColor,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: 0.05),
-                                  offset: const Offset(0, 2),
-                                  blurRadius: 10,
-                                ),
-                                BoxShadow(
-                                  color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: 0.04),
-                                  // offset: const Offset(0, 2),
-                                  blurRadius: 2,
-                                ),
-                              ]
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: Dimensions.paddingSizeExtraSmall,
+                              vertical: Dimensions.paddingSizeDefault,
                             ),
-                            child: Center(
-                              child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center, children: [
+                            decoration: BoxDecoration(
+                              /// nest. style : flat bordered card
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
+                              border: Border.all(
+                                color: Theme.of(context).primaryColorLight.withValues(alpha: Get.isDarkMode ? 0.4 : 1),
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                /// Grey circle icon - nest. style
                                 Container(
-                                  height: containerSize,
-                                  width: containerSize,
+                                  height: 56,
+                                  width: 56,
                                   decoration: BoxDecoration(
-                                    borderRadius: const BorderRadius.all(Radius.circular(Dimensions.radiusDefault)),
-                                    color: context.customThemeColors.searchBarBorder,
+                                    shape: BoxShape.circle,
+                                    color: Theme.of(context).primaryColorLight,
                                   ),
-                                  child: Center(child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-                                    child: CustomImage(
-                                      width: imageSize,
-                                      height: imageSize,
-                                      image: categoryController.categoryList?[index].imageFullPath ?? "",
-                                      fit: BoxFit.cover,
+                                  child: Center(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(100),
+                                      child: CustomImage(
+                                        width: 32,
+                                        height: 32,
+                                        image: categoryController.categoryList?[index].imageFullPath ?? "",
+                                        fit: BoxFit.contain,
+                                      ),
                                     ),
-                                  )),
-                                ),
-                                SizedBox(height: Dimensions.paddingSizeSmall),
-
-                                SizedBox(
-                                  width: itemWidth,
-                                  child: Text(
-                                    categoryController.categoryList?[index].name ?? '',
-                                    style: robotoRegular.copyWith(
-                                      fontSize: isDesktop ? Dimensions.fontSizeDefault : Dimensions.fontSizeSmall,
-                                      color: hovered ? Get.isDarkMode
-                                          ? Theme.of(context).textTheme.bodyMedium?.color
-                                          : Theme.of(context).colorScheme.primary
-                                          : Theme.of(context).textTheme.bodySmall?.color,
-                                    ),
-                                    maxLines: 2,
-                                    textAlign: TextAlign.center,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                const SizedBox(height: Dimensions.paddingSizeSmall),
 
-                              ]),
+                                /// Label - fixed 2 lines, no overflow
+                                Text(
+                                  categoryController.categoryList?[index].name ?? '',
+                                  style: robotoMedium.copyWith(
+                                    fontSize: Dimensions.fontSizeSmall,
+                                    height: 1.2,
+                                    color: Theme.of(context).textTheme.bodySmall?.color,
+                                    fontWeight: hovered ? FontWeight.w600 : FontWeight.w500,
+                                  ),
+                                  maxLines: 2,
+                                  textAlign: TextAlign.center,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
                           ),
                         );
@@ -112,6 +108,6 @@ class AllCategoryScreen extends StatelessWidget {
         ),
       ),
     );
-
   }
 }
+

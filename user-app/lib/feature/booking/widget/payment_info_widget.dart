@@ -65,10 +65,10 @@ class _PaidPaymentView extends StatelessWidget {
         if(bookingDetails.offlinePaymentDeniedNote !=null && bookingDetails.paymentMethod == "offline_payment") const SizedBox(height: 10,),
 
         Container(
-          decoration: BoxDecoration(color: Theme.of(context).cardColor , borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+          decoration: BoxDecoration(color: Theme.of(context).cardColor , borderRadius: BorderRadius.circular(Dimensions.radiusExtraLarge),
             boxShadow: Get.find<ThemeController>().darkTheme ? null : searchBoxShadow,
           ),//boxShadow: shadow),
-          padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeSmall),
+          padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeDefault),
           child: Column( crossAxisAlignment: CrossAxisAlignment.start, children: [
 
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -80,10 +80,19 @@ class _PaidPaymentView extends StatelessWidget {
                 ),
               ),
 
-              Text( bookingDetails.isPaid == 0 ? "unpaid".tr : "paid".tr,
-                style: robotoMedium.copyWith(
-                  fontSize: Dimensions.fontSizeDefault + 1,
-                  color:  bookingDetails.isPaid == 0 ? Theme.of(context).colorScheme.error: Colors.green,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(30),
+                  color: (bookingDetails.isPaid == 0 ? Theme.of(context).colorScheme.error : Theme.of(Get.context!).colorScheme.primary)
+                      .withValues(alpha: 0.1),
+                ),
+                child: Text( bookingDetails.isPaid == 0 ? "unpaid".tr : "paid".tr,
+                  style: robotoMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: Dimensions.fontSizeSmall,
+                    color:  bookingDetails.isPaid == 0 ? Theme.of(context).colorScheme.error: Theme.of(Get.context!).colorScheme.primary,
+                  ),
                 ),
               ),
             ]),
@@ -283,7 +292,7 @@ class _MakePaymentView extends StatelessWidget {
               Text(
                 bookingDetails.isPaid == 1 ?"paid".tr : "unpaid".tr,
                 style: robotoMedium.copyWith(
-                    color:  bookingDetails.isPaid == 1 ? Colors.green : Theme.of(context).colorScheme.error,
+                    color:  bookingDetails.isPaid == 1 ? Theme.of(Get.context!).colorScheme.primary : Theme.of(context).colorScheme.error,
                     fontSize: Dimensions.fontSizeSmall + 1
                 ),
               ),
@@ -316,4 +325,7 @@ class _MakePaymentView extends StatelessWidget {
     );
   }
 }
+
+
+
 

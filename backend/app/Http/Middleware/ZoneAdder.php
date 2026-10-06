@@ -30,6 +30,14 @@ class ZoneAdder
                     return response()->json(response_formatter(ZONE_404), 401);
                 }
             }
+
+            $lat = $request->input('latitude', $request->input('lat'));
+            $lng = $request->input('longitude', $request->input('lng'));
+            $radius = $request->input('radius');
+
+            Config::set('search_lat', is_numeric($lat) && $lat >= -90 && $lat <= 90 ? (float) $lat : null);
+            Config::set('search_lng', is_numeric($lng) && $lng >= -180 && $lng <= 180 ? (float) $lng : null);
+            Config::set('search_radius', is_numeric($radius) && $radius > 0 && $radius <= 500 ? (float) $radius : null);
         }
         return $next($request);
     }

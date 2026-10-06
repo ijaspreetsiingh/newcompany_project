@@ -88,7 +88,7 @@ class NearbyProviderMapItemView extends StatelessWidget {
                             Directionality(
                               textDirection: TextDirection.ltr,
                               child: Flexible(
-                                child: Text("${providerData.distance!.toStringAsFixed(2)} ${'km_away_from_you'.tr}",
+                                child: Text("${providerData.distance?.toStringAsFixed(2) ?? '--'} ${'km_away_from_you'.tr}",
                                   style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall - 1),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -171,4 +171,6 @@ class ProviderInfoButton extends StatelessWidget {
     );
   }
 }
+
+
 

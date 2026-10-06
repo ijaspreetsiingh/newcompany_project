@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\BusinessSettingsModule\Http\Controllers\Api\V1\Admin\ConfigurationController as AdminConfigurationController;
 use Modules\BusinessSettingsModule\Http\Controllers\Api\V1\Admin\BusinessInformationController as AdminBusinessInformationController;
+use Modules\BusinessSettingsModule\Http\Controllers\Api\V1\Admin\LocationSettingsController;
 use Modules\BusinessSettingsModule\Http\Controllers\Api\V1\Provider\BusinessInformationController as ProviderBusinessInformationController;
 use Modules\BusinessSettingsModule\Http\Controllers\Api\V1\Provider\ConfigurationController;
 use Modules\BusinessSettingsModule\Http\Controllers\Api\V1\Provider\SubscriptionPackageController;
@@ -24,6 +25,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admi
 
         Route::get('get-email-config', [AdminConfigurationController::class, 'email_config_get']);
         Route::put('set-email-config', [AdminConfigurationController::class, 'email_config_set']);
+
+        Route::get('location/search-radius', [LocationSettingsController::class, 'getSearchRadius']);
+        Route::put('location/search-radius', [LocationSettingsController::class, 'updateSearchRadius']);
 
         Route::get('get-third-party-config', [AdminConfigurationController::class, 'third_party_config_get']);
         Route::put('set-third-party-config', [AdminConfigurationController::class, 'third_party_config_set']);
@@ -54,3 +58,5 @@ Route::group(['prefix' => 'partner', 'as' => 'provider.', 'middleware' => ['auth
         Route::post('modify-alert-state',  [ConfigurationController::class, 'updateStatus']);
     });
 });
+
+

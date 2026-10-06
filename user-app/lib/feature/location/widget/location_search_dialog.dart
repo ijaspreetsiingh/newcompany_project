@@ -26,6 +26,7 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
   bool _isEditing = false;
   bool _isSearching = false;
   Timer? _debounce;
+  int _searchRevision = 0;
 
   @override
   void initState() {
@@ -80,6 +81,7 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
 
   void _onSearchChanged(String query) {
     _debounce?.cancel();
+    final int revision = ++_searchRevision;
     if (query.isEmpty) {
       setState(() {
         _predictionList = [];
@@ -88,23 +90,28 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
       });
       return;
     }
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      _performSearch(query);
+    _debounce = Timer(const Duration(milliseconds: 320), () {
+      _performSearch(query, revision);
     });
   }
 
-  Future<void> _performSearch(String query) async {
+  Future<void> _performSearch(String query, int revision) async {
     if (query.isEmpty) return;
     setState(() => _isSearching = true);
 
     try {
       LocationController locationController = Get.find<LocationController>();
-      _predictionList = await locationController.searchLocation(context, query);
+      final List<PredictionModel> predictions = await locationController
+          .searchLocation(context, query);
+      if (!mounted || revision != _searchRevision) return;
+      _predictionList = predictions;
 
       _predictList = [];
       for (var prediction in _predictionList) {
         _predictList.add(
-          prediction.description ?? prediction.placePrediction?.text?.text ?? '',
+          prediction.description ??
+              prediction.placePrediction?.text?.text ??
+              '',
         );
       }
 
@@ -115,7 +122,7 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
       _predictList = [];
     }
 
-    if (mounted) {
+    if (mounted && revision == _searchRevision) {
       setState(() {
         _isSearching = false;
         _showResults = _predictList.isNotEmpty;
@@ -154,10 +161,7 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
     if (_isEditing) {
       return _buildEditingView(context);
     } else if (widget.child != null) {
-      return GestureDetector(
-        onTap: _startEditing,
-        child: widget.child!,
-      );
+      return GestureDetector(onTap: _startEditing, child: widget.child!);
     } else {
       return _buildEditingView(context);
     }
@@ -181,11 +185,9 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
               Icon(
                 Icons.location_on,
                 size: 25,
-                color: Theme.of(context)
-                    .textTheme
-                    .bodyLarge!
-                    .color!
-                    .withValues(alpha: .6),
+                color: Theme.of(
+                  context,
+                ).textTheme.bodyLarge!.color!.withValues(alpha: .6),
               ),
               const SizedBox(width: Dimensions.paddingSizeExtraSmall),
               Expanded(
@@ -220,7 +222,9 @@ class _LocationSearchDialogState extends State<LocationSearchDialog> {
               else
                 IconButton(
                   onPressed: _stopEditing,
-                  icon: Icon(Icons.close, size: 20,
+                  icon: Icon(
+                    Icons.close,
+                    size: 20,
                     color: Theme.of(context).textTheme.bodyLarge!.color,
                   ),
                 ),
