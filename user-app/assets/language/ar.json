@@ -1040,6 +1040,7 @@
   "all_booking": "جميع الحجز",
   "regular_booking": "الحجز المنتظم",
   "repeat_booking": "كرر الحجز",
+  "repeat_booking_cash_or_wallet_only": "الحجز المتكرر يدعم الدفع النقدي بعد الخدمة أو المحفظة فقط",
   "daily_at": "يوميا في",
   "download_invoice": "تحميل الفاتورة",
   "repeat_booking_details": "كرر تفاصيل الحجز",

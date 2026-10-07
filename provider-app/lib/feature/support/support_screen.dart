@@ -17,6 +17,24 @@ class SupportScreen extends StatelessWidget {
     }
   }
 
+  /// Help & Support → admin (technical support) se in-app chat
+  Future<void> _openSupportChat() async {
+    final content = Get.find<SplashController>().configModel.content;
+    final String adminId = content?.adminDetails?.id ?? '';
+    if (adminId.isEmpty) {
+      showCustomSnackBar('something_went_wrong'.tr, type: ToasterMessageType.error);
+      return;
+    }
+    await Get.find<ConversationController>().createChannel(
+      userID: adminId,
+      referenceID: '',
+      name: 'Technical support',
+      image: content?.faviconFullPath ?? '',
+      phone: _phone,
+      userType: 'super-admin',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,6 +91,13 @@ class SupportScreen extends StatelessWidget {
 
                 const SizedBox(height: 26),
 
+                _SupportCard(
+                  highlight: true,
+                  icon: Icons.messenger_outline_rounded,
+                  title: 'Chat with support',
+                  subtitle: 'Replies within minutes',
+                  onTap: _openSupportChat,
+                ),
                 _SupportCard(
                   icon: Icons.phone_outlined,
                   title: 'Call support',
@@ -177,12 +202,14 @@ class _SupportCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final bool highlight;
 
   const _SupportCard({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.highlight = false,
   });
 
   @override
@@ -198,7 +225,9 @@ class _SupportCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: InkColors.border),
+            border: Border.all(
+              color: highlight ? InkColors.foreground.withValues(alpha: 0.45) : InkColors.border,
+            ),
           ),
           child: Row(children: [
             Container(
@@ -206,10 +235,14 @@ class _SupportCard extends StatelessWidget {
               width: 40,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: InkColors.secondary,
+                color: highlight ? InkColors.foreground : InkColors.secondary,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 18, color: InkColors.foreground),
+              child: Icon(
+                icon,
+                size: 18,
+                color: highlight ? InkColors.background : InkColors.foreground,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(

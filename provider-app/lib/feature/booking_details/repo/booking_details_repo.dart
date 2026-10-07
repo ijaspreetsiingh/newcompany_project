@@ -81,8 +81,7 @@ class BookingDetailsRepo{
   }
 
   Future<Response> removeCartServiceFromServer({CartModel? cart , String? bookingId, String? zoneId}){
-    return apiClient.postData(AppConstants.removeCartServiceFromServer, {
-      "_method" : "put",
+    return apiClient.putData(AppConstants.removeCartServiceFromServer, {
       "booking_id" : bookingId,
       "zone_id" : zoneId,
       "variant_key" : cart?.variantKey,
@@ -91,8 +90,7 @@ class BookingDetailsRepo{
   }
 
   Future<Response> updateBooking({required BookingEditType bookingEditType,String? bookingId, String? subBookingId , String? zoneId, String? paymentStatus, String? servicemanId, String? bookingStatus, String? serviceSchedule, String? serviceInfo, bool? changeNextAllBooking }){
-    return apiClient.postData( bookingEditType == BookingEditType.regular ? AppConstants.updateRegularBooking : AppConstants.updateRepeatBooking, {
-      "_method" : "put",
+    return apiClient.putData( bookingEditType == BookingEditType.regular ? AppConstants.updateRegularBooking : AppConstants.updateRepeatBooking, {
       "booking_id" : bookingId,
       "zone_id" : zoneId,
       "payment_status" : paymentStatus,

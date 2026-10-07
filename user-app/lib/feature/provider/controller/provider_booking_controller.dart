@@ -12,7 +12,7 @@ class ProviderBookingController extends GetxController implements GetxService {
   ProviderBookingController({required this.providerBookingRepo});
 
 
-  final bool _isLoading = false;
+  bool _isLoading = false;
   bool get isLoading => _isLoading;
 
   ProviderModel? _providerModel;
@@ -176,6 +176,9 @@ class ProviderBookingController extends GetxController implements GetxService {
         _providerList = null;
       }
 
+      _isLoading = true;
+      update();
+
       Map<String,dynamic> body={
         'sort_by': sortBy[selectedSortByIndex],
         'rating': selectedRatingIndex,
@@ -201,8 +204,9 @@ class ProviderBookingController extends GetxController implements GetxService {
           onResponse: (data, source) {
             _providerModel = ProviderModel.fromJson(data);
             _providerList = [];
-            _providerList!.addAll(ProviderModel.fromJson(data).content?.data??[]);
+            _providerList!.addAll(_providerModel?.content?.data ?? []);
             _calculateDistance();
+            _isLoading = false;
             update();
           },
         );
@@ -219,9 +223,11 @@ class ProviderBookingController extends GetxController implements GetxService {
             _providerList!.addAll(_providerModel?.content?.data??[]);
           }
           _calculateDistance();
+          _isLoading = false;
 
         } else {
           ApiChecker.checkApi(response.response);
+          _isLoading = false;
         }
         update();
       }
@@ -252,7 +258,8 @@ class ProviderBookingController extends GetxController implements GetxService {
       if (response.statusCode == 200) {
         _providerDetailsContent = ProviderDetails.fromJson(response.body).content;
 
-        if(_providerDetailsContent!.subCategories!=null || _providerDetailsContent!.subCategories!.isNotEmpty){
+        // null-safe check: agar subCategories null hai to pehla condition hi galat ho jata tha
+        if(_providerDetailsContent!.subCategories!=null && _providerDetailsContent!.subCategories!.isNotEmpty){
           for (var subcategory in _providerDetailsContent!.subCategories!) {
             List<Service> serviceList = [];
             if(subcategory.services!.isNotEmpty){

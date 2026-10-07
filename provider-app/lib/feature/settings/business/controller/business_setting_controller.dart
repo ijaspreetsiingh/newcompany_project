@@ -133,10 +133,10 @@ class BusinessSettingController extends GetxController implements GetxService{
     _isLoading = true;
     update();
     Response response =  await businessSettingRepo.updateBookingSettingIntoServer(jsonEncode(settingsData));
-    if(response.statusCode == 200 && response.body['response_code'] == "default_update_200"){
+    if(response.statusCode == 200 && response.body is Map && response.body['response_code'] == "default_update_200"){
       showCustomSnackBar("successfully_updated".tr,  type: ToasterMessageType.success);
     }else{
-      showCustomSnackBar(response.body["message"] ?? "");
+      showCustomSnackBar(response.body is Map && response.body["message"] != null ? "${response.body["message"]}" : response.statusText);
     }
 
     await getBookingSettingsDataFromServer();
@@ -156,7 +156,6 @@ class BusinessSettingController extends GetxController implements GetxService{
     }
 
     Map<String, dynamic> settingsData = {
-      "_method" : "put",
       "service_availability" : _serviceAvailabilitySettings ? "1" : "0",
       "start_time" : DateConverter.convertStringDateTo24HourFormat(_serviceStartTime ?? "00:00"),
       "end_time" : DateConverter.convertStringDateTo24HourFormat(_serviceEndTime ?? "00:00"),
@@ -167,16 +166,16 @@ class BusinessSettingController extends GetxController implements GetxService{
     _isLoading = true;
     update();
     Response response =  await businessSettingRepo.updateServiceAvailabilitySettingIntoServer(settingsData);
-    if(response.statusCode == 200 && response.body['response_code'] == "default_update_200"){
+    if(response.statusCode == 200 && response.body is Map && response.body['response_code'] == "default_update_200"){
       showCustomSnackBar("successfully_updated".tr,  type: ToasterMessageType.success);
       Get.find<UserProfileController>().getProviderInfo(reload: true);
-    }else if(response.statusCode == 400 && response.body['response_code'] == "default_400") {
+    }else if(response.statusCode == 400 && response.body is Map && response.body['response_code'] == "default_400") {
 
       if(response.body['errors']!=null){
         showCustomSnackBar(response.body["errors"][0]['message'] ?? "");
       }
     }else{
-      showCustomSnackBar(response.body["message"] ?? "");
+      showCustomSnackBar(response.body is Map && response.body["message"] != null ? "${response.body["message"]}" : response.statusText);
     }
     _isLoading = false;
     update();

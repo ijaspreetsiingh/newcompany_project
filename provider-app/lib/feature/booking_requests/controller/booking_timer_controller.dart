@@ -86,7 +86,7 @@ class BookingTimerController extends GetxController implements GetxService {
 
     // decision window active hai toh serviceman suggestions load karo
     if (windowActive) {
-      loadSuggestions();
+      await loadSuggestions();
     }
 
     _timer?.cancel();
@@ -195,15 +195,23 @@ class BookingTimerController extends GetxController implements GetxService {
     _isLoading = true;
     update();
 
-    await bookingDetailsRepo.ignoreBookingRequest(_bookingId!);
-    _timer?.cancel();
-    _rejected = true;
-    _isLoading = false;
-    update();
+    // API success check zaroori hai — fail hone par bhi rejected dikhana ghost rejection thi
+    Response response = await bookingDetailsRepo.ignoreBookingRequest(_bookingId!);
+    if (response.statusCode == 200) {
+      _timer?.cancel();
+      _rejected = true;
+      _isLoading = false;
+      update();
 
-    Future.delayed(const Duration(seconds: 2), () {
-      _closePopupAndRefresh();
-    });
+      Future.delayed(const Duration(seconds: 2), () {
+        _closePopupAndRefresh();
+      });
+    } else {
+      // popup khula rakho taaki provider dobara try kar sake
+      _isLoading = false;
+      update();
+      ApiChecker.checkApi(response);
+    }
   }
 
   void _closePopupAndRefresh() {

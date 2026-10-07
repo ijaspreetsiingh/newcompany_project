@@ -19,6 +19,29 @@ class SupportScreen extends StatelessWidget {
     }
   }
 
+  /// Help & Support → admin (technical support) se in-app chat.
+  /// Serviceman config me admin_details nahi aata, isliye thread-index ka
+  /// auto-created `adminChannel` (reference_type = support) use hota hai.
+  Future<void> _openSupportChat() async {
+    final ConversationController conversation = Get.find<ConversationController>();
+    if (conversation.adminConversationModel?.id == null) {
+      await conversation.getChannelList(1, type: 'customer');
+    }
+    final ChannelData? adminChannel = conversation.adminConversationModel;
+    if (adminChannel?.id == null) {
+      showCustomSnackBar('something_went_wrong'.tr);
+      return;
+    }
+    final content = Get.find<SplashController>().configModel?.content;
+    Get.toNamed(RouteHelper.getChatScreenRoute(
+      adminChannel!.id!,
+      'Technical support',
+      content?.faviconFullPath ?? '',
+      _phone,
+      'super-admin',
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     return CustomPopScopeWidget(
@@ -78,6 +101,13 @@ class SupportScreen extends StatelessWidget {
 
                   const SizedBox(height: 26),
 
+                  _SupportCard(
+                    highlight: true,
+                    icon: Icons.messenger_outline_rounded,
+                    title: 'Chat with support',
+                    subtitle: 'Replies within minutes',
+                    onTap: _openSupportChat,
+                  ),
                   _SupportCard(
                     icon: Icons.phone_outlined,
                     title: 'Call support',
@@ -180,12 +210,14 @@ class _SupportCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final bool highlight;
 
   const _SupportCard({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.highlight = false,
   });
 
   @override
@@ -201,7 +233,9 @@ class _SupportCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: context.kBorder),
+            border: Border.all(
+              color: highlight ? context.kPrimary.withValues(alpha: 0.5) : context.kBorder,
+            ),
           ),
           child: Row(children: [
             Container(
@@ -209,10 +243,14 @@ class _SupportCard extends StatelessWidget {
               width: 40,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: context.kCard,
+                color: highlight ? context.kPrimary : context.kCard,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 18, color: context.kForeground),
+              child: Icon(
+                icon,
+                size: 18,
+                color: highlight ? context.kPrimaryForeground : context.kForeground,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(

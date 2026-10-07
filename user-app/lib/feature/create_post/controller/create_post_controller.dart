@@ -61,7 +61,7 @@ class CreatePostController extends GetxController implements GetxService{
       Get.offNamed(RouteHelper.getCreatePostSuccessfullyScreen());
       customSnackBar("your_post_has_been_created_successfully".tr,type : ToasterMessageType.success);
     }else{
-      customSnackBar( response.body['message'] ?? response.statusText);
+      customSnackBar( response.body is Map && response.body['message'] != null ? "${response.body['message']}" : response.statusText);
     }
     _isLoading = false;
     update();

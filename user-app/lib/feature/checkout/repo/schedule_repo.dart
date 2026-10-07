@@ -7,8 +7,7 @@ class ScheduleRepo extends GetxService {
   ScheduleRepo({required this.apiClient});
 
   Future<Response> changePostScheduleTime(String postId, String scheduleTime) async {
-    return await apiClient.postData(AppConstants.updatePostInfo,{
-      "_method":"put",
+    return await apiClient.putData(AppConstants.updatePostInfo,{
       "post_id":postId,
       "booking_schedule":scheduleTime
     });

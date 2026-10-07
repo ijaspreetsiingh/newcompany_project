@@ -25,10 +25,7 @@ class LocationRepo {
   }
 
   Future<Response> removeAddressByID(String id) async {
-    return await apiClient.postData("${AppConstants.addressUri}/$id", {
-      '_method': 'delete',
-      'guest_id': Get.find<SplashController>().getGuestId(),
-    });
+    return await apiClient.deleteData("${AppConstants.addressUri}/$id?guest_id=${Get.find<SplashController>().getGuestId()}");
   }
 
   Future<Response> addAddress(AddressModel addressModel) async {
@@ -86,8 +83,7 @@ class LocationRepo {
     String postId,
     String addressId,
   ) async {
-    return await apiClient.postData(AppConstants.updatePostInfo, {
-      "_method": "put",
+    return await apiClient.putData(AppConstants.updatePostInfo, {
       "post_id": postId,
       "service_address_id": addressId,
     });

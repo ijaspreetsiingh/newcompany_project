@@ -1041,6 +1041,7 @@
   "all_booking": "सारी बुकिंग",
   "regular_booking": "नियमित बुकिंग",
   "repeat_booking": "दोबारा बुकिंग करें",
+  "repeat_booking_cash_or_wallet_only": "रिपीट बुकिंग में केवल कैश या वॉलेट पेमेंट समर्थित है",
   "daily_at": "प्रतिदिन पर",
   "download_invoice": "चालान डाउनलोड करें",
   "repeat_booking_details": "बुकिंग विवरण दोहराएँ",

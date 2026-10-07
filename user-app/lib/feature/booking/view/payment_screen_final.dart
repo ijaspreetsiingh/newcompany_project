@@ -97,13 +97,37 @@ class _PaymentScreenFinalState extends State<PaymentScreenFinal> {
     );
 
     if (scheduleController.selectedServiceType == ServiceType.repeat) {
-      checkoutController.placeBookingRequest(
-        paymentMethod: "cash_after_service",
-        schedule: schedule,
-        isPartial: 0,
-        address: addressModel,
-        fromNewFlow: true,
-      );
+      // Repeat booking me bhi user ka selected payment method respect karo —
+      // pehle cash_after_service hardcoded tha
+      if (checkoutController.selectedPaymentMethod == PaymentMethodName.none) {
+        customSnackBar('select_payment_method'.tr, type: ToasterMessageType.info);
+        return;
+      }
+      if (checkoutController.selectedPaymentMethod == PaymentMethodName.cos) {
+        checkoutController.placeBookingRequest(
+          paymentMethod: "cash_after_service",
+          schedule: schedule,
+          isPartial: isPartialPayment && cartController.walletPaymentStatus ? 1 : 0,
+          address: addressModel,
+          fromNewFlow: true,
+        );
+      } else if (checkoutController.selectedPaymentMethod == PaymentMethodName.walletMoney) {
+        final bool walletHasEnoughBalance =
+            cartController.walletBalance >= (cartController.totalPrice * (scheduleController.scheduleDaysCount > 0 ? scheduleController.scheduleDaysCount : 1));
+        if (!walletHasEnoughBalance) {
+          customSnackBar('insufficient_wallet_balance'.tr, type: ToasterMessageType.info);
+          return;
+        }
+        checkoutController.placeBookingRequest(
+          paymentMethod: "wallet_payment",
+          schedule: schedule,
+          isPartial: 0,
+          address: addressModel,
+          fromNewFlow: true,
+        );
+      } else {
+        customSnackBar('repeat_booking_cash_or_wallet_only'.tr, type: ToasterMessageType.info);
+      }
       return;
     }
 

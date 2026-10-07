@@ -74,7 +74,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     const SizedBox(width: Dimensions.paddingSizeLarge),
 
                     CustomButton(
-                      height: 40, width: 100, fontSize: Dimensions.fontSizeSmall, isLoading: signUpController.isLoading!,
+                      height: 40, width: 100, fontSize: Dimensions.fontSizeSmall, isLoading: signUpController.isLoading ?? false,
                       btnTxt: (signUpController.currentStep == SignUpPageStep.step5 || (signUpController.currentStep == SignUpPageStep.step4
                           && signUpController.selectedBusinessPlan == BusinessPlanType.commissionBase)) ? "confirm".tr : 'next'.tr,
                       onPressed: (signUpController.currentStep == SignUpPageStep.step5 && config?.digitalPayment == 0 && config?.subscriptionFreeTrail == 0) ? null : () {

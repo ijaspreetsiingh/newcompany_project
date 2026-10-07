@@ -77,10 +77,9 @@ class UserRepo {
   }
 
   Future<Response> updatePasswordApi({required String password, required String confirmPassword}) async {
-    return await apiClient.postData(AppConstants.updatePasswordUrl, {
+    return await apiClient.putData(AppConstants.updatePasswordUrl, {
       "password": password,
-      "confirm_password": confirmPassword,
-      "_method": "put"
+      "confirm_password": confirmPassword
     });
   }
 

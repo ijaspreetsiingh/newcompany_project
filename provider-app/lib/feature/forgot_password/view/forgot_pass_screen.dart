@@ -107,7 +107,7 @@ class _ForgetPassScreenState extends State<ForgetPassScreen> {
               const SizedBox(height: Dimensions.paddingSizeLarge),
 
               GetBuilder<AuthController>(builder: (authController) {
-                return CustomButton(btnTxt: "send_verification_code".tr, isLoading: authController.isLoading!,
+                return CustomButton(btnTxt: "send_verification_code".tr, isLoading: authController.isLoading,
                   onPressed: ()=> formKey.currentState!.validate() ? _forgetPass(countryDialCode,authController) : null,
                 );
               }),

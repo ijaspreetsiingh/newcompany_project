@@ -16,6 +16,15 @@ class ConfirmationScreenFinal extends StatelessWidget {
     return '-';
   }
 
+  /// Tracking API ko actual booking (UUID) chahiye — readable (#1234) nahi chalta.
+  String _internalBookingId() {
+    try {
+      final String? bookingId = Get.find<CheckOutController>().bookingId;
+      if (bookingId != null && bookingId.isNotEmpty) return bookingId;
+    } catch (_) {}
+    return '';
+  }
+
   String _scheduleText() {
     try {
       final String? scheduleTime = Get.find<ScheduleController>().scheduleTime;
@@ -29,6 +38,13 @@ class ConfirmationScreenFinal extends StatelessWidget {
 
   String _addressText() {
     try {
+      // Friend/relative booking ho to friend ka selected address dikhana chahiye,
+      // customer ke apne saved address se address overwrite mat karo
+      final FriendLocationController friendController =
+          Get.find<FriendLocationController>();
+      if (friendController.isBookingForOther) {
+        return friendController.selectedFriendAddress?.address ?? '';
+      }
       final LocationController locationController = Get.find<LocationController>();
       final AddressModel? address = CheckoutHelper.selectedAddressModel(
         selectedAddress: locationController.selectedAddress,
@@ -128,7 +144,7 @@ class ConfirmationScreenFinal extends StatelessWidget {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () => Get.toNamed(RouteHelper.getTrackingFinalRoute(bookingId: bookingId)),
+                  onPressed: () => Get.toNamed(RouteHelper.getTrackingFinalRoute(bookingId: _internalBookingId())),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryAccent,
                     shape: RoundedRectangleBorder(

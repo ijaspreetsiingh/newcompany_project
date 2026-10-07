@@ -1040,6 +1040,7 @@
   "all_booking": "সব বুকিং",
   "regular_booking": "রেগুলার বুকিং",
   "repeat_booking": "রিপিট বুকিং করুন",
+  "repeat_booking_cash_or_wallet_only": "রিপিট বুকিংয়ে শুধু ক্যাশ বা ওয়ালেট পেমেন্ট সমর্থিত",
   "daily_at": "দৈনিক এ",
   "download_invoice": "ইনভয়েস ডাউনলোড করুন",
   "repeat_booking_details": "বুকিং ডিটেইলস পুনরাবৃত্তি করুন",

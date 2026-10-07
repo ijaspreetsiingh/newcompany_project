@@ -15,32 +15,24 @@ class CartRepo extends DataSyncRepo{
   }
 
   Future<Response> removeCartFromServer(String cartID) async {
-    return await apiClient.postData("${AppConstants.removeCartItem}$cartID?guest_id=${Get.find<SplashController>().getGuestId()}", {
-      "_method" : "delete"
-    });
+    return await apiClient.deleteData("${AppConstants.removeCartItem}$cartID?guest_id=${Get.find<SplashController>().getGuestId()}");
   }
 
   Future<Response> removeAllCartFromServer() async {
-    return await apiClient.postData("${AppConstants.removeAllCartItem}?guest_id=${Get.find<SplashController>().getGuestId()}",
-        {
-          "_method" : "delete"
-        }
-    );
+    return await apiClient.deleteData("${AppConstants.removeAllCartItem}?guest_id=${Get.find<SplashController>().getGuestId()}");
   }
 
   Future<Response> updateCartQuantity(String cartID, int quantity)async{
-    return await apiClient.postData("${AppConstants.updateCartQuantity}$cartID?guest_id=${Get.find<SplashController>().getGuestId()}",
+    return await apiClient.putData("${AppConstants.updateCartQuantity}$cartID?guest_id=${Get.find<SplashController>().getGuestId()}",
         {
           'quantity': quantity,
-          "_method": "put"
         }
     );
   }
 
   Future<Response> updateProvider(String providerId)async {
-    return await apiClient.postData(AppConstants.updateCartProvider,
+    return await apiClient.putData(AppConstants.updateCartProvider,
       { 'provider_id': providerId,
-        "_method":"put",
         "guest_id": Get.find<SplashController>().getGuestId()
       });
   }

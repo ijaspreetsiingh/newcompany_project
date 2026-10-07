@@ -278,7 +278,9 @@ class UserProfileController extends GetxController implements GetxService{
       showCustomSnackBar(response.body['message'], type: ToasterMessageType.success);
 
     } else{
-      showCustomSnackBar(response.body['errors'][0]['message']);
+      showCustomSnackBar(response.body is Map && response.body['errors'] is List && (response.body['errors'] as List).isNotEmpty
+          ? "${response.body['errors'][0]['message']}"
+          : (response.statusText ?? 'something_went_wrong'.tr));
     }
     _isLoading = false;
     update();
@@ -513,7 +515,7 @@ class UserProfileController extends GetxController implements GetxService{
       }
       showCustomSnackBar('auto_assign_mode_updated'.tr, type: ToasterMessageType.success);
     } else {
-      showCustomSnackBar(response.body['message'] ?? 'something_went_wrong'.tr);
+      showCustomSnackBar(response.body is Map && response.body['message'] != null ? "${response.body['message']}" : 'something_went_wrong'.tr);
     }
 
     _autoAssignLoading = false;
@@ -541,7 +543,7 @@ class UserProfileController extends GetxController implements GetxService{
       }
       showCustomSnackBar('auto_assign_mode_updated'.tr, type: ToasterMessageType.success);
     } else {
-      showCustomSnackBar(response.body['message'] ?? 'something_went_wrong'.tr);
+      showCustomSnackBar(response.body is Map && response.body['message'] != null ? "${response.body['message']}" : 'something_went_wrong'.tr);
     }
 
     _autoAssignLoading = false;
@@ -557,7 +559,7 @@ class UserProfileController extends GetxController implements GetxService{
       _autoAssignWaitTime = seconds;
       showCustomSnackBar('auto_assign_wait_time_updated'.tr, type: ToasterMessageType.success);
     } else {
-      showCustomSnackBar(response.body['message'] ?? 'something_went_wrong'.tr);
+      showCustomSnackBar(response.body is Map && response.body['message'] != null ? "${response.body['message']}" : 'something_went_wrong'.tr);
     }
 
     _autoAssignLoading = false;

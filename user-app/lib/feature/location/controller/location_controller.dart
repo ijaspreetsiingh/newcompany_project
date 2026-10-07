@@ -401,7 +401,7 @@ class LocationController extends GetxController implements GetxService {
       final ZoneResponseModel responseModel =
           locationResults[0] as ZoneResponseModel;
       if (formCheckout &&
-          !responseModel.zoneIds.contains(getUserAddress()?.zoneId ?? '')) {
+          responseModel.zoneIds != (getUserAddress()?.zoneId ?? '')) {
         Get.dialog(
           ConfirmationDialog(
             description: null,
@@ -455,7 +455,9 @@ class LocationController extends GetxController implements GetxService {
     } else {
       responseModel = ResponseModel(
         false,
-        response.body['message'] ?? response.statusText,
+        response.body is Map && response.body['message'] != null
+            ? "${response.body['message']}"
+            : response.statusText,
       );
     }
     update();
@@ -937,7 +939,8 @@ class LocationController extends GetxController implements GetxService {
         '${address.longitude}',
         false,
       );
-      if (selectedZone.zoneIds.contains(getUserAddress()?.zoneId ?? "")) {
+      // exact zone match (contains substring match karta tha — "12" vs "123" jaise IDs par galat match ho sakta tha)
+      if (selectedZone.zoneIds == (getUserAddress()?.zoneId ?? "")) {
         _selectedAddress = address;
 
         update();

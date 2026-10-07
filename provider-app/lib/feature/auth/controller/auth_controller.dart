@@ -6,13 +6,13 @@ class AuthController extends GetxController implements GetxService {
   final AuthRepo authRepo;
   AuthController({required this.authRepo});
 
-  bool? _isLoading = false;
+  bool _isLoading = false;
   final bool _notification = true;
 
   bool _isNumberLogin = false;
   bool get isNumberLogin => _isNumberLogin;
 
-  bool? get isLoading => _isLoading;
+  bool get isLoading => _isLoading;
   bool? get notification => _notification;
 
   bool? _isActiveRememberMe =false ;

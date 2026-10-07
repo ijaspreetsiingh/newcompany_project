@@ -184,7 +184,8 @@ class ProviderData {
     serviceManCount = json['service_man_count'];
     serviceCapacityPerDay = json['service_capacity_per_day'];
     ratingCount = json['rating_count'];
-    avgRating = json['avg_rating'] != null ? double.tryParse(double.tryParse(json['avg_rating'].toString())!.toStringAsExponential(2)) : null;
+    // avg_rating invalid/missing ho to null — force-unwrap se crash nahi hoga
+    avgRating = double.tryParse(json['avg_rating']?.toString() ?? '');
     commissionStatus = json['commission_status'];
     commissionPercentage = int.tryParse(json['commission_percentage'].toString());
     isActive = int.tryParse(json['is_active'].toString());

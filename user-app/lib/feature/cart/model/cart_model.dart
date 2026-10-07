@@ -133,7 +133,6 @@ class CartModel {
     data['coupon_code'] = _couponCode;
     data['tax_amount'] = _taxAmount;
     data['total_cost'] = _totalCost;
-    data['service'] = _service;
     data['service'] = service?.toJson();
     data['provider'] = provider?.toJson();
     return data;

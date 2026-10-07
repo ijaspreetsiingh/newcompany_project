@@ -38,7 +38,7 @@
                                         </label>
                                         <input type="text" class="form-control"
                                                name="agora_app_id"
-                                               placeholder="{{translate('Ex: 00000000000000000000000000000000000000000000'}} *"
+                                               placeholder="{{translate('Ex: 00000000000000000000000000000000000000000000')}} *"
                                                required=""
                                                value="{{ $data['agora_app_id'] ?? '' }}">
                                     </div>
@@ -53,7 +53,7 @@
                                         </label>
                                         <input type="text" class="form-control"
                                                name="agora_app_certificate"
-                                               placeholder="{{translate('Ex: 00000000000000000000000000000000000000000000'}} *"
+                                               placeholder="{{translate('Ex: 00000000000000000000000000000000000000000000')}} *"
                                                required=""
                                                autocomplete="off"
                                                value="{{ $data['agora_app_certificate'] ?? '' }}">

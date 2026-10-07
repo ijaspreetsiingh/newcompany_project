@@ -66,7 +66,7 @@ class AuthRepo {
     }else{
       await subscribeTokenToTopic(deviceToken, AppConstants.topic);
     }
-    return await apiClient.postData(AppConstants.tokenUri, {"_method": "put", "fcm_token": deviceToken});
+    return await apiClient.putData(AppConstants.tokenUri, {"fcm_token": deviceToken});
   }
 
   Future<void> subscribeTokenToTopic(dynamic token, dynamic topic) async {
@@ -209,7 +209,7 @@ class AuthRepo {
         }
       }
     }
-    apiClient.postData(AppConstants.tokenUri, {"_method": "put", "fcm_token": '@'});
+    apiClient.putData(AppConstants.tokenUri, {"fcm_token": '@'});
     sharedPreferences.remove(AppConstants.token);
     sharedPreferences.remove(AppConstants.referredBottomSheet);
     Get.find<AuthController>().updateSavedLocalAddress(saveContactPersonInfo: false);

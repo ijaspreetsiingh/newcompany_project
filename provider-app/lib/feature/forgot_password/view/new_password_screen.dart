@@ -78,7 +78,7 @@ class _NewPassScreenState extends State<NewPassScreen> {
                   return CustomButton(
                     fontSize: Dimensions.fontSizeDefault,
                     btnTxt: "change_password".tr,
-                    isLoading: controller.isLoading!,
+                    isLoading: controller.isLoading,
                     onPressed: ()=> _resetPassword(
                         _identity,widget.otp,_newPasswordController.text.trim(),_confirmPasswordController.text.trim()
                     ),

@@ -189,14 +189,14 @@ class ApiClient extends GetxService {
     }
   }
 
-  Future<Response> putData(String? uri, dynamic body, {Map<String, String>? headers}) async {
+  Future<Response> putData(String? uri, dynamic body, {Map<String, String>? headers, int? timeout}) async {
     printLog('====> body : ${body.toString()}');
     try {
       http.Response response = await http.put(
         _requestUri(uri),
         body: jsonEncode(body),
         headers: headers ?? _mainHeaders,
-      ).timeout(Duration(seconds: timeoutInSeconds));
+      ).timeout(Duration(seconds: timeout ?? timeoutInSeconds));
       return handleResponse(response, uri);
     } catch (e) {
       return Response(statusCode: 1, statusText: noInternetMessage);

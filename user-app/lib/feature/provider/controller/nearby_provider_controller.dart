@@ -10,7 +10,7 @@ class NearbyProviderController extends GetxController implements GetxService {
   NearbyProviderController({required this.providerBookingRepo});
 
 
-  final bool _isLoading = false;
+  bool _isLoading = false;
   bool get isLoading => _isLoading;
 
   ProviderModel? _providerModel;
@@ -67,6 +67,9 @@ class NearbyProviderController extends GetxController implements GetxService {
         _providerModel = null;
       }
 
+      _isLoading = true;
+      update();
+
       if(!applyFilter){
         clearFilterDataValues(shouldUpdate: false);
       }
@@ -99,8 +102,9 @@ class NearbyProviderController extends GetxController implements GetxService {
           onResponse: (data, source) {
             _providerModel = ProviderModel.fromJson(data);
             _providerList = [];
-            _providerList!.addAll(ProviderModel.fromJson(data).content?.data??[]);
+            _providerList!.addAll(_providerModel?.content?.data ?? []);
             _sortProviderListAndinttMap(initialPosition: initialPosition);
+            _isLoading = false;
             update();
           },
         );
@@ -113,12 +117,14 @@ class NearbyProviderController extends GetxController implements GetxService {
           }
           _providerModel = ProviderModel.fromJson(response.response.body);
           if(_providerModel != null ){
-            _providerList!.addAll(ProviderModel.fromJson(response.response.body).content?.data??[]);
+            _providerList!.addAll(_providerModel?.content?.data ?? []);
           }
           _sortProviderListAndinttMap(initialPosition: initialPosition);
+          _isLoading = false;
 
         } else {
           ApiChecker.checkApi(response.response);
+          _isLoading = false;
         }
 
         update();
@@ -193,7 +199,16 @@ class NearbyProviderController extends GetxController implements GetxService {
 
     Position myPosition;
     try {
-      Geolocator.requestPermission();
+      // Permission request ka result wait karna zaroori hai — warna permission na
+      // hone par getCurrentPosition fail ho kar default location aa jati hai
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw StateError('Location permission was not granted');
+      }
       Position newLocalData = await Geolocator.getCurrentPosition();
       myPosition = newLocalData;
 

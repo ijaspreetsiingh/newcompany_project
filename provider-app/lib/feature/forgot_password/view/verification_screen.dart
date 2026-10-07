@@ -140,7 +140,7 @@ class VerificationScreenState extends State<VerificationScreen> {
 
               CustomButton(
                 margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
-                btnTxt: "verify".tr, isLoading: authController.isLoading!,
+                btnTxt: "verify".tr, isLoading: authController.isLoading,
                 onPressed: authController.verificationCode.length == 6 ? (){
                 _otpVerify(_identity!,widget.identityType, authController.verificationCode,authController);
                 } : null,

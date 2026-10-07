@@ -375,9 +375,7 @@ class ConversationController extends GetxController with GetSingleTickerProvider
      Response response = await conversationRepo.createChannel(userID : userID, referenceID: referenceID);
      if(response.statusCode == 200){
        _isLoading = false;
-       if(userType != 'super-admin'){
-         Get.toNamed(RouteHelper.getChatScreenRoute(response.body['content']['id'],name!,image!,phone!,userType));
-       }
+       Get.toNamed(RouteHelper.getChatScreenRoute(response.body['content']['id'],name!,image!,phone!,userType));
      }else{
        ApiChecker.checkApi(response);
      }

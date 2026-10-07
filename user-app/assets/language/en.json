@@ -1052,6 +1052,7 @@
   "all_booking": "All booking",
   "regular_booking": "Regular booking",
   "repeat_booking": "Repeat booking",
+  "repeat_booking_cash_or_wallet_only": "Repeat bookings support cash after service or wallet payment only",
   "daily_at": "Daily at",
   "download_invoice": "Download Invoice",
   "repeat_booking_details": "Repeat Booking Details",

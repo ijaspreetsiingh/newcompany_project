@@ -75,6 +75,15 @@ class SupportScreen extends StatelessWidget {
                       ),
                     ),
 
+                    /// in-app chat with admin (Help & Support se technical support)
+                    _SupportCard(
+                      highlight: true,
+                      icon: Icons.messenger_outline_rounded,
+                      title: 'Chat with support',
+                      subtitle: 'Replies within minutes',
+                      onTap: _openSupportChat,
+                    ),
+
                     /// 3 × reference `.support-card`
                     _SupportCard(
                       icon: Icons.phone_outlined,
@@ -164,6 +173,28 @@ class SupportScreen extends StatelessWidget {
       customSnackBar('Could not open the app');
     }
   }
+
+  /// Help & Support → admin (technical support) se in-app chat
+  Future<void> _openSupportChat() async {
+    if (!Get.find<AuthController>().isLoggedIn()) {
+      Get.toNamed(RouteHelper.getSignInRoute());
+      return;
+    }
+    final content = Get.find<SplashController>().configModel.content;
+    final String adminId = content?.adminDetails?.id ?? '';
+    if (adminId.isEmpty) {
+      customSnackBar('Could not start the chat');
+      return;
+    }
+    await Get.find<ConversationController>().createChannel(
+      adminId,
+      '',
+      name: 'Technical support',
+      image: content?.faviconFullPath ?? '',
+      phone: _phone,
+      userType: 'super-admin',
+    );
+  }
 }
 
 /// reference `.support-card`
@@ -172,12 +203,14 @@ class _SupportCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final bool highlight;
 
   const _SupportCard({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.highlight = false,
   });
 
   @override
@@ -193,11 +226,19 @@ class _SupportCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: NestInk.border),
+            border: Border.all(
+              color: highlight ? NestInk.primary.withValues(alpha: 0.5) : NestInk.border,
+            ),
           ),
           child: Row(
             children: [
-              NestIconWell(icon: icon),
+              highlight
+                  ? NestIconWell(
+                      icon: icon,
+                      background: NestInk.primary,
+                      foreground: NestInk.background,
+                    )
+                  : NestIconWell(icon: icon),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(

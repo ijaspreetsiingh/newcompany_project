@@ -115,7 +115,7 @@ class AuthRepo {
 
     FirebaseMessaging.instance.subscribeToTopic(AppConstants.topic);
     FirebaseMessaging.instance.subscribeToTopic('${AppConstants.topic}-${Get.find<UserProfileController>().myZoneId}');
-    return await apiClient.postData(AppConstants.tokenUrl, {"_method": "put", "fcm_token": deviceToken});
+    return await apiClient.putData(AppConstants.tokenUrl, {"fcm_token": deviceToken});
   }
 
   Future<String?> _saveDeviceToken() async {
@@ -140,7 +140,7 @@ class AuthRepo {
   Future<void> unsubscribeToken() async {
     if(GetPlatform.isAndroid) {
       FirebaseMessaging.instance.unsubscribeFromTopic('${AppConstants.topic}-${Get.find<UserProfileController>().myZoneId}');
-      apiClient.postData(AppConstants.tokenUrl, {"_method": "put", "fcm_token": "@"});
+      apiClient.putData(AppConstants.tokenUrl, {"fcm_token": "@"});
     }
   }
 
@@ -163,7 +163,7 @@ class AuthRepo {
     if(GetPlatform.isAndroid) {
       FirebaseMessaging.instance.unsubscribeFromTopic(AppConstants.topic);
       FirebaseMessaging.instance.unsubscribeFromTopic('${AppConstants.topic}-${Get.find<UserProfileController>().myZoneId}');
-      apiClient.postData(AppConstants.tokenUrl, {"_method": "put", "fcm_token": "@"});
+      apiClient.putData(AppConstants.tokenUrl, {"fcm_token": "@"});
     }
     sharedPreferences.remove(AppConstants.token);
     sharedPreferences.remove(AppConstants.userAddress);

@@ -127,11 +127,16 @@ class CartController extends GetxController implements GetxService {
 
 
   Future<void> removeAllCartItem()async{
+    _isLoading = true;
+    update();
     Response response = await cartRepo.removeAllCartFromServer();
     if(response.statusCode == 200){
-      _isLoading = false;
-      getCartListFromServer(shouldUpdate: false);
+      await getCartListFromServer(shouldUpdate: false);
+    } else {
+      ApiChecker.checkApi(response);
     }
+    _isLoading = false;
+    update();
   }
 
   Future<void> updateCartQuantityToApi(String cartID, int quantity)async{
@@ -229,7 +234,8 @@ class CartController extends GetxController implements GetxService {
 
 
   void addDataToCart(){
-    if(_cartList.isNotEmpty && _inttialCartList.first.subCategoryId != _cartList.first.subCategoryId) {
+    // _inttialCartList khali ho sakti hai (naya service screen) — .first pe crash nahi hona chahiye
+    if(_cartList.isNotEmpty && _inttialCartList.isNotEmpty && _inttialCartList.first.subCategoryId != _cartList.first.subCategoryId) {
       Get.back();
       Get.dialog(ConfirmationDialog(
         icon: Images.warning,

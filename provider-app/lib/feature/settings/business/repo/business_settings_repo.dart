@@ -6,8 +6,7 @@ class BusinessSettingRepo {
   BusinessSettingRepo({required this.apiClient});
 
   Future<Response> updateBookingSettingIntoServer(String data) async {
-    return await apiClient.postData(AppConstants.updateBusinessBookingSettings, {
-      "_method" : "put",
+    return await apiClient.putData(AppConstants.updateBusinessBookingSettings, {
       "data" : data
     });
   }
@@ -18,7 +17,7 @@ class BusinessSettingRepo {
 
 
   Future<Response> updateServiceAvailabilitySettingIntoServer(Map<String, dynamic> body)  async {
-    return await apiClient.postData(AppConstants.updateServiceAvailabilitySettings, body);
+    return await apiClient.putData(AppConstants.updateServiceAvailabilitySettings, body);
   }
 
 

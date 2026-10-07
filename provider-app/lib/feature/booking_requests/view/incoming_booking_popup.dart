@@ -19,8 +19,20 @@ class _IncomingBookingPopupState extends State<IncomingBookingPopup> {
   @override
   void initState() {
     super.initState();
+    // Purana controller instance ho to hatao — repeat popups par stale state/timer na chale
+    if (Get.isRegistered<BookingTimerController>()) {
+      Get.delete<BookingTimerController>();
+    }
     final BookingTimerController controller = Get.put(BookingTimerController(bookingDetailsRepo: Get.find()));
     controller.startTimer(widget.bookingId);
+  }
+
+  @override
+  void dispose() {
+    if (Get.isRegistered<BookingTimerController>()) {
+      Get.delete<BookingTimerController>();
+    }
+    super.dispose();
   }
 
   @override

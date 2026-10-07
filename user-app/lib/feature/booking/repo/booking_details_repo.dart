@@ -24,9 +24,8 @@ class BookingDetailsRepo{
 
 
   Future<Response> bookingCancel({required String bookingID}) async {
-    return await apiClient.postData('${AppConstants.bookingCancel}/$bookingID', {
-      "booking_status" :"canceled",
-      "_method" : "put"}, timeout: 30);
+    return await apiClient.putData('${AppConstants.bookingCancel}/$bookingID', {
+      "booking_status" :"canceled"}, timeout: 30);
   }
 
   Future<Response> subBookingCancel({required String bookingID}) async {

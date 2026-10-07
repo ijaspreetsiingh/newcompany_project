@@ -236,8 +236,8 @@ trait BookingTrait
                 $schedule->save();
 
                 $statusHistory = new BookingStatusHistory();
-                $statusHistory->changed_by = $booking->id;
-                $statusHistory->booking_id = $userId;
+                $statusHistory->changed_by = $userId;
+                $statusHistory->booking_id = $booking->id;
                 $statusHistory->is_guest = $isGuest;
                 $statusHistory->booking_status = isset($booking->provider_id) ? 'accepted' : 'pending';
                 $statusHistory->save();
@@ -421,6 +421,8 @@ trait BookingTrait
                 if ($request->has('payment_method') && $request['payment_method'] == 'cash_after_service') {
                     $transactionId = 'cash-payment';
 
+                } else if ($request->has('payment_method') && $request['payment_method'] == 'wallet_payment') {
+                    $transactionId = 'wallet-payment';
                 }
 
                 $totalBookingAmount = $cartData->sum('total_cost');
@@ -470,6 +472,7 @@ trait BookingTrait
                 $booking->zone_id = $zoneId;
                 $booking->booking_status = 'pending';
                 $booking->payment_method = $request['payment_method'];
+                $booking->is_paid = $request['payment_method'] == 'cash_after_service' || $request['payment_method'] == 'offline_payment' ? 0 : 1;
                 $booking->total_booking_amount = ($totalBookingAmount * $totalDate) + $extraFee;
                 $booking->total_tax_amount = $cartData->sum('tax_amount') * $totalDate;
                 $booking->total_discount_amount = $cartData->sum('discount_amount') * $totalDate;
@@ -512,6 +515,7 @@ trait BookingTrait
                     $repeatBooking->transaction_id = $transactionId;
                     $repeatBooking->booking_status = 'pending';
                     $repeatBooking->payment_method = $request['payment_method'];
+                    $repeatBooking->is_paid = $request['payment_method'] == 'cash_after_service' || $request['payment_method'] == 'offline_payment' ? 0 : 1;
                     $repeatBooking->service_schedule = date('Y-m-d H:i:s', strtotime($repeat['date'])) ?? now()->addHours(5);
                     $repeatBooking->total_booking_amount = $index < 1 ? $totalBookingAmount + $extraFee : $totalBookingAmount;
                     $repeatBooking->total_tax_amount = $cartData->sum('tax_amount');
@@ -804,8 +808,8 @@ trait BookingTrait
             $schedule->save();
 
             $statusHistory = new BookingStatusHistory();
-            $statusHistory->changed_by = $booking->id;
-            $statusHistory->booking_id = $customerUserId;
+            $statusHistory->changed_by = $customerUserId;
+            $statusHistory->booking_id = $booking->id;
             $statusHistory->booking_status = isset($booking->provider_id) ? 'accepted' : 'pending';
             $statusHistory->save();
 
@@ -1694,7 +1698,7 @@ trait BookingTrait
     private function calculate_discount_cost(float $discount_amount): array
     {
         $data = BusinessSettings::where('settings_type', 'promotional_setup')->where('key_name', 'discount_cost_bearer')->first();
-        if (!isset($data)) return [];
+        if (!isset($data)) return ['admin' => 0, 'provider' => 0];
         $data = $data->live_values;
 
         if ($data['admin_percentage'] == 0) {
@@ -1721,7 +1725,7 @@ trait BookingTrait
     private function calculate_campaign_cost(float $campaignAmount): array
     {
         $data = BusinessSettings::where('settings_type', 'promotional_setup')->where('key_name', 'campaign_cost_bearer')->first();
-        if (!isset($data)) return [];
+        if (!isset($data)) return ['admin' => 0, 'provider' => 0];
         $data = $data->live_values;
 
         if ($data['admin_percentage'] == 0) {
@@ -1749,7 +1753,7 @@ trait BookingTrait
     private function calculate_coupon_cost(float $couponAmount): array
     {
         $data = BusinessSettings::where('settings_type', 'promotional_setup')->where('key_name', 'coupon_cost_bearer')->first();
-        if (!isset($data)) return [];
+        if (!isset($data)) return ['admin' => 0, 'provider' => 0];
         $data = $data->live_values;
 
         if ($data['admin_percentage'] == 0) {

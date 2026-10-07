@@ -166,12 +166,26 @@ class _ProceedToCheckoutButtonwidgetstate extends State<ProceedToCheckoutButtonW
 
 
                       if(scheduleController.selectedServiceType == ServiceType.repeat){
-                        checkoutController.placeBookingRequest(
-                          paymentMethod: "cash_after_service",
-                          schedule: schedule,
-                          isPartial: 0,
-                          address: addressModel!,
-                        );
+                        // Repeat booking me bhi user ka selected payment method respect karo —
+                        // pehle cash_after_service hardcoded tha
+                        if(checkoutController.selectedPaymentMethod == PaymentMethodName.walletMoney){
+                          checkoutController.placeBookingRequest(
+                            paymentMethod: "wallet_payment",
+                            schedule: schedule,
+                            isPartial: 0,
+                            address: addressModel!,
+                          );
+                        } else if(checkoutController.selectedPaymentMethod == PaymentMethodName.none ||
+                                  checkoutController.selectedPaymentMethod == PaymentMethodName.cos){
+                          checkoutController.placeBookingRequest(
+                            paymentMethod: "cash_after_service",
+                            schedule: schedule,
+                            isPartial: 0,
+                            address: addressModel!,
+                          );
+                        } else {
+                          customSnackBar("repeat_booking_cash_or_wallet_only".tr, type: ToasterMessageType.info);
+                        }
                       }
                       else if(cartController.walletPaymentStatus && isPartialPayment && checkoutController.selectedPaymentMethod == PaymentMethodName.walletMoney){
                         customSnackBar("select_another_payment_method_to_pay_remaintng_bill".tr, type: ToasterMessageType.info);

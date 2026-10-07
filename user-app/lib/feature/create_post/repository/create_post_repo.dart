@@ -26,10 +26,9 @@ class CreatePostRepo{
 
   Future<Response> updatePostStatus(String postId, String providerId, String status,{int? isPartial, String? serviceAddressId, String? serviceAddress}) async {
 
-    return await apiClient.postData(
+    return await apiClient.putData(
       AppConstants.updatePostStatus,
       {
-        "_method":"put",
         "post_id":postId,
         "provider_id":providerId,
         "status": status,

@@ -73,6 +73,10 @@ class CheckOutController extends GetxController implements GetxService{
   String _bookingReadableId = "";
   String get bookingReadableId => _bookingReadableId;
 
+  /// Tracking API ko actual booking (UUID) chahiye hota hai — readable (#1234) nahi
+  String _bookingId = "";
+  String get bookingId => _bookingId;
+
   bool _isLoading= false;
   bool get isLoading => _isLoading;
 
@@ -217,6 +221,7 @@ class CheckOutController extends GetxController implements GetxService{
       if(response.statusCode == 200 && response.body["response_code"] == "booking_place_success_200"){
         _isPlacedOrderSuccessfully = true;
         _bookingReadableId = response.body['content']['readable_id'].toString();
+        try { _bookingId = response.body['content']['booking_id'][0].toString(); } catch (_) {}
         String? token = response.body['content']['token'];
         Get.find<CartController>().getCartListFromServer();
 
@@ -243,6 +248,7 @@ class CheckOutController extends GetxController implements GetxService{
 
        }else{
         String? bookingId = response.body['content']['booking_id'][0];
+        _bookingId = bookingId ?? '';
         customSnackBar('now_pay_you_bill_using_the_payment_method'.tr,toasterTitle: 'your_booking_has_been_placed_successfully'.tr, type: ToasterMessageType.success, duration: 4);
         Get.offAllNamed(RouteHelper.getOfflinePaymentRoute(
           totalAmount: bookingAmount ?? 0, index: selectedOfflinePaymentIndex ?? 0, bookingId: bookingId,

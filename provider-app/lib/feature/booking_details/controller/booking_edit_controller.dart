@@ -386,7 +386,7 @@ class BookingEditController extends GetxController implements GetxService{
     }else{
       _isLoading = false;
       update();
-      return ResponseModel(false, response.body['message']);
+      return ResponseModel(false, response.body is Map && response.body['message'] != null ? "${response.body['message']}" : (response.statusText ?? 'something_went_wrong'.tr));
     }
 
   }
