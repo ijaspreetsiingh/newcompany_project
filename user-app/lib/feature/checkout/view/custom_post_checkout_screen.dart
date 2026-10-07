@@ -27,6 +27,9 @@ class _CustomPostCheckoutScreenState extends State<CustomPostCheckoutScreen> {
   void initState() {
     super.initState();
 
+    // P4 fix: cart provider id is custom post screen se aayega — warna
+    // gateway filtering/fee/tax global reh jaate the (server 400 karta tha).
+    Get.find<CheckOutController>().setProviderPaymentOverride(widget.providerId);
     Get.find<CheckOutController>().getPostDetails(widget.postId, widget.bidId);
     Get.find<CheckOutController>().changePaymentMethod(shouldUpdate: false);
     Get.find<AuthController>().cancelTermsAndCondition();
@@ -34,6 +37,12 @@ class _CustomPostCheckoutScreenState extends State<CustomPostCheckoutScreen> {
     Get.find<CheckOutController>().getOfflinePaymentMethod(true);
     Get.find<CheckOutController>().toggleTerms(value: false, shouldUpdate: false);
 
+  }
+
+  @override
+  void dispose() {
+    Get.find<CheckOutController>().setProviderPaymentOverride(null);
+    super.dispose();
   }
   
   @override

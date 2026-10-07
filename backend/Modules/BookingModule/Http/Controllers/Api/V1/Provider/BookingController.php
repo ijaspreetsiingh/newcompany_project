@@ -696,6 +696,10 @@ class BookingController extends Controller
         if (isset($booking)) {
             $booking->service_address = $booking->service_address_location != null ? json_decode($booking->service_address_location) : $booking->service_address;
 
+            if (isset($booking->provider)) {
+                $booking->provider->callingEnabled = (bool)($booking->provider->calling_enabled ?? false);
+            }
+
             $offlinePayment = $booking->booking_offline_payments?->first();
             unset($booking->booking_offline_payments);
 
@@ -780,6 +784,9 @@ class BookingController extends Controller
 
         if (isset($booking)) {
             $booking->booking->service_address = $booking->booking->service_address_location != null ? json_decode($booking->booking->service_address_location) : $booking->booking->service_address;
+            if (isset($booking->booking->provider)) {
+                $booking->booking->provider->callingEnabled = (bool)($booking->booking->provider->calling_enabled ?? false);
+            }
             return response()->json(response_formatter(DEFAULT_200, $booking), 200);
         }
         return response()->json(response_formatter(DEFAULT_204), 200);

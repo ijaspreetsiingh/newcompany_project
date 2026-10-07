@@ -95,6 +95,7 @@ class ChattingController extends Controller
                 if (isset($channelUser->user->provider)) {
                     $providerId = $channelUser->user->provider->id;
                     $channelUser->user->provider->chatEligibility = chatEligibility($providerId);
+                    $channelUser->user->provider->callingEnabled = (bool)($channelUser->user->provider->calling_enabled ?? false);
                 }
             }
             return $channel;

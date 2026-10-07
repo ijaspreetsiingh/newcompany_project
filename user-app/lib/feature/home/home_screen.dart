@@ -187,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final textColor = Colors.white;
 
     return GestureDetector(
-      onTap: () => Get.toNamed(RouteHelper.getCouponRoute()),
+      onTap: () => Get.toNamed(RouteHelper.getOffersRoute()),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
         padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),

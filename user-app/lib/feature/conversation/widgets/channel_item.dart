@@ -84,8 +84,11 @@ class ChannelItem extends StatelessWidget {
       }
     }
 
-    /// nest. `.conversation` â€” flat row Â· avatar Â· name Â· message Â· time Â· dot
+    /// nest. `.conversation` — flat row · avatar · name · message · time · dot
     if (conversationUser == null) return const SizedBox();
+
+    final String? serviceName = Get.find<ConversationController>()
+        .serviceNameForChannel(channelData);
 
     final String contactName =
         '${conversationUser.user?.firstName ?? ''} ${conversationUser.user?.lastName ?? ''}'
@@ -194,6 +197,19 @@ class ChannelItem extends StatelessWidget {
                       ],
                     ],
                   ),
+                  if (serviceName != null && serviceName.isNotEmpty) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      serviceName,
+                      style: NestInk.body(
+                        size: 10,
+                        weight: FontWeight.w600,
+                        color: NestInk.primary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                   if (lastMessage != null) ...[
                     const SizedBox(height: 3),
                     Text(

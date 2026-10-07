@@ -1280,18 +1280,51 @@ if (!function_exists('providerEffectiveTaxPercent')) {
     }
 }
 
+if (!function_exists('providerCustomFeesEnabled')) {
+    /**
+     * Is provider ke liye alag (per-provider) fees ON hain?
+     * Independent mode + wizard Step 4 ka "separate fees" toggle dono chahiye.
+     */
+    function providerCustomFeesEnabled($provider): bool
+    {
+        return providerIsIndependent($provider)
+            && (int) ($provider->custom_fees_enabled ?? 0) === 1;
+    }
+}
+
 if (!function_exists('providerBookingFee')) {
     /**
      * Customer-facing booking fee for this provider.
-     * null = use the global booking_additional_charge flow (nothing changes).
+     *  - Separate fees ON  -> provider ki fee strictly lagti hai (0 = koi fee nahi).
+     *  - Separate fees OFF -> legacy: fee > 0 ho to provider fee, warna null
+     *    (null = global booking_additional_charge flow, nothing changes).
+     *  - Independent hi nahi -> null (global flow).
      */
     function providerBookingFee($provider): ?float
     {
         if (!providerIsIndependent($provider)) {
             return null;
         }
+        if (providerCustomFeesEnabled($provider)) {
+            return max(0, (float) ($provider->booking_fee ?? 0));
+        }
         $fee = (float) ($provider->booking_fee ?? 0);
         return $fee > 0 ? $fee : null;
+    }
+}
+
+if (!function_exists('providerBookingFeeLabel')) {
+    /**
+     * Is provider ka apna customer-facing fee label.
+     * null = global additional_charge_label_name use karo.
+     */
+    function providerBookingFeeLabel($provider): ?string
+    {
+        if (!providerCustomFeesEnabled($provider)) {
+            return null;
+        }
+        $label = trim((string) ($provider->booking_fee_label ?? ''));
+        return $label !== '' ? $label : null;
     }
 }
 

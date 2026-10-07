@@ -26,8 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>This app requires access to the camera to upload customer profile picture.</string>
+<key>NSCameraUsageDescription</key>
+  <string>This app requires access to the camera to upload customer profile picture.</string>
+<key>NSMicrophoneUsageDescription</key>
+  <string>This app requires access to the microphone for in-app voice and video calls.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs access to location to manage coverage area to get a service from service provider.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

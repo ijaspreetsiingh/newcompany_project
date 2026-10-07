@@ -444,7 +444,7 @@ class _PaymentScreenFinalState extends State<PaymentScreenFinal> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                  Get.find<SplashController>().configModel.content?.additionalChargeLabelName ?? '',
+                                  CheckoutHelper.getAdditionalChargeLabel(),
                                   style: robotoRegular.copyWith(fontSize: 14, color: Colors.black54)),
                               Text(PriceConverter.convertPrice(CheckoutHelper.getAdditionalCharge()),
                                   style: robotoMedium.copyWith(

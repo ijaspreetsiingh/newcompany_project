@@ -17,8 +17,10 @@ class ThirdPartyDataStoreOrUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'party_name' => 'required|string|in:google_map,firebase,push_notification,firebase_otp_verification,recaptcha,apple_login,email_config,sms_config,payment_config,storage_connection,app_settings',
+            'party_name' => 'required|string|in:google_map,firebase,push_notification,firebase_otp_verification,recaptcha,apple_login,email_config,sms_config,payment_config,storage_connection,app_settings,agora',
             'status' => 'sometimes',
+            'agora_app_id' => 'required_if:party_name,agora|string|max:191',
+            'agora_app_certificate' => 'required_if:party_name,agora|string|max:191',
             'map_api_key_server' => 'required_if:party_name,google_map|string',
             'map_api_key_client' => 'required_if:party_name,google_map|string',
             'server_key' => 'nullable|string',

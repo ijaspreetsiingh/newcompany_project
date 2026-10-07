@@ -55,6 +55,14 @@ Future<void> main() async {
       final RemoteMessage? remoteMessage = await FirebaseMessaging.instance.getInitialMessage();
       if (remoteMessage != null) {
         body = NotificationHelper.convertNotification(remoteMessage.data);
+        final Map<String, dynamic> initialPushData = Map<String, dynamic>.from(remoteMessage.data);
+        Future.delayed(const Duration(milliseconds: 3000), () {
+          try {
+            if ((initialPushData['type'] ?? '').toString().startsWith('call')) {
+              NotificationHelper.handleCallNotificationTap(initialPushData);
+            }
+          } catch (_) {}
+        });
       }
       await NotificationHelper.initialize(flutterLocalNotificationsPlugin);
       FirebaseMessaging.onBackgroundMessage(myBackgroundMessageHandler);

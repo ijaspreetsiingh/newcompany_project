@@ -129,17 +129,20 @@ class RepeatBookingDetailsWidget extends StatelessWidget {
                       heroTag: "1",
                       elevation: 0.0,
                       backgroundColor: Colors.green,
-                      onPressed: () async {
-                        try {
-                          final bool ok = await launchUrl(Uri(
-                            scheme: 'tel',
-                            path: bookingDetails.serviceAddress?.contactPersonNumber ?? bookingDetails.subBooking?.serviceAddress?.contactPersonNumber ?? "",
-                          ), mode: LaunchMode.externalApplication);
-                          if (!ok) {
-                            showCustomSnackBar('something_went_wrong'.tr, type: ToasterMessageType.error);
-                          }
-                        } catch (_) {
-                          showCustomSnackBar('something_went_wrong'.tr, type: ToasterMessageType.error);
+                      onPressed: () {
+                        final String phone = bookingDetails.serviceAddress?.contactPersonNumber ??
+                            bookingDetails.subBooking?.serviceAddress?.contactPersonNumber ?? "";
+                        final String? customerId = bookingDetails.customerId;
+                        if (customerId != null && customerId.isNotEmpty) {
+                          Get.find<CallController>().startCall(
+                            calleeId: customerId,
+                            callType: 'voice',
+                            bookingId: bookingDetails.id,
+                            name: "${bookingDetails.customer?.firstName ?? ''} ${bookingDetails.customer?.lastName ?? ''}".trim(),
+                            phone: phone,
+                          );
+                        } else if (phone.isNotEmpty) {
+                          launchUrl(Uri(scheme: 'tel', path: phone), mode: LaunchMode.externalApplication);
                         }
                       },
                       child: Icon(Icons.call,color: Colors.white, size: 20,),

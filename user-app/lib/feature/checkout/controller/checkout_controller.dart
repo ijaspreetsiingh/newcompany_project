@@ -51,6 +51,13 @@ class CheckOutController extends GetxController implements GetxService{
   Map<String, dynamic>? get providerPaymentConfig => _providerPaymentConfig;
   String? _providerPaymentConfigFor;
 
+  /// Custom-post checkout me cart khali hota hai — screen ye override set
+  /// karti hai taaki gateway list, fee aur tax provider ke hisaab se aaye (P4).
+  String? _providerPaymentOverrideId;
+  void setProviderPaymentOverride(String? providerId) {
+    _providerPaymentOverrideId = providerId;
+  }
+
 
 
 
@@ -447,7 +454,10 @@ class CheckOutController extends GetxController implements GetxService{
 
     totalAmount = 0.00;
     totalVat = 0.00;
-    double serviceTax = postDetails?.service?.tax ?? 1;
+    final dynamic providerTax = _providerPaymentConfig?['provider_tax_percent'];
+    double serviceTax = (providerTax is num)
+        ? providerTax.toDouble()
+        : (postDetails?.service?.tax ?? 1);
     double extraFee = CheckoutHelper.getAdditionalCharge();
     totalAmount = amount + ((amount*serviceTax)/100) + extraFee - referralDiscountAmount;
     totalVat = (amount*serviceTax)/100;
@@ -577,6 +587,9 @@ class CheckOutController extends GetxController implements GetxService{
   }
 
   String? _currentCartProviderId() {
+    if (_providerPaymentOverrideId != null) {
+      return _providerPaymentOverrideId;
+    }
     try {
       final List<CartModel> cartList = Get.find<CartController>().cartList;
       if (cartList.isNotEmpty) {

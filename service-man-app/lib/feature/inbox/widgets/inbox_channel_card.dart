@@ -104,6 +104,8 @@ class InboxChannelCard extends StatelessWidget {
             : "${chatUser.user?.firstName ?? ""} ${chatUser.user?.lastName ?? ""}";
 
     final String lastMessage = inboxLastMessage(channelData, userName);
+    final String? serviceName =
+        Get.find<ConversationController>().serviceNameForChannel(channelData);
 
     String time = '';
     final String? timeSource = chatUser.updatedAt ?? channelData.createdAt;
@@ -179,6 +181,18 @@ class InboxChannelCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (serviceName != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        serviceName,
+                        style: robotoRegular.copyWith(
+                          fontSize: Dimensions.fontSizeSmall,
+                          color: context.kMutedForeground,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                     if (lastMessage.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(

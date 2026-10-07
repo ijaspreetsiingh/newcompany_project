@@ -79,6 +79,22 @@ class ConversationController extends GetxController with GetSingleTickerProvider
   List<ChannelData> _searchedServicemanChannelList = [];
   List<ChannelData> get searchedServicemanChannelList => _searchedServicemanChannelList;
 
+  String? otherUserIdForChannel(String channelId) {
+    final all = [...?_customerChannelList, ...?_servicemanChannelList];
+    for (final ch in all) {
+      if (ch.id == channelId && ch.channelUsers != null && ch.channelUsers!.isNotEmpty) {
+        for (final u in ch.channelUsers!) {
+          final String userType = u.user?.userType ?? '';
+          if (userType == 'customer' || userType == 'provider-serviceman') {
+            return u.userId?.toString();
+          }
+        }
+        return ch.channelUsers!.first.userId?.toString();
+      }
+    }
+    return null;
+  }
+
 
   List<MultipartBody> _selectedImageList = [];
   List<MultipartBody> get selectedImageList => _selectedImageList;
@@ -89,6 +105,51 @@ class ConversationController extends GetxController with GetSingleTickerProvider
 
   ChannelData? _adminConversation;
   ChannelData? get adminConversationModel => _adminConversation;
+
+  /// bookingId -> service name (inbox rows me "kis service ke liye" dikhane ke liye)
+  final Map<String, String> _bookingServiceNames = {};
+  Map<String, String> get bookingServiceNames => _bookingServiceNames;
+  final Set<String> _bookingServiceLoading = {};
+
+  void _prefetchBookingServiceNames(List<ChannelData>? channels) {
+    for (final ch in channels ?? const <ChannelData>[]) {
+      final String refId = ch.referenceId ?? '';
+      if (refId.isNotEmpty) {
+        _loadBookingServiceName(refId);
+      }
+    }
+  }
+
+  Future<void> _loadBookingServiceName(String bookingId) async {
+    if (_bookingServiceNames.containsKey(bookingId) ||
+        _bookingServiceLoading.contains(bookingId)) {
+      return;
+    }
+    _bookingServiceLoading.add(bookingId);
+    try {
+      final Response response = await conversationRepo.getBookingServiceName(
+        bookingId,
+      );
+      if (response.statusCode == 200 && response.body is Map) {
+        final dynamic content = response.body['content'];
+        final dynamic detail = content is Map ? content['detail'] : null;
+        if (detail is List && detail.isNotEmpty && detail.first is Map) {
+          final dynamic name = detail.first['service_name'];
+          if (name is String && name.trim().isNotEmpty) {
+            _bookingServiceNames[bookingId] = name.trim();
+            update();
+          }
+        }
+      }
+    } catch (_) {}
+    _bookingServiceLoading.remove(bookingId);
+  }
+
+  String? serviceNameForChannel(ChannelData? channel) {
+    final String refId = channel?.referenceId ?? '';
+    if (refId.isEmpty) return null;
+    return _bookingServiceNames[refId];
+  }
 
 
 
@@ -240,16 +301,10 @@ class ConversationController extends GetxController with GetSingleTickerProvider
            } else if (conversationUser.user?.userType == "provider-serviceman"){
              _searchedServicemanChannelList.add(element);
            }
-         }
-       }
+          }
+        }
 
-       if(tabController?.index == 0 && _searchedCustomerChannelList.isEmpty && _searchedServicemanChannelList.isNotEmpty){
-         tabController?.index = 1;
-       } else if(tabController?.index == 1 && _searchedServicemanChannelList.isEmpty && _searchedCustomerChannelList.isNotEmpty){
-         tabController?.index = 0;
-       }
-
-     }else{
+      }else{
        ApiChecker.checkApi(response);
      }
 
@@ -295,6 +350,12 @@ class ConversationController extends GetxController with GetSingleTickerProvider
       }
 
       _channelPageSize =response.body['content']['channelList']['last_page'];
+
+      if(type == "customer"){
+        _prefetchBookingServiceNames(_customerChannelList);
+      }else{
+        _prefetchBookingServiceNames(_servicemanChannelList);
+      }
 
       if(response.body['content']['adminChannel'] !=null) {
         _adminConversation = ChannelData.fromJson( response.body['content']['adminChannel']);

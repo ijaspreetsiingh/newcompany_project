@@ -154,7 +154,20 @@ class BookingInformationView extends StatelessWidget {
               icon: Icons.call_outlined,
               outline: true,
               onTap: contactPersonNumber.isNotEmpty
-                  ? () => launchUrl(Uri.parse('tel:$contactPersonNumber'))
+                  ? () {
+                      final customerId = bookingDetails.customerId;
+                      if (customerId != null && customerId.isNotEmpty) {
+                        Get.find<CallController>().startCall(
+                          calleeId: customerId,
+                          callType: 'voice',
+                          bookingId: bookingDetails.id,
+                          name: contactPersonName,
+                          phone: contactPersonNumber,
+                        );
+                      } else {
+                        launchUrl(Uri.parse('tel:$contactPersonNumber'));
+                      }
+                    }
                   : null,
             ),
           ),

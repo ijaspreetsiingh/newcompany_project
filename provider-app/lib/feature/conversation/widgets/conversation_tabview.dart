@@ -1,4 +1,5 @@
 import 'package:demandium_provider/util/core_export.dart';
+import 'package:get/get.dart';
 
 class ConversationListTabview extends StatelessWidget {
   final String value;
@@ -8,7 +9,7 @@ class ConversationListTabview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkPills(
-      items: const ["All", "Customers", "Servicemen"],
+      items: ["chats".tr, "calls".tr],
       value: value,
       onChanged: onChanged,
     );

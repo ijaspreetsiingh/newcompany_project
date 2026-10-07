@@ -6,9 +6,16 @@
 </li>
 
 <li class="nav-item">
-    <a class="nav-link {{ $webPage=='recaptcha' ? 'active' : '' }}"
+    <a class="nav-link {{ $webPage == 'recaptcha' ? 'active' : '' }}"
        href="{{ route('admin.configuration.third-party', 'recaptcha') }}">
         {{translate('recaptcha')}}
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link {{ $webPage == 'agora-config' ? 'active' : '' }}"
+       href="{{ route('admin.configuration.third-party', 'agora-config') }}">
+        {{translate('Agora (Calling)')}}
     </a>
 </li>
 <li class="nav-item">

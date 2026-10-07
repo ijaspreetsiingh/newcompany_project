@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:demandium_provider/feature/payement_information/controller/payment_info_controller.dart';
 import 'package:demandium_provider/feature/payement_information/repository/payment_info_repo.dart';
 import 'package:demandium_provider/feature/settings/business/controller/identity_controller.dart';
@@ -14,38 +14,39 @@ Future<Map<String, Map<String, String>>> init() async{
 
   /// Core
   final sharedPreferences = await SharedPreferences.getInstance();
-  Get.lazyPut(() => sharedPreferences);
-  Get.lazyPut(() => ApiClient(appBaseUrl: AppConstants.baseUrl, sharedPreferences: Get.find()));
+  Get.lazyPut(() => sharedPreferences, fenix: true);
+  Get.lazyPut(() => ApiClient(appBaseUrl: AppConstants.baseUrl, sharedPreferences: Get.find()), fenix: true);
 
 
   /// Repository
-  Get.lazyPut(() => PostRepo(apiClient: Get.find()));
-  Get.lazyPut(() => ConversationRepo(apiClient: Get.find()));
-  Get.lazyPut(() => RecheckRepo(apiClient: Get.find()));
-  Get.lazyPut(() => SuggestServiceRepo(apiClient: Get.find()));
-  Get.lazyPut(() => ReviewRepo(apiClient: Get.find()));
-  Get.lazyPut(() => SplashRepo(sharedPreferences: Get.find(), apiClient: Get.find()));
-  Get.lazyPut(() => NotificationRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => AuthRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => LocationRepo(apiClient: Get.find(),sharedPreferences: Get.find()));
-  Get.lazyPut(() => DashBoardRepo(apiClient: Get.find(),sharedPreferences: Get.find()));
-  Get.lazyPut(() => ServicemanRepo(apiClient: Get.find()));
-  Get.lazyPut(() => BookingDetailsRepo(apiClient: Get.find()));
-  Get.lazyPut(() => ReportRepo(apiClient: Get.find()));
-  Get.lazyPut(() => UserRepo(Get.find(), apiClient: Get.find()));
-  Get.lazyPut(() => BookingRequestRepo(apiClient: Get.find()));
-  Get.lazyPut(() => AdvertisementRepo(apiClient: Get.find()));
-  Get.lazyPut(() => MyServicesRepo(apiClient: Get.find()));
-  Get.lazyPut(() => CategoryAssignmentRepo(apiClient: Get.find()));
-  Get.lazyPut(() => SubscriptionRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => BusinessSettingRepo(apiClient: Get.find()));
-  Get.lazyPut(() => NotificationSetupRepo(apiClient: Get.find()));
-  Get.lazyPut(() => TransactionRepo(apiClient: Get.find()));
-  Get.lazyPut(() => HtmlRepository(apiClient: Get.find()));
-  Get.lazyPut(() => BankInfoRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => ServiceDetailsRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => TutorialRepo(apiClient: Get.find()));
-  Get.lazyPut(() => PaymentInfoRepo(apiClient: Get.find()));
+  Get.lazyPut(() => PostRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => ConversationRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => CallRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => RecheckRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => SuggestServiceRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => ReviewRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => SplashRepo(sharedPreferences: Get.find(), apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => NotificationRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => AuthRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => LocationRepo(apiClient: Get.find(),sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => DashBoardRepo(apiClient: Get.find(),sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => ServicemanRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => BookingDetailsRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => ReportRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => UserRepo(Get.find(), apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => BookingRequestRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => AdvertisementRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => MyServicesRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => CategoryAssignmentRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => SubscriptionRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => BusinessSettingRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => NotificationSetupRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => TransactionRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => HtmlRepository(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => BankInfoRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => ServiceDetailsRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => TutorialRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => PaymentInfoRepo(apiClient: Get.find()), fenix: true);
 
 
   /// Controller
@@ -69,6 +70,7 @@ Future<Map<String, Map<String, String>>> init() async{
   Get.lazyPut(() => CategoryAssignmentController(categoryAssignmentRepo: Get.find()));
   Get.lazyPut(() => ServicemanDetailsController(servicemanRepo: Get.find()));
   Get.lazyPut(() => ConversationController(conversationRepo: Get.find()));
+  Get.lazyPut(() => CallController(callRepo: Get.find()), fenix: true);
   Get.lazyPut(() => RecheckController(recheckRepo: Get.find()));
   Get.lazyPut(() => SuggestServiceController(suggestServiceRepo: Get.find()));
   Get.lazyPut(() => NotificationController(notificationRepo: Get.find()));

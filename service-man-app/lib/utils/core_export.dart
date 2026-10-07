@@ -53,6 +53,9 @@ export 'package:demandium_serviceman/feature/forgot_password/view/verification_s
 export 'package:demandium_serviceman/feature/forgot_password/view/new_password_screen.dart';
 export 'package:demandium_serviceman/feature/conversation/model/conversation_model.dart';
 export 'package:demandium_serviceman/feature/conversation/controller/conversation_controller.dart';
+export 'package:demandium_serviceman/feature/conversation/controller/call_controller.dart';
+export 'package:demandium_serviceman/feature/conversation/model/call_model.dart';
+export 'package:demandium_serviceman/feature/conversation/repo/call_repo.dart';
 export 'package:demandium_serviceman/feature/conversation/model/channel_model.dart';
 export 'package:demandium_serviceman/feature/profile/controller/user_controller.dart';
 export 'package:demandium_serviceman/feature/conversation/repo/conversation_repo.dart';

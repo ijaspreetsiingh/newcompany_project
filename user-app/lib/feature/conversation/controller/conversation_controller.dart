@@ -81,6 +81,22 @@ class ConversationController extends GetxController
   List<ChannelData>? get searchedServicemanChannelList =>
       _searchedServicemanChannelList;
 
+  String? otherUserIdForChannel(String channelId) {
+    final all = [...?_providerChannelList, ...?_servicemanChannelList];
+    for (final ch in all) {
+      if (ch.id == channelId && ch.channelUsers != null && ch.channelUsers!.isNotEmpty) {
+        for (final u in ch.channelUsers!) {
+          final String userType = u.user?.userType ?? '';
+          if (userType != 'customer') {
+            return u.userId?.toString();
+          }
+        }
+        return ch.channelUsers!.first.userId?.toString();
+      }
+    }
+    return null;
+  }
+
   List<ConversationData>? _conversationList;
   List<ConversationData>? get conversationList => _conversationList;
 
@@ -89,6 +105,52 @@ class ConversationController extends GetxController
 
   ChannelData? _adminConversation;
   ChannelData? get adminConversationModel => _adminConversation;
+
+  /// bookingId -> service name (inbox rows me "kis service ke liye" dikhane ke liye)
+  final Map<String, String> _bookingServiceNames = {};
+  Map<String, String> get bookingServiceNames => _bookingServiceNames;
+  final Set<String> _bookingServiceLoading = {};
+
+  void _prefetchBookingServiceNames(List<ChannelData>? channels) {
+    for (final ch in channels ?? const <ChannelData>[]) {
+      final String refId = ch.referenceId ?? '';
+      final String refType = ch.referenceType ?? '';
+      if (refType == 'booking_id' && refId.isNotEmpty) {
+        _loadBookingServiceName(refId);
+      }
+    }
+  }
+
+  Future<void> _loadBookingServiceName(String bookingId) async {
+    if (_bookingServiceNames.containsKey(bookingId) ||
+        _bookingServiceLoading.contains(bookingId)) {
+      return;
+    }
+    _bookingServiceLoading.add(bookingId);
+    try {
+      final Response response = await conversationRepo.getBookingServiceName(
+        bookingId,
+      );
+      if (response.statusCode == 200 && response.body is Map) {
+        final dynamic content = response.body['content'];
+        final dynamic detail = content is Map ? content['detail'] : null;
+        if (detail is List && detail.isNotEmpty && detail.first is Map) {
+          final dynamic name = detail.first['service_name'];
+          if (name is String && name.trim().isNotEmpty) {
+            _bookingServiceNames[bookingId] = name.trim();
+            update();
+          }
+        }
+      }
+    } catch (_) {}
+    _bookingServiceLoading.remove(bookingId);
+  }
+
+  String? serviceNameForChannel(ChannelData? channel) {
+    final String refId = channel?.referenceId ?? '';
+    if (refId.isEmpty) return null;
+    return _bookingServiceNames[refId];
+  }
 
   final ScrollController channelScrollController1 = ScrollController();
   final ScrollController channelScrollController2 = ScrollController();
@@ -113,9 +175,7 @@ class ConversationController extends GetxController
     super.onInit();
     conversationController.text = '';
     tabController = TabController(vsync: this, length: 2);
-    channelScrollController1.addListener(() {
-      _loadMoreChannelList(channelScrollController1, type: 'provider');
-    });
+    channelScrollController1.addListener(_loadMoreGroupedChannelList);
     channelScrollController2.addListener(() {
       _loadMoreChannelList(channelScrollController2, type: 'serviceman');
     });
@@ -154,6 +214,29 @@ class ConversationController extends GetxController
         : _servicemanChannelPageSize;
     if (currentOffset < pageSize) {
       getChannelList(currentOffset + 1, type: type, isFromPagination: true);
+    }
+  }
+
+  /// Grouped (single scroll) inbox — dono sections ke liye pagination
+  void _loadMoreGroupedChannelList() {
+    if (!channelScrollController1.hasClients ||
+        channelScrollController1.position.pixels !=
+            channelScrollController1.position.maxScrollExtent) {
+      return;
+    }
+    if (_providerChannelOffset < _providerChannelPageSize) {
+      getChannelList(
+        _providerChannelOffset + 1,
+        type: 'provider',
+        isFromPagination: true,
+      );
+    }
+    if (_servicemanChannelOffset < _servicemanChannelPageSize) {
+      getChannelList(
+        _servicemanChannelOffset + 1,
+        type: 'serviceman',
+        isFromPagination: true,
+      );
     }
   }
 
@@ -315,6 +398,10 @@ class ConversationController extends GetxController
           Map<String, dynamic>.from(adminChannel),
         );
       }
+
+      _prefetchBookingServiceNames(isProvider
+          ? _providerChannelList
+          : _servicemanChannelList);
     } else {
       if (isProvider) {
         _providerChannelList ??= <ChannelData>[];
@@ -380,16 +467,6 @@ class ConversationController extends GetxController
             _searchedServicemanChannelList?.add(item);
           }
         }
-      }
-
-      if (tabController?.index == 0 &&
-          _searchedProviderChannelList!.isEmpty &&
-          _searchedServicemanChannelList!.isNotEmpty) {
-        tabController?.index = 1;
-      } else if (tabController?.index == 1 &&
-          _searchedProviderChannelList!.isNotEmpty &&
-          _searchedServicemanChannelList!.isEmpty) {
-        tabController?.index = 0;
       }
     } else {
       ApiChecker.checkApi(response);

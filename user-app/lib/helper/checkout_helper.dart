@@ -27,8 +27,18 @@ class CheckoutHelper {
     return Get.find<SplashController>().configModel.content?.additionalCharge == 1 ? configModel.content?.additionalChargeFeeAmount ?? 0.0 : 0.0;
   }
 
+  /// Fee label: provider ka apna label (agar diya ho) warna global business label.
+  static String getAdditionalChargeLabel() {
+    final Map<String, dynamic>? providerConfig = _providerPaymentConfig();
+    if (providerConfig != null) {
+      final String providerLabel = '${providerConfig['additional_charge_label_name'] ?? ''}';
+      if (providerLabel.trim().isNotEmpty) return providerLabel;
+    }
+    return Get.find<SplashController>().configModel.content?.additionalChargeLabelName ?? '';
+  }
+
   static bool shouldShowAdditionalCharge() {
-    final String label = Get.find<SplashController>().configModel.content?.additionalChargeLabelName ?? '';
+    final String label = getAdditionalChargeLabel();
     final Map<String, dynamic>? providerConfig = _providerPaymentConfig();
     if (providerConfig != null) {
       final num flag = num.tryParse('${providerConfig['booking_additional_charge']}') ?? 0;

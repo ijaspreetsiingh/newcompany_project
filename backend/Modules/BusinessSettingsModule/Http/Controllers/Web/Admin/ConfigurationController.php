@@ -955,7 +955,7 @@ class ConfigurationController extends Controller
 
         $validator = Validator::make(
             ['web_page' => $webPage],
-            ['web_page' => 'required|in:map-api,recaptcha,firebase-configuration,firebase-authentication,apple-login,email-config,sms_config,payment_config,app_settings,social_login,test_mail,storage_connection']
+            ['web_page' => 'required|in:map-api,recaptcha,firebase-configuration,firebase-authentication,apple-login,email-config,sms_config,payment_config,app_settings,social_login,test_mail,storage_connection,agora-config']
         );
         $validator->validate();
 
@@ -1032,6 +1032,7 @@ class ConfigurationController extends Controller
             'map-api' => $data = $this->getThirdPartyData(webPage: 'google_map'),
             'firebase-configuration', 'firebase-authentication' => $data = $this->getFirebaseConfigurationData(),
             'recaptcha' => $data = $this->getThirdPartyData(webPage: 'recaptcha'),
+            'agora-config' => $data = $this->getThirdPartyData(webPage: 'agora'),
             'apple-login' => $data = $this->getThirdPartyData(webPage: 'apple_login'),
             'email-config' => $data = array_merge($this->getThirdPartyData(webPage: 'email_config'), ['status' => $this->getThirdPartyData(webPage: 'email_config_status')]),
             'sms_config' => $data = array_merge(['gateways' => $gateways], [ 'recaptcha' => $recaptcha, 'firebase_otp_verification' => $firebaseOtpVerification]),

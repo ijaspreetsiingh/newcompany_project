@@ -7,7 +7,8 @@ class ConversationDetailsAppBar extends StatelessWidget {
   final String? phone;
   final String userType;
   final String fromNotification;
-  const ConversationDetailsAppBar({super.key, this.name, this.image, this.phone, this.userType = "", this.fromNotification =""}) ;
+  final String? channelId;
+  const ConversationDetailsAppBar({super.key, this.name, this.image, this.phone, this.userType = "", this.fromNotification ="", this.channelId});
 
   String get _role {
     switch (userType) {
@@ -45,12 +46,28 @@ class ConversationDetailsAppBar extends StatelessWidget {
         right: KIconButton(
           icon: Icons.call_outlined,
           onTap: _canCall
-              ? () => Get.to(() => ChatCallScreen(
-                    name: name ?? "",
-                    phone: phone ?? "",
-                    image: image ?? "",
-                    role: _role,
-                  ))
+              ? () {
+                  String? calleeId;
+                  if (channelId != null && channelId!.isNotEmpty) {
+                    calleeId = Get.find<ConversationController>().otherUserIdForChannel(channelId!);
+                  }
+                  if (calleeId != null) {
+                    Get.find<CallController>().startCall(
+                      calleeId: calleeId,
+                      callType: 'voice',
+                      name: name ?? "",
+                      image: image ?? "",
+                      phone: phone ?? "",
+                    );
+                  } else {
+                    Get.to(() => ChatCallScreen(
+                          name: name ?? "",
+                          phone: phone ?? "",
+                          image: image ?? "",
+                          role: _role,
+                        ));
+                  }
+                }
               : null,
         ),
       ),

@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 
 class ApiChecker {
   static void checkApi(Response response) {
-    bool isAppNotActive = response.statusCode == 503 && '${response.body['code']}'.contains('activation-503');
+    bool isAppNotActive = response.statusCode == 503 && response.body is Map && '${response.body['code']}'.contains('activation-503');
 
     if(response.statusCode == 401 || isAppNotActive) {
       _executeUnAuthorized(response, isAppNotActive ? response.body['message'] : null);

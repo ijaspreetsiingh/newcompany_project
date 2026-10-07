@@ -35,9 +35,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(Request $request)
     {
-        // Render pe request proxy ke through aati hai (X-Forwarded-Proto: https),
-        // tab bhi saare generated URLs https honi chahiye (mixed content fix).
-        if (env('FORCE_HTTPS', false) || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')) {
+        if(env('FORCE_HTTPS', false)) {
             \URL::forceScheme('https');
         }
 

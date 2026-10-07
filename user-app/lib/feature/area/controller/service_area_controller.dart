@@ -60,7 +60,7 @@ class ServiceAreaController extends GetxController implements GetxService{
     );
   }
 
-  Future<void> setMarker(List<ZoneModel> zoneList, Map<String, GlobalKey> globalKeymap) async {
+  Future<void> setMarker(List<ZoneModel> zoneList, Map<String, GlobalKey> globalKeymap, Function(ZoneModel)? onZoneSelected) async {
 
     List<Marker> markerList = [];
 
@@ -72,21 +72,47 @@ class ServiceAreaController extends GetxController implements GetxService{
 
       LatLng centroid = computeCentroid(coordinates: zoneList[index].formattedCoordinates!);
 
-      Widget markerWidget = Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+      Widget markerWidget = GestureDetector(
+        onTap: () {
+          // Call the callback to update selected zone in parent widget
+          if (onZoneSelected != null) {
+            onZoneSelected(zoneList[index]);
+          }
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: Dimensions.paddingSizeDefault,
+                vertical: Dimensions.paddingSizeExtraSmall,
+              ),
+              child: Text(
+                zoneList[index].name ?? "",
+                style: robotoMedium.copyWith(
+                  fontSize: Dimensions.fontSizeSmall,
+                  color: Colors.black,
+                ),
+              ),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeExtraSmall),
-            child: Text(zoneList[index].name ?? "", style: robotoMedium.copyWith(
-                fontSize: Dimensions.fontSizeSmall, color: Colors.black
-            ),),
-          ),
-          Icon(Icons.location_on, color: Get.theme.colorScheme.primary, size: 30),
-        ],
+            Icon(
+              Icons.location_on,
+              color: Get.theme.colorScheme.primary,
+              size: 30,
+            ),
+          ],
+        ),
       );
 
       markerList.add(Marker(

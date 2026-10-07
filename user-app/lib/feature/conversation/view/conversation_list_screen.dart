@@ -1,10 +1,10 @@
 import 'package:jdds/common/design_system/nest_screens_kit.dart';
 import 'package:jdds/common/widgets/custom_pop_widget.dart';
 import 'package:jdds/feature/conversation/widgets/conversation_list_shimmer.dart';
-import 'package:jdds/feature/conversation/widgets/conversation_listview.dart';
 import 'package:jdds/feature/conversation/widgets/conversation_search_shimmer.dart';
 import 'package:jdds/feature/conversation/widgets/conversation_search_widget.dart';
 import 'package:jdds/feature/conversation/widgets/conversation_tabview.dart';
+import 'package:jdds/feature/conversation/widgets/grouped_conversation_listview.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:jdds/common/widgets/address_selection_drawer.dart';
@@ -26,6 +26,10 @@ class _ConversationListScreenState extends State<ConversationListScreen>
       shouldUpdate: false,
     );
     _loadData();
+
+    try {
+      Get.find<CallController>().recoverActiveCall();
+    } catch (_) {}
   }
 
   Future<void> _loadData() async {
@@ -107,15 +111,6 @@ class _ConversationListScreenState extends State<ConversationListScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (conversationController.adminConversationModel !=
-                                null) ...[
-                              ChannelItem(
-                                channelData: conversationController
-                                    .adminConversationModel!,
-                                isAdmin: true,
-                              ),
-                            ],
-
                             Expanded(
                               child: TabBarView(
                                 controller:
@@ -126,34 +121,9 @@ class _ConversationListScreenState extends State<ConversationListScreen>
                                           !conversationController
                                               .isSearchComplete
                                       ? const ConversationSearchShimmer()
-                                      : ConversationListView(
-                                          channelList:
-                                              conversationController
-                                                  .isSearchComplete
-                                              ? conversationController
-                                                    .searchedProviderChannelList!
-                                              : conversationController
-                                                        .providerChannelList ??
-                                                    [],
-                                          tabIndex: 0,
-                                        ),
+                                      : const GroupedConversationListView(),
 
-                                  conversationController.searchedChannelList ==
-                                              null &&
-                                          !conversationController
-                                              .isSearchComplete
-                                      ? const ConversationSearchShimmer()
-                                      : ConversationListView(
-                                          channelList:
-                                              conversationController
-                                                  .isSearchComplete
-                                              ? conversationController
-                                                    .searchedServicemanChannelList!
-                                              : conversationController
-                                                        .servicemanChannelList ??
-                                                    [],
-                                          tabIndex: 1,
-                                        ),
+                                  const CallHistoryList(),
                                 ],
                               ),
                             ),

@@ -11,11 +11,15 @@ trait PaymentHelperTrait
 {
     public function find_total_Booking_amount($customer_user_id, $post_id, $provider_id): float
     {
-        $booking_additional_charge_status = business_config('booking_additional_charge', 'booking_setup')->live_values??0;
-        $extra_fee = 0;
-        if($booking_additional_charge_status){
-            $extra_fee = business_config('additional_charge_fee_amount', 'booking_setup')->live_values??0;
-        }
+        // P1 fix: gateway amount par bhi wahi fee jo booking par lagti hai —
+        // global fee ki jagah provider-specific fee (bookingExtraFee).
+        $feeProviderId = !empty($post_id)
+            ? $provider_id
+            : \Modules\CartModule\Entities\Cart::where('customer_id', $customer_user_id)->value('provider_id');
+        $feeProvider = !empty($feeProviderId)
+            ? \Modules\ProviderManagement\Entities\Provider::find($feeProviderId)
+            : null;
+        $extra_fee = bookingExtraFee($feeProvider);
 
         if (!isset($post_id)) {
             $total_amount = cart_total($customer_user_id);
@@ -27,7 +31,13 @@ trait PaymentHelperTrait
                 ->where('status', 'pending')
                 ->first();
 
-            $total_amount = $post_bid->offered_price;
+            // P2 fix: bidding me gateway amount par bhi wahi tax jo booking par
+            // lagega (provider tax override ke saath), warna charge < booking total.
+            $serviceTax = (float) ($post_bid?->post?->service?->tax ?? 0);
+            $taxPercent = providerEffectiveTaxPercent($feeProvider, $serviceTax);
+            $biddingTax = round(($post_bid->offered_price * $taxPercent) / 100, 2);
+
+            $total_amount = $post_bid->offered_price + $biddingTax;
         }
 
         return $total_amount+$extra_fee;

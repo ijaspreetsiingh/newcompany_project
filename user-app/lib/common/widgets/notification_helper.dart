@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:jdds/common/widgets/demo_reset_dialog_widget.dart';
 import 'package:jdds/feature/booking/widget/booking_ignored_bottom_sheet.dart';
+import 'package:jdds/feature/conversation/view/incoming_call_screen.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
@@ -14,6 +15,22 @@ class NotificationHelper {
     var androidinitialize = const AndroidInitializationSettings('notification_icon');
     var iOSinitialize = const DarwinInitializationSettings();
     var inttializationsSettings = InitializationSettings(android: androidinitialize, iOS: iOSinitialize);
+
+    if (!GetPlatform.isIOS) {
+      try {
+        final androidPlugin = flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        await androidPlugin?.createNotificationChannel(const AndroidNotificationChannel(
+          'incoming_call',
+          'Incoming Calls',
+          description: 'In-app voice and video call alerts',
+          importance: Importance.max,
+          playSound: true,
+          enableVibration: true,
+        ));
+      } catch (_) {}
+    }
+
     flutterLocalNotificationsPlugin.initialize(inttializationsSettings, onDidReceiveNotificationResponse: (payload) async {
       if (kDebugMode) {
         print("Payload: $payload");
@@ -21,6 +38,14 @@ class NotificationHelper {
 
       try{
         if(payload.payload!=null && payload.payload!=''){
+          try {
+            final Map<String, dynamic> pushData = jsonDecode(payload.payload!) as Map<String, dynamic>;
+            if ((pushData['type'] ?? '').toString().startsWith('call')) {
+              handleCallNotificationTap(pushData);
+              return;
+            }
+          } catch (_) {}
+
           NotificationBody notificationBody = NotificationBody.fromJson(jsonDecode(payload.payload!));
           if (kDebugMode) {
             print("Type: ${notificationBody.notificationType}");
@@ -93,7 +118,17 @@ class NotificationHelper {
         print("onMessage: Notification Body => ${message.data.toString()}");
       }
       if(!ResponsiveHelper.isWeb()){
-        if(message.data['type']=='bidding'){
+        if ((message.data['type'] ?? '').toString().startsWith('call')) {
+          if (message.data['type'] == 'call_invite') {
+            try {
+              Get.find<CallController>().handleCallPush(Map<String, dynamic>.from(message.data));
+            } catch (_) {}
+          } else {
+            NotificationHelper.showNotification(message, flutterLocalNotificationsPlugin, false);
+          }
+        }
+
+        else if(message.data['type']=='bidding'){
 
           if((message.data['post_id']!="" && message.data['post_id']!=null) && (message.data['provider_id']!="" && message.data['provider_id']!=null)){
             Get.find<CreatePostController>().providerBidDetailsForNotification(message.data['post_id'],message.data['provider_id']);
@@ -222,6 +257,10 @@ class NotificationHelper {
 
      try{
        if(message !=null && message.data.isNotEmpty) {
+         if ((message.data['type'] ?? '').toString().startsWith('call')) {
+           handleCallNotificationTap(Map<String, dynamic>.from(message.data));
+           return;
+         }
          NotificationBody notificationBody = convertNotification(message.data);
          if(notificationBody.notificationType == "chatting"){
 
@@ -401,6 +440,22 @@ class NotificationHelper {
 
   static NotificationBody convertNotification(Map<String, dynamic> data){
    return NotificationBody.fromJson(data);
+  }
+
+  static void handleCallNotificationTap(Map<String, dynamic> data) {
+    try {
+      final String callId = (data['call_id'] ?? '').toString();
+      if (callId.isEmpty) return;
+      if (Get.currentRoute.contains('incoming-call') || Get.currentRoute.contains('voice-call')) return;
+      Get.to(() => IncomingCallScreen(
+            callId: callId,
+            callType: (data['call_type'] ?? 'voice').toString(),
+            userName: (data['user_name'] ?? '').toString(),
+            userImage: (data['user_image'] ?? '').toString(),
+            bookingId: (data['booking_id'] ?? '').toString(),
+            verify: true,
+          ));
+    } catch (_) {}
   }
 }
 

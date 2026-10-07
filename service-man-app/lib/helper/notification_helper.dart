@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:demandium_serviceman/common/widgets/demo_reset_dialog_widget.dart';
+import 'package:demandium_serviceman/feature/conversation/view/incoming_call_screen.dart';
 import 'package:demandium_serviceman/utils/core_export.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -11,10 +12,34 @@ class NotificationHelper {
     var androidInitialize = const AndroidInitializationSettings('notification_icon');
     var iOSInitialize = const DarwinInitializationSettings();
     var initializationsSettings = InitializationSettings(android: androidInitialize, iOS: iOSInitialize);
+
+    if (!GetPlatform.isIOS) {
+      try {
+        final androidPlugin = flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        await androidPlugin?.createNotificationChannel(const AndroidNotificationChannel(
+          'incoming_call',
+          'Incoming Calls',
+          description: 'In-app voice and video call alerts',
+          importance: Importance.max,
+          playSound: true,
+          enableVibration: true,
+        ));
+      } catch (_) {}
+    }
+
     flutterLocalNotificationsPlugin.initialize(initializationsSettings, onDidReceiveNotificationResponse: (NotificationResponse? notificationResponse) async {
       try{
         PriceConverter.getCurrency(Get.context!);
         if(notificationResponse!.payload != null &&  notificationResponse.payload!=''){
+          try {
+            final Map<String, dynamic> pushData = jsonDecode(notificationResponse.payload!) as Map<String, dynamic>;
+            if ((pushData['type'] ?? '').toString().startsWith('call')) {
+              handleCallNotificationTap(pushData);
+              return;
+            }
+          } catch (_) {}
+
           NotificationBody notificationBody = NotificationBody.fromJson(jsonDecode(notificationResponse.payload!));
 
           if (kDebugMode) {
@@ -61,7 +86,16 @@ class NotificationHelper {
         print("onMessage: Notification Type => ${message.data["type"]}/ Title => ${message.data['title']} ${message.notification?.title}/${message.notification?.body}/${message.notification?.titleLocKey}");
       }
 
-      if(message.data['type']=='booking') {
+      if ((message.data['type'] ?? '').toString().startsWith('call')) {
+        if (message.data['type'] == 'call_invite') {
+          try {
+            Get.find<CallController>().handleCallPush(Map<String, dynamic>.from(message.data));
+          } catch (_) {}
+        } else {
+          NotificationHelper.showNotification(message, flutterLocalNotificationsPlugin, false);
+        }
+      }
+      else if(message.data['type']=='booking') {
         Get.find<BookingRequestController>().getBookingList(BooingListStatus.accepted.name.toLowerCase(), 1);
       }
 
@@ -125,6 +159,10 @@ class NotificationHelper {
       try{
         PriceConverter.getCurrency(Get.context!);
         if(message!=null && message.data.isNotEmpty) {
+          if ((message.data['type'] ?? '').toString().startsWith('call')) {
+            handleCallNotificationTap(Map<String, dynamic>.from(message.data));
+            return;
+          }
           NotificationBody notificationBody = convertNotification(message.data);
           if(notificationBody.notificationType=="chatting" && notificationBody.channelId!=""){
 
@@ -235,6 +273,22 @@ class NotificationHelper {
 
   static NotificationBody convertNotification(Map<String, dynamic> data){
     return NotificationBody.fromJson(data);
+  }
+
+  static void handleCallNotificationTap(Map<String, dynamic> data) {
+    try {
+      final String callId = (data['call_id'] ?? '').toString();
+      if (callId.isEmpty) return;
+      if (Get.currentRoute.contains('incoming-call') || Get.currentRoute.contains('voice-call')) return;
+      Get.to(() => IncomingCallScreen(
+            callId: callId,
+            callType: (data['call_type'] ?? 'voice').toString(),
+            userName: (data['user_name'] ?? '').toString(),
+            userImage: (data['user_image'] ?? '').toString(),
+            bookingId: (data['booking_id'] ?? '').toString(),
+            verify: true,
+          ));
+    } catch (_) {}
   }
 
 

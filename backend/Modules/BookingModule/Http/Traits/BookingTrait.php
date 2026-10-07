@@ -707,7 +707,12 @@ trait BookingTrait
             $referralDiscount += $this->referralEarningCalculationForFirstBooking($customerUserId, $totalBookingAmount, $zoneId);
             $totalBookingAmount -= $referralDiscount;
 
-            $tax = !is_null($data['service_tax']) ? round((($data['price'] * $data['service_tax']) / 100) * 1, 2) : 0; //
+            $biddingProvider = !empty($data['provider_id']) ? Provider::find($data['provider_id']) : null;
+
+            // P2 fix: bidding/custom-post tax par provider tax override lagao
+            // (provider.tax_percent > service.tax), warna booking amount galat banega.
+            $biddingTaxPercent = providerEffectiveTaxPercent($biddingProvider, (float) ($data['service_tax'] ?? 0));
+            $tax = round(($data['price'] * $biddingTaxPercent) / 100, 2);
 
             $totalBookingAmount += $tax;
             $isPartials = $data['is_partial'] ? 1 : 0;
@@ -716,7 +721,6 @@ trait BookingTrait
                 return ['flag' => 'failed', 'message' => 'Invalid data'];
             }
 
-            $biddingProvider = !empty($data['provider_id']) ? Provider::find($data['provider_id']) : null;
             $extraFee = bookingExtraFee($biddingProvider);
 
             $totalBookingAmount += $extraFee;
@@ -1779,7 +1783,10 @@ trait BookingTrait
         $adminCommission = $commissionDetails['adminCommission'];
         $adminCommissionWithoutCost = $commissionDetails['adminCommissionWithoutCost'];
 
-        $bookingAmountWithoutCommission = $booking['total_booking_amount'] - $adminCommissionWithoutCost;
+        // P3 fix: provider_earning wahi rakde jo ledger (Transaction::payable...)
+        // provider ko deta hai = total - adminCommission - extra_fee. Booking fee
+        // provider_earning me andar thi to report ledger se zyada dikhati thi.
+        $bookingAmountWithoutCommission = $booking['total_booking_amount'] - $adminCommissionWithoutCost - (float) ($booking['extra_fee'] ?? 0);
 
         if (isset($booking->booking_id)){
             $bookingAmountDetailAmount = BookingDetailsAmount::where('booking_repeat_id', $booking->id)->first();

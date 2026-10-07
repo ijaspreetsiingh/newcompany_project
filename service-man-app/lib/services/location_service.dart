@@ -47,7 +47,7 @@ class LocationService extends GetxService {
     if (_currentPosition == null) return;
 
     try {
-      Response response = await Get.find<ApiClient>().postData(
+      Response response = await Get.find<ApiClient>().putData(
         AppConstants.updateLocationUrl,
         {
           "lat": _currentPosition!.latitude.toString(),

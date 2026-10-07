@@ -528,6 +528,9 @@ class ProviderController extends Controller
             'platform_fee_label' => 'nullable|string|max:191',
             'tax_percent' => 'nullable|numeric|min:0|max:100',
             'booking_fee' => 'nullable|numeric|min:0',
+            'custom_fees_enabled' => 'nullable|in:0,1',
+            'booking_fee_label' => 'nullable|string|max:191',
+            'calling_enabled' => 'nullable|in:0,1',
             'allowed_payment_methods' => 'nullable|array',
             'allowed_payment_methods.*' => 'string|max:191',
 
@@ -593,6 +596,9 @@ class ProviderController extends Controller
         $provider->platform_fee_label = $request->input('platform_fee_label');
         $provider->tax_percent = $request->filled('tax_percent') ? (float) $request->input('tax_percent') : null;
         $provider->booking_fee = (float) $request->input('booking_fee', 0);
+        $provider->custom_fees_enabled = $request->has('custom_fees_enabled') ? 1 : 0;
+        $provider->booking_fee_label = $request->filled('booking_fee_label') ? $request->input('booking_fee_label') : null;
+        $provider->calling_enabled = $request->has('calling_enabled') ? 1 : 0;
         $provider->allowed_payment_methods = json_encode(array_values(array_filter((array) $request->input('allowed_payment_methods', []))));
         $provider->zone_id = $request['zone_id'];
         $provider->coordinates = ['latitude' => $request['latitude'], 'longitude' => $request['longitude']];
@@ -1003,6 +1009,9 @@ class ProviderController extends Controller
             'platform_fee_label' => 'nullable|string|max:191',
             'tax_percent' => 'nullable|numeric|min:0|max:100',
             'booking_fee' => 'nullable|numeric|min:0',
+            'custom_fees_enabled' => 'nullable|in:0,1',
+            'booking_fee_label' => 'nullable|string|max:191',
+            'calling_enabled' => 'nullable|in:0,1',
             'allowed_payment_methods' => 'nullable|array',
             'allowed_payment_methods.*' => 'string|max:191',
 
@@ -1075,6 +1084,9 @@ class ProviderController extends Controller
         $provider->platform_fee_label = $request->input('platform_fee_label');
         $provider->tax_percent = $request->filled('tax_percent') ? (float) $request->input('tax_percent') : null;
         $provider->booking_fee = (float) $request->input('booking_fee', 0);
+        $provider->custom_fees_enabled = $request->has('custom_fees_enabled') ? 1 : 0;
+        $provider->booking_fee_label = $request->filled('booking_fee_label') ? $request->input('booking_fee_label') : null;
+        $provider->calling_enabled = $request->has('calling_enabled') ? 1 : 0;
         $provider->allowed_payment_methods = json_encode(array_values(array_filter((array) $request->input('allowed_payment_methods', []))));
         // Step 6: Service Permission (checkbox present = on, missing = off)
         $provider->allow_service_create = $request->has('allow_service_create') ? 1 : 0;

@@ -4,6 +4,38 @@
 
 @push('css_or_js')
     <link rel="stylesheet" href="{{asset('public/assets/admin-module/plugins/swiper/swiper-bundle.min.css')}}">
+    <style>
+        /* Flat page: wizard steps() hata diya gaya — sab sections ek hi scroll page par */
+        #create-provider-form { padding-bottom: 96px; }
+        #create-provider-form h3.flat-section-title {
+            display: inline-block;
+            font-size: 17px;
+            font-weight: 700;
+            margin: 26px 0 14px;
+            padding: 8px 16px;
+            border-left: 4px solid #4f66d6;
+            background: #eef1fb;
+            border-radius: 6px;
+            color: #2b3552;
+        }
+        #create-provider-form h3.flat-section-title:first-of-type { margin-top: 4px; }
+        .btn-float-save {
+            position: fixed;
+            right: 28px;
+            bottom: 24px;
+            z-index: 1060;
+            padding: 13px 28px;
+            border-radius: 999px;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, .28);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        @media (max-width: 767px) {
+            .btn-float-save { right: 16px; bottom: 16px; padding: 11px 20px; }
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -14,7 +46,7 @@
                   enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
-                <h3>{{translate('Step 1')}}</h3>
+                <h3 class="flat-section-title">{{translate('Basic info')}}</h3>
                 <section>
                     <div class="page-title-wrap mb-3">
                         <h2 class="page-title">{{translate('update_Provider')}}</h2>
@@ -230,6 +262,25 @@
                     <div class="col-12 mt-4">
                         <div class="card h-100">
                             <div class="card-body">
+                                <div class="d-flex flex-wrap justify-content-between gap-3 mb-3">
+                                    <div>
+                                        <h4 class="c1 mb-2">{{translate('In-App Calling (Voice & Video)')}}</h4>
+                                        <p class="fz-12 text-muted mb-0">{{translate('Allow this provider and its service men to use in-app voice & video calling. Customers can call them only when this is enabled. Agora credentials must be configured under Business Settings > 3rd Party > Agora.')}}</p>
+                                    </div>
+                                    <label class="switcher mb-0 flex-shrink-0">
+                                        <input class="switcher_input" type="checkbox" id="calling_enabled"
+                                               name="calling_enabled" value="1"
+                                            {{ old('calling_enabled', $provider->calling_enabled ?? 0) ? 'checked' : '' }}>
+                                        <span class="switcher_control"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mt-4">
+                        <div class="card h-100">
+                            <div class="card-body">
                                 <div class="d-flex flex-wrap justify-content-between gap-3 mb-20">
                                     <h4 class="c1">{{translate('Select Address from Map')}}</h4>
                                 </div>
@@ -280,7 +331,7 @@
                         </div>
                     </div>
                 </section>
-                <h3>{{translate('Step 2')}}</h3>
+                <h3 class="flat-section-title">{{translate('Business Plan')}}</h3>
                 <section id="business-plan-section">
                     <div class="page-title-wrap mb-3">
                         <h2 class="page-title mb-2">{{translate('Update Provider')}}</h2>
@@ -422,7 +473,7 @@
                         </div>
                     </div>
                 </section>
-                <h3>{{translate('Step 3')}} : {{translate('Provider Subscribe')}}</h3>
+                <h3 class="flat-section-title">{{translate('Provider Subscribe')}}</h3>
                 <section>
                     <div class="page-title-wrap mb-3">
                         <h2 class="page-title mb-2">{{translate('Provider Subscribe')}}</h2>
@@ -466,7 +517,7 @@
                         </div>
                     </div>
                 </section>
-                <h3>{{translate('Step 4')}} : {{translate('Independent Commission')}}</h3>
+                <h3 class="flat-section-title">{{translate('Independent Commission')}}</h3>
                 <section>
                     <div class="page-title-wrap mb-3">
                         <h2 class="page-title mb-2">{{translate('Independent Commission')}}</h2>
@@ -574,7 +625,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="mb-2 text-dark">{{translate('Customer Booking Fee')}}</label>
-                                    <p class="fz-12 mb-10">{{translate('Flat booking fee charged to the customer for this provider. 0 = global booking fee applies.')}}</p>
+                                    <p class="fz-12 mb-10">{{translate('Flat booking fee charged to the customer for this provider. Separate fees OFF = global booking fee applies. ON = this value applies, 0 = no fee.')}}</p>
                                     <div class="form-floating form-floating__icon">
                                         <input type="number" class="form-control" name="booking_fee"
                                                id="booking_fee" min="0" step="0.01"
@@ -582,6 +633,34 @@
                                                value="{{ old('booking_fee', $provider->booking_fee ?? 0) }}">
                                         <label>{{translate('Booking Fee')}}</label>
                                         <span class="material-icons">receipt_long</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="mb-2 text-dark">{{translate('Use separate fees for this provider')}}</label>
+                                    <p class="fz-12 mb-10">{{translate('ON = only this provider fee + label apply to its bookings (global fees ignored). OFF = global business settings fees apply.')}}</p>
+                                    <div class="border p-12 rounded d-flex justify-content-between bg-white">
+                                        <span class="text-dark fz-14">{{translate('Separate provider fees')}}</span>
+                                        <label class="switcher">
+                                            <input class="switcher_input" type="checkbox"
+                                                   id="custom_fees_enabled"
+                                                   name="custom_fees_enabled"
+                                                   value="1"
+                                                {{ old('custom_fees_enabled', $provider->custom_fees_enabled ?? 0) ? 'checked' : '' }}>
+                                            <span class="switcher_control"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6" id="custom-fees-label-field"
+                                     style="{{ old('custom_fees_enabled', $provider->custom_fees_enabled ?? 0) ? '' : 'display:none;' }}">
+                                    <label class="mb-2 text-dark">{{translate('Booking Fee Label (customer visible)')}}</label>
+                                    <p class="fz-12 mb-10">{{translate('Text shown to customer for this booking fee, e.g. Booking Fee / Service Charge. Empty = global label.')}}</p>
+                                    <div class="form-floating form-floating__icon">
+                                        <input type="text" class="form-control" name="booking_fee_label"
+                                               id="booking_fee_label" maxlength="191"
+                                               placeholder="{{translate('Booking Fee Label')}}"
+                                               value="{{ old('booking_fee_label', $provider->booking_fee_label ?? '') }}">
+                                        <label>{{translate('Booking Fee Label')}}</label>
+                                        <span class="material-icons">label</span>
                                     </div>
                                 </div>
                                 <div class="col-md-12">
@@ -622,21 +701,35 @@
                                 if (!box || !fields) return;
                                 fields.style.setProperty('display', box.checked ? 'flex' : 'none', 'important');
                             }
+                            function syncCustomFees() {
+                                var box = document.getElementById('custom_fees_enabled');
+                                var field = document.getElementById('custom-fees-label-field');
+                                if (!box || !field) return;
+                                field.style.setProperty('display', box.checked ? 'flex' : 'none', 'important');
+                            }
                             document.addEventListener('change', function (e) {
-                                if (e.target && e.target.id === 'independent_mode') syncIndependentFields();
+                                var id = e.target ? e.target.id : '';
+                                if (id === 'independent_mode') syncIndependentFields();
+                                if (id === 'custom_fees_enabled') syncCustomFees();
                             }, true);
                             document.addEventListener('click', function (e) {
                                 var t = e.target;
-                                if (t && t.id === 'independent_mode') syncIndependentFields();
+                                var id = t ? t.id : '';
+                                if (id === 'independent_mode') syncIndependentFields();
+                                if (id === 'custom_fees_enabled') syncCustomFees();
                             }, true);
                             if (document.readyState === 'loading') {
-                                document.addEventListener('DOMContentLoaded', syncIndependentFields);
+                                document.addEventListener('DOMContentLoaded', function () {
+                                    syncIndependentFields();
+                                    syncCustomFees();
+                                });
                             }
                             syncIndependentFields();
+                            syncCustomFees();
                         })();
                     </script>
                 </section>
-                <h3>{{translate('Step 5')}} : {{translate('Category Assignment')}}</h3>
+                <h3 class="flat-section-title">{{translate('Category Assignment')}}</h3>
                 <section id="step5-category-assignment">
                     <div class="page-title-wrap mb-3">
                         <h2 class="page-title mb-2">{{translate('Category Assignment')}}</h2>
@@ -1000,7 +1093,7 @@
                     </script>
                 </section>
 
-                <h3>{{translate('Step 6')}} : {{translate('Service Permission')}}</h3>
+                <h3 class="flat-section-title">{{translate('Service Permission')}}</h3>
                 <section id="step6-service-permission">
                     <div class="page-title-wrap mb-3">
                         <h2 class="page-title mb-2">{{translate('Service Permission')}}</h2>
@@ -1126,6 +1219,10 @@
                         </div>
                     </div>
                 </section>
+                <button type="submit" class="btn btn--primary btn-float-save">
+                    <span class="material-icons" style="font-size:18px">save</span>
+                    {{translate('save_changes')}}
+                </button>
             </form>
         </div>
     </div>
@@ -1137,7 +1234,6 @@
     <script src="{{asset('public/assets/provider-module')}}/js/spartan-multi-image-picker.js"></script>
     <script src="{{asset('public/assets/admin-module/plugins/swiper/swiper-bundle.min.js')}}"></script>
 
-    <script src="{{asset('public/assets/provider-module')}}/plugins/jquery-steps/jquery.steps.min.js"></script>
     <script src="{{asset('public/assets/provider-module')}}/plugins/jquery-validation/jquery.validate.min.js"></script>
 
 
@@ -1155,6 +1251,9 @@
         }
 
         updateSelectedPackage();
+        document.querySelectorAll('input[name="plan"]').forEach(function (input) {
+            input.addEventListener('change', updateSelectedPackage);
+        });
 
         $(document).ready(function () {
             let formWizard = $("#create-provider-form");
@@ -1178,54 +1277,26 @@
                 input.removeAttribute('data-intl-initialized');
             });
 
-            formWizard.steps({
-                headerTag: "h3",
-                bodyTag: "section",
-                transitionEffect: "fade",
-                stepsOrientation: "vertical",
-                autoFocus: true,
-                labels: {
-                    finish: "Submit",
-                    next: "Proceed",
-                    previous: "Back"
-                },
-                onInit: function (event, currentIndex) {
-                   //
-                },
-                onStepChanging: function (event, currentIndex, newIndex) {
+            // FLAT PAGE: wizard steps() hata diya gaya — sab sections ek hi page
+            // par scroll hote hain; neeche floating Save button se submit hota hai.
+            // Subscription package change hone par wahi payment modal dikhata hai.
+            let flatSubmitted = false;
+            $('.pay_complete_btn').on('click', function () {
+                flatSubmitted = true;
+                formWizard.submit();
+            });
+            formWizard.on('submit', function (e) {
+                if (flatSubmitted) return;
 
-                    if (newIndex < currentIndex) {
-                        return true;
-                    }
+                if (!formWizard.valid()) {
+                    e.preventDefault();
+                    return false;
+                }
 
-                    formWizard.validate().settings.ignore = ":disabled,:hidden";
-                    let multiImg = $('.spartan_image_input');
-
-                    if (multiImg.length < 2 && $('.spartan_item_wrapper_error_msg').length === 0) {
-                        multiImg.closest('.spartan_item_wrapper > div').after('<div class="spartan_item_wrapper_error_msg error text-danger mt-2 fs-12">This field is required.</div>');
-                    }
-
-                    document.querySelectorAll('input[name="plan"]').forEach(function (input) {
-                        input.addEventListener('change', updateSelectedPackage);
-                    });
-
-
-                    return formWizard.valid();
-                },
-                onFinished: function (event, currentIndex) {
-                    const myModalAlternative = new bootstrap.Modal('#paymentModal', {});
-
-                    let selectedPackageId = $('input[name="plan"]:checked').attr('data-id');
-
-                    if ($('.subscription-type:checked').val() === 'subscription_based' && initialPackageId !== selectedPackageId) {
-                        myModalAlternative.show();
-
-                        $('.pay_complete_btn').on('click', function () {
-                            formWizard.submit();
-                        });
-                    } else {
-                        formWizard.submit();
-                    }
+                let selectedPackageId = $('input[name="plan"]:checked').attr('data-id');
+                if ($('.subscription-type:checked').val() === 'subscription_based' && initialPackageId !== selectedPackageId) {
+                    e.preventDefault();
+                    new bootstrap.Modal('#paymentModal', {}).show();
                 }
             });
 
@@ -1268,10 +1339,12 @@
             const subscriptionRequired = document.getElementById('subscription_required');
             const businessPlanSection = document.getElementById('business-plan-section');
             if (subscriptionRequired && businessPlanSection) {
-                if (subscriptionRequired.checked) {
-                    businessPlanSection.style.display = 'none';
-                } else {
-                    businessPlanSection.style.display = 'block';
+                // Section ke upar wala flat heading bhi saath hide/show karo
+                const heading = businessPlanSection.previousElementSibling;
+                const show = !subscriptionRequired.checked;
+                businessPlanSection.style.display = show ? 'block' : 'none';
+                if (heading && heading.tagName === 'H3') {
+                    heading.style.display = show ? '' : 'none';
                 }
             }
         }

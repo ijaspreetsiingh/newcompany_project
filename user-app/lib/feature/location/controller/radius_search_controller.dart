@@ -1,39 +1,36 @@
 import 'package:get/get.dart';
 import 'package:jdds/common/widgets/address_selection_bottom_sheet.dart';
+import 'package:jdds/feature/home/widget/radius_search_bottom_sheet.dart';
 import 'package:jdds/util/core_export.dart';
 
-/// Progressive radius search flow - OPTIMIZED FOR SPEED.
+/// ⚡ ULTRA-FAST Progressive radius search - NO BLOCKING CALLS
 /// Niyam:
-///  1. Har location par pehle zone/initial radius (server default) se search.
-///  2. Agar current radius me koi provider/serviceman NA mile → popup:
-///     "Service not available at your location" + [Search with more radius].
-///  3. Expand karne par radius `initial` (step) se badhta hai, max admin
-///     setting (`max_search_radius`) tak — har expansion par dobara check.
-///  4. Max tak kuch na mile → final "not available" popup.
-///  5. Location change hote hi radius state reset + Home/Services refresh.
+///  1. Default values used immediately (5km initial, 50km max)
+///  2. Config fetched in BACKGROUND - never blocks popup
+///  3. Agar current radius me koi provider NA mile → popup INSTANTLY
+///  4. Expand karne par radius badhta hai, max tak
+///  5. Location change hote hi state reset + refresh
 class RadiusSearchController extends GetxService {
   final LocationRepo locationRepo;
   RadiusSearchController({required this.locationRepo});
 
-  /// Home ka service-gate (availableServiceCount) 0 tha aur radius search me
-  /// provider mil gaya → home ko full content dikhane ke liye notify karta hai.
   static final ValueNotifier<int> homeGate = ValueNotifier<int>(0);
 
-  double? _initial;
-  double? _max;
+  // DEFAULT VALUES - NO WAIT FOR API
+  double _initial = 5.0;
+  double _max = 50.0;
   double _current = 0;
   bool _checking = false;
   bool _dialogOpen = false;
   bool _dismissed = false;
   bool _finalShown = false;
   String? _locationKey;
+  bool _configFetched = false;
 
-  double get initialRadius => _initial ?? 5;
-  double get maxRadius => _max ?? 50;
+  double get initialRadius => _initial;
+  double get maxRadius => _max;
   double get currentRadius => _current;
 
-  /// Radius flow ka current state — Home inhe dekh kar decide karta hai ki
-  /// location popup khud dikhana hai ya nahi (double dialog nahi chahiye).
   bool get isDialogOpen => _dialogOpen;
   bool get wasDismissed => _dismissed;
   bool get isFinalShown => _finalShown;
@@ -45,32 +42,66 @@ class RadiusSearchController extends GetxService {
     return '${lat}_${lng}_${address.zoneId ?? ''}';
   }
 
-  /// Naye address save hone par (LocationController.saveUserAddress se).
-  /// Sirf tab reset + refresh jab actually location/zone badla ho.
+  /// Naye location par config background me fetch karo
   Future<void> onAddressSaved(AddressModel address) async {
     final String key = locationKeyOf(address);
     if (key == _locationKey) return;
     resetForNewLocation();
     _locationKey = key;
+    _fetchConfigInBackground();  // Non-blocking!
     refreshServicesTab();
   }
 
   void resetForNewLocation() {
-    _initial = null;
-    _max = null;
+    _initial = 5.0;      // Reset to defaults
+    _max = 50.0;
     _current = 0;
     _checking = false;
     _dialogOpen = false;
     _dismissed = false;
     _finalShown = false;
     _locationKey = null;
+    _configFetched = false;
     SearchRadiusState.activeRadius = null;
     SearchRadiusState.initialRadius = null;
     SearchRadiusState.maxRadius = null;
     homeGate.value = 0;
   }
 
-  /// Services tab ki data (categories + service list) turant refresh.
+  /// Background fetch - NO AWAIT, NO BLOCKING
+  void _fetchConfigInBackground() {
+    if (_configFetched) return;
+    _configFetched = true;
+    
+    // Fire and forget
+    Future(() async {
+      try {
+        final Response response = await locationRepo.getSearchRadius().timeout(
+          const Duration(milliseconds: 1500),  // Fast timeout
+          onTimeout: () => Response(statusCode: 408),
+        );
+        
+        if (response.statusCode == 200 &&
+            response.body is Map &&
+            response.body['response_code'] == 'default_200') {
+          final dynamic content = response.body['content'];
+          if (content is Map) {
+            double initial = (content['initial_radius'] as num?)?.toDouble() ?? 5;
+            double max = (content['max_radius'] as num?)?.toDouble() ?? 50;
+            if (initial > 0 && max >= initial) {
+              _initial = initial;
+              _max = max;
+              SearchRadiusState.initialRadius = initial;
+              SearchRadiusState.maxRadius = max;
+            }
+          }
+        }
+      } catch (_) {
+        // Use defaults - already set
+      }
+    });
+  }
+
   static void refreshServicesTab() {
     if (Get.isRegistered<CategoryController>()) {
       Get.find<CategoryController>().getCategoryList(true);
@@ -87,13 +118,12 @@ class RadiusSearchController extends GetxService {
     }
   }
 
-  /// ✅ OPTIMIZED - NO DELAYS - Check immediately and show popup fast
+  /// ⚡ INSTANT - No config fetch, uses defaults
   Future<void> checkAvailabilityAndPrompt() async {
     if (_checking || _dialogOpen || _dismissed || _finalShown) return;
     if (!Get.isRegistered<LocationController>()) return;
 
-    final AddressModel? address =
-        Get.find<LocationController>().getUserAddress();
+    final AddressModel? address = Get.find<LocationController>().getUserAddress();
     if (address == null) return;
 
     final double lat = double.tryParse(address.latitude ?? '') ?? 0;
@@ -104,77 +134,58 @@ class RadiusSearchController extends GetxService {
     if (key != _locationKey) {
       resetForNewLocation();
       _locationKey = key;
+      _fetchConfigInBackground();
     }
 
     _checking = true;
     try {
-      // Fetch config with timeout (don't block forever)
-      if (!await _ensureConfig()) {
-        // Use defaults if config fetch fails
-        _initial = 5;
-        _max = 50;
-      }
-
-      // Recheck location hasn't changed
-      if (_locationKey != key) {
-        _checking = false;
-        return;
-      }
-
-      // Setup current radius
+      // Setup radius IMMEDIATELY using defaults
       if (_current <= 0) {
         _current = initialRadius;
         SearchRadiusState.activeRadius = _current;
       }
 
-      // IMMEDIATELY check providers - NO DELAY
+      // Check providers
       final bool? found = await _providersWithinCurrentRadius();
       
       if (found == null) {
-        // Check failed (offline) - abort
         _checking = false;
         return;
       }
       
       if (_locationKey != key) {
-        // Location changed during check
         _checking = false;
         return;
       }
 
       if (found) {
-        // Service found! Open gate and exit
         _openHomeGateIfZoneEmpty(address);
         _checking = false;
         return;
       }
 
-      // Service NOT found - show progressive popup
-
-      // Check guards again
+      // NOT FOUND - SHOW POPUP IMMEDIATELY
       if (_dialogOpen || _dismissed || _finalShown) {
         _checking = false;
         return;
       }
 
       if (_current >= maxRadius) {
-        // Max radius reached - show final dialog
         _finalShown = true;
         _showFinalDialog();
         _checking = false;
         return;
       }
 
-      // Show expand dialog
+      // Calculate next radius
       final double step = initialRadius;
-      final double next = (_current + step) > maxRadius 
-          ? maxRadius 
-          : (_current + step);
+      final double next = (_current + step) > maxRadius ? maxRadius : (_current + step);
 
       _dialogOpen = true;
       _checking = false;
       
-      RadiusSearchDialog.show(
+      // 🔥 POPUP SHOWS INSTANTLY - NO WAIT
+      RadiusSearchBottomSheet.show(
         currentRadius: _current,
         nextRadius: next,
         step: step,
@@ -185,6 +196,11 @@ class RadiusSearchController extends GetxService {
           SearchRadiusState.activeRadius = next;
           unawaited(_reloadAfterRadiusChange(address));
           unawaited(checkAvailabilityAndPrompt());
+        },
+        onSetManually: () {
+          _dialogOpen = false;
+          _dismissed = true;
+          _navigateToLocationScreen();
         },
         onDismiss: () {
           _dialogOpen = false;
@@ -197,35 +213,7 @@ class RadiusSearchController extends GetxService {
     }
   }
 
-  /// ✅ OPTIMIZED - Fetch config with timeout
-  Future<bool> _ensureConfig() async {
-    if (_initial != null && _max != null) return true;
-    try {
-      final Response response = await locationRepo.getSearchRadius();
-      if (response.statusCode == 200 &&
-          response.body is Map &&
-          response.body['response_code'] == 'default_200') {
-        final dynamic content = response.body['content'];
-        double initial = 5;
-        double max = 50;
-        if (content is Map) {
-          initial = (content['initial_radius'] as num?)?.toDouble() ?? 5;
-          max = (content['max_radius'] as num?)?.toDouble() ?? 50;
-        }
-        if (initial <= 0) initial = 5;
-        if (max < initial) max = initial;
-        _initial = initial;
-        _max = max;
-        SearchRadiusState.initialRadius = initial;
-        SearchRadiusState.maxRadius = max;
-        return true;
-      }
-    } catch (_) {}
-    return false;
-  }
-
-  /// null = check fail (offline); true/false = asli result.
-  /// ✅ FAST - minimal data transfer
+  /// Fast provider check - 1 API call
   Future<bool?> _providersWithinCurrentRadius() async {
     try {
       final Response response = await locationRepo.apiClient.postData(
@@ -235,12 +223,12 @@ class RadiusSearchController extends GetxService {
           'offset': 1,
           'radius': _current,
         },
-      );
+      ).timeout(const Duration(seconds: 5));
+      
       if (response.statusCode != 200) return null;
       final dynamic body = response.body;
-      if (body is! Map || body['response_code'] != 'default_200') {
-        return null;
-      }
+      if (body is! Map || body['response_code'] != 'default_200') return null;
+      
       final dynamic content = body['content'];
       if (content is Map && content['data'] is List) {
         return (content['data'] as List).isNotEmpty;
@@ -252,8 +240,6 @@ class RadiusSearchController extends GetxService {
     }
   }
 
-  /// Zone me count 0 tha (ServiceNotAvailableScreen) par radius search me
-  /// provider mil gaya → gate khol do taaki Home full content dikhaye.
   void _openHomeGateIfZoneEmpty(AddressModel address) {
     if ((address.availableServiceCountInZone ?? 0) > 0) return;
     address.availableServiceCountInZone = 1;
@@ -275,7 +261,7 @@ class RadiusSearchController extends GetxService {
 
   void _showFinalDialog() {
     _dialogOpen = true;
-    RadiusSearchDialog.showFinal(
+    RadiusSearchBottomSheet.showFinal(
       radius: maxRadius,
       maxRadius: maxRadius,
       onDismiss: () {
@@ -292,6 +278,25 @@ class RadiusSearchController extends GetxService {
           );
         } catch (_) {}
       },
+      onSetManually: () {
+        _dialogOpen = false;
+        _navigateToLocationScreen();
+      },
     );
+  }
+
+  void _navigateToLocationScreen() {
+    try {
+      final AddressModel? address = Get.find<LocationController>().getUserAddress();
+      Get.toNamed(
+        RouteHelper.getPickMapRoute(
+          RouteHelper.home,
+          false,
+          'false',
+          null,
+          address,
+        ),
+      );
+    } catch (_) {}
   }
 }

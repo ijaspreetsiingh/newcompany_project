@@ -1191,7 +1191,9 @@ if (!function_exists('completeBookingTransactionForPartialDigital')) {
         }
 
         //total booking amount (without commission)
-        $booking_amount_without_commission = $booking['total_booking_amount'] - $admin_commission - $booking['additional_charge'];
+        // P3 alignment: baaki sabhi flow ki tarah extra_fee provider credit se
+        // subtract (report provider_earning bhi yahi value rakhta hai).
+        $booking_amount_without_commission = $booking['total_booking_amount'] - $admin_commission - $booking['additional_charge'] - $booking['extra_fee'];
 
         //user ids (from/to)
         $admin_user_id = User::where('user_type', ADMIN_USER_TYPES[0])->first()->id;
@@ -1216,6 +1218,27 @@ if (!function_exists('completeBookingTransactionForPartialDigital')) {
                 'from_user_account' => ACCOUNT_STATES[0]['value'],
                 'to_user_account' => null
             ]);
+
+            if($booking['extra_fee'] > 0) {
+                //Admin transactions for extra fee (+received_balance) —
+                //digital/partial-CAS/repeat flows ki tarah booking fee admin ko milti hai.
+                $account = Account::where('user_id', $admin_user_id)->first();
+                $account->received_balance += $booking['extra_fee'];
+                $account->save();
+
+                Transaction::create([
+                    'ref_trx_id' => $primary_transaction['id'],
+                    'booking_id' => $booking['id'],
+                    'trx_type' => TRX_TYPE['received_extra_fee'],
+                    'debit' => 0,
+                    'credit' => $booking['extra_fee'],
+                    'balance' => $account->received_balance,
+                    'from_user_id' => $admin_user_id,
+                    'to_user_id' => $admin_user_id,
+                    'from_user_account' => ACCOUNT_STATES[1]['value'],
+                    'to_user_account' => null
+                ]);
+            }
 
             //Provider transactions (+receivable)
             $account = Account::where('user_id', $provider_user_id)->first();

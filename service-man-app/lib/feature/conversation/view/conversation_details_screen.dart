@@ -55,6 +55,7 @@ class _ConversationDetailsScreenState extends State<ConversationDetailsScreen> {
             fromNotification: widget.formNotification,
             name: widget.name, phone: phone, image: widget.image,
             userType: widget.userType,
+            channelId: widget.channelID,
           ),
 
           Expanded(child: GetBuilder<ConversationController>( builder: (conversationController) {

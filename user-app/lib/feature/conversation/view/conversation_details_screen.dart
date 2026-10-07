@@ -1,4 +1,4 @@
-import 'package:jdds/common/widgets/custom_pop_widget.dart';
+﻿import 'package:jdds/common/widgets/custom_pop_widget.dart';
 import 'package:jdds/feature/conversation/widgets/conversation_bubble_widget.dart';
 import 'package:jdds/feature/conversation/widgets/conversation_details_appbar.dart';
 import 'package:jdds/feature/conversation/widgets/conversation_details_shimmer.dart';
@@ -74,6 +74,7 @@ class _ConversationDetailsScreenState extends State<ConversationDetailsScreen> {
             fromNotification: widget.formNotification,
             name: widget.name, phone: phone, image: widget.image,
             userType: widget.userType,
+            channelId: widget.channelID,
           ),
         ),
 

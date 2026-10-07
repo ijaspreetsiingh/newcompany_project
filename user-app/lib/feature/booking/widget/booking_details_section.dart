@@ -89,7 +89,7 @@ class BookingDetailsSection extends StatelessWidget {
                     backgroundColor: Theme.of(context).colorScheme.primary, onPressed: () {
                       BookingDetailsContent bookingDetailsContent = bookingDetailsController.bookingDetailsContent!;
 
-                      if (bookingDetailsContent.provider != null ) {
+                      if (bookingDetailsContent.provider != null || bookingDetailsContent.serviceman != null) {
                         showModalBottomSheet( useRootNavigator: true, isScrollControlled: true,
                           backgroundColor: Colors.transparent, context: context, builder: (context) => CreateChannelDialog(
                            isSubBooking: isSubBooking,

@@ -66,6 +66,13 @@ class AppConstants {
   static const String searchChannelListUrl = '/api/v1/partner/inbox/thread-lookup';
   static const String getConversationUrl = '/api/v1/partner/inbox/thread';
   static const String sendMessageUrl = '/api/v1/partner/inbox/transmit-note';
+  static const String callInitiateUrl = '/api/v1/partner/inbox/call/initiate';
+  static const String callRespondUrl = '/api/v1/partner/inbox/call/respond';
+  static const String callEndUrl = '/api/v1/partner/inbox/call/end';
+  static const String callActiveUrl = '/api/v1/partner/inbox/call/active';
+  static const String callStatusUrl = '/api/v1/partner/inbox/call/status';
+  static const String callTokenUrl = '/api/v1/partner/inbox/call/token';
+  static const String callHistoryUrl = '/api/v1/partner/inbox/call/history';
   static const String getServiceReviewList = '/api/v1/partner/task/feedback';
   static const String getProviderReviewList = '/api/v1/partner/feedback';
   static const String reviewReply = '/api/v1/partner/feedback-response';

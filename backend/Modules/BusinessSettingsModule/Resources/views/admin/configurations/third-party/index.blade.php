@@ -23,6 +23,7 @@
 
                     @include('businesssettingsmodule::admin.configurations.third-party.map')
                     @include('businesssettingsmodule::admin.configurations.third-party.recaptcha')
+                    @include('businesssettingsmodule::admin.configurations.third-party.agora')
                     @include('businesssettingsmodule::admin.configurations.third-party.apple-login')
                     @include('businesssettingsmodule::admin.configurations.third-party.config-email')
                     @include('businesssettingsmodule::admin.configurations.third-party.config-sms')

@@ -25,6 +25,10 @@ class ConversationRepo {
     });
   }
 
+  Future<Response> getBookingServiceName(String bookingId) async {
+    return await apiClient.getData('${AppConstants.bookingDetailsUrl}$bookingId');
+  }
+
 
   Future<Response> getChannelListBasedOnReferenceId(int offset,String referenceID) async {
     return await apiClient.getData('${AppConstants.getChannelListUrl}offset=$offset&reference_id=$referenceID&reference_type=booking_id');

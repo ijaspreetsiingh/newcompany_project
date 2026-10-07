@@ -70,6 +70,7 @@ class ChannelItem extends StatelessWidget {
 
     final bool isUnread = isRead == 0;
     final String time = _relativeTime(channelData.updatedAt ?? conversationUser.updatedAt);
+    final String? serviceName = Get.find<ConversationController>().serviceNameForChannel(channelData);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -129,6 +130,19 @@ class ChannelItem extends StatelessWidget {
                 ],
               ],),
               const SizedBox(height: 4),
+              if (serviceName != null) ...[
+                Text(
+                  serviceName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    height: 1.3,
+                    color: InkColors.mutedForeground,
+                  ),
+                ),
+                const SizedBox(height: 3),
+              ],
               if (lastMessage != null)
                 Text(
                   lastMessage.capitalizeFirst ?? "",

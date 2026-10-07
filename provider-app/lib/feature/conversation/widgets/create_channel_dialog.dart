@@ -3,7 +3,10 @@ import 'package:demandium_provider/util/core_export.dart';
 
 class CreateChannelDialog extends StatefulWidget {
   final bool isSubBooking;
-  const CreateChannelDialog({super.key, required this.isSubBooking,});
+
+  /// 'customer' | 'serviceman' | null (dono buttons)
+  final String? target;
+  const CreateChannelDialog({super.key, required this.isSubBooking, this.target});
   @override
   State<CreateChannelDialog> createState() => _ProductBottomSheetState();
 }
@@ -24,9 +27,18 @@ class _ProductBottomSheetState extends State<CreateChannelDialog> {
         BookingDetailsServiceman? serviceman = bookingDetails?.serviceman ?? bookingDetails?.subBooking?.serviceman;
         Customer? customer = bookingDetails?.customer ?? bookingDetails?.subBooking?.customer;
 
+        final bool showCustomer = customer != null &&
+            (widget.target == null || widget.target == 'customer');
+        final bool showServiceman = serviceman != null &&
+            (widget.target == null || widget.target == 'serviceman');
+
         String titleText = "";
 
-        if(serviceman != null && customer != null){
+        if(widget.target == 'customer'){
+          titleText = "make_conversation_with_customer";
+        } else if(widget.target == 'serviceman'){
+          titleText = "make_conversation_with_serviceman";
+        } else if(serviceman != null && customer != null){
           titleText = "make_conversation_with_customer_and_serviceman";
         } else if(serviceman != null){
           titleText = "make_conversation_with_serviceman";
@@ -68,7 +80,7 @@ class _ProductBottomSheetState extends State<CreateChannelDialog> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
 
-                                customer != null ? TextButton(
+                                showCustomer ? TextButton(
                                   onPressed:(){
                                     Get.back();
                                     String? customerId = customer.id;
@@ -94,7 +106,7 @@ class _ProductBottomSheetState extends State<CreateChannelDialog> {
                                 ):const SizedBox.shrink(),
                                 const SizedBox(width: Dimensions.paddingSizeLarge),
 
-                                serviceman != null ?
+                                serviceman != null && showServiceman ?
                                 TextButton(
                                   onPressed:(){
                                     Get.back();

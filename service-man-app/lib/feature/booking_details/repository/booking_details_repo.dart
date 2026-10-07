@@ -17,7 +17,7 @@ class BookingDetailsRepo{
   }
 
   Future<Response> changePaymentStatus(String bookingID,String paymentStatus) async {
-    return await apiClient.postData("${AppConstants.paymentStatusUpdate}/$bookingID",{'payment_status':paymentStatus,'_method':'put'});
+    return await apiClient.putData("${AppConstants.paymentStatusUpdate}/$bookingID",{'payment_status':paymentStatus});
   }
 
   Future<Response> getServiceListBasedOnSubcategory(String subCategoryId) async {
@@ -34,8 +34,7 @@ class BookingDetailsRepo{
   }
 
   Future<Response> removeCartServiceFromServer({CartModel? cart , String? bookingId, String? zoneId}){
-    return apiClient.postData(AppConstants.removeCartServiceFromServer, {
-      "_method" : "put",
+    return apiClient.putData(AppConstants.removeCartServiceFromServer, {
       "booking_id" : bookingId,
       "zone_id" : zoneId,
       "variant_key" : cart?.variantKey,
@@ -44,8 +43,7 @@ class BookingDetailsRepo{
   }
 
   Future<Response> updateBooking({ required bool isSubBooking, String? bookingId, String? subBookingId, String? zoneId, String? paymentStatus, String? servicemanId, String? bookingStatus, String? serviceSchedule, String? serviceInfo }){
-    return apiClient.postData(isSubBooking ? AppConstants.updateSubBooking : AppConstants.updateRegularBooking, {
-      "_method" : "put",
+    return apiClient.putData(isSubBooking ? AppConstants.updateSubBooking : AppConstants.updateRegularBooking, {
       "booking_id" : bookingId,
       "booking_repeat_id": subBookingId,
       "zone_id" : zoneId,

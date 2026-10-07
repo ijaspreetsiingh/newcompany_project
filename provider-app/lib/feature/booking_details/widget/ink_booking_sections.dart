@@ -60,11 +60,13 @@ class InkPillButton extends StatelessWidget {
                     Icon(icon, size: fontSize + 3, color: fg),
                     const SizedBox(width: 6),
                   ],
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: robotoSemiBold.copyWith(fontSize: fontSize, color: fg),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: robotoSemiBold.copyWith(fontSize: fontSize, color: fg),
+                    ),
                   ),
                 ],
               ),
@@ -219,16 +221,45 @@ class InkBookingCustomerCard extends StatelessWidget {
                     icon: Icons.call_rounded,
                     onTap: phone.isEmpty
                         ? null
-                        : () async {
-                            try {
-                              final bool ok = await launchUrl(Uri(scheme: 'tel', path: phone), mode: LaunchMode.externalApplication);
-                              if (!ok) {
-                                showCustomSnackBar('something_went_wrong'.tr, type: ToasterMessageType.error);
-                              }
-                            } catch (_) {
-                              showCustomSnackBar('something_went_wrong'.tr, type: ToasterMessageType.error);
+                        : () {
+                            final String? customerId = bookingDetails.customerId;
+                            if (customerId != null && customerId.isNotEmpty) {
+                              Get.find<CallController>().startCall(
+                                calleeId: customerId,
+                                callType: 'voice',
+                                bookingId: bookingDetails.id,
+                                name: name,
+                                phone: phone,
+                              );
+                            } else {
+                              launchUrl(Uri(scheme: 'tel', path: phone), mode: LaunchMode.externalApplication);
                             }
                           },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: InkPillButton(
+                    label: "Chat",
+                    icon: Icons.chat_bubble_outline_rounded,
+                    onTap: (bookingDetails.customerId?.isNotEmpty ?? false) ||
+                            bookingDetails.customer != null
+                        ? () {
+                            final String? chatUserId =
+                                bookingDetails.customerId?.isNotEmpty ?? false
+                                    ? bookingDetails.customerId
+                                    : bookingDetails.customer?.id;
+                            if (chatUserId == null || chatUserId.isEmpty) return;
+                            Get.find<ConversationController>().createChannel(
+                              userID: chatUserId,
+                              referenceID: bookingDetails.id,
+                              name: name,
+                              image: bookingDetails.customer?.profileImageFullPath ?? '',
+                              phone: phone,
+                              userType: 'customer',
+                            );
+                          }
+                        : null,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -515,11 +546,14 @@ class InkAssignServicemanSection extends StatelessWidget {
       final BookingDetailsController bookingDetailsController = Get.find<BookingDetailsController>();
 
       final String? assignedServicemanId = bookingDetails.servicemanId;
-      final String assignedName = bookingDetails.serviceman?.user != null
-          ? "${bookingDetails.serviceman!.user!.firstName ?? ''} ${bookingDetails.serviceman!.user!.lastName ?? ''}".trim()
+      final BookingDetailsServiceman? assignedSM =
+          bookingDetails.serviceman ?? bookingDetails.subBooking?.serviceman;
+      final String assignedName = assignedSM?.user != null
+          ? "${assignedSM!.user!.firstName ?? ''} ${assignedSM.user!.lastName ?? ''}".trim()
           : "";
-      final String assignedPhone = bookingDetails.serviceman?.user?.phone ?? "";
-      final String assignedRole = bookingDetails.serviceman?.user?.userType ?? "";
+      final String assignedPhone = assignedSM?.user?.phone ?? "";
+      final String assignedRole = assignedSM?.user?.userType ?? "";
+      final String? assignedUserId = assignedSM?.userId;
 
       bool canReassign = bookingDetails.bookingStatus == "accepted" || bookingDetails.bookingStatus == "ongoing";
       bool reAssignServiceman = isSubBooking
@@ -583,6 +617,25 @@ class InkAssignServicemanSection extends StatelessWidget {
             assigned: true,
             enabled: canReassign,
             onTap: canReassign ? openAssignSheet : null,
+            onCall: (assignedUserId?.isNotEmpty ?? false)
+                ? () => Get.find<CallController>().startCall(
+                      calleeId: assignedUserId!,
+                      callType: 'voice',
+                      bookingId: bookingDetails.id,
+                      name: assignedName,
+                      phone: assignedPhone,
+                    )
+                : null,
+            onChat: (assignedUserId?.isNotEmpty ?? false)
+                ? () => Get.find<ConversationController>().createChannel(
+                      userID: assignedUserId,
+                      referenceID: bookingDetails.id,
+                      name: assignedName,
+                      image: assignedSM?.user?.profileImageFullPath ?? '',
+                      phone: assignedPhone,
+                      userType: 'serviceman',
+                    )
+                : null,
           ));
         }
         for (int i = 0; i < shownList.length; i++) {
@@ -627,6 +680,8 @@ class _ServicemanRow extends StatelessWidget {
   final bool assigned;
   final bool enabled;
   final VoidCallback? onTap;
+  final VoidCallback? onCall;
+  final VoidCallback? onChat;
 
   const _ServicemanRow({
     required this.name,
@@ -634,7 +689,29 @@ class _ServicemanRow extends StatelessWidget {
     required this.assigned,
     required this.enabled,
     this.onTap,
+    this.onCall,
+    this.onChat,
   });
+
+  Widget _miniAction(IconData icon, VoidCallback? onTap) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 30,
+          width: 30,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: InkColors.mutedForeground.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            size: 15,
+            color: onTap != null
+                ? InkColors.foreground
+                : InkColors.mutedForeground.withValues(alpha: 0.4),
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -664,6 +741,12 @@ class _ServicemanRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
+          if (onCall != null || onChat != null) ...[
+            if (onCall != null) _miniAction(Icons.call_outlined, onCall),
+            const SizedBox(width: 6),
+            if (onChat != null) _miniAction(Icons.chat_bubble_outline_rounded, onChat),
+            const SizedBox(width: 6),
+          ],
           assigned
               ? GestureDetector(
                   onTap: onTap,

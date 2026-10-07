@@ -139,6 +139,9 @@ export 'package:demandium_provider/feature/dashboard/widgets/dashboard_shimmer.d
 export 'package:shimmer_animation/shimmer_animation.dart';
 export 'package:demandium_provider/feature/dashboard/widgets/subscription_item.dart';
 export 'package:demandium_provider/feature/conversation/controller/conversation_controller.dart';
+export 'package:demandium_provider/feature/conversation/controller/call_controller.dart';
+export 'package:demandium_provider/feature/conversation/model/call_model.dart';
+export 'package:demandium_provider/feature/conversation/repo/call_repo.dart';
 export 'package:demandium_provider/feature/conversation/repo/conversation_repo.dart';
 export 'package:demandium_provider/feature/conversation/model/channel_model.dart';
 export 'package:demandium_provider/feature/conversation/model/conversation_model.dart';

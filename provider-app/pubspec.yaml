@@ -66,6 +66,8 @@ dependencies:
   syncfusion_flutter_calendar: ^33.1.45
   loading_animation_widget: ^1.3.0
   flutter_svg: ^2.0.0
+  agora_rtc_engine: ^6.3.2
+  audioplayers: ^6.1.0
 
 
 
@@ -81,6 +83,7 @@ flutter:
     - assets/images/
     - assets/language/
     - assets/icons/
+    - assets/sounds/
 
   fonts:
     - family: Ubuntu

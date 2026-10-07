@@ -6,7 +6,13 @@ import 'package:get/get.dart';
 class AreaMapViewScreen extends StatefulWidget {
   final List<ZoneModel> zoneList;
   final Function(bool)? onValueChanged;
-  const AreaMapViewScreen({super.key, required this.zoneList,  this.onValueChanged});
+  final Function(ZoneModel)? onZoneSelected;
+  const AreaMapViewScreen({
+    super.key,
+    required this.zoneList,
+    this.onValueChanged,
+    this.onZoneSelected,
+  });
   @override
   State<AreaMapViewScreen> createState() => _AreaMapViewScreenState();
 }
@@ -77,7 +83,7 @@ class _AreaMapViewScreenState extends State<AreaMapViewScreen> {
                           minZoom: 0,
                           maxZoom: 16,
                           onMapReady: () {
-                            serviceAreaController.setMarker(widget.zoneList, globalKeyMap).then((value) {
+                            serviceAreaController.setMarker(widget.zoneList, globalKeyMap, widget.onZoneSelected).then((value) {
                               if (_mapController != null) {
                                 serviceAreaController.mapBound(_mapController!);
                               }

@@ -266,7 +266,7 @@ class ProfileScreen extends StatelessWidget {
         MenuGroupItem(
           icon: Icons.help_outline_rounded,
           label: 'help_support'.tr,
-          onTap: () => Get.toNamed(RouteHelper.getInboxScreenRoute()),
+          onTap: () => Get.toNamed(RouteHelper.getSupportScreenRoute()),
         ),
       ],
     );

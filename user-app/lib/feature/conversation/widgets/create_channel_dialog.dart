@@ -3,7 +3,10 @@ import 'package:jdds/util/core_export.dart';
 
 class CreateChannelDialog extends StatefulWidget {
   final bool isSubBooking;
-  const CreateChannelDialog({super.key, required this.isSubBooking,});
+
+  /// 'provider' | 'serviceman' | null (dono buttons)
+  final String? target;
+  const CreateChannelDialog({super.key, required this.isSubBooking, this.target});
 
   @override
   State<CreateChannelDialog> createState() => _ProductBottomSheetState();
@@ -38,6 +41,11 @@ class _ProductBottomSheetState extends State<CreateChannelDialog> {
 
         ProviderData ? provider = bookingDetails?.provider;
         Serviceman ? serviceman = bookingDetails?.serviceman;
+
+        final bool showProvider = provider != null &&
+            (widget.target == null || widget.target == 'provider');
+        final bool showServiceman = serviceman != null &&
+            (widget.target == null || widget.target == 'serviceman');
 
         return Container(
           width: Dimensions.webMaxWidth,
@@ -84,7 +92,9 @@ class _ProductBottomSheetState extends State<CreateChannelDialog> {
                     ),
                     child: Column(mainAxisAlignment: MainAxisAlignment.start, crossAxisAlignment: CrossAxisAlignment.center, children: [
 
-                      Text(provider != null && serviceman != null ? 'create_channel_with_provider'.tr :
+                      Text(widget.target == 'provider' ? 'conversation_with_provider'.tr :
+                        widget.target == 'serviceman' ? 'conversation_with_serviceman'.tr :
+                        provider != null && serviceman != null ? 'create_channel_with_provider'.tr :
                         provider != null ? 'conversation_with_provider'.tr :
                         serviceman != null ? 'conversation_with_serviceman'.tr : "",
                         style: robotoMedium,
@@ -92,11 +102,11 @@ class _ProductBottomSheetState extends State<CreateChannelDialog> {
                       const SizedBox(height: Dimensions.paddingSizeLarge,),
 
                       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        if(provider != null)
+                        if(showProvider)
                           TextButton(
                             onPressed:(){
                               if(provider.chatEligibility == true){
-                                String name = provider.companyName!;
+                                String name = provider.companyName ?? provider.contactPersonName ?? '';
                                 String image = provider.logoFullPath ?? "";
                                 String phone = provider.companyPhone??"";
                                 Get.find<ConversationController>().createChannel(provider.userId!, bookingDetails?.id ?? "",name: name,image: image,fromBookingDetailsPage: true,phone: phone,userType: "provider");
@@ -112,7 +122,7 @@ class _ProductBottomSheetState extends State<CreateChannelDialog> {
                             child: Text('zone_admin'.tr, textAlign: TextAlign.center, style: robotoBold.copyWith(color: Theme.of(context).textTheme.bodyLarge!.color),),
                           ),
                         const SizedBox(width: Dimensions.paddingSizeLarge),
-                        if(serviceman != null)
+                        if(showServiceman)
                           TextButton(
                             onPressed:(){
                               String name = "${serviceman.user?.firstName ??""}"

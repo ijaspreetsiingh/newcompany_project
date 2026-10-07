@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:demandium_serviceman/common/widgets/maintenance_screen.dart';
 import 'package:demandium_serviceman/feature/conversation/view/conversation_list_screen.dart';
+import 'package:demandium_serviceman/feature/support/support_screen.dart';
 import 'package:get/get.dart';
 import 'package:demandium_serviceman/utils/core_export.dart';
 
@@ -28,6 +29,7 @@ class RouteHelper {
   static const String forgotPassword = '/forgot-password';
   static const String changePassword = '/change-password';
   static const String maintenanceRoute = '/maintenance-screen';
+  static const String supportScreen = '/help-and-support';
 
 
   static String getInitialRoute() => initial;
@@ -72,6 +74,7 @@ class RouteHelper {
 
   static String getNotificationRoute() => notification;
   static String getMaintenanceRoute() => maintenanceRoute;
+  static String getSupportScreenRoute() => supportScreen;
 
 
   static List<GetPage> routes = [
@@ -149,6 +152,7 @@ class RouteHelper {
     )),
     GetPage(name: update, page: () => UpdateScreen(isUpdate: Get.parameters['update'] == 'true')),
     GetPage(name: maintenanceRoute, page: () => const MaintenanceScreen()),
+    GetPage(name: supportScreen, page: () => const SupportScreen()),
   ];
 
   static Widget getRoute(Widget navigateTo) {

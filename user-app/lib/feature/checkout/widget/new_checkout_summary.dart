@@ -10,7 +10,6 @@ class NewCheckoutSummary extends StatelessWidget {
       return GetBuilder<ScheduleController>(builder: (scheduleController) {
         return GetBuilder<CartController>(builder: (cartController) {
           int scheduleDaysCount = scheduleController.scheduleDaysCount > 0 ? scheduleController.scheduleDaysCount : 1;
-          ConfigModel configModel = Get.find<SplashController>().configModel;
           List<CartModel> cartList = cartController.cartList;
           bool walletPaymentStatus = cartController.walletPaymentStatus;
           int applicableCouponCount = CheckoutHelper.getNumberOfDaysForApplicableCoupon(pickedScheduleDays: scheduleDaysCount) ?? 1;
@@ -81,7 +80,7 @@ class NewCheckoutSummary extends StatelessWidget {
                 if (referDisCount > 0) _buildPriceRow('referral_discount'.tr, referDisCount, context, isDiscount: true),
                 _buildPriceRow('vat'.tr, vat, context),
                 if (CheckoutHelper.shouldShowAdditionalCharge())
-                  _buildPriceRow(configModel.content?.additionalChargeLabelName ?? '', additionalCharge, context),
+                  _buildPriceRow(CheckoutHelper.getAdditionalChargeLabel(), additionalCharge, context),
 
                 const Divider(height: 24),
 

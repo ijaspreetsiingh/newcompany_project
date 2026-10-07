@@ -252,9 +252,17 @@ class ConfigController extends Controller
         $digitalPayment = ((int) ((business_config('digital_payment', 'service_setup'))->live_values ?? 0)
             && count($payment_gateways) > 0) ? 1 : 0;
 
-        $bookingAdditionalCharge = $provider !== null && providerBookingFee($provider) !== null
-            ? 1
+        $providerFee = providerBookingFee($provider);
+        $bookingAdditionalCharge = $providerFee !== null
+            ? ($providerFee > 0 ? 1 : 0)
             : (int) (business_config('booking_additional_charge', 'booking_setup')?->live_values ?? 0);
+
+        $providerTaxPercent = null;
+        if (providerIsIndependent($provider)
+            && $provider->tax_percent !== null
+            && $provider->tax_percent !== '') {
+            $providerTaxPercent = (float) $provider->tax_percent;
+        }
 
         return response()->json(response_formatter(DEFAULT_200, [
             'provider_id' => $provider?->id,
@@ -265,8 +273,10 @@ class ConfigController extends Controller
             'wallet_payment' => $walletPayment,
             'offline_payment' => $offlinePayment,
             'booking_additional_charge' => $bookingAdditionalCharge,
-            'additional_charge_label_name' => (string) (business_config('additional_charge_label_name', 'booking_setup')?->live_values ?? ''),
+            'additional_charge_label_name' => providerBookingFeeLabel($provider)
+                ?? (string) (business_config('additional_charge_label_name', 'booking_setup')?->live_values ?? ''),
             'additional_charge_fee_amount' => bookingExtraFee($provider),
+            'provider_tax_percent' => $providerTaxPercent,
         ]), 200);
     }
 

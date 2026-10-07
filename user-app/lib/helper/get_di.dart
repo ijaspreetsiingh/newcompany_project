@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:jdds/api/local/cache_response.dart';
 import 'package:jdds/common/repo/data_sync_repo.dart';
 import 'package:jdds/feature/auth/controller/facebook_login_controller.dart';
@@ -12,31 +12,32 @@ Future<Map<String, Map<String, String>>> intt() async {
 
   final sharedPreferences = await SharedPreferences.getInstance();
 
-  Get.lazyPut(() => sharedPreferences);
+  Get.lazyPut(() => sharedPreferences, fenix: true);
 
   /// Repository
-  Get.lazyPut(() => DataSyncRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => CategoryRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => BannerRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => WebLandingRepo(apiClient: Get.find(), sharedPreferences:  Get.find()));
-  Get.lazyPut(() => AdvertisementRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => ServiceRepo(apiClient:Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => CampaignRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => ProviderBookingRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => SplashRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => AuthRepo(sharedPreferences:Get.find(),apiClient: Get.find()));
-  Get.lazyPut(() => DataSyncRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => UserRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => CouponRepo(apiClient: Get.find()));
-  Get.lazyPut(() => CreatePostRepo(apiClient: Get.find()));
-  Get.lazyPut(() => CheckoutRepo(apiClient: Get.find()));
-  Get.lazyPut(() => ConversationRepo(apiClient: Get.find()));
-  Get.lazyPut(() => HtmlRepository(apiClient: Get.find()));
-  Get.lazyPut(() => MyFavoriteRepo(apiClient: Get.find()));
-  Get.lazyPut(() => SearchRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => NotificationRepo(apiClient:Get.find() , sharedPreferences: Get.find()));
-  Get.lazyPut(() => ServiceBookingRepo(sharedPreferences:Get.find(),apiClient: Get.find()));
-  Get.lazyPut(() => BookingDetailsRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
+  Get.lazyPut(() => DataSyncRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => CategoryRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => BannerRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => WebLandingRepo(apiClient: Get.find(), sharedPreferences:  Get.find()), fenix: true);
+  Get.lazyPut(() => AdvertisementRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => ServiceRepo(apiClient:Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => CampaignRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => ProviderBookingRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => SplashRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => AuthRepo(sharedPreferences:Get.find(),apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => DataSyncRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => UserRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => CouponRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => CreatePostRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => CheckoutRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => ConversationRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => CallRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => HtmlRepository(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => MyFavoriteRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => SearchRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => NotificationRepo(apiClient:Get.find() , sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => ServiceBookingRepo(sharedPreferences:Get.find(),apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => BookingDetailsRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
 
 
 
@@ -60,6 +61,7 @@ Future<Map<String, Map<String, String>>> intt() async {
   Get.lazyPut(() => CreatePostController(createPostRepo: Get.find()));
   Get.lazyPut(() => CheckOutController(checkoutRepo: Get.find()));
   Get.lazyPut(() => ConversationController(conversationRepo: Get.find()));
+  Get.lazyPut(() => CallController(callRepo: Get.find()), fenix: true);
   Get.lazyPut(() => HtmlViewController(htmlRepository: Get.find()));
   Get.lazyPut(() => MyFavoriteController(myFavoriteRepo: Get.find()));
   Get.lazyPut(() => AllSearchController(searchRepo: Get.find()));
@@ -70,7 +72,7 @@ Future<Map<String, Map<String, String>>> intt() async {
   Get.lazyPut(() => NewBookingController());
 
 
-  Get.lazyPut(() => ApiClient(appBaseUrl: AppConstants.baseUrl, sharedPreferences: Get.find()));
+  Get.lazyPut(() => ApiClient(appBaseUrl: AppConstants.baseUrl, sharedPreferences: Get.find()), fenix: true);
 
 
 

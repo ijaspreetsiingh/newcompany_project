@@ -524,11 +524,7 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
                                   padding: const EdgeInsets.only(top: 12),
                                   child: _priceRow(
                                     context,
-                                    Get.find<SplashController>()
-                                            .configModel
-                                            .content
-                                            ?.additionalChargeLabelName ??
-                                        '',
+                                    CheckoutHelper.getAdditionalChargeLabel(),
                                     PriceConverter.convertPrice(
                                         CheckoutHelper.getAdditionalCharge()),
                                   ),

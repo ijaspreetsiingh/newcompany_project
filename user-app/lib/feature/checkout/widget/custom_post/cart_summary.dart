@@ -8,7 +8,6 @@ class CustomPostCartSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ConfigModel configModel = Get.find<SplashController>().configModel;
     double additionalCharge = CheckoutHelper.getAdditionalCharge();
     return  Column(
       children: [
@@ -49,7 +48,7 @@ class CustomPostCartSummary extends StatelessWidget {
             CheckoutHelper.shouldShowAdditionalCharge() ?
             GetBuilder<CheckOutController>(builder: (controller){
               return  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,children: [
-                Text(configModel.content?.additionalChargeLabelName ?? "",style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall,
+                Text(CheckoutHelper.getAdditionalChargeLabel(),style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall,
                     color: Theme.of(context).textTheme.bodyMedium!.color!.withValues(alpha: 0.5)),),
                 const SizedBox(width: Dimensions.paddingSizeDefault,),
                 Text("(+)${PriceConverter.convertPrice( additionalCharge, isShowLongPrice: true)}",style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall,

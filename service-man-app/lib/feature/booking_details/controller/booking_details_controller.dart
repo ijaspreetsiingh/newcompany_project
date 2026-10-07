@@ -144,11 +144,19 @@ class BookingDetailsController extends GetxController implements GetxService {
         }
       }
       else{
-        showCustomSnackBar(response.body['message'] ?? response.statusText);
+        showCustomSnackBar(_errorMessage(response));
       }
     }
     _isUpdate = false;
     update();
+  }
+
+  String _errorMessage(Response response) {
+    final dynamic data = response.body;
+    if (data is Map && data['message'] != null) {
+      return data['message'].toString();
+    }
+    return response.statusText?.isNotEmpty == true ? response.statusText! : 'something_went_wrong'.tr;
   }
 
   void changePaymentStatus(String bookingId,String paymentStatus) async {
@@ -156,7 +164,7 @@ class BookingDetailsController extends GetxController implements GetxService {
     if(response.statusCode == 200){
       showCustomSnackBar('successfully_paid'.tr,type : ToasterMessageType.success);
     } else {
-      showCustomSnackBar(response.body['message']);
+      showCustomSnackBar(_errorMessage(response));
     }
     update();
   }

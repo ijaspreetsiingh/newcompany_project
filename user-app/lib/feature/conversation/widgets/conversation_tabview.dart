@@ -14,27 +14,32 @@ class ConversationListTabview extends StatelessWidget {
             conversationController.isActiveSuffixIcon &&
             conversationController.isSearchComplete;
 
-        int providerCount = isSearching
-            ? (conversationController.searchedProviderChannelList?.length ?? 0)
-            : 0;
-        int servicemanCount = isSearching
-            ? (conversationController.searchedServicemanChannelList?.length ??
-                  0)
-            : 0;
+        int chatCount = isSearching
+            ? ((conversationController.searchedProviderChannelList?.length ??
+                      0) +
+                  (conversationController
+                          .searchedServicemanChannelList?.length ??
+                      0))
+            : ((conversationController.providerChannelList?.length ?? 0) +
+                  (conversationController.servicemanChannelList?.length ?? 0));
 
         void onSegmentTap(int index) {
           if (tabController != null) {
             tabController!.animateTo(index);
           }
+          if (index == 1) {
+            try {
+              Get.find<CallController>().loadHistory(reload: true);
+            } catch (_) {}
+            return;
+          }
           if (!isSearching) {
-            conversationController.getChannelList(
-              1,
-              type: index == 0 ? "provider" : "serviceman",
-            );
+            conversationController.getChannelList(1, type: 'provider');
+            conversationController.getChannelList(1, type: 'serviceman');
           }
         }
 
-        /// nest. `.tab-row` â€” underline tabs
+        /// nest. `.tab-row` — underline tabs (Chats | Calls)
         Widget tabRow(int selectedIndex) {
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -44,15 +49,15 @@ class ConversationListTabview extends StatelessWidget {
             child: Row(
               children: [
                 _SegmentItem(
-                  title: 'zone_admin'.tr,
-                  count: providerCount,
+                  title: 'chats'.tr,
+                  count: chatCount,
                   isSelected: selectedIndex == 0,
                   onTap: () => onSegmentTap(0),
                 ),
 
                 _SegmentItem(
-                  title: 'partner'.tr,
-                  count: servicemanCount,
+                  title: 'calls'.tr,
+                  count: 0,
                   isSelected: selectedIndex == 1,
                   onTap: () => onSegmentTap(1),
                 ),

@@ -50,8 +50,7 @@ class AuthRepo {
         '${AppConstants.topic}-${Get.find<UserController>().zoneId}',
       );
     }
-    return await apiClient.postData(AppConstants.tokenUri, {
-      "_method": "put",
+    return await apiClient.putData(AppConstants.tokenUri, {
       "fcm_token": deviceToken,
     });
   }
@@ -80,8 +79,7 @@ class AuthRepo {
       FirebaseMessaging.instance.unsubscribeFromTopic(
         '${AppConstants.topic}-${Get.find<UserController>().zoneId}',
       );
-      apiClient.postData(AppConstants.tokenUri, {
-        "_method": "put",
+      apiClient.putData(AppConstants.tokenUri, {
         "fcm_token": "@",
       });
     }
@@ -161,8 +159,7 @@ class AuthRepo {
       FirebaseMessaging.instance.unsubscribeFromTopic(
         '${AppConstants.topic}-${Get.find<UserController>().zoneId}',
       );
-      apiClient.postData(AppConstants.tokenUri, {
-        "_method": "put",
+      apiClient.putData(AppConstants.tokenUri, {
         "fcm_token": "@",
       });
     }

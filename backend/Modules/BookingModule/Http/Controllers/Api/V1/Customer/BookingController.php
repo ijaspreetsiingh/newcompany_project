@@ -138,7 +138,11 @@ class BookingController extends Controller
         }
 
         $minimumBookingAmount = (float)(business_config('min_booking_amount', 'booking_setup'))?->live_values;
-        $totalBookingAmount = cart_total($customerUserId) + getServiceFee();
+        // P1 fix: min-booking check par provider-specific fee (global getServiceFee ki jagah)
+        $minCheckProvider = !empty($checkoutProviderId)
+            ? \Modules\ProviderManagement\Entities\Provider::find($checkoutProviderId)
+            : null;
+        $totalBookingAmount = cart_total($customerUserId) + bookingExtraFee($minCheckProvider);
 
         if (!isset($request['post_id']) && $minimumBookingAmount > 0 && $totalBookingAmount < $minimumBookingAmount) {
             return response()->json(response_formatter(MINIMUM_BOOKING_AMOUNT_200), 200);
@@ -168,7 +172,11 @@ class BookingController extends Controller
                 ];
 
                 $user = User::find($customerUserId);
-                $tax = !is_null($data['service_tax']) ? round((($data['price'] * $data['service_tax']) / 100) * 1, 2) : 0;
+                // P2 fix: wallet check par bhi booking wala effective tax
+                // (provider tax override | service tax) — warna insufficiency galat lage.
+                $biddingWalletProvider = \Modules\ProviderManagement\Entities\Provider::find($data['provider_id']);
+                $walletTaxPercent = providerEffectiveTaxPercent($biddingWalletProvider, (float) ($data['service_tax'] ?? 0));
+                $tax = round(($data['price'] * $walletTaxPercent) / 100, 2);
                 if (isset($user) && $user->wallet_balance < ($postBid->offered_price + $tax)) {
                     return response()->json(response_formatter(INSUFFICIENT_WALLET_BALANCE_400), 400);
                 }
@@ -328,6 +336,7 @@ class BookingController extends Controller
 
             if (isset($booking->provider)){
                 $booking->provider->chatEligibility = chatEligibility($booking->provider_id);
+                $booking->provider->callingEnabled = (bool)($booking->provider->calling_enabled ?? false);
             }
 
             if ($booking->repeat->isNotEmpty()) {
@@ -409,6 +418,7 @@ class BookingController extends Controller
         if (isset($booking)) {
             if (isset($booking->provider)){
                 $booking->provider->chatEligibility = chatEligibility($booking->provider_id);
+                $booking->provider->callingEnabled = (bool)($booking->provider->calling_enabled ?? false);
             }
             return response()->json(response_formatter(DEFAULT_200, $booking), 200);
         }

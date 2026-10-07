@@ -64,6 +64,10 @@ class MenuScreen extends StatelessWidget {
           title: 'inbox'.tr,
           route: RouteHelper.getInboxScreenRoute()),
       MenuModel(
+          icon: Icons.help_outline_rounded,
+          title: 'help_support'.tr,
+          route: RouteHelper.getSupportScreenRoute()),
+      MenuModel(
           icon: Icons.replay_rounded,
           title: 'recheck_tasks'.tr,
           route: RouteHelper.getRecheckTasksRoute()),

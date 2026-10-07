@@ -3,7 +3,8 @@ import 'package:demandium_serviceman/utils/core_export.dart';
 import 'package:get/get.dart';
 
 class InboxScreen extends StatefulWidget {
-  const InboxScreen({super.key});
+  final String? fromNotification;
+  const InboxScreen({super.key, this.fromNotification});
 
   @override
   State<InboxScreen> createState() => _InboxScreenState();
@@ -29,6 +30,10 @@ class _InboxScreenState extends State<InboxScreen> {
     }
 
     _scrollController.addListener(_onScroll);
+
+    try {
+      Get.find<CallController>().recoverActiveCall();
+    } catch (_) {}
   }
 
   @override
@@ -58,46 +63,14 @@ class _InboxScreenState extends State<InboxScreen> {
         Get.find<ConversationController>();
     setState(() => _loadingMore = true);
 
-    if (_filter != 2) {
+    if (_filter == 0) {
       await conversationController.loadMoreChannels("customer");
-    }
-    if (_filter != 1) {
       await conversationController.loadMoreChannels("provider");
     }
 
     if (mounted) {
       setState(() => _loadingMore = false);
     }
-  }
-
-  DateTime _lastActiveTime(ChannelData channelData) {
-    try {
-      final String? timeSource = (channelData.channelUsers != null &&
-              channelData.channelUsers!.isNotEmpty)
-          ? (channelData.channelUsers!.first.updatedAt ?? channelData.createdAt)
-          : channelData.createdAt;
-      if (timeSource == null || timeSource.isEmpty) {
-        return DateTime.fromMillisecondsSinceEpoch(0);
-      }
-      return DateConverter.isoUtcStringToLocalDate(timeSource);
-    } catch (_) {
-      return DateTime.fromMillisecondsSinceEpoch(0);
-    }
-  }
-
-  List<ChannelData> _mergeAndSort(List<ChannelData> first, List<ChannelData> second) {
-    final Set<String> seen = <String>{};
-    final List<ChannelData> merged = <ChannelData>[];
-    for (final ChannelData channel in [...first, ...second]) {
-      if (channel.id == null || seen.add(channel.id!)) {
-        merged.add(channel);
-      }
-    }
-    merged.sort(
-      (ChannelData a, ChannelData b) =>
-          _lastActiveTime(b).compareTo(_lastActiveTime(a)),
-    );
-    return merged;
   }
 
   @override
@@ -118,36 +91,19 @@ class _InboxScreenState extends State<InboxScreen> {
             final int providerCount =
                 conversationController.providerChannelList?.length ?? 0;
 
-            List<ChannelData> channelList;
+            List<ChannelData> customers;
+            List<ChannelData> providers;
             if (isSearchingInProgress) {
-              channelList = <ChannelData>[];
+              customers = <ChannelData>[];
+              providers = <ChannelData>[];
             } else if (isSearching) {
-              if (_filter == 1) {
-                channelList = conversationController.searchedCustomerChannelList;
-              } else if (_filter == 2) {
-                channelList = conversationController.searchedProviderChannelList;
-              } else {
-                channelList = _mergeAndSort(
-                  conversationController.searchedCustomerChannelList,
-                  conversationController.searchedProviderChannelList,
-                );
-              }
-            } else if (_filter == 1) {
-              channelList = conversationController.customerChannelList ?? <ChannelData>[];
-            } else if (_filter == 2) {
-              channelList = conversationController.providerChannelList ?? <ChannelData>[];
+              customers = conversationController.searchedCustomerChannelList;
+              providers = conversationController.searchedProviderChannelList;
             } else {
-              channelList = _mergeAndSort(
-                conversationController.customerChannelList ?? <ChannelData>[],
-                conversationController.providerChannelList ?? <ChannelData>[],
-              );
-
-              final ChannelData? adminChannel =
-                  conversationController.adminConversationModel;
-              if (adminChannel != null &&
-                  !channelList.any((ChannelData e) => e.id == adminChannel.id)) {
-                channelList = <ChannelData>[adminChannel, ...channelList];
-              }
+              customers =
+                  conversationController.customerChannelList ?? <ChannelData>[];
+              providers =
+                  conversationController.providerChannelList ?? <ChannelData>[];
             }
 
             final bool isInitialLoading =
@@ -163,6 +119,18 @@ class _InboxScreenState extends State<InboxScreen> {
                   child: PageHeader(
                     title: 'inbox'.tr,
                     subtitle: "${customerCount + providerCount} ${'conversations'.tr}",
+                    onBack: widget.fromNotification != null
+                        ? () {
+                            if (widget.fromNotification == "fromNotification") {
+                              Get.offNamed(RouteHelper.getInitialRoute());
+                            } else if (conversationController.isActiveSuffixIcon &&
+                                conversationController.isSearchComplete) {
+                              conversationController.clearSearchController();
+                            } else {
+                              Get.back();
+                            }
+                          }
+                        : null,
                     right: KIconButton(
                       icon: Icons.settings_outlined,
                       onTap: _refresh,
@@ -182,70 +150,25 @@ class _InboxScreenState extends State<InboxScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
 
                 Expanded(
-                  child: RefreshIndicator(
+                  child: _filter == 3
+                      ? _buildCallHistory(context)
+                      : RefreshIndicator(
                     color: context.kPrimary,
                     backgroundColor: context.kCard,
                     onRefresh: _refresh,
                     child: isInitialLoading || isSearchingInProgress
                         ? _buildSkeleton(context)
-                        : channelList.isEmpty
+                        : customers.isEmpty && providers.isEmpty
                             ? _buildEmptyState(context, fromSearch: isSearching)
-                            : ListView.builder(
-                                controller: _scrollController,
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                padding: const EdgeInsets.fromLTRB(20, 0, 20, 112),
-                                itemCount: channelList.length +
-                                    ((_loadingMore ||
-                                            conversationController.loadingMoreChannels)
-                                        ? 1
-                                        : 0),
-                                itemBuilder: (context, index) {
-                                  if (index >= channelList.length) {
-                                    return const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: Dimensions.paddingSizeDefault,
-                                      ),
-                                      child: Center(
-                                        child: SizedBox(
-                                          width: 22,
-                                          height: 22,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }
-
-                                  final ChannelData channelData = channelList[index];
-                                  final bool showAdminCard =
-                                      !isSearching &&
-                                          _filter == 0 &&
-                                          conversationController
-                                                  .adminConversationModel !=
-                                              null &&
-                                          channelData.id ==
-                                              conversationController
-                                                  .adminConversationModel!.id;
-
-                                  return Column(
-                                    children: [
-                                      InboxChannelCard(
-                                        channelData: channelData,
-                                        isAdmin: showAdminCard,
-                                      ),
-                                      if (index < channelList.length - 1)
-                                        Divider(
-                                          height: 1,
-                                          thickness: 1,
-                                          color: context.kBorder,
-                                        ),
-                                    ],
-                                  );
-                                },
+                            : _buildGroupedList(
+                                context,
+                                conversationController,
+                                customers,
+                                providers,
+                                isSearching,
                               ),
                   ),
                 ),
@@ -254,6 +177,79 @@ class _InboxScreenState extends State<InboxScreen> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _sectionHeader(BuildContext context, String title, int count) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16, bottom: 2),
+      child: Row(children: [
+        Text(
+          title.toUpperCase(),
+          style: robotoMedium.copyWith(
+            fontSize: 11,
+            letterSpacing: 0.8,
+            color: context.kMutedForeground,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '($count)',
+          style: robotoRegular.copyWith(
+            fontSize: 11,
+            color: context.kMutedForeground,
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildGroupedList(
+    BuildContext context,
+    ConversationController conversationController,
+    List<ChannelData> customers,
+    List<ChannelData> providers,
+    bool isSearching,
+  ) {
+    final bool showFooter =
+        _loadingMore || conversationController.loadingMoreChannels;
+
+    return ListView(
+      controller: _scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 112),
+      children: [
+        if (customers.isNotEmpty) ...[
+          _sectionHeader(context, 'customers'.tr, customers.length),
+          for (int i = 0; i < customers.length; i++) ...[
+            InboxChannelCard(channelData: customers[i]),
+            if (i < customers.length - 1)
+              Divider(height: 1, thickness: 1, color: context.kBorder),
+          ],
+        ],
+        if (providers.isNotEmpty) ...[
+          _sectionHeader(context, 'zone_admin'.tr, providers.length),
+          for (int i = 0; i < providers.length; i++) ...[
+            InboxChannelCard(channelData: providers[i]),
+            if (i < providers.length - 1)
+              Divider(height: 1, thickness: 1, color: context.kBorder),
+          ],
+        ],
+        if (showFooter)
+          const Padding(
+            padding: EdgeInsets.symmetric(
+              vertical: Dimensions.paddingSizeDefault,
+            ),
+            child: Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ),
+        const SizedBox(height: 24),
+      ],
     );
   }
 
@@ -327,23 +323,130 @@ class _InboxScreenState extends State<InboxScreen> {
     return Row(
       children: [
         KFilterChip(
-          label: 'all'.tr,
+          label: 'chats'.tr,
           selected: _filter == 0,
           onTap: () => setState(() => _filter = 0),
         ),
         const SizedBox(width: 8),
         KFilterChip(
-          label: 'customer'.tr,
-          selected: _filter == 1,
-          onTap: () => setState(() => _filter = 1),
-        ),
-        const SizedBox(width: 8),
-        KFilterChip(
-          label: 'zone_admin'.tr,
-          selected: _filter == 2,
-          onTap: () => setState(() => _filter = 2),
+          label: 'calls'.tr,
+          selected: _filter == 3,
+          onTap: () {
+            setState(() => _filter = 3);
+            Get.find<CallController>().loadHistory(reload: true);
+          },
         ),
       ],
+    );
+  }
+
+  Widget _buildCallHistory(BuildContext context) {
+    return GetBuilder<CallController>(
+      builder: (callController) {
+        if (callController.historyList.isEmpty && callController.historyLoading) {
+          return _buildSkeleton(context);
+        }
+        if (callController.historyList.isEmpty) {
+          return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              EmptyState(
+                icon: Icons.call_end_rounded,
+                title: 'no_calls_yet'.tr,
+                text: 'call_history_empty_desc'.tr,
+              ),
+            ],
+          );
+        }
+        return RefreshIndicator(
+          color: context.kPrimary,
+          backgroundColor: context.kCard,
+          onRefresh: () => callController.loadHistory(reload: true),
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 112),
+            itemCount: callController.historyList.length,
+            itemBuilder: (context, index) {
+              final call = callController.historyList[index];
+              final other = call.otherUser ?? <String, dynamic>{};
+              final bool missed = call.status == 'missed';
+              final bool outgoing = call.direction == 'out';
+              final IconData dirIcon = missed
+                  ? Icons.call_missed_rounded
+                  : outgoing
+                      ? Icons.call_made_rounded
+                      : Icons.call_received_rounded;
+              final Color dirColor = missed
+                  ? Colors.redAccent
+                  : outgoing
+                      ? Colors.green
+                      : context.kPrimary;
+              final String name = (other['name'] ?? '').toString();
+              final String image = (other['image'] ?? '').toString();
+
+              return Column(
+                children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 22,
+                          backgroundColor: context.kMuted,
+                          backgroundImage: image.isNotEmpty ? NetworkImage(image) : null,
+                          child: image.isEmpty
+                              ? const Icon(Icons.person, size: 24)
+                              : null,
+                        ),
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Icon(dirIcon, size: 15, color: dirColor),
+                        ),
+                      ],
+                    ),
+                    title: Text(
+                      name.isNotEmpty ? name : 'call'.tr,
+                      style: robotoMedium.copyWith(
+                        fontSize: Dimensions.fontSizeDefault,
+                        color: context.kForeground,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      [
+                        call.callType == 'video' ? 'video'.tr : 'voice'.tr,
+                        callController.callStatusText(call.status),
+                        if ((call.duration ?? 0) > 0)
+                          callController.formatDuration(call.duration!),
+                      ].join(' · '),
+                      style: robotoRegular.copyWith(
+                        fontSize: Dimensions.fontSizeSmall,
+                        color: missed ? Colors.redAccent : context.kMutedForeground,
+                      ),
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(Icons.call_rounded, color: context.kPrimary),
+                      onPressed: (other['id'] ?? '').toString().isEmpty
+                          ? null
+                          : () => callController.startCall(
+                                calleeId: other['id'].toString(),
+                                callType: 'voice',
+                                name: name,
+                                image: image,
+                                phone: (other['phone'] ?? '').toString(),
+                              ),
+                    ),
+                  ),
+                  if (index < callController.historyList.length - 1)
+                    Divider(height: 1, thickness: 1, color: context.kBorder),
+                ],
+              );
+            },
+          ),
+        );
+      },
     );
   }
 

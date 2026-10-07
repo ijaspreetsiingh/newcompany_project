@@ -38,12 +38,6 @@ class BookingTrackingDetailsView extends StatelessWidget {
                   'no_provider_assigned'.tr)
             : '${serviceman.firstName ?? ''} ${serviceman.lastName ?? ''}'
                   .trim();
-        final professionalImage =
-            serviceman?.profileImageFullPath ?? provider?.logoFullPath ?? '';
-        final phone =
-            serviceman?.phone ??
-            provider?.contactPersonPhone ??
-            provider?.companyPhone;
         final address =
             booking.serviceAddress?.address ?? 'no_address_found'.tr;
         final scheduleTitle = schedule.isEmpty ? 'Schedule pending' : schedule;
@@ -115,15 +109,50 @@ class BookingTrackingDetailsView extends StatelessWidget {
                       border: border,
                     ),
                     const SizedBox(height: 20),
-                    if (provider != null || serviceman != null) ...[
+                    if (provider != null) ...[
                       _ProfessionalCard(
-                        name: professionalName,
-                        image: professionalImage,
-                        phone: phone,
-                        isSubBooking: isSubBooking,
-                        hasProvider: provider != null,
-                        rating: provider?.avgRating,
-                        jobs: provider?.totalServiceServed,
+                        label: 'YOUR PROVIDER',
+                        name: provider.contactPersonName ??
+                            provider.companyName ??
+                            'no_provider_assigned'.tr,
+                        image: provider.logoFullPath ?? '',
+                        phone: provider.contactPersonPhone ?? provider.companyPhone,
+                        calleeId: provider.userId,
+                        rating: provider.avgRating,
+                        jobs: provider.totalServiceServed,
+                        onChat: () => _openChannelChat(
+                          booking.id ?? '',
+                          userId: provider.userId,
+                          name: provider.contactPersonName ??
+                              provider.companyName ??
+                              '',
+                          image: provider.logoFullPath ?? '',
+                          phone: provider.contactPersonPhone ??
+                              provider.companyPhone ??
+                              '',
+                          userType: 'provider',
+                        ),
+                        ink: ink,
+                        muted: muted,
+                        border: border,
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    if (booking.serviceman != null) ...[
+                      _ProfessionalCard(
+                        label: 'YOUR SERVICE MAN',
+                        name: '${serviceman?.firstName ?? ''} ${serviceman?.lastName ?? ''}'.trim(),
+                        image: serviceman?.profileImageFullPath ?? '',
+                        phone: serviceman?.phone,
+                        calleeId: booking.serviceman?.userId,
+                        onChat: () => _openChannelChat(
+                          booking.id ?? '',
+                          userId: booking.serviceman?.userId,
+                          name: '${serviceman?.firstName ?? ''} ${serviceman?.lastName ?? ''}'
+                              .trim(),
+                          image: serviceman?.profileImageFullPath ?? '',
+                          phone: serviceman?.phone ?? '',
+                        ),
                         ink: ink,
                         muted: muted,
                         border: border,
@@ -252,6 +281,26 @@ class BookingTrackingDetailsView extends StatelessWidget {
       }
       if (Get.isDialogOpen ?? false) Get.back();
     }
+  }
+
+  void _openChannelChat(
+    String referenceId, {
+    required String? userId,
+    required String name,
+    String image = '',
+    String phone = '',
+    String userType = '',
+  }) {
+    if (userId == null || userId.isEmpty) return;
+    Get.find<ConversationController>().createChannel(
+      userId,
+      referenceId,
+      name: name,
+      image: image,
+      phone: phone,
+      userType: userType,
+      fromBookingDetailsPage: false,
+    );
   }
 
   String _statusEyebrow(String status) => status == 'pending'
@@ -429,17 +478,20 @@ int? _bookingTimelineStep(String status) {
 
 class _ProfessionalCard extends StatelessWidget {
   final String name, image;
+  final String label;
   final String? phone;
-  final bool isSubBooking, hasProvider;
+  final String? calleeId;
+  final VoidCallback onChat;
   final double? rating;
   final int? jobs;
   final Color ink, muted, border;
   const _ProfessionalCard({
     required this.name,
     required this.image,
+    required this.label,
     this.phone,
-    required this.isSubBooking,
-    required this.hasProvider,
+    this.calleeId,
+    required this.onChat,
     this.rating,
     this.jobs,
     required this.ink,
@@ -485,7 +537,7 @@ class _ProfessionalCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'YOUR PROFESSIONAL',
+                label,
                 style: GoogleFonts.dmSans(
                   fontSize: 10,
                   color: muted,
@@ -503,11 +555,13 @@ class _ProfessionalCard extends StatelessWidget {
                   color: ink,
                 ),
               ),
-              const SizedBox(height: 3),
-              Text(
-                'â˜… ${(rating ?? 0).toStringAsFixed(2)} Â· ${jobs ?? 0} jobs',
-                style: GoogleFonts.dmSans(fontSize: 11, color: muted),
-              ),
+              if (rating != null) ...[
+                const SizedBox(height: 3),
+                Text(
+                  'â˜… ${rating!.toStringAsFixed(2)} Â· ${jobs ?? 0} jobs',
+                  style: GoogleFonts.dmSans(fontSize: 11, color: muted),
+                ),
+              ],
             ],
           ),
         ),
@@ -515,7 +569,14 @@ class _ProfessionalCard extends StatelessWidget {
           context,
           Icons.call_outlined,
           () {
-            if (phone != null && phone!.isNotEmpty) {
+            if (calleeId != null && calleeId!.isNotEmpty) {
+              Get.find<CallController>().startCall(
+                calleeId: calleeId!,
+                callType: 'voice',
+                name: name,
+                phone: phone,
+              );
+            } else if (phone != null && phone!.isNotEmpty) {
               launchUrl(Uri(scheme: 'tel', path: phone));
             }
           },
@@ -526,22 +587,7 @@ class _ProfessionalCard extends StatelessWidget {
         _roundAction(
           context,
           Icons.chat_bubble_outline,
-          () {
-            if (!hasProvider) {
-              customSnackBar(
-                'provider_or_service_man_assigned'.tr,
-                type: ToasterMessageType.info,
-              );
-              return;
-            }
-            showModalBottomSheet(
-              context: context,
-              useRootNavigator: true,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (_) => CreateChannelDialog(isSubBooking: isSubBooking),
-            );
-          },
+          () => onChat(),
           ink,
           border,
         ),

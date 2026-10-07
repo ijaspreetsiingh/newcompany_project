@@ -34,6 +34,13 @@ class AppConstants {
   static const String searchChannelListUrl = '/api/v1/technician/inbox/thread-lookup';
   static const String getConversationUrl = '/api/v1/technician/inbox/thread';
   static const String sendMessageUrl = '/api/v1/technician/inbox/transmit-note';
+  static const String callInitiateUrl = '/api/v1/technician/inbox/call/initiate';
+  static const String callRespondUrl = '/api/v1/technician/inbox/call/respond';
+  static const String callEndUrl = '/api/v1/technician/inbox/call/end';
+  static const String callActiveUrl = '/api/v1/technician/inbox/call/active';
+  static const String callStatusUrl = '/api/v1/technician/inbox/call/status';
+  static const String callTokenUrl = '/api/v1/technician/inbox/call/token';
+  static const String callHistoryUrl = '/api/v1/technician/inbox/call/history';
   static const String paymentStatusUpdate = '/api/v1/technician/order/pay-state-change';
   static const String verifyTokenUri = '/api/v1/access/token-probe';
   static const String tokenUri = '/api/v1/technician/modify/push-key';

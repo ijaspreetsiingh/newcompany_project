@@ -6,6 +6,7 @@ use Modules\ChattingModule\Http\Controllers\Api\V1\Customer\ChattingController a
 use Modules\ChattingModule\Http\Controllers\Api\V1\Provider\ChattingController as ProviderChattingController;
 use Modules\ChattingModule\Http\Controllers\Api\V1\Serviceman\ChattingController as ServicemanChattingController;
 use Modules\ChattingModule\Http\Controllers\Api\V1\GlobalChattingController;
+use Modules\ChattingModule\Http\Controllers\Api\V1\CallController;
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admin', 'middleware' => ['auth:api']], function () {
     Route::group(['prefix' => 'chat'], function () {
@@ -25,6 +26,16 @@ Route::group(['prefix' => 'client', 'as' => 'customer.', 'namespace' => 'Api\V1\
         Route::post('open-thread', [CustomerChattingController::class, 'createChannel']);
         Route::post('transmit-note', [CustomerChattingController::class, 'sendMessage']);
         Route::get('thread', [CustomerChattingController::class, 'conversation']);
+
+        Route::group(['prefix' => 'call'], function () {
+            Route::post('initiate', [CallController::class, 'initiate']);
+            Route::post('respond', [CallController::class, 'respond']);
+            Route::post('end', [CallController::class, 'end']);
+            Route::get('active', [CallController::class, 'active']);
+            Route::get('status', [CallController::class, 'status']);
+            Route::get('token', [CallController::class, 'token']);
+            Route::get('history', [CallController::class, 'history']);
+        });
     });
 });
 
@@ -36,6 +47,16 @@ Route::group(['prefix' => 'partner', 'as' => 'provider.', 'namespace' => 'Api\V1
         Route::post('open-thread', [ProviderChattingController::class, 'createChannel']);
         Route::post('transmit-note', [ProviderChattingController::class, 'sendMessage']);
         Route::get('thread', [ProviderChattingController::class, 'conversation']);
+
+        Route::group(['prefix' => 'call'], function () {
+            Route::post('initiate', [CallController::class, 'initiate']);
+            Route::post('respond', [CallController::class, 'respond']);
+            Route::post('end', [CallController::class, 'end']);
+            Route::get('active', [CallController::class, 'active']);
+            Route::get('status', [CallController::class, 'status']);
+            Route::get('token', [CallController::class, 'token']);
+            Route::get('history', [CallController::class, 'history']);
+        });
     });
 });
 
@@ -47,6 +68,16 @@ Route::group(['prefix' => 'technician', 'as' => 'serviceman.', 'namespace' => 'A
         Route::post('open-thread', [ServicemanChattingController::class, 'createChannel']);
         Route::post('transmit-note', [ServicemanChattingController::class, 'sendMessage']);
         Route::get('thread', [ServicemanChattingController::class, 'conversation']);
+
+        Route::group(['prefix' => 'call'], function () {
+            Route::post('initiate', [CallController::class, 'initiate']);
+            Route::post('respond', [CallController::class, 'respond']);
+            Route::post('end', [CallController::class, 'end']);
+            Route::get('active', [CallController::class, 'active']);
+            Route::get('status', [CallController::class, 'status']);
+            Route::get('token', [CallController::class, 'token']);
+            Route::get('history', [CallController::class, 'history']);
+        });
     });
 });
 

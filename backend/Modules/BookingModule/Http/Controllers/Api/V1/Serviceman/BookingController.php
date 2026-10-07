@@ -451,6 +451,10 @@ class BookingController extends Controller
         if (isset($booking)) {
             $booking->service_address = $booking->service_address_location != null ? json_decode($booking->service_address_location) : $booking->service_address;
 
+            if (isset($booking->provider)) {
+                $booking->provider->callingEnabled = (bool)($booking->provider->calling_enabled ?? false);
+            }
+
             $offlinePayment = $booking->booking_offline_payments?->first()?->customer_information;
             unset($booking->booking_offline_payments);
 
@@ -511,6 +515,10 @@ class BookingController extends Controller
         })->where(['id' => $id])->first();
 
         if (isset($booking)) {
+            if (isset($booking->booking->provider)) {
+                $booking->booking->provider->callingEnabled = (bool)($booking->booking->provider->calling_enabled ?? false);
+            }
+
             return response()->json(response_formatter(DEFAULT_200, [
                 'booking' => $booking,
                 'provider_serviceman_can_cancel_booking' => (int)provider_config('provider_serviceman_can_cancel_booking', 'serviceman_config', $booking->provider_id)?->live_values,

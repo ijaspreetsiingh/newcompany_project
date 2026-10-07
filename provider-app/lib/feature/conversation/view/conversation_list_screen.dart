@@ -11,11 +11,10 @@ class ConversationListScreen extends StatefulWidget {
 
 class _ConversationListScreenState extends State<ConversationListScreen> {
 
-  static const String filterAll = 'All';
-  static const String filterCustomers = 'Customers';
-  static const String filterServicemen = 'Servicemen';
+  static String get filterChats => 'chats'.tr;
+  static String get filterCalls => 'calls'.tr;
 
-  String _filter = filterAll;
+  String _filter = filterChats;
   bool _isLoadingMore = false;
   bool _initialLoadSettled = false;
 
@@ -27,17 +26,17 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
 
     final ConversationController conversationController = Get.find<ConversationController>();
     conversationController.clearSearchController(shouldUpdate: false);
-    conversationController.tabController?.addListener(_onTabIndexChanged);
     _allScrollController.addListener(_onAllScrollReachedEnd);
 
     _loadData();
+
+    try {
+      Get.find<CallController>().recoverActiveCall();
+    } catch (_) {}
   }
 
   @override
   void dispose() {
-    if (Get.isRegistered<ConversationController>()) {
-      Get.find<ConversationController>().tabController?.removeListener(_onTabIndexChanged);
-    }
     _allScrollController.dispose();
     super.dispose();
   }
@@ -51,15 +50,6 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
     }
   }
 
-  void _onTabIndexChanged() {
-    if (_filter == filterAll) return;
-    final int index = Get.find<ConversationController>().tabController?.index ?? 0;
-    final String nextFilter = index == 0 ? filterCustomers : filterServicemen;
-    if (nextFilter != _filter) {
-      setState(() => _filter = nextFilter);
-    }
-  }
-
   void _onFilterChanged(String value) {
     if (value == _filter) return;
     setState(() => _filter = value);
@@ -67,21 +57,13 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
     final ConversationController conversationController = Get.find<ConversationController>();
     final bool isShowingSearchResult = conversationController.isActiveSuffixIcon && conversationController.isSearchComplete;
 
-    if (value == filterCustomers) {
-      conversationController.tabController?.index = 0;
-      if (!isShowingSearchResult) {
-        conversationController.getChannelList(1, type: "customer");
-      }
-    } else if (value == filterServicemen) {
-      conversationController.tabController?.index = 1;
-      if (!isShowingSearchResult) {
-        conversationController.getChannelList(1, type: "serviceman");
-      }
-    } else {
-      if (!isShowingSearchResult) {
-        conversationController.getChannelList(1, type: "customer");
-        conversationController.getChannelList(1, type: "serviceman");
-      }
+    if (value == filterCalls) {
+      try {
+        Get.find<CallController>().loadHistory(reload: true);
+      } catch (_) {}
+    } else if (!isShowingSearchResult) {
+      conversationController.getChannelList(1, type: "customer");
+      conversationController.getChannelList(1, type: "serviceman");
     }
   }
 
@@ -104,49 +86,8 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
   }
 
   Future<void> _onRefresh(ConversationController conversationController) async {
-    if (_filter == filterServicemen) {
-      await conversationController.getChannelList(1, reload: true, type: "serviceman");
-    } else if (_filter == filterCustomers) {
-      await conversationController.getChannelList(1, reload: true, type: "customer");
-    } else {
-      await conversationController.getChannelList(1, reload: true, type: "customer");
-      await conversationController.getChannelList(1, reload: true, type: "serviceman");
-    }
-  }
-
-  List<ChannelData> _channelList(ConversationController conversationController) {
-    final bool isSearchResult = conversationController.isSearchComplete;
-
-    switch (_filter) {
-      case filterCustomers:
-        return isSearchResult
-            ? conversationController.searchedCustomerChannelList
-            : (conversationController.customerChannelList ?? []);
-      case filterServicemen:
-        return isSearchResult
-            ? conversationController.searchedServicemanChannelList
-            : (conversationController.servicemanChannelList ?? []);
-      default:
-        return [
-          ...(isSearchResult
-              ? conversationController.searchedCustomerChannelList
-              : (conversationController.customerChannelList ?? [])),
-          ...(isSearchResult
-              ? conversationController.searchedServicemanChannelList
-              : (conversationController.servicemanChannelList ?? [])),
-        ];
-    }
-  }
-
-  ScrollController? _scrollControllerFor(ConversationController conversationController) {
-    switch (_filter) {
-      case filterCustomers:
-        return conversationController.channelScrollController1;
-      case filterServicemen:
-        return conversationController.channelScrollController2;
-      default:
-        return _allScrollController;
-    }
+    await conversationController.getChannelList(1, reload: true, type: "customer");
+    await conversationController.getChannelList(1, reload: true, type: "serviceman");
   }
 
   void _onBackPressed() {
@@ -170,10 +111,8 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
         child: GetBuilder<ConversationController>(
           builder: (conversationController) {
 
-            final ChannelData? adminChannel = conversationController.adminConversationModel;
             final int conversationCount = (conversationController.customerChannelList?.length ?? 0) +
-                (conversationController.servicemanChannelList?.length ?? 0) +
-                (adminChannel != null ? 1 : 0);
+                (conversationController.servicemanChannelList?.length ?? 0);
 
             return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
 
@@ -200,12 +139,14 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
               const SizedBox(height: 12),
 
               Expanded(
-                child: RefreshIndicator(
-                  color: InkColors.foreground,
-                  backgroundColor: InkColors.card,
-                  onRefresh: () => _onRefresh(conversationController),
-                  child: _conversationContent(conversationController, adminChannel),
-                ),
+                child: _filter == filterCalls
+                    ? _buildCallHistory(context)
+                    : RefreshIndicator(
+                        color: InkColors.foreground,
+                        backgroundColor: InkColors.card,
+                        onRefresh: () => _onRefresh(conversationController),
+                        child: _conversationContent(conversationController),
+                      ),
               ),
 
             ],);
@@ -215,7 +156,49 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
     );
   }
 
-  Widget _conversationContent(ConversationController conversationController, ChannelData? adminChannel) {
+  Widget _sectionHeader(String title, int count) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 8),
+      child: Row(children: [
+        Text(
+          title.toUpperCase(),
+          style: robotoMedium.copyWith(
+            fontSize: 11,
+            letterSpacing: 0.8,
+            color: InkColors.mutedForeground,
+            decoration: TextDecoration.none,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '($count)',
+          style: robotoRegular.copyWith(
+            fontSize: 11,
+            color: InkColors.mutedForeground,
+            decoration: TextDecoration.none,
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _sectionCard(List<ChannelData> items) {
+    return InkCard(
+      padding: EdgeInsets.zero,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(19),
+        child: Column(children: [
+          for (int i = 0; i < items.length; i++) ...[
+            if (i > 0) Divider(height: 1, thickness: 1, color: InkColors.border),
+            ChannelItem(channelData: items[i]),
+          ],
+        ]),
+      ),
+    );
+  }
+
+  Widget _conversationContent(ConversationController conversationController) {
 
     if (conversationController.searchedChannelList == null && !conversationController.isSearchComplete) {
       return const ConversationSearchShimmer();
@@ -223,19 +206,155 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
 
     if (!_initialLoadSettled &&
         conversationController.customerChannelList == null &&
-        conversationController.servicemanChannelList == null &&
-        conversationController.adminConversationModel == null) {
+        conversationController.servicemanChannelList == null) {
       return const ConversationSearchShimmer();
     }
 
-    final List<ChannelData> channels = _channelList(conversationController);
-    final List<ChannelData> items = [...channels];
-    if (adminChannel != null) items.insert(0, adminChannel);
+    final bool showSearchResult = conversationController.isSearchComplete;
+    final List<ChannelData> customers = showSearchResult
+        ? conversationController.searchedCustomerChannelList
+        : (conversationController.customerChannelList ?? []);
+    final List<ChannelData> servicemen = showSearchResult
+        ? conversationController.searchedServicemanChannelList
+        : (conversationController.servicemanChannelList ?? []);
 
-    return ConversationListView(
-      channelList: items,
-      scrollController: _scrollControllerFor(conversationController),
-      fromSearch: conversationController.isActiveSuffixIcon && conversationController.isSearchComplete,
+    final bool fromSearch = conversationController.isActiveSuffixIcon && showSearchResult;
+
+    if (customers.isEmpty && servicemen.isEmpty) {
+      return ListView(
+        controller: _allScrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [EmptyConversationWidget(fromSearch: fromSearch)],
+      );
+    }
+
+    return ListView(
+      controller: _allScrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        if (customers.isNotEmpty) ...[
+          _sectionHeader('customers'.tr, customers.length),
+          _sectionCard(customers),
+          const SizedBox(height: 14),
+        ],
+        if (servicemen.isNotEmpty) ...[
+          _sectionHeader('service_men'.tr, servicemen.length),
+          _sectionCard(servicemen),
+        ],
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildCallHistory(BuildContext context) {
+    return GetBuilder<CallController>(
+      builder: (callController) {
+        if (callController.historyList.isEmpty && callController.historyLoading) {
+          return const ConversationSearchShimmer();
+        }
+        if (callController.historyList.isEmpty) {
+          return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(top: 60, left: 24, right: 24),
+            children: [
+              const Icon(Icons.call_end_rounded, size: 48, color: Colors.grey),
+              const SizedBox(height: 12),
+              Text(
+                'no_calls_yet'.tr,
+                textAlign: TextAlign.center,
+                style: robotoMedium.copyWith(fontSize: 15, color: InkColors.foreground, decoration: TextDecoration.none),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'call_history_empty_desc'.tr,
+                textAlign: TextAlign.center,
+                style: robotoRegular.copyWith(fontSize: 13, color: InkColors.mutedForeground, decoration: TextDecoration.none),
+              ),
+            ],
+          );
+        }
+        return RefreshIndicator(
+          color: InkColors.foreground,
+          backgroundColor: InkColors.card,
+          onRefresh: () => callController.loadHistory(reload: true),
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            itemCount: callController.historyList.length,
+            itemBuilder: (context, index) {
+              final call = callController.historyList[index];
+              final other = call.otherUser ?? <String, dynamic>{};
+              final bool missed = call.status == 'missed';
+              final bool outgoing = call.direction == 'out';
+              final IconData dirIcon = missed
+                  ? Icons.call_missed_rounded
+                  : outgoing
+                      ? Icons.call_made_rounded
+                      : Icons.call_received_rounded;
+              final Color dirColor = missed
+                  ? Colors.redAccent
+                  : outgoing
+                      ? Colors.green
+                      : InkColors.foreground;
+              final String name = (other['name'] ?? '').toString();
+
+              return Column(
+                children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Stack(
+                      children: [
+                        InkAvatar(name: name.isEmpty ? "?" : name, size: 44),
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Icon(dirIcon, size: 15, color: dirColor),
+                        ),
+                      ],
+                    ),
+                    title: Text(
+                      name.isNotEmpty ? name : 'call'.tr,
+                      style: robotoMedium.copyWith(
+                        fontSize: 14,
+                        color: InkColors.foreground,
+                        decoration: TextDecoration.none,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      [
+                        call.callType == 'video' ? 'video'.tr : 'voice'.tr,
+                        callController.callStatusText(call.status),
+                        if ((call.duration ?? 0) > 0) callController.formatDuration(call.duration!),
+                      ].join(' · '),
+                      style: robotoRegular.copyWith(
+                        fontSize: 12,
+                        color: missed ? Colors.redAccent : InkColors.mutedForeground,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(Icons.call_rounded, color: InkColors.foreground),
+                      onPressed: (other['id'] ?? '').toString().isEmpty
+                          ? null
+                          : () => callController.startCall(
+                                calleeId: other['id'].toString(),
+                                callType: 'voice',
+                                name: name,
+                                image: (other['image'] ?? '').toString(),
+                                phone: (other['phone'] ?? '').toString(),
+                              ),
+                    ),
+                  ),
+                  if (index < callController.historyList.length - 1)
+                    Divider(height: 1, thickness: 1, color: InkColors.border),
+                ],
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

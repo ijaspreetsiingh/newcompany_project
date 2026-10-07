@@ -14,7 +14,6 @@ class CartSummery extends StatelessWidget {
 
               int scheduleDaysCount = scheduleController.scheduleDaysCount > 0 ? scheduleController.scheduleDaysCount : 1;
 
-              ConfigModel configModel = Get.find<SplashController>().configModel;
               List<CartModel> cartList = cartController.cartList;
               bool walletPaymentStatus = cartController.walletPaymentStatus;
               int applicableCouponCount = CheckoutHelper.getNumberOfDaysForApplicableCoupon(pickedScheduleDays:scheduleDaysCount) ?? 1;
@@ -75,7 +74,7 @@ class CartSummery extends StatelessWidget {
                       return  Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,children: [
                         Expanded(
                           child: Row(children: [
-                            Flexible(child: Text(configModel.content?.additionalChargeLabelName ?? "", style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault),overflow: TextOverflow.ellipsis,)),
+                            Flexible(child: Text(CheckoutHelper.getAdditionalChargeLabel(), style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeDefault),overflow: TextOverflow.ellipsis,)),
 
                           ],),
                         ),

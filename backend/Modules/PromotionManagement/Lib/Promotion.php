@@ -215,6 +215,60 @@ if (!function_exists('device_notification_for_chatting')) {
         return sendNotificationToHttp($postData);
     }
 }
+
+if (!function_exists('device_notification_for_calling')) {
+    /**
+     * In-app voice/video call push (invite / response / ended).
+     * Data payload me call_id, call_type aur caller details hote hain —
+     * app foreground me ise onMessage par ring screen kholta hai, background
+     * me system notification 'incoming_call' channel (sound + vibration) se
+     * bajta hai.
+     */
+    function device_notification_for_calling(string $fcm_token, string $title, ?string $description, string $call_id, string $call_type, string $user_name, string $user_image, string $user_phone, string $user_type, ?string $booking_id, ?string $channel_id, string $type = 'call_invite')
+    {
+        $postData = [
+            'message' => [
+                "token" => $fcm_token,
+                "data" => [
+                    "title" => (string)$title,
+                    "body" => (string)($description ?? ''),
+                    "image" => (string)($user_image ?? ''),
+                    "type" => (string)$type,
+                    "call_id" => (string)$call_id,
+                    "call_type" => (string)$call_type,
+                    "booking_id" => (string)($booking_id ?? ''),
+                    "channel_id" => (string)($channel_id ?? ''),
+                    "user_name" => (string)$user_name,
+                    "user_image" => (string)($user_image ?? ''),
+                    "user_phone" => (string)($user_phone ?? ''),
+                    "user_type" => (string)$user_type,
+                ],
+                "notification" => [
+                    "title" => (string)$title,
+                    "body" => (string)($description ?? ''),
+                ],
+                "android" => [
+                    "priority" => "high",
+                    "notification" => [
+                        "channelId" => "incoming_call",
+                        "sound" => "default",
+                    ],
+                ],
+                "apns" => [
+                    "payload" => [
+                        "aps" => [
+                            "sound" => "default",
+                            "interruption-level" => "time-sensitive",
+                        ]
+                    ]
+                ],
+            ]
+        ];
+
+        return sendNotificationToHttp($postData);
+    }
+}
+
 if (!function_exists('basic_discount_calculation')) {
     function basic_discount_calculation($service, $total_purchase_amount, mixed $providerId = null): float
     {

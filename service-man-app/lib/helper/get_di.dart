@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:demandium_serviceman/utils/core_export.dart';
 import 'package:demandium_serviceman/feature/html/repository/html_repo.dart';
 import 'package:demandium_serviceman/feature/notifications/repository/notification_repo.dart';
@@ -9,19 +9,20 @@ Future<Map<String, Map<String, String>>> init() async{
 
   /// Core
   final sharedPreferences = await SharedPreferences.getInstance();
-  Get.lazyPut(() => sharedPreferences);
-  Get.lazyPut(() => ApiClient(appBaseUrl: AppConstants.baseUrl, sharedPreferences: Get.find()));
+  Get.lazyPut(() => sharedPreferences, fenix: true);
+  Get.lazyPut(() => ApiClient(appBaseUrl: AppConstants.baseUrl, sharedPreferences: Get.find()), fenix: true);
 
 
   /// Repository
-  Get.lazyPut(() => SplashRepo(sharedPreferences: Get.find(), apiClient: Get.find()));
-  Get.lazyPut(() => AuthRepo(apiClient: Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => DashboardRepository(apiClient: Get.find()));
-  Get.lazyPut(() => ConversationRepo(apiClient: Get.find()));
-  Get.lazyPut(() => NotificationRepo(apiClient:  Get.find(), sharedPreferences: Get.find()));
-  Get.lazyPut(() => BookingRequestRepo(apiClient: Get.find()));
-  Get.lazyPut(() => UserRepo(apiClient: Get.find()));
-  Get.lazyPut(() => HtmlRepository(apiClient: Get.find()));
+  Get.lazyPut(() => SplashRepo(sharedPreferences: Get.find(), apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => AuthRepo(apiClient: Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => DashboardRepository(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => ConversationRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => CallRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => NotificationRepo(apiClient:  Get.find(), sharedPreferences: Get.find()), fenix: true);
+  Get.lazyPut(() => BookingRequestRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => UserRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => HtmlRepository(apiClient: Get.find()), fenix: true);
 
 
   /// Controller
@@ -31,6 +32,7 @@ Future<Map<String, Map<String, String>>> init() async{
   Get.lazyPut(() => LocalizationController(sharedPreferences: Get.find(), apiClient: Get.find()));
   Get.lazyPut(() => DashboardController(dashboardRepository: Get.find()));
   Get.lazyPut(() => ConversationController(conversationRepo: Get.find()));
+  Get.lazyPut(() => CallController(callRepo: Get.find()), fenix: true);
   Get.lazyPut(() => NotificationController(notificationRepo: Get.find()));
   Get.lazyPut(() => BookingRequestController(bookingRequestRepo: Get.find()));
   Get.lazyPut(() => RecheckController(bookingRequestRepo: Get.find()));

@@ -101,6 +101,20 @@ class ConversationController extends GetxController  with GetSingleTickerProvide
   List<ChannelData>? _searchedChannelList = [];
   List<ChannelData>? get searchedChannelList => _searchedChannelList;
 
+  String? otherUserIdForChannel(String channelId) {
+    final all = [...?_customerChannelList, ...?_providerChannelList];
+    for (final ch in all) {
+      if (ch.id == channelId && ch.channelUsers != null && ch.channelUsers!.isNotEmpty) {
+        final meId = Get.find<UserController>().userInfo.id?.toString() ?? '';
+        for (final u in ch.channelUsers!) {
+          if (u.userId?.toString() != meId) return u.userId?.toString();
+        }
+        return ch.channelUsers!.first.userId?.toString();
+      }
+    }
+    return null;
+  }
+
   List<ChannelData> _searchedCustomerChannelList = [];
   List<ChannelData> get searchedCustomerChannelList => _searchedCustomerChannelList;
 
@@ -117,6 +131,51 @@ class ConversationController extends GetxController  with GetSingleTickerProvide
 
   ChannelData? _adminConversation;
   ChannelData? get adminConversationModel => _adminConversation;
+
+  /// bookingId -> service name (inbox rows me "kis service ke liye" dikhane ke liye)
+  final Map<String, String> _bookingServiceNames = {};
+  Map<String, String> get bookingServiceNames => _bookingServiceNames;
+  final Set<String> _bookingServiceLoading = {};
+
+  void _prefetchBookingServiceNames(List<ChannelData>? channels) {
+    for (final ch in channels ?? const <ChannelData>[]) {
+      final String refId = ch.referenceId ?? '';
+      if (refId.isNotEmpty) {
+        _loadBookingServiceName(refId);
+      }
+    }
+  }
+
+  Future<void> _loadBookingServiceName(String bookingId) async {
+    if (_bookingServiceNames.containsKey(bookingId) ||
+        _bookingServiceLoading.contains(bookingId)) {
+      return;
+    }
+    _bookingServiceLoading.add(bookingId);
+    try {
+      final Response response = await conversationRepo.getBookingServiceName(
+        bookingId,
+      );
+      if (response.statusCode == 200 && response.body is Map) {
+        final dynamic content = response.body['content'];
+        final dynamic detail = content is Map ? content['detail'] : null;
+        if (detail is List && detail.isNotEmpty && detail.first is Map) {
+          final dynamic name = detail.first['service_name'];
+          if (name is String && name.trim().isNotEmpty) {
+            _bookingServiceNames[bookingId] = name.trim();
+            update();
+          }
+        }
+      }
+    } catch (_) {}
+    _bookingServiceLoading.remove(bookingId);
+  }
+
+  String? serviceNameForChannel(ChannelData? channel) {
+    final String refId = channel?.referenceId ?? '';
+    if (refId.isEmpty) return null;
+    return _bookingServiceNames[refId];
+  }
 
 
 
@@ -197,12 +256,6 @@ class ConversationController extends GetxController  with GetSingleTickerProvide
         }
       }
 
-      if(tabController?.index == 0 && _searchedCustomerChannelList.isEmpty && _searchedProviderChannelList.isNotEmpty){
-        tabController?.index = 1;
-      } else if(tabController?.index == 1 && _searchedProviderChannelList.isEmpty && _searchedCustomerChannelList.isNotEmpty){
-        tabController?.index = 0;
-      }
-
     }else{
       ApiChecker.checkApi(response);
     }
@@ -255,8 +308,10 @@ class ConversationController extends GetxController  with GetSingleTickerProvide
 
       if(type == "customer"){
         _customerChannelPageSize =response.body['content']['channelList']['last_page'];
+        _prefetchBookingServiceNames(_customerChannelList);
       }else{
         _providerChannelPageSize =response.body['content']['channelList']['last_page'];
+        _prefetchBookingServiceNames(_providerChannelList);
       }
 
 
