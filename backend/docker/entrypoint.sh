@@ -60,6 +60,13 @@ if [ -z "$APP_URL" ] && [ -n "$RAILWAY_PUBLIC_DOMAIN" ]; then
     export APP_URL="https://$RAILWAY_PUBLIC_DOMAIN"
 fi
 
+# Railway edge TLS terminate karta hai - APP_URL hamesha https rakho
+if [ -n "$RAILWAY_PUBLIC_DOMAIN" ]; then
+    case "$APP_URL" in
+        http://*) export APP_URL="https://${APP_URL#http://}" ;;
+    esac
+fi
+
 echo "[entrypoint] APP_URL=$APP_URL PORT=$PORT"
 
 echo "[diag] disk:"
@@ -104,3 +111,4 @@ su -s /bin/sh www-data -c 'touch /var/www/html/storage/framework/sessions/__wt &
 
 echo "[entrypoint] starting supervisord..."
 exec supervisord -c /etc/supervisord.conf
+
