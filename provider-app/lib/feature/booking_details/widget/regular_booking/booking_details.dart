@@ -1,7 +1,7 @@
-import 'package:demandium_provider/feature/booking_details/widget/booking_service_location.dart';
-import 'package:demandium_provider/feature/booking_details/widget/ink_booking_sections.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/booking_service_location.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/ink_booking_sections.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 
 class BookingDetailsWidget extends StatelessWidget {

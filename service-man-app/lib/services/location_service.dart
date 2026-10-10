@@ -1,7 +1,7 @@
 
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 class LocationService extends GetxService {
   StreamSubscription<Position>? _positionSubscription;

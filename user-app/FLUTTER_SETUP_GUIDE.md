@@ -1,4 +1,4 @@
-# 🎨 DEMANDIUM FLUTTER - User App & Web Setup Guide
+# 🎨 JASSODS FLUTTER - User App & Web Setup Guide
 
 ## ✅ STATUS: READY FOR DEVELOPMENT
 

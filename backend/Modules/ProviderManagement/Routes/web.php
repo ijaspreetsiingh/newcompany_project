@@ -34,6 +34,8 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Web\Admin',
         Route::any('details/{id}', [ProviderController::class, 'details'])->name('details');
         Route::post('category-request-update', [ProviderController::class, 'categoryRequestUpdate'])->name('category_request_update');
         Route::get('view-stats/{id}', [ProviderController::class, 'viewStats'])->name('view_stats');
+        Route::get('dashboard/{id}', [ProviderController::class, 'providerDashboard'])->name('dashboard');
+        Route::get('serviceman-dashboard/{id}', [ProviderController::class, 'servicemanDashboard'])->name('serviceman_dashboard');
         Route::any('download', [ProviderController::class, 'download'])->name('download');
         Route::any('reviews/download', [ProviderController::class, 'reviewsDownload'])->name('reviews.download');
         Route::get('get-provider-info/{provider_id}', [ProviderController::class, 'getProviderInfo'])->name('get-provider-info')->withoutMiddleware('admin');

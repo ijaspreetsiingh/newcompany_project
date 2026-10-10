@@ -1,6 +1,6 @@
 
 
-import 'package:demandium_provider/feature/booking_details/model/provider.dart';
+import 'package:jassdbx_provider/feature/booking_details/model/provider.dart';
 
 class Invoice {
   final InvoiceInfo? info;

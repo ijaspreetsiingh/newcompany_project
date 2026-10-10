@@ -54,9 +54,24 @@ class LocationSettingsController extends Controller
                 ->first()?->live_values ?? 1),
         ];
 
+        $values = $this->businessSetting->whereIn('key_name', ['customer_app_settings'])->first();
+        $customerDataValues = isset($values) ? json_decode($values->live_values) : null;
+
+        $values = $this->businessSetting->whereIn('key_name', ['provider_app_settings'])->first();
+        $providerDataValues = isset($values) ? json_decode($values->live_values) : null;
+
+        $values = $this->businessSetting->whereIn('key_name', ['serviceman_app_settings'])->first();
+        $servicemanDataValues = isset($values) ? json_decode($values->live_values) : null;
+
+        $socialLoginConfigs = $this->businessSetting->where('settings_type', 'social_login')->get();
+
         return view('businesssettingsmodule::admin.app-settings', [
             'webPage' => 'location_search',
-            'locationSettings' => $locationSettings
+            'locationSettings' => $locationSettings,
+            'customerDataValues' => $customerDataValues,
+            'providerDataValues' => $providerDataValues,
+            'servicemanDataValues' => $servicemanDataValues,
+            'socialLoginConfigs' => $socialLoginConfigs,
         ]);
     }
 
@@ -82,32 +97,32 @@ class LocationSettingsController extends Controller
             }
 
             // Save settings
-            $this->businessSetting->updateOrInsert(
+            $this->businessSetting->updateOrCreate(
                 ['key_name' => 'initial_search_radius', 'settings_type' => 'location_search'],
                 ['live_values' => $validated['initial_radius']]
             );
 
-            $this->businessSetting->updateOrInsert(
+            $this->businessSetting->updateOrCreate(
                 ['key_name' => 'max_search_radius', 'settings_type' => 'location_search'],
                 ['live_values' => $validated['max_radius']]
             );
 
-            $this->businessSetting->updateOrInsert(
+            $this->businessSetting->updateOrCreate(
                 ['key_name' => 'radius_increment_step', 'settings_type' => 'location_search'],
                 ['live_values' => $validated['radius_increment_step']]
             );
 
-            $this->businessSetting->updateOrInsert(
+            $this->businessSetting->updateOrCreate(
                 ['key_name' => 'max_search_attempts', 'settings_type' => 'location_search'],
                 ['live_values' => $validated['max_search_attempts']]
             );
 
-            $this->businessSetting->updateOrInsert(
+            $this->businessSetting->updateOrCreate(
                 ['key_name' => 'show_popup_on_location_change', 'settings_type' => 'location_search'],
                 ['live_values' => $request->has('show_popup_on_location_change') ? 1 : 0]
             );
 
-            $this->businessSetting->updateOrInsert(
+            $this->businessSetting->updateOrCreate(
                 ['key_name' => 'show_zone_reminder', 'settings_type' => 'location_search'],
                 ['live_values' => $request->has('show_zone_reminder') ? 1 : 0]
             );

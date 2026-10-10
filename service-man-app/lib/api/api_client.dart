@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:get/get_connect/http/src/request/request.dart';
 import 'package:path/path.dart';
 import 'package:http/http.dart' as http;

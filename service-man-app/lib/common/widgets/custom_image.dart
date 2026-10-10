@@ -1,5 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:demandium_serviceman/utils/images.dart';
+import 'package:jassdbx_serviceman/utils/images.dart';
 import 'package:flutter/material.dart';
 
 class CustomImage extends StatelessWidget {

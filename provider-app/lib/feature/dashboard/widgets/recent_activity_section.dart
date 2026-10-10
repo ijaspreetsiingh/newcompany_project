@@ -1,7 +1,7 @@
-﻿import 'package:demandium_provider/feature/dashboard/widgets/recent_activity_graph.dart';
-import 'package:demandium_provider/feature/dashboard/widgets/recent_activity_list_view.dart';
+import 'package:jassdbx_provider/feature/dashboard/widgets/recent_activity_graph.dart';
+import 'package:jassdbx_provider/feature/dashboard/widgets/recent_activity_list_view.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class RecentActivitySection extends StatelessWidget {
   const RecentActivitySection({super.key});

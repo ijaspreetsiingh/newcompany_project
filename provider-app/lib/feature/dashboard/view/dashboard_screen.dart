@@ -1,8 +1,8 @@
-import 'package:demandium_provider/feature/dashboard/widgets/dashboard_header_new.dart';
-import 'package:demandium_provider/feature/dashboard/widgets/earning_statistics_widget.dart';
-import 'package:demandium_provider/feature/nav/widgets/subscription_trail_end_widget.dart';
+import 'package:jassdbx_provider/feature/dashboard/widgets/dashboard_header_new.dart';
+import 'package:jassdbx_provider/feature/dashboard/widgets/earning_statistics_widget.dart';
+import 'package:jassdbx_provider/feature/nav/widgets/subscription_trail_end_widget.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class DashBoardScreen extends StatefulWidget {
   const DashBoardScreen({super.key});

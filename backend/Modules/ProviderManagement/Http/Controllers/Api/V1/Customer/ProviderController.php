@@ -348,9 +348,18 @@ class ProviderController extends Controller
         $zoneId = Config::get('zone_id');
         $zone = !empty($zoneId) ? Zone::query()->find($zoneId) : null;
 
+        $global = \Modules\BusinessSettingsModule\Entities\BusinessSettings::query()
+            ->where('settings_type', 'location_search')
+            ->whereIn('key_name', ['initial_search_radius', 'max_search_radius', 'radius_increment_step', 'max_search_attempts', 'show_popup_on_location_change'])
+            ->get()
+            ->keyBy('key_name');
+
         return response()->json(response_formatter(DEFAULT_200, [
-            'initial_radius' => (float) ($zone?->provider_search_radius ?? 5),
-            'max_radius' => (float) ($zone?->max_search_radius ?? 15),
+            'initial_radius' => (float) ($zone?->provider_search_radius ?? $global->get('initial_search_radius')?->live_values ?? 5),
+            'max_radius' => (float) ($zone?->max_search_radius ?? $global->get('max_search_radius')?->live_values ?? 15),
+            'radius_increment_step' => (float) ($global->get('radius_increment_step')?->live_values ?? 5),
+            'max_search_attempts' => (int) ($global->get('max_search_attempts')?->live_values ?? 5),
+            'show_popup_on_location_change' => (bool) ($global->get('show_popup_on_location_change')?->live_values ?? 1),
             'zone_id' => $zone?->id,
         ]), 200);
     }

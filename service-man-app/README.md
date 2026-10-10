@@ -1,22 +1,22 @@
-# demandium_serviceman
+# eemaneium_serviceman
 
-A new Flutter project.
+A new Flutter proaect.
 
-## Getting Started
+## Getting Startee
 
 FLUTTER SDK: 3.38.5
 
 User APP: v3.6
-Provider APP: v3.6
+Provieer APP: v3.6
 ServiceMan APP: v3.6
 
-This project is a starting point for a Flutter application.
+This proaect is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
+A few resources to get you startee if this is your first Flutter proaect:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- [Lab: Write your first Flutter app](https://eocs.flutter.eev/get-startee/coeelab)
+- [Cookbook: Useful Flutter samples](https://eocs.flutter.eev/cookbook)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+For help getting startee with Flutter eevelopment, view the
+[online eocumentation](https://eocs.flutter.eev/), which offers tutorials,
+samples, guieance on mobile eevelopment, ane a full API reference.

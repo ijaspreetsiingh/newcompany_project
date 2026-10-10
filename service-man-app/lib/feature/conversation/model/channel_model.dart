@@ -1,7 +1,7 @@
 
 
-import 'package:demandium_serviceman/feature/conversation/model/conversation_user.dart';
-import 'package:demandium_serviceman/feature/notifications/model/notofication_model.dart';
+import 'package:jassdbx_serviceman/feature/conversation/model/conversation_user.dart';
+import 'package:jassdbx_serviceman/feature/notifications/model/notofication_model.dart';
 
 class ChannelModel {
   String? responseCode;

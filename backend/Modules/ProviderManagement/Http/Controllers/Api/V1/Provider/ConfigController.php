@@ -140,11 +140,11 @@ class ConfigController extends Controller
             'currency_decimal_point' => (business_config('currency_decimal_point', 'business_information'))->live_values ?? null,
             'currency_code' => (business_config('currency_code', 'business_information'))->live_values ?? null,
             'currency_symbol' => currency_symbol() ?? '',
-            'about_us' => route('about-us'),
-            'privacy_policy' => route('privacy-policy'),
-            'terms_and_conditions' => (business_config('terms_and_conditions', 'pages_setup'))->is_active ? route('terms-and-conditions') : "",
-            'refund_policy' => (business_config('refund_policy', 'pages_setup'))->is_active ? route('refund-policy') : "",
-            'cancellation_policy' => (business_config('cancellation_policy', 'pages_setup'))->is_active ? route('cancellation-policy') : "",
+            'about_us' => route('about-us', ['app' => 'provider']),
+            'privacy_policy' => route('privacy-policy', ['app' => 'provider']),
+            'terms_and_conditions' => (business_config('terms_and_conditions', 'pages_setup'))->is_active ? route('terms-and-conditions', ['app' => 'provider']) : "",
+            'refund_policy' => (business_config('refund_policy', 'pages_setup'))->is_active ? route('refund-policy', ['app' => 'provider']) : "",
+            'cancellation_policy' => (business_config('cancellation_policy', 'pages_setup'))->is_active ? route('cancellation-policy', ['app' => 'provider']) : "",
             'default_location' => ['default' => [
                 'lat' => (business_config('address_latitude', 'business_information'))->live_values ?? 23.811842872190,
                 'lon' => (business_config('address_longitude', 'business_information'))->live_values ?? 90.66504678008192

@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 /// AUTO-ASSIGN: serviceman ko new booking assignment aane par full-screen popup
 class IncomingBookingPopup extends StatefulWidget {

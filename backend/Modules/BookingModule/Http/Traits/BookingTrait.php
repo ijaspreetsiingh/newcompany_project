@@ -254,35 +254,11 @@ trait BookingTrait
                     placeBookingTransactionForWalletPayment($booking);   //wallet payment
                 }
 
-                //firebaseTopic
+                //firebaseTopic — topic broadcast hataya kyunki neeche per-provider
+                //token loop chalta hai (same filters). Dono chalne par subscribed
+                //provider ko 2 identical notification milte the.
                 $bookingNotification = (int) (business_config('booking_notification', 'business_information'))?->live_values;
                 $bookingNotificationType = (business_config('booking_notification_type', 'business_information'))?->live_values;
-
-                if ($bookingNotification && $bookingNotificationType == 'firebase') {
-                    try {
-                        $serviceAtProviderPlace = (int)(business_config('service_at_provider_place', 'provider_config')->live_values ?? 0);
-                        $serviceLocation = $booking->service_location;
-                        $zoneId = $booking->zone_id;
-
-                        if (isset($booking->provider_id)){
-                            $topic = "jdds_provider_{$zoneId}_{$booking->provider_id}_booking_message";
-                        }else {
-                            if ($serviceAtProviderPlace) {
-                                if ($serviceLocation === 'provider') {
-                                    $topic = "jdds_provider_{$zoneId}_provider_booking_message";
-                                }
-                                if ($serviceLocation === 'customer') {
-                                    $topic = "jdds_provider_{$zoneId}_customer_booking_message";
-                                }
-                            } else {
-                                $topic = "jdds_provider_{$zoneId}_booking_message";
-                            }
-                        }
-
-                        topic_notification($topic, 'new booking', '', 'def.png', null);
-                    } catch (Exception $e) {
-                    }
-                }
 
                 $maximumBookingAmount = (business_config('max_booking_amount', 'booking_setup'))?->live_values;
 
@@ -587,34 +563,10 @@ trait BookingTrait
                     }
                 }
 
-                //firebaseTopic
+                //firebaseTopic — hataya (topic + token loop dono chalne par 2 push),
+                //per-provider token loop neeche chalta hai
                 $bookingNotification = (int) (business_config('booking_notification', 'business_information'))?->live_values;
                 $bookingNotificationType = (business_config('booking_notification_type', 'business_information'))?->live_values;
-                if ($bookingNotification && $bookingNotificationType == 'firebase') {
-                    try {
-                        $serviceAtProviderPlace = (int)(business_config('service_at_provider_place', 'provider_config')->live_values ?? 0);
-                        $serviceLocation = $booking->service_location;
-                        $zoneId = $booking->zone_id;
-
-                        if (isset($booking->provider_id)){
-                            $topic = "jdds_provider_{$zoneId}_{$booking->provider_id}_booking_message";
-                        }else {
-                            if ($serviceAtProviderPlace) {
-                                if ($serviceLocation === 'provider') {
-                                    $topic = "jdds_provider_{$zoneId}_provider_booking_message";
-                                }
-                                if ($serviceLocation === 'customer') {
-                                    $topic = "jdds_provider_{$zoneId}_customer_booking_message";
-                                }
-                            } else {
-                                $topic = "jdds_provider_{$zoneId}_booking_message";
-                            }
-                        }
-
-                        topic_notification($topic, 'new booking', '', 'def.png', null);
-                    } catch (Exception $e) {
-                    }
-                }
 
 
                 $maximumBookingAmount = (business_config('max_booking_amount', 'booking_setup'))?->live_values;

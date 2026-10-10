@@ -1,6 +1,6 @@
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/theme/ios27_theme.dart';
+import 'package:jassdbx_serviceman/theme/ios27_theme.dart';
 import 'helper/get_di.dart' as di;
 
 
@@ -15,10 +15,10 @@ Future<void> main() async {
         ///todo you need to configure that firebase Option with your own firebase to run your app
         ///Go to android/app/google-services.json and find those key and added in below
         options: const FirebaseOptions(
-          apiKey: "AIzaSyBYMyaGbvQhVf6YIfH1TEVT56Zs83QASxg", ///current_key here
-          appId: "1:889759666168:android:f49fc09445e6d8f884d00d", ///mobilesdk_app_id here
-          messagingSenderId: "889759666168", ///project_number here
-          projectId: "demancms", ///project_id her
+          apiKey: "AIzaSyD8PuTDJaGxlkl9vtZxzGHMpIbyGTXep7A", ///current_key here
+          appId: "1:418974405325:android:80ab96be5f0fed743b0f84", ///mobilesdk_app_id here
+          messagingSenderId: "418974405325", ///project_number here
+          projectId: "newcompany-ebf01", ///project_id her
         ),
       );
     }catch(e) {
@@ -31,6 +31,13 @@ Future<void> main() async {
 
   await FlutterDownloader.initialize(debug: true, ignoreSsl: true);
 
+  // Android 13+ par notification permission warna tray me kuch nahi dikhega
+  if (GetPlatform.isMobile) {
+    try {
+      await FirebaseMessaging.instance.requestPermission();
+    } catch (_) {}
+  }
+
 
   Map<String, Map<String, String>> languages = await di.init();
   await WorkStatusService.init();
@@ -39,6 +46,15 @@ Future<void> main() async {
   try {
     await NotificationHelper.initialize(flutterLocalNotificationsPlugin);
     FirebaseMessaging.onBackgroundMessage(myBackgroundMessageHandler);
+
+    // FCM token rotate hone par turant backend me update (warna push band)
+    FirebaseMessaging.instance.onTokenRefresh.listen((_) {
+      try {
+        if (Get.find<AuthRepo>().isLoggedIn()) {
+          Get.find<AuthRepo>().updateToken();
+        }
+      } catch (_) {}
+    });
 
     if (GetPlatform.isMobile) {
       final RemoteMessage? remoteMessage = await FirebaseMessaging.instance.getInitialMessage();

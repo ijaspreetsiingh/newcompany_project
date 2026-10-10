@@ -1,7 +1,7 @@
 
-import 'package:demandium_provider/feature/payement_information/model/payment_method_list_model.dart';
-import 'package:demandium_provider/feature/payement_information/repository/payment_info_repo.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/payement_information/model/payment_method_list_model.dart';
+import 'package:jassdbx_provider/feature/payement_information/repository/payment_info_repo.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 class PaymentInfoController extends GetxController implements GetxService{

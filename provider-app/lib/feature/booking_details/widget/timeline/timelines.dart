@@ -1,4 +1,4 @@
-import 'package:demandium_provider/feature/booking_details/widget/timeline/timeline_tile_builder.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/timeline/timeline_tile_builder.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';

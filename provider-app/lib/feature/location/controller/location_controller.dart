@@ -1,7 +1,7 @@
 import 'dart:ui';
-import 'package:demandium_provider/feature/location/model/address_format.dart';
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/location/model/place_details_model.dart';
+import 'package:jassdbx_provider/feature/location/model/address_format.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/location/model/place_details_model.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 

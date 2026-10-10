@@ -1,7 +1,7 @@
-import 'package:demandium_serviceman/feature/booking_details/widget/booking_service_location.dart';
-import 'package:demandium_serviceman/helper/booking_helper.dart';
+import 'package:jassdbx_serviceman/feature/booking_details/widget/booking_service_location.dart';
+import 'package:jassdbx_serviceman/helper/booking_helper.dart';
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 class BookingInformationView extends StatelessWidget {
   final BookingDetailsContent bookingDetails;

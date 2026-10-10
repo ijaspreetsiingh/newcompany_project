@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 class AuthRepo {
   final ApiClient apiClient;
@@ -44,6 +44,16 @@ class AuthRepo {
     } else {
       deviceToken = await _saveDeviceToken();
     }
+
+    // Token null hai to backend ko '@' mat bhejo — backend me purana valid
+    // token overwrite ho jaata tha aur notification aana band ho jaate the
+    if (deviceToken == null || deviceToken.isEmpty || deviceToken == '@') {
+      if (kDebugMode) {
+        print('updateToken skipped: fcm token unavailable');
+      }
+      return null;
+    }
+
     FirebaseMessaging.instance.subscribeToTopic(AppConstants.topic);
     if (Get.find<UserController>().zoneId != null) {
       FirebaseMessaging.instance.subscribeToTopic(
@@ -55,8 +65,20 @@ class AuthRepo {
     });
   }
 
+  // On-duty toggle — backend par bhi update hota hai taki auto-assign
+  // sirf on-duty servicemen ko ho
+  Future<Response?> updateWorkStatus(bool isOnDuty) async {
+    return await apiClient.putData(AppConstants.workStatusUri, {
+      "is_on_duty": isOnDuty ? "1" : "0",
+    });
+  }
+
+  Future<Response?> getWorkStatus() async {
+    return await apiClient.getData(AppConstants.workStatusUri);
+  }
+
   Future<String?> _saveDeviceToken() async {
-    String? deviceToken = '@';
+    String? deviceToken;
     if (!GetPlatform.isWeb) {
       try {
         deviceToken = await FirebaseMessaging.instance.getToken();

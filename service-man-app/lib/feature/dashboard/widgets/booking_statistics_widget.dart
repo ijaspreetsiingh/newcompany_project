@@ -1,6 +1,6 @@
 
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 class BookingStatisticsWidget extends StatelessWidget {
   const BookingStatisticsWidget({super.key});

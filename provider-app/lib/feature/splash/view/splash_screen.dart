@@ -1,6 +1,6 @@
-import 'package:demandium_provider/helper/version.dart';
+import 'package:jassdbx_provider/helper/version.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class SplashScreen extends StatefulWidget {
   final NotificationBody? body;

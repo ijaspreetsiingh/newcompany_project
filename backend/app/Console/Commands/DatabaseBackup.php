@@ -51,6 +51,7 @@ class DatabaseBackup extends Command
             ->setHost(env('DB_HOST', '127.0.0.1'))
             ->setPort(env('DB_PORT', '3306'))
             ->setDumpBinaryPath(env('DUMP_BINARY_PATH', '/usr/bin/'))
-            ->dumpToFile($sql_file_name);
+            ->addExtraOption('--skip-ssl')
+            ->dumpToFile(base_path($sql_file_name));
     }
 }

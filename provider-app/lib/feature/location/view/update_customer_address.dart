@@ -1,5 +1,5 @@
-import 'package:demandium_provider/feature/location/widget/address_label.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/location/widget/address_label.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 

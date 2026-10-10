@@ -1,4 +1,4 @@
-import 'package:demandium_provider/feature/reporting/model/booking_report_model.dart';
+import 'package:jassdbx_provider/feature/reporting/model/booking_report_model.dart';
 
 class BusinessReportOverviewModel {
   Content? content;

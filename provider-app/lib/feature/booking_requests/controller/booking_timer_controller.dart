@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/booking_details/model/bookings_details_model.dart';
-import 'package:demandium_provider/feature/booking_details/model/assign_suggestion_model.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/booking_details/model/bookings_details_model.dart';
+import 'package:jassdbx_provider/feature/booking_details/model/assign_suggestion_model.dart';
 
 /// AUTO-ASSIGN: incoming booking popup ka controller.
 /// - booking details fetch karta hai

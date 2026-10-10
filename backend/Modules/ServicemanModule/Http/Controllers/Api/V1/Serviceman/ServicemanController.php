@@ -470,6 +470,44 @@ class ServicemanController extends Controller
     }
 
     /**
+     * On-duty toggle (serviceman app "Available for jobs" switch):
+     * OFF karne par auto-assign is serviceman ko nahi karega.
+     */
+    public function updateWorkStatus(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'is_on_duty' => 'required|in:0,1',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
+        }
+
+        $serviceman = $request->user()->serviceman;
+        if (!$serviceman) {
+            return response()->json(response_formatter(DEFAULT_204), 200);
+        }
+
+        $serviceman->is_on_duty = (int) $request->is_on_duty;
+        $serviceman->save();
+
+        return response()->json(response_formatter(DEFAULT_UPDATE_200), 200);
+    }
+
+    /**
+     * Current duty status — app start par sync ke liye
+     */
+    public function getWorkStatus(Request $request): JsonResponse
+    {
+        $serviceman = $request->user()->serviceman;
+        $isOnDuty = $serviceman ? (int) ($serviceman->is_on_duty ?? 1) : 1;
+
+        return response()->json(response_formatter(DEFAULT_200, [
+            'is_on_duty' => $isOnDuty,
+        ]), 200);
+    }
+
+    /**
      * Update serviceman's current GPS location
      * @param Request $request
      * @return JsonResponse

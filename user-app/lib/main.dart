@@ -31,18 +31,19 @@ Future<void> main() async {
       try {
         await Firebase.initializeApp(
           options: const FirebaseOptions(
-            apiKey: "AIzaSyBYMyaGbvQhVf6YIfH1TEVT56Zs83QASxg",
+            apiKey: "AIzaSyD8PuTDJaGxlkl9vtZxzGHMpIbyGTXep7A",
 
             ///current_key here
-            appId: "1:889759666168:android:64e5375b02e6121d84d00d",
+            appId: "1:418974405325:android:4b1835837c5cc32d3b0f84",
 
             ///mobilesdk_app_id here
-            messagingSenderId: "889759666168",
+            messagingSenderId: "418974405325",
 
             ///project_number here
-            projectId: "demancms",
+            projectId: "newcompany-ebf01",
 
             ///project_id her
+            storageBucket: "newcompany-ebf01.firebasestorage.app",
           ),
         );
       } catch (e) {
@@ -73,6 +74,28 @@ Future<void> main() async {
   Map<String, Map<String, String>> languages = await di.intt();
   NotificationBody? body;
   String? path;
+
+  // Pehle notification handlers register karo — pehle ye dynamic-links /
+  // getInitialMessage ke baad the, unke throw karne par initialize aur
+  // onBackgroundMessage kabhi call hi nahi hote the (push dead)
+  try {
+    await NotificationHelper.initialize(flutterLocalNotificationsPlugin);
+    FirebaseMessaging.onBackgroundMessage(myBackgroundMessageHandler);
+
+    // FCM token rotate hone par turant backend update
+    FirebaseMessaging.instance.onTokenRefresh.listen((_) {
+      try {
+        if (Get.find<AuthController>().isLoggedIn()) {
+          Get.find<AuthController>().updateToken();
+        }
+      } catch (_) {}
+    });
+  } catch (e) {
+    if (kDebugMode) {
+      print("");
+    }
+  }
+
   try {
     if (!kIsWeb) {
       path = await inttDynamicLinks();
@@ -91,8 +114,6 @@ Future<void> main() async {
         } catch (_) {}
       });
     }
-    await NotificationHelper.initialize(flutterLocalNotificationsPlugin);
-    FirebaseMessaging.onBackgroundMessage(myBackgroundMessageHandler);
   } catch (e) {
     if (kDebugMode) {
       print("");

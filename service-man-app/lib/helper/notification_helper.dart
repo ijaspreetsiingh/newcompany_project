@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
-import 'package:demandium_serviceman/common/widgets/demo_reset_dialog_widget.dart';
-import 'package:demandium_serviceman/feature/conversation/view/incoming_call_screen.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/common/widgets/demo_reset_dialog_widget.dart';
+import 'package:jassdbx_serviceman/feature/conversation/view/incoming_call_screen.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
@@ -21,6 +21,16 @@ class NotificationHelper {
           'incoming_call',
           'Incoming Calls',
           description: 'In-app voice and video call alerts',
+          importance: Importance.max,
+          playSound: true,
+          enableVibration: true,
+        ));
+        // FCM background messages 'jassbooking' channel me aate hain —
+        // channel exist na ho to Android 8+ notification silently drop hota hai
+        await androidPlugin?.createNotificationChannel(const AndroidNotificationChannel(
+          'jassbooking',
+          'Booking Notifications',
+          description: 'Booking and assignment updates',
           importance: Importance.max,
           playSound: true,
           enableVibration: true,
@@ -108,7 +118,10 @@ class NotificationHelper {
         }
       }
 
-      if(message.data['type']=='chatting'){
+      // NOTE: ek hi if/else chain — pehle do independent if-chain the jisse
+      // call/booking/new_booking_request messages DO baar show hote the
+      // (in-app action + final else ka showNotification)
+      else if(message.data['type']=='chatting'){
 
         if((message.data['channel_id']!="" && message.data['channel_id']!=null)){
           if( Get.currentRoute.contains(RouteHelper.chatScreen)
@@ -218,12 +231,12 @@ class NotificationHelper {
 
       if(image != null && image.isNotEmpty) {
         try{
-          await showBigPictureNotificationHiddenLargeIcon(title!, body!, playLoad, image, fln);
+          await showBigPictureNotificationHiddenLargeIcon(title!, body ?? '', playLoad, image, fln);
         }catch(e) {
-          await showBigTextNotification(title :title!, body: '',payload: playLoad, fln : fln);
+          await showBigTextNotification(title :title!, body: body ?? '',payload: playLoad, fln : fln);
         }
       }else {
-        await showBigTextNotification(title : title ??"", body: '',payload: playLoad, fln : fln);
+        await showBigTextNotification(title : title ??"", body: body ?? '',payload: playLoad, fln : fln);
       }
     }
   }

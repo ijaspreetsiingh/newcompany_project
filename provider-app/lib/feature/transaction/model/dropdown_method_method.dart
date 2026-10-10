@@ -1,5 +1,5 @@
-import 'package:demandium_provider/feature/payement_information/model/payment_method_list_model.dart';
-import 'package:demandium_provider/feature/transaction/model/withdraw_method_model.dart';
+import 'package:jassdbx_provider/feature/payement_information/model/payment_method_list_model.dart';
+import 'package:jassdbx_provider/feature/transaction/model/withdraw_method_model.dart';
 
 class DropdownMethodModel{
   String? id;

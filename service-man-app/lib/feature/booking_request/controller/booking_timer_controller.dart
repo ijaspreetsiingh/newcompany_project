@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 /// AUTO-ASSIGN: serviceman incoming booking popup ka countdown timer controller.
 /// Backend se remaining seconds lekar countdown chalata hai,
@@ -79,7 +79,9 @@ class BookingTimerController extends GetxController implements GetxService {
     update();
 
     Response response = await bookingRequestRepo.acceptBooking(_bookingId!);
-    if (response.statusCode == 200) {
+    // sirf statusCode 200 enough nahi — backend default_204 (expired/not-found)
+    // bhi 200 par bhejta hai; response_code check karo
+    if (response.statusCode == 200 && response.body['response_code'] == 'status_update_success_200') {
       _timer?.cancel();
       _accepted = true;
       _isLoading = false;
@@ -91,7 +93,11 @@ class BookingTimerController extends GetxController implements GetxService {
     } else {
       _isLoading = false;
       ApiChecker.checkApi(response);
+      _timer?.cancel();
       _expired = true;
+      Future.delayed(const Duration(seconds: 2), () {
+        _closePopupAndRefresh();
+      });
     }
     update();
   }
@@ -101,9 +107,14 @@ class BookingTimerController extends GetxController implements GetxService {
     _isLoading = true;
     update();
 
-    await bookingRequestRepo.rejectBooking(_bookingId!);
+    Response response = await bookingRequestRepo.rejectBooking(_bookingId!);
     _timer?.cancel();
-    _rejected = true;
+    // failure (default_204) par bhi pehle popup band ho jaata tha jaise reject ho gaya ho
+    if (response.statusCode == 200 && response.body['response_code'] == 'default_200') {
+      _rejected = true;
+    } else {
+      ApiChecker.checkApi(response);
+    }
     _isLoading = false;
     update();
 

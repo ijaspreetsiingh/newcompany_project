@@ -1,6 +1,6 @@
-import 'package:demandium_provider/feature/booking_requests/controller/calendar_controller.dart';
-import 'package:demandium_provider/feature/booking_requests/widgets/month_picker_widget.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/booking_requests/controller/calendar_controller.dart';
+import 'package:jassdbx_provider/feature/booking_requests/widgets/month_picker_widget.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 /// Compact month navigation row rendered on top of the calendar card:

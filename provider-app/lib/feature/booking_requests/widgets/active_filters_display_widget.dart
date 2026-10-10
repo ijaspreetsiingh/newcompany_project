@@ -1,7 +1,7 @@
-import 'package:demandium_provider/common/widgets/circular_icon_button_widget.dart';
-import 'package:demandium_provider/feature/booking_requests/controller/calendar_controller.dart';
-import 'package:demandium_provider/feature/booking_requests/controller/calender_order_filter_controller.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/common/widgets/circular_icon_button_widget.dart';
+import 'package:jassdbx_provider/feature/booking_requests/controller/calendar_controller.dart';
+import 'package:jassdbx_provider/feature/booking_requests/controller/calender_order_filter_controller.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 /// Widget to display active filters as chips with individual clear buttons

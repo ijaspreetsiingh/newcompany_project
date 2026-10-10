@@ -1,5 +1,5 @@
-import 'package:demandium_serviceman/common/widgets/no_data_screen.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/common/widgets/no_data_screen.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:get/get.dart';
 
 

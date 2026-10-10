@@ -897,13 +897,15 @@ class SocialMediaLoginOptions {
   int? google;
   int? facebook;
   int? apple;
+  String? googleWebClientId;
 
-  SocialMediaLoginOptions({this.google, this.facebook, this.apple});
+  SocialMediaLoginOptions({this.google, this.facebook, this.apple, this.googleWebClientId});
 
   SocialMediaLoginOptions.fromJson(Map<String, dynamic> json) {
     google = json['google'];
     facebook = json['facebook'];
     apple = json['apple'];
+    googleWebClientId = json['google_web_client_id'];
   }
 
   Map<String, dynamic> toJson() {
@@ -911,6 +913,7 @@ class SocialMediaLoginOptions {
     data['google'] = google;
     data['facebook'] = facebook;
     data['apple'] = apple;
+    data['google_web_client_id'] = googleWebClientId;
     return data;
   }
 }

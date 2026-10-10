@@ -28,6 +28,16 @@ class NotificationHelper {
           playSound: true,
           enableVibration: true,
         ));
+        // FCM background messages 'jassbooking' channel me aate hain —
+        // channel exist na ho to Android 8+ notification silently drop hoti hai
+        await androidPlugin?.createNotificationChannel(const AndroidNotificationChannel(
+          'jassbooking',
+          'Booking Notifications',
+          description: 'Booking and order updates',
+          importance: Importance.max,
+          playSound: true,
+          enableVibration: true,
+        ));
       } catch (_) {}
     }
 

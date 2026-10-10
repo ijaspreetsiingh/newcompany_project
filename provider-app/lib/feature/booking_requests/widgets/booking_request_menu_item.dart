@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class BookingRequestMenuItem extends GetView<BookingRequestController> {
   const BookingRequestMenuItem({super.key, required this.title,this.index, required this.bookingCount});

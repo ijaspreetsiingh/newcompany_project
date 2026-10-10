@@ -200,6 +200,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Web\Admin',
         Route::put('update-storage-connection', [ConfigurationController::class, 'updateStorageConnectionSettings'])->name('update-storage-connection');
 
         Route::get('third-party/{webPage}', [ConfigurationController::class, 'thirdParty'])->name('third-party');
+
+        Route::get('app-content', [\Modules\BusinessSettingsModule\Http\Controllers\Web\Admin\AppContentController::class, 'index'])->name('app-content');
+        Route::put('app-content', [\Modules\BusinessSettingsModule\Http\Controllers\Web\Admin\AppContentController::class, 'update'])->name('app-content.update');
         Route::put('store-third-party-data', [ConfigurationController::class, 'storeThirdPartyData'])->name('store-third-party-data');
         Route::post('update-firebase-otp-status', [ConfigurationController::class, 'updateFirebaseOtpStatus'])->name('update-firebase-otp-status');
         Route::get('ai-configuration', [ConfigurationController::class, 'AIConfiguration'])->name('ai-configuration');

@@ -1,7 +1,7 @@
-import 'package:demandium_provider/feature/booking_requests/controller/calendar_controller.dart';
-import 'package:demandium_provider/feature/booking_requests/model/booking_appointment_model.dart';
-import 'package:demandium_provider/helper/extension_helper.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/booking_requests/controller/calendar_controller.dart';
+import 'package:jassdbx_provider/feature/booking_requests/model/booking_appointment_model.dart';
+import 'package:jassdbx_provider/helper/extension_helper.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class TimeCellOrderCountWidget extends StatelessWidget {
   final BookingAppointmentModel appointment;

@@ -1,6 +1,6 @@
-import 'package:demandium_provider/api/api_checker.dart';
-import 'package:demandium_provider/feature/html/model/pages_details_model.dart';
-import 'package:demandium_provider/feature/html/repository/html_repo.dart';
+import 'package:jassdbx_provider/api/api_checker.dart';
+import 'package:jassdbx_provider/feature/html/model/pages_details_model.dart';
+import 'package:jassdbx_provider/feature/html/repository/html_repo.dart';
 import 'package:get/get.dart';
 
 

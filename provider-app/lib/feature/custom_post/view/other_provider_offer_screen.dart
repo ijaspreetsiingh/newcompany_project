@@ -1,5 +1,5 @@
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/custom_post/widget/others_provider_offer_list_screen.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/custom_post/widget/others_provider_offer_list_screen.dart';
 import 'package:get/get.dart';
 
 class OtherProviderOfferScreen extends StatelessWidget {

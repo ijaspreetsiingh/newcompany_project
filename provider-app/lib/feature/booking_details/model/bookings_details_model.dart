@@ -1,6 +1,6 @@
-import 'package:demandium_provider/feature/dashboard/model/dashboard_serviceman_model.dart';
-import 'package:demandium_provider/feature/review/model/review_model.dart';
-import 'package:demandium_provider/feature/serviceman/model/service_man_model.dart';
+import 'package:jassdbx_provider/feature/dashboard/model/dashboard_serviceman_model.dart';
+import 'package:jassdbx_provider/feature/review/model/review_model.dart';
+import 'package:jassdbx_provider/feature/serviceman/model/service_man_model.dart';
 
 class BookingDetailsModel {
   String? responseCode;

@@ -3,19 +3,18 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jdds/common/design_system/nest_screens_kit.dart';
-import 'package:jdds/helper/responsive_helper.dart';
 import 'package:jdds/util/dimensions.dart';
 import 'package:jdds/util/styles.dart';
 
 /// Bottom Sheet Style Radius Search Dialog
 /// Same design as location popup - slides up from bottom
-class RadiusSearchBottomSheet extends StatelessWidget {
+class RadiusSearchBottomSheet extends StatefulWidget {
   final double? currentRadius;
   final double? nextRadius;
   final double? maxRadius;
   final double? step;
   final double? radius;
-  final VoidCallback? onExpand;
+  final Future<void> Function()? onExpand;
   final VoidCallback? onDismiss;
   final VoidCallback? onChangeAddress;
   final VoidCallback? onSetManually;
@@ -34,12 +33,13 @@ class RadiusSearchBottomSheet extends StatelessWidget {
   });
 
   /// Radius badhane wala popup (max se pehle).
+  /// onExpand async hai — sheet loading state me button spin kar sakta hai.
   static Future<void> show({
     required double currentRadius,
     required double nextRadius,
     required double step,
     required double maxRadius,
-    required VoidCallback onExpand,
+    required Future<void> Function() onExpand,
     required VoidCallback onSetManually,
     required VoidCallback onDismiss,
   }) {
@@ -107,6 +107,13 @@ class RadiusSearchBottomSheet extends StatelessWidget {
   bool get _isExpandMode => onExpand != null;
 
   @override
+  State<RadiusSearchBottomSheet> createState() => _RadiusSearchBottomSheetState();
+}
+
+class _RadiusSearchBottomSheetState extends State<RadiusSearchBottomSheet> {
+  bool _loading = false;
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: MediaQuery.of(context).viewInsets,
@@ -147,8 +154,9 @@ class RadiusSearchBottomSheet extends StatelessWidget {
 
   Widget _buildContent(BuildContext context) {
     final Color primary = NestInk.primary;
-    final double displayRadius =
-        _isExpandMode ? (currentRadius ?? 0) : (radius ?? 0);
+    final double displayRadius = widget._isExpandMode
+        ? (widget.currentRadius ?? 0)
+        : (widget.radius ?? 0);
     final bool wholeDisplay =
         displayRadius.truncateToDouble() == displayRadius;
 
@@ -175,7 +183,7 @@ class RadiusSearchBottomSheet extends StatelessWidget {
             color: primary.withValues(alpha: 0.12),
           ),
           child: Icon(
-            _isExpandMode
+            widget._isExpandMode
                 ? Icons.location_searching_rounded
                 : Icons.location_off_rounded,
             size: 34,
@@ -195,7 +203,7 @@ class RadiusSearchBottomSheet extends StatelessWidget {
         const SizedBox(height: 10),
 
         Text(
-          _fmt(
+          RadiusSearchBottomSheet._fmt(
             'no_provider_within'.tr,
             'radius',
             displayRadius.toStringAsFixed(wholeDisplay ? 0 : 2),
@@ -208,14 +216,16 @@ class RadiusSearchBottomSheet extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
 
-        if (_isExpandMode) ...[
+        if (widget._isExpandMode) ...[
           const SizedBox(height: 16),
 
           /// Radius progression chip: 5 km → 10 km
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _radiusChip('${_km(currentRadius ?? 0)} km', primary),
+              _radiusChip(
+                  '${RadiusSearchBottomSheet._km(widget.currentRadius ?? 0)} km',
+                  primary),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Icon(
@@ -224,12 +234,17 @@ class RadiusSearchBottomSheet extends StatelessWidget {
                   color: primary,
                 ),
               ),
-              _radiusChip('${_km(nextRadius ?? 0)} km', primary),
+              _radiusChip(
+                  '${RadiusSearchBottomSheet._km(widget.nextRadius ?? 0)} km',
+                  primary),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            _fmt('max_radius'.tr, 'radius', _km(maxRadius ?? 0)),
+            RadiusSearchBottomSheet._fmt(
+                'max_radius'.tr,
+                'radius',
+                RadiusSearchBottomSheet._km(widget.maxRadius ?? 0)),
             style: robotoRegular.copyWith(
               fontSize: Dimensions.fontSizeSmall,
               color: NestInk.mutedText,
@@ -245,28 +260,47 @@ class RadiusSearchBottomSheet extends StatelessWidget {
           width: double.infinity,
           height: 52,
           child: ElevatedButton(
-            onPressed: () {
-              Get.back();
-              (_isExpandMode ? onExpand : onChangeAddress)?.call();
-            },
+            onPressed: _loading
+                ? null
+                : () {
+                    if (widget._isExpandMode) {
+                      // Sheet turant band karo, expand background me chalega
+                      Navigator.of(context).pop();
+                      widget.onExpand?.call();
+                    } else {
+                      Navigator.of(context).pop();
+                      widget.onChangeAddress?.call();
+                    }
+                  },
             style: ElevatedButton.styleFrom(
               backgroundColor: primary,
               foregroundColor: NestInk.background,
+              disabledBackgroundColor: primary.withValues(alpha: 0.7),
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            child: Text(
-              (_isExpandMode
-                      ? 'search_with_more_radius'
-                      : 'change_address')
-                  .tr,
-              style: robotoMedium.copyWith(
-                fontSize: Dimensions.fontSizeDefault,
-                color: NestInk.background,
-              ),
-            ),
+            child: _loading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Text(
+                    (widget._isExpandMode
+                            ? 'search_with_more_radius'
+                            : 'change_address')
+                        .tr,
+                    style: robotoMedium.copyWith(
+                      fontSize: Dimensions.fontSizeDefault,
+                      color: NestInk.background,
+                    ),
+                  ),
           ),
         ),
         const SizedBox(height: 12),
@@ -276,10 +310,12 @@ class RadiusSearchBottomSheet extends StatelessWidget {
           width: double.infinity,
           height: 52,
           child: OutlinedButton(
-            onPressed: () {
-              Get.back();
-              onSetManually?.call();
-            },
+            onPressed: _loading
+                ? null
+                : () {
+                    Navigator.of(context).pop();
+                    widget.onSetManually?.call();
+                  },
             style: OutlinedButton.styleFrom(
               foregroundColor: NestInk.primary,
               side: BorderSide(color: NestInk.border, width: 1.5),
@@ -298,7 +334,7 @@ class RadiusSearchBottomSheet extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'set_manually'.tr,
+                  'Set Location Manually',
                   style: robotoMedium.copyWith(
                     fontSize: Dimensions.fontSizeDefault,
                     color: NestInk.primary,
@@ -315,10 +351,12 @@ class RadiusSearchBottomSheet extends StatelessWidget {
           width: double.infinity,
           height: 52,
           child: OutlinedButton(
-            onPressed: () {
-              Get.back();
-              onDismiss?.call();
-            },
+            onPressed: _loading
+                ? null
+                : () {
+                    Navigator.of(context).pop();
+                    widget.onDismiss?.call();
+                  },
             style: OutlinedButton.styleFrom(
               foregroundColor: NestInk.mutedText,
               side: BorderSide(color: NestInk.border, width: 1.5),

@@ -255,6 +255,8 @@ class Booking extends Model
             $providerPermission = isNotificationActive(null, 'booking', 'notification', 'provider');
             $servicemanPermission = isNotificationActive(null, 'booking', 'notification', 'serviceman');
 
+            $notifications = [];
+
             if ($model->isDirty('booking_status')) {
                 $key = null;
                 if ($model->booking_status == 'pending') {
@@ -290,7 +292,9 @@ class Booking extends Model
                         'settings_type' => 'customer_notification'
                     ];
                 }
-                if ($providerPermission && $model->is_repeated == 0) {
+                if ($providerPermission && $model->is_repeated == 0 && !$model->isDirty('serviceman_id')) {
+                    // serviceman_id bhi dirty hai to isi save me 'serviceman_assign'
+                    // push provider ko jaayega — alag se booking_accepted mat bhejo
                     $notifications[] = [
                         'key' => 'booking_accepted',
                         'settings_type' => 'provider_notification'
@@ -500,20 +504,31 @@ class Booking extends Model
             $notifications = [];
             $booking_notification_status = business_config('booking', 'notification_settings')->live_values;
 
-            if ($model->isDirty('serviceman_id') && !$model->is_repeted) {
-                if ($bookingScheduleTimeChange) {
+            if ($model->isDirty('serviceman_id') && !$model->is_repeated) {
+                // Customer ko sirf PEHLI baar "serviceman assigned" bhejo:
+                //  - accept wali save me booking_status bhi dirty hota hai (booking_accepted push already jaata hai)
+                //  - rotation me har naye serviceman par pehle wali push dubara nahi chahiye
+                $originalServicemanId = $model->getOriginal('serviceman_id');
+                if ($bookingScheduleTimeChange
+                    && empty($originalServicemanId)
+                    && !empty($model->serviceman_id)
+                    && !$model->isDirty('booking_status')
+                    && !$model->serviceman_assign_customer_notified) {
                     $notifications[] = [
                         'key' => 'serviceman_assign',
                         'settings_type' => 'customer_notification'
                     ];
+                    $model->serviceman_assign_customer_notified = 1;
+                    $model->timestamps = false;
+                    $model->saveQuietly();
                 }
-                if ($bookingScheduleTimeChangeProvider && !$model->is_repeted) {
+                if ($bookingScheduleTimeChangeProvider) {
                     $notifications[] = [
                         'key' => 'serviceman_assign',
                         'settings_type' => 'provider_notification'
                     ];
                 }
-                if ($bookingScheduleTimeChangeServiceman && !$model->is_repeted) {
+                if ($bookingScheduleTimeChangeServiceman) {
                     $notifications[] = [
                         'key' => 'serviceman_assign',
                         'settings_type' => 'serviceman_notification'

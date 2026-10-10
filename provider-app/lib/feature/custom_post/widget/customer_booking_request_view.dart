@@ -1,6 +1,6 @@
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/booking_details/widget/ink_booking_sections.dart';
-import 'package:demandium_provider/feature/custom_post/model/post_model.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/ink_booking_sections.dart';
+import 'package:jassdbx_provider/feature/custom_post/model/post_model.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 

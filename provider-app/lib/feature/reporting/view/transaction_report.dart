@@ -1,6 +1,6 @@
-import 'package:demandium_provider/feature/reporting/view/report_search_filter.dart';
-import 'package:demandium_provider/feature/reporting/widgets/report_panels.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/reporting/view/report_search_filter.dart';
+import 'package:jassdbx_provider/feature/reporting/widgets/report_panels.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 

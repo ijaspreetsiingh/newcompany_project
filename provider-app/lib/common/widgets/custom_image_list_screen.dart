@@ -1,5 +1,5 @@
-import 'package:demandium_provider/common/widgets/zoom_image.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/common/widgets/zoom_image.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 class ImageDetailScreen extends StatefulWidget {

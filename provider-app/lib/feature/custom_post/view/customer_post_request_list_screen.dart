@@ -1,5 +1,5 @@
-﻿import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/custom_post/widget/custom_post_list_view.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/custom_post/widget/custom_post_list_view.dart';
 import 'package:get/get.dart';
 
 class CustomerRequestListScreen extends StatefulWidget {

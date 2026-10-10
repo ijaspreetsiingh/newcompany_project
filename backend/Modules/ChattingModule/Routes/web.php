@@ -12,6 +12,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Web\Admin',
         Route::post('create-channel', [ChattingController::class, 'createChannel'])->name('create-channel');
         Route::post('send-message', [ChattingController::class, 'sendMessage'])->name('send-message');
         Route::get('ajax-conversation', [ChattingController::class, 'conversation'])->name('ajax-conversation');
+        Route::get('admin-conversation', [ChattingController::class, 'adminConversation'])->name('admin-conversation');
     });
 });
 

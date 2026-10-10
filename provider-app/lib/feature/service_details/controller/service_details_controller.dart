@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/service_details/model/service_faq_model.dart';
-import 'package:demandium_provider/feature/service_details/model/variant_model.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/service_details/model/service_faq_model.dart';
+import 'package:jassdbx_provider/feature/service_details/model/variant_model.dart';
 
 
 enum ServiceTabControllerState {serviceOverview,priceTable,faq,review}

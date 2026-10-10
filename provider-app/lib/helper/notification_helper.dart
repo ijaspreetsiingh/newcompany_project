@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
-import 'package:demandium_provider/common/widgets/demo_reset_dialog_widget.dart';
-import 'package:demandium_provider/feature/conversation/view/incoming_call_screen.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/common/widgets/demo_reset_dialog_widget.dart';
+import 'package:jassdbx_provider/feature/conversation/view/incoming_call_screen.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
@@ -25,6 +25,23 @@ class NotificationHelper {
           importance: Importance.max,
           playSound: true,
           enableVibration: true,
+        ));
+        // FCM background messages default channel me aate hain — channel
+        // exist na ho to Android 8+ notification silently drop kar deta hai
+        await androidPlugin?.createNotificationChannel(const AndroidNotificationChannel(
+          'jassbooking',
+          'Booking Notifications',
+          description: 'Booking and order updates',
+          importance: Importance.max,
+          playSound: true,
+          enableVibration: true,
+        ));
+        await androidPlugin?.createNotificationChannel(const AndroidNotificationChannel(
+          'jassbookingWithoutsound',
+          'Booking Notifications (Silent)',
+          description: 'Silent booking and order updates',
+          importance: Importance.max,
+          playSound: false,
         ));
       } catch (_) {}
     }

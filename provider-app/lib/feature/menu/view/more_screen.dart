@@ -1,8 +1,8 @@
 import 'dart:ui';
 
 import 'package:get/get.dart';
-import 'package:demandium_provider/feature/profile/model/provider_model.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/profile/model/provider_model.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class MoreScreen extends StatefulWidget {
   const MoreScreen({super.key});

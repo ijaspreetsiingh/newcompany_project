@@ -1,4 +1,4 @@
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:get/get.dart';
 
 class BottomNavScreen extends StatefulWidget {
@@ -44,6 +44,7 @@ class BottomNavScreenState extends State<BottomNavScreen>
     Get.find<ConversationController>().getChannelList(1, type: "customer");
     Get.find<ConversationController>().getChannelList(1, type: "provider");
     Get.find<AuthController>().updateToken();
+    WorkStatusService.syncFromServer();
   }
 
   int _currentIndex = 0;

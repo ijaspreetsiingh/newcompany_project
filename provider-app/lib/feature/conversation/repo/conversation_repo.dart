@@ -1,7 +1,7 @@
 
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class ConversationRepo {
 

@@ -1,5 +1,5 @@
-import 'package:demandium_provider/helper/route_helper.dart';
-import 'package:demandium_provider/feature/profile/controller/user_controller.dart';
+import 'package:jassdbx_provider/helper/route_helper.dart';
+import 'package:jassdbx_provider/feature/profile/controller/user_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

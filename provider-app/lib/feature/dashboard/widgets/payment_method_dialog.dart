@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:demandium_provider/helper/extension_helper.dart';
+import 'package:jassdbx_provider/helper/extension_helper.dart';
 import 'package:universal_html/html.dart' as html;
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 class PaymentMethodDialog extends StatelessWidget {

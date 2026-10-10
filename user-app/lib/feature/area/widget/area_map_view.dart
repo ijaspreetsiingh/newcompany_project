@@ -93,7 +93,7 @@ class _AreaMapViewScreenState extends State<AreaMapViewScreen> {
                         children: [
                           TileLayer(
                             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                            userAgentPackageName: 'com.sixamtech.demandium.user',
+                            userAgentPackageName: 'com.jassdbx.jassods',
                           ),
                           MarkerLayer(markers: serviceAreaController.markers),
                           PolygonLayer(polygons: serviceAreaController.polygone),

@@ -1,4 +1,4 @@
-import 'package:demandium_provider/feature/profile/model/provider_model.dart';
+import 'package:jassdbx_provider/feature/profile/model/provider_model.dart';
 
 class PackageSubscriptionDetailsModel {
   String? responseCode;

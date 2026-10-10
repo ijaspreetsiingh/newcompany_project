@@ -1,5 +1,5 @@
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/profile/view/view/auto_assign_settings_screen.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/profile/view/view/auto_assign_settings_screen.dart';
 import 'package:get/get.dart';
 
 class BookingSetupTabItemWidget extends StatelessWidget {

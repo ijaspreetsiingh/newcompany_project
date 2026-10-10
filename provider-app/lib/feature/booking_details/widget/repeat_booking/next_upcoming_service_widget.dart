@@ -1,6 +1,6 @@
-import 'package:demandium_provider/feature/booking_details/widget/booking_status_button_widget.dart';
-import 'package:demandium_provider/helper/extension_helper.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/booking_status_button_widget.dart';
+import 'package:jassdbx_provider/helper/extension_helper.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 class NextUpcomingServiceWidget extends StatelessWidget {

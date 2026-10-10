@@ -354,8 +354,22 @@ class LoginController extends Controller
 
         try {
             if ($request['medium'] == 'google') {
-                $res = $client->request('GET', 'https://www.googleapis.com/oauth2/v3/userinfo?access_token=' . $token);
-                $data = json_decode($res->getBody()->getContents(), true);
+                if (substr_count($token, '.') === 2) {
+                    $socialSetup = login_setup('social_media_for_login');
+                    $googleCfg = json_decode($socialSetup?->value ?? '[]', true) ?? [];
+                    $expectedAud = trim((string) ($googleCfg['google_web_client_id'] ?? ''));
+                    if ($expectedAud === '') {
+                        return response()->json(response_formatter(DEFAULT_401), 200);
+                    }
+                    $res = $client->request('GET', 'https://oauth2.googleapis.com/tokeninfo?id_token=' . urlencode($token));
+                    $data = json_decode($res->getBody()->getContents(), true);
+                    if (!isset($data['email']) || ($data['aud'] ?? '') !== $expectedAud) {
+                        return response()->json(response_formatter(DEFAULT_401), 200);
+                    }
+                } else {
+                    $res = $client->request('GET', 'https://www.googleapis.com/oauth2/v3/userinfo?access_token=' . $token);
+                    $data = json_decode($res->getBody()->getContents(), true);
+                }
             } elseif ($request['medium'] == 'facebook') {
                 $res = $client->request('GET', 'https://graph.facebook.com/' . $unique_id . '?access_token=' . $token . '&&fields=name,email');
                 $data = json_decode($res->getBody()->getContents(), true);

@@ -1,8 +1,8 @@
-import 'package:demandium_provider/feature/booking_details/widget/booking_service_location.dart';
-import 'package:demandium_provider/helper/booking_helper.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/booking_service_location.dart';
+import 'package:jassdbx_provider/helper/booking_helper.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 /// ---------------------------------------------------------------------------
 /// INK design sections for Booking Details

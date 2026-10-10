@@ -1,9 +1,9 @@
-import 'package:demandium_provider/common/enums/payment_info_menu_enum.dart';
-import 'package:demandium_provider/common/widgets/custom_alert_dialog_widget.dart';
-import 'package:demandium_provider/common/widgets/custom_menu_item_widget.dart';
-import 'package:demandium_provider/feature/payement_information/controller/payment_info_controller.dart';
-import 'package:demandium_provider/feature/payement_information/model/payment_method_list_model.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/common/enums/payment_info_menu_enum.dart';
+import 'package:jassdbx_provider/common/widgets/custom_alert_dialog_widget.dart';
+import 'package:jassdbx_provider/common/widgets/custom_menu_item_widget.dart';
+import 'package:jassdbx_provider/feature/payement_information/controller/payment_info_controller.dart';
+import 'package:jassdbx_provider/feature/payement_information/model/payment_method_list_model.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 

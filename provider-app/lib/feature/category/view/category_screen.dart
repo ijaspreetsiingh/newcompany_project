@@ -1,9 +1,9 @@
 import 'dart:ui';
 
-import 'package:demandium_provider/feature/tutorial/controller/tutorial_controller.dart';
-import 'package:demandium_provider/helper/help_me.dart';
+import 'package:jassdbx_provider/feature/tutorial/controller/tutorial_controller.dart';
+import 'package:jassdbx_provider/helper/help_me.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 class AllServicesScreen extends StatefulWidget {

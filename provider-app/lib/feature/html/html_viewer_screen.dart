@@ -1,6 +1,6 @@
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class HtmlViewerScreen extends StatefulWidget {

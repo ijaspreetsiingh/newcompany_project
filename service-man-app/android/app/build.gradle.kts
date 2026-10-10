@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.sixamtech.demandium.serviceman"
+    namespace = "com.jassdbx.jassods.serviceman"
     compileSdk = 36
 
     compileOptions {
@@ -34,7 +34,7 @@ android {
 
     defaultConfig {
         multiDexEnabled = true
-        applicationId = "com.sixamtech.demandium.serviceman"
+        applicationId = "com.jassdbx.jassods.serviceman"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode

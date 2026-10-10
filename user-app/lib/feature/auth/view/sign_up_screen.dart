@@ -16,19 +16,15 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   var firstNameController = TextEditingController();
-  var lastNameController = TextEditingController();
   var emailController = TextEditingController();
   var phoneController = TextEditingController();
   var passwordController = TextEditingController();
-  var confirmPasswordController = TextEditingController();
   var referCodeController = TextEditingController();
 
   final FocusNode _firstNameFocus = FocusNode();
-  final FocusNode _lastNameFocus = FocusNode();
   final FocusNode _emailFocus = FocusNode();
   final FocusNode _phoneFocus = FocusNode();
   final FocusNode _passwordFocus = FocusNode();
-  final FocusNode _confirmPasswordFocus = FocusNode();
   final FocusNode _referCodeFocus = FocusNode();
 
   late final GlobalKey<FormState> customerSignUpKey = GlobalKey<FormState>();
@@ -71,10 +67,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
             : null,
         body: GetBuilder<AuthController>(
           builder: (authController) {
-            var config = Get.find<SplashController>().configModel.content;
-            var socialLogin =
-                config?.customerLogin?.loginOption?.socialMediaLogin;
-
             return Column(
               children: [
                 Container(
@@ -107,7 +99,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                       ),
                       const Spacer(),
-                      const SizedBox(width: 48),
+                      TextButton(
+                        onPressed: () =>
+                            Get.offAllNamed(RouteHelper.getMainRoute("home")),
+                        child: Text(
+                          'skip'.tr,
+                          style: robotoBold.copyWith(
+                            fontSize: Dimensions.fontSizeDefault,
+                            color: NestInk.primary,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -175,56 +177,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           _buildSectionTitle('Personal Information'),
                           const SizedBox(height: 16),
 
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildFieldLabel('first_name'.tr),
-                                    CustomTextField(
-                                      hintText: 'enter_your_first_name'.tr,
-                                      controller: firstNameController,
-                                      focusNode: _firstNameFocus,
-                                      nextFocus: _lastNameFocus,
-                                      inputType: TextInputType.name,
-                                      capitalization: TextCapitalization.words,
-                                      isShowBorder: true,
-                                      borderRadius: 12,
-                                      onValidate: (String? value) {
-                                        return FormValidation()
-                                            .isValidFirstName(value!);
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildFieldLabel('last_name'.tr),
-                                    CustomTextField(
-                                      hintText: 'enter_your_last_name'.tr,
-                                      controller: lastNameController,
-                                      focusNode: _lastNameFocus,
-                                      nextFocus: _emailFocus,
-                                      inputType: TextInputType.name,
-                                      capitalization: TextCapitalization.words,
-                                      isShowBorder: true,
-                                      borderRadius: 12,
-                                      onValidate: (String? value) {
-                                        return FormValidation().isValidLastName(
-                                          value!,
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                          _buildFieldLabel('Full Name'),
+                          CustomTextField(
+                            hintText: 'e.g. Rahul Sharma',
+                            controller: firstNameController,
+                            focusNode: _firstNameFocus,
+                            nextFocus: _emailFocus,
+                            inputType: TextInputType.name,
+                            capitalization: TextCapitalization.words,
+                            isShowBorder: true,
+                            borderRadius: 12,
+                            onValidate: (String? value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Please enter your full name';
+                              }
+                              if (value.trim().length < 2) {
+                                return 'Name is too short';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 24),
 
@@ -282,36 +253,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             hintText: 'enter_password'.tr,
                             controller: passwordController,
                             focusNode: _passwordFocus,
-                            nextFocus: _confirmPasswordFocus,
-                            inputType: TextInputType.visiblePassword,
-                            isPassword: true,
-                            isShowBorder: true,
-                            borderRadius: 12,
-                            onValidate: (String? value) {
-                              return FormValidation().isValidPassword(value!);
-                            },
-                          ),
-                          const SizedBox(height: 20),
-
-                          _buildFieldLabel('confirm_password'.tr),
-                          CustomTextField(
-                            hintText: 'enter_confirm_password'.tr,
-                            controller: confirmPasswordController,
-                            focusNode: _confirmPasswordFocus,
                             nextFocus: _referCodeFocus,
                             inputType: TextInputType.visiblePassword,
                             isPassword: true,
                             isShowBorder: true,
                             borderRadius: 12,
                             onValidate: (String? value) {
-                              if (value == null || value.isEmpty) {
-                                return 'this_field_can_not_empty'.tr;
-                              } else {
-                                return FormValidation().isValidConfirmPassword(
-                                  passwordController.text,
-                                  confirmPasswordController.text,
-                                );
-                              }
+                              return FormValidation().isValidPassword(value!);
                             },
                           ),
                           const SizedBox(height: 20),
@@ -361,42 +309,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
 
                           const SizedBox(height: 24),
-
-                          if (socialLogin == 1) ...[
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    height: 1,
-                                    color: NestInk.border,
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  child: Text(
-                                    'or'.tr,
-                                    style: robotoSemiBold.copyWith(
-                                      color: NestInk.mutedText,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    height: 1,
-                                    color: NestInk.border,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            SocialLoginWidget(
-                              redtrectUrl: widget.redtrectRoute,
-                            ),
-                            const SizedBox(height: 24),
-                          ],
 
                           Center(
                             child: Container(
@@ -482,33 +394,30 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void _register(AuthController authController) async {
     if (customerSignUpKey.currentState!.validate()) {
-      SignUpBody signUpBody;
       String numberWithCountryCode =
           PhoneVerificationHelper.getValidPhoneNumber(
             authController.countryDialCode + phoneController.value.text,
             withCountryCode: true,
           );
 
-      if (referCodeController.text != "") {
-        signUpBody = SignUpBody(
-          fName: firstNameController.value.text.trim(),
-          lName: lastNameController.value.text.trim(),
-          email: emailController.value.text.trim(),
-          phone: numberWithCountryCode.trim(),
-          password: passwordController.value.text.trim(),
-          confirmPassword: confirmPasswordController.value.text.trim(),
-          referCode: referCodeController.text.trim(),
-        );
-      } else {
-        signUpBody = SignUpBody(
-          fName: firstNameController.value.text.trim(),
-          lName: lastNameController.value.text.trim(),
-          email: emailController.value.text.trim(),
-          phone: numberWithCountryCode.trim(),
-          password: passwordController.value.text.trim(),
-          confirmPassword: confirmPasswordController.value.text.trim(),
-        );
-      }
+      String fullName = firstNameController.value.text.trim();
+      List<String> nameParts = fullName.split(RegExp(r'\s+'));
+      String fName = nameParts.first;
+      String lName = nameParts.length > 1
+          ? nameParts.sublist(1).join(' ')
+          : nameParts.first;
+
+      SignUpBody signUpBody = SignUpBody(
+        fName: fName,
+        lName: lName,
+        email: emailController.value.text.trim(),
+        phone: numberWithCountryCode.trim(),
+        password: passwordController.value.text.trim(),
+        confirmPassword: passwordController.value.text.trim(),
+        referCode: referCodeController.text.trim().isEmpty
+            ? null
+            : referCodeController.text.trim(),
+      );
       authController.registration(
         signUpBody: signUpBody,
         redtrectUrl: widget.redtrectRoute,
@@ -518,11 +427,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void _clearControllerValue() {
     firstNameController.text = "";
-    lastNameController.text = "";
     emailController.text = "";
     phoneController.text = "";
     passwordController.text = "";
-    confirmPasswordController.text = "";
     referCodeController.text = "";
   }
 }

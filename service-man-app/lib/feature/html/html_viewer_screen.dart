@@ -1,7 +1,7 @@
-import 'package:demandium_serviceman/common/widgets/no_data_screen.dart';
+import 'package:jassdbx_serviceman/common/widgets/no_data_screen.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 class HtmlViewerScreen extends StatefulWidget {
   final HtmlType? type;

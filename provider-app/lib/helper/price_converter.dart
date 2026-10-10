@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:demandium_provider/feature/service_details/model/service_details_model.dart';
-import 'package:demandium_provider/feature/splash/controller/splash_controller.dart';
+import 'package:jassdbx_provider/feature/service_details/model/service_details_model.dart';
+import 'package:jassdbx_provider/feature/splash/controller/splash_controller.dart';
 
 
  class PriceConverter {

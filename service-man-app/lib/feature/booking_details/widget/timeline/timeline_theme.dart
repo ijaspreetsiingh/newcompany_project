@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'package:demandium_serviceman/feature/booking_details/widget/timeline/indicator_theme.dart';
+import 'package:jassdbx_serviceman/feature/booking_details/widget/timeline/indicator_theme.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'connector_theme.dart';

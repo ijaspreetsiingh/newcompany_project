@@ -1,11 +1,11 @@
-import 'package:demandium_provider/feature/reporting/widgets/business_report/business_report_bar_chart.dart';
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/reporting/widgets/business_report/business_report_earning_list.dart';
-import 'package:demandium_provider/feature/reporting/widgets/business_report/business_report_line_chart.dart';
-import 'package:demandium_provider/feature/reporting/widgets/business_report/business_report_expense_listview.dart';
-import 'package:demandium_provider/feature/reporting/widgets/business_report/business_report_overview_list.dart';
-import 'package:demandium_provider/feature/reporting/widgets/business_report/business_report_shimmer.dart';
-import 'package:demandium_provider/feature/reporting/widgets/business_report/business_report_statistics.dart';
+import 'package:jassdbx_provider/feature/reporting/widgets/business_report/business_report_bar_chart.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/reporting/widgets/business_report/business_report_earning_list.dart';
+import 'package:jassdbx_provider/feature/reporting/widgets/business_report/business_report_line_chart.dart';
+import 'package:jassdbx_provider/feature/reporting/widgets/business_report/business_report_expense_listview.dart';
+import 'package:jassdbx_provider/feature/reporting/widgets/business_report/business_report_overview_list.dart';
+import 'package:jassdbx_provider/feature/reporting/widgets/business_report/business_report_shimmer.dart';
+import 'package:jassdbx_provider/feature/reporting/widgets/business_report/business_report_statistics.dart';
 import 'package:get/get.dart';
 
 class BusinessReportView extends StatelessWidget {

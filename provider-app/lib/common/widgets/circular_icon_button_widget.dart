@@ -1,4 +1,4 @@
-import 'package:demandium_provider/util/dimensions.dart';
+import 'package:jassdbx_provider/util/dimensions.dart';
 import 'package:flutter/material.dart';
 
 /// A reusable circular icon button with optional indicator dot

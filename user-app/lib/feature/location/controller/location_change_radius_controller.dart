@@ -18,6 +18,7 @@ class LocationChangeRadiusController extends GetxService {
 
   double? _initial;
   double? _max;
+  double _step = 5.0;
   double _current = 0;
   bool _checking = false;
   bool _dialogOpen = false;
@@ -102,7 +103,7 @@ class LocationChangeRadiusController extends GetxService {
       }
 
       // Expand popup dikha
-      final double step = initialRadius;
+      final double step = _step;
       final double next =
           (_current + step) > maxRadius ? maxRadius : (_current + step);
 
@@ -142,14 +143,18 @@ class LocationChangeRadiusController extends GetxService {
         final dynamic content = response.body['content'];
         double initial = 5;
         double max = 50;
+        double step = 5;
         if (content is Map) {
           initial = (content['initial_radius'] as num?)?.toDouble() ?? 5;
           max = (content['max_radius'] as num?)?.toDouble() ?? 50;
+          step = (content['radius_increment_step'] as num?)?.toDouble() ?? 5;
         }
         if (initial <= 0) initial = 5;
         if (max < initial) max = initial;
+        if (step <= 0) step = initial;
         _initial = initial;
         _max = max;
+        _step = step;
         return true;
       }
     } catch (_) {}

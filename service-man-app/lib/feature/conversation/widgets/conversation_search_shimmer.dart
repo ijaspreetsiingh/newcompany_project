@@ -1,4 +1,4 @@
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 class ConversationSearchShimmer extends StatelessWidget {
   const ConversationSearchShimmer({super.key,});

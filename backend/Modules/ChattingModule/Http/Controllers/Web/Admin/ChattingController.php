@@ -304,4 +304,30 @@ class ChattingController extends Controller
             'template' => view('chattingmodule::admin.partials._conversations', compact('fromUser', 'conversation', 'channelId'))->render()
         ]);
     }
+
+    public function adminConversation(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'channel_id' => 'required|uuid',
+            'offset' => 'nullable|integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
+        }
+
+        $offset = (int) ($request->input('offset') ?? 0);
+
+        $conversation = $this->channelConversation->where(['channel_id' => $request['channel_id']])
+            ->with(['user:id,first_name,last_name,profile_image', 'conversationFiles'])
+            ->latest()
+            ->paginate(100, ['*'], 'offset', $offset);
+
+        $channelId = $request['channel_id'];
+        $fromUser = null;
+
+        return response()->json([
+            'template' => view('chattingmodule::admin.partials._conversations', compact('fromUser', 'conversation', 'channelId'))->render()
+        ]);
+    }
 }

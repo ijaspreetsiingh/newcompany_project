@@ -1,6 +1,6 @@
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/suggest_service/widgets/suggest_service_item_view.dart';
-import 'package:demandium_provider/feature/suggest_service/widgets/suggest_service_list_shimmer.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/suggest_service/widgets/suggest_service_item_view.dart';
+import 'package:jassdbx_provider/feature/suggest_service/widgets/suggest_service_list_shimmer.dart';
 import 'package:get/get.dart';
 
 class SuggestedServiceListScreen extends StatefulWidget {

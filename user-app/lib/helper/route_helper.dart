@@ -327,15 +327,11 @@ class RouteHelper {
       exitFromApp: Get.parameters['page'] == signUp || Get.parameters['page'] == splash,
       redtrectRoute: RedtrectRouteValidator.getValidRoute(Get.parameters['redtrect_to']) == null
           ? null : jsonEncode(Get.parameters),
-    ), middlewares: [
-      RedtrectToHomeMiddleware(),
-    ]),
+    )),
     GetPage(name: signUp, page: () =>  SignUpScreen(
       referralCode: Get.parameters['referral_code'],
       redtrectRoute: RedtrectRouteValidator.getValidRoute(Get.parameters['redtrect_to']),
-    ), middlewares: [
-      RedtrectToHomeMiddleware(),
-    ]),
+    )),
     GetPage(name: socialLoginScreen, page: () => const SocialLoginScreen()),
 
 

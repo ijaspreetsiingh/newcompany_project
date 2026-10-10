@@ -1,5 +1,5 @@
 
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:get/get.dart';
 
 class ApiChecker {
@@ -9,7 +9,7 @@ class ApiChecker {
     if(response.statusCode == 401 || isAppNotActive) {
       _executeUnAuthorized(response, isAppNotActive ? response.body['message'] : null);
 
-    }if(response.statusCode == 500){
+    }else if(response.statusCode == 500){
       showCustomSnackBar(response.statusText);
     }else {
       showCustomSnackBar(response.statusText);

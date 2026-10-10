@@ -1,5 +1,5 @@
 import 'package:syncfusion_flutter_calendar/calendar.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class BookingCalendarDataSource extends CalendarDataSource {
   BookingCalendarDataSource(List<BookingAppointmentModel> source) {

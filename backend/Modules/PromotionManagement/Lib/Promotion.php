@@ -81,7 +81,7 @@ if (!function_exists('device_notification')) {
                 ],
                 "android" => [
                     "notification" => [
-                        "channelId" => "jdds"
+                        "channelId" => "jassbooking"
                     ]
                 ],
             ]
@@ -120,7 +120,7 @@ if (!function_exists('topic_notification')) {
                 ],
                 "android" => [
                     "notification" => [
-                        "channelId" => "jdds"
+                        "channelId" => "jassbooking"
                     ]
                 ],
             ]
@@ -162,7 +162,7 @@ if (!function_exists('device_notification_for_bidding')) {
                 ],
                 "android" => [
                     "notification" => [
-                        "channelId" => "jdds"
+                        "channelId" => "jassbooking"
                     ]
                 ],
             ]
@@ -206,7 +206,7 @@ if (!function_exists('device_notification_for_chatting')) {
                 ],
                 "android" => [
                     "notification" => [
-                        "channelId" => "jdds"
+                        "channelId" => "jassbooking"
                     ]
                 ],
             ]

@@ -1,5 +1,5 @@
-import 'package:demandium_provider/feature/serviceman/widget/serviceman_card_view.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/serviceman/widget/serviceman_card_view.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 class ServiceManListview extends StatelessWidget {

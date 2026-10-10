@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.sixamtech.demandium" "\0"
-            VALUE "FileDescription", "demandium_serviceman" "\0"
+            VALUE "CompanyName", "com.jassdbx.jassods" "\0"
+            VALUE "FileDescription", "jassdbx_serviceman" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "demandium_serviceman" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.sixamtech.demandium. All rights reserved." "\0"
-            VALUE "OriginalFilename", "demandium_serviceman.exe" "\0"
-            VALUE "ProductName", "demandium_serviceman" "\0"
+            VALUE "InternalName", "jassdbx_serviceman" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.jassdbx.jassods. All rights reserved." "\0"
+            VALUE "OriginalFilename", "jassdbx_serviceman.exe" "\0"
+            VALUE "ProductName", "jassdbx_serviceman" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

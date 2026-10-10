@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';

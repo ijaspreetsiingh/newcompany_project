@@ -1,8 +1,8 @@
-import 'package:demandium_provider/common/model/api_response_model.dart';
-import 'package:demandium_provider/feature/payement_information/controller/payment_info_controller.dart';
-import 'package:demandium_provider/feature/transaction/model/dropdown_method_method.dart';
+import 'package:jassdbx_provider/common/model/api_response_model.dart';
+import 'package:jassdbx_provider/feature/payement_information/controller/payment_info_controller.dart';
+import 'package:jassdbx_provider/feature/transaction/model/dropdown_method_method.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 
 class TransactionController extends GetxController implements GetxService{

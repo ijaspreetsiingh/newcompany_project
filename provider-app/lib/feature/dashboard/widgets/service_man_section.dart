@@ -1,6 +1,6 @@
-﻿import 'package:demandium_provider/feature/serviceman/view/serviceman_details.dart';
+import 'package:jassdbx_provider/feature/serviceman/view/serviceman_details.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class ServiceManSection extends StatelessWidget {
   const ServiceManSection({super.key});

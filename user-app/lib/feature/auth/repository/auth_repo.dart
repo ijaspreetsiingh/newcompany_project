@@ -66,6 +66,15 @@ class AuthRepo {
     }else{
       await subscribeTokenToTopic(deviceToken, AppConstants.topic);
     }
+
+    // Token null hai to backend ko '@' mat bhejo — purana valid token
+    // overwrite hota tha aur notifications aana band ho jaate the
+    if (deviceToken == null || deviceToken.isEmpty || deviceToken == '@') {
+      if (kDebugMode) {
+        print('updateToken skipped: fcm token unavailable');
+      }
+      return null;
+    }
     return await apiClient.putData(AppConstants.tokenUri, {"fcm_token": deviceToken});
   }
 
@@ -74,7 +83,7 @@ class AuthRepo {
   }
 
   Future<String?> _saveDeviceToken() async {
-    String? deviceToken = '@';
+    String? deviceToken;
     try {
       deviceToken = await FirebaseMessaging.instance.getToken();
     }catch(e) {

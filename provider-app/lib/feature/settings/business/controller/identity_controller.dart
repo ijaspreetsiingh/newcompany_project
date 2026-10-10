@@ -1,6 +1,6 @@
-import 'package:demandium_provider/feature/settings/business/model/picked_identity_image_model.dart';
+import 'package:jassdbx_provider/feature/settings/business/model/picked_identity_image_model.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 
 

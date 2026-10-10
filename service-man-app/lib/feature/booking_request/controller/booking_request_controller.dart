@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 
 class BookingRequestController extends GetxController  implements GetxService{
@@ -104,11 +104,13 @@ class BookingRequestController extends GetxController  implements GetxService{
     _isBookingActionInProgress = true;
     Response response = await bookingRequestRepo.acceptBooking(bookingId);
     _isBookingActionInProgress = false;
-    if (response.statusCode == 200) {
+    // backend default_204 (expired/not-found) bhi HTTP 200 par bhejta hai
+    if (response.statusCode == 200 && response.body['response_code'] == 'status_update_success_200') {
       showCustomSnackBar('booking_accepted_successfully'.tr, type: ToasterMessageType.success);
       getBookingList(_bookingStatusState.name.toLowerCase(), 1);
     } else {
       ApiChecker.checkApi(response);
+      getBookingList(_bookingStatusState.name.toLowerCase(), 1);
     }
   }
 
@@ -117,11 +119,13 @@ class BookingRequestController extends GetxController  implements GetxService{
     _isBookingActionInProgress = true;
     Response response = await bookingRequestRepo.rejectBooking(bookingId);
     _isBookingActionInProgress = false;
-    if (response.statusCode == 200) {
+    // decline me backend default_200 success aur default_204 failure bhejta hai
+    if (response.statusCode == 200 && response.body['response_code'] == 'default_200') {
       showCustomSnackBar('booking_rejected'.tr, type: ToasterMessageType.success);
       getBookingList(_bookingStatusState.name.toLowerCase(), 1);
     } else {
       ApiChecker.checkApi(response);
+      getBookingList(_bookingStatusState.name.toLowerCase(), 1);
     }
   }
 

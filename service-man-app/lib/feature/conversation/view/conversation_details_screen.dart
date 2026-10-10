@@ -1,7 +1,7 @@
-import 'package:demandium_serviceman/utils/core_export.dart';
-import 'package:demandium_serviceman/feature/conversation/widgets/conversation_details_appbar.dart';
-import 'package:demandium_serviceman/feature/conversation/widgets/conversation_details_shimmer.dart';
-import 'package:demandium_serviceman/feature/conversation/widgets/conversation_send_message_widget.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/feature/conversation/widgets/conversation_details_appbar.dart';
+import 'package:jassdbx_serviceman/feature/conversation/widgets/conversation_details_shimmer.dart';
+import 'package:jassdbx_serviceman/feature/conversation/widgets/conversation_send_message_widget.dart';
 import 'package:get/get.dart';
 
 class ConversationDetailsScreen extends StatefulWidget {

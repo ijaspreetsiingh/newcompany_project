@@ -1,4 +1,4 @@
-<div class="tab-pane fade" id="location-search">
+<div class="tab-pane fade {{($webPage ?? '') == 'location_search' ? 'show active' : ''}}" id="location-search">
     <div class="card">
         <div class="card-header">
             <h4 class="page-title">{{translate('Location_Search_Settings')}}</h4>
@@ -10,7 +10,7 @@
                     {{translate('Configure the radius search behavior for service discovery. These settings control how far users can search for services when none are found in their initial location.')}}
                 </p>
             </div>
-            <form action="{{route('admin.location-settings.update')}}" method="POST" id="location-search-form">
+            <form action="{{route('admin.business-settings.location-settings.update')}}" method="POST" id="location-search-form">
                 @csrf
                 @method('PUT')
                 <div class="row">
@@ -91,6 +91,7 @@
                                 <input class="form-check-input" 
                                        type="checkbox" 
                                        name="show_popup_on_location_change"
+                                       value="1"
                                        id="show_popup_check"
                                        {{($locationSettings->show_popup_on_location_change ?? 1) ? 'checked' : ''}}>
                                 <label class="form-check-label" for="show_popup_check">
@@ -107,6 +108,7 @@
                                 <input class="form-check-input" 
                                        type="checkbox" 
                                        name="show_zone_reminder"
+                                       value="1"
                                        id="zone_reminder_check"
                                        {{($locationSettings->show_zone_reminder ?? 1) ? 'checked' : ''}}>
                                 <label class="form-check-label" for="zone_reminder_check">

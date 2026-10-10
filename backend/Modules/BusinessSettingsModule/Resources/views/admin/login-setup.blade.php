@@ -154,6 +154,13 @@
                                                 <p class="fz-13 max-w-500">
                                                     {{ translate('Enabling Google Login, customers can log in to the site using their existing Email credentials.') }}
                                                 </p>
+                                                <input type="text" class="form-control form-control-sm mt-2"
+                                                       name="google_web_client_id" id="google_web_client_id"
+                                                       value="{{ $socialMediaLoginOptions?->google_web_client_id ?? '' }}"
+                                                       placeholder="{{ translate('Google Web Client ID (xxxx.apps.googleusercontent.com)') }}">
+                                                <p class="fz-12 text-muted mt-1 mb-0">
+                                                    {{ translate('Google Cloud Console > APIs & Services > Credentials > OAuth 2.0 Client ID (Web application). Required for Google sign-in inside the app.') }}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>

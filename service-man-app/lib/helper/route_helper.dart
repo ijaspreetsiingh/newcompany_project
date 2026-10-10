@@ -1,9 +1,9 @@
 import 'dart:convert';
-import 'package:demandium_serviceman/common/widgets/maintenance_screen.dart';
-import 'package:demandium_serviceman/feature/conversation/view/conversation_list_screen.dart';
-import 'package:demandium_serviceman/feature/support/support_screen.dart';
+import 'package:jassdbx_serviceman/common/widgets/maintenance_screen.dart';
+import 'package:jassdbx_serviceman/feature/conversation/view/conversation_list_screen.dart';
+import 'package:jassdbx_serviceman/feature/support/support_screen.dart';
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 
 class RouteHelper {

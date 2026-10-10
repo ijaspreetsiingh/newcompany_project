@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:demandium_provider/common/widgets/ink_widgets.dart';
-import 'package:demandium_provider/util/app_constants.dart';
+import 'package:jassdbx_provider/common/widgets/ink_widgets.dart';
+import 'package:jassdbx_provider/util/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeController extends GetxController {

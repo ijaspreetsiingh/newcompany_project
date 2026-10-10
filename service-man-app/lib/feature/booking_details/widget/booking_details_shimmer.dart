@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 class BookingDetailsShimmer extends StatelessWidget {
   const BookingDetailsShimmer({super.key});

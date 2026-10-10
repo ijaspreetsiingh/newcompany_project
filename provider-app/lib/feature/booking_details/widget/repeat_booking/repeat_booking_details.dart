@@ -1,12 +1,12 @@
-import 'package:demandium_provider/feature/booking_details/widget/booking_service_location.dart';
-import 'package:demandium_provider/feature/booking_details/widget/repeat_booking/all_booking_summary_widget.dart';
-import 'package:demandium_provider/feature/booking_details/widget/repeat_booking/next_upcoming_service_widget.dart';
-import 'package:demandium_provider/feature/booking_details/widget/repeat_booking/repeat_booking_info_view.dart';
-import 'package:demandium_provider/feature/booking_details/widget/repeat_booking/repeat_booking_status_change_dropdown_button.dart';
-import 'package:demandium_provider/feature/booking_details/widget/repeat_booking/repeat_booking_summery_widget.dart';
-import 'package:demandium_provider/helper/booking_helper.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/booking_service_location.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/repeat_booking/all_booking_summary_widget.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/repeat_booking/next_upcoming_service_widget.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/repeat_booking/repeat_booking_info_view.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/repeat_booking/repeat_booking_status_change_dropdown_button.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/repeat_booking/repeat_booking_summery_widget.dart';
+import 'package:jassdbx_provider/helper/booking_helper.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 
 class RepeatBookingDetailsWidget extends StatelessWidget {

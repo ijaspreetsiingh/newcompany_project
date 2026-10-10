@@ -1,8 +1,8 @@
-import 'package:demandium_provider/feature/custom_post/model/post_model.dart';
-import 'package:demandium_provider/feature/custom_post/model/provider_offer.dart';
-import 'package:demandium_provider/feature/custom_post/widget/notification_dialog.dart';
+import 'package:jassdbx_provider/feature/custom_post/model/post_model.dart';
+import 'package:jassdbx_provider/feature/custom_post/model/provider_offer.dart';
+import 'package:jassdbx_provider/feature/custom_post/widget/notification_dialog.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class PostController extends GetxController  with GetSingleTickerProviderStateMixin implements GetxService{
 

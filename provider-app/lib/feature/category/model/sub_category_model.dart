@@ -1,4 +1,4 @@
-import 'package:demandium_provider/feature/service_details/model/service_details_model.dart';
+import 'package:jassdbx_provider/feature/service_details/model/service_details_model.dart';
 
 class ServiceSubCategoryModel {
   String? id;

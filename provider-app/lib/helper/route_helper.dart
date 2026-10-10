@@ -1,15 +1,15 @@
 import 'dart:convert';
-import 'package:demandium_provider/common/widgets/maintenance_screen.dart';
-import 'package:demandium_provider/feature/advertisement/view/advertisement_list_screen.dart';
-import 'package:demandium_provider/feature/booking_details/view/repeat_booking_details_screen.dart';
-import 'package:demandium_provider/feature/payement_information/view/add_payment_info_screen.dart';
-import 'package:demandium_provider/feature/payement_information/view/payment_information_screen.dart';
-import 'package:demandium_provider/feature/profile/view/view/auto_assign_settings_screen.dart';
-import 'package:demandium_provider/feature/settings/notification/view/notification_settings_screen.dart';
-import 'package:demandium_provider/feature/subscriptions/view/business/business_plan_screen.dart';
-import 'package:demandium_provider/feature/support/support_screen.dart';
-import 'package:demandium_provider/feature/booking_requests/view/calendar_order_screen.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/common/widgets/maintenance_screen.dart';
+import 'package:jassdbx_provider/feature/advertisement/view/advertisement_list_screen.dart';
+import 'package:jassdbx_provider/feature/booking_details/view/repeat_booking_details_screen.dart';
+import 'package:jassdbx_provider/feature/payement_information/view/add_payment_info_screen.dart';
+import 'package:jassdbx_provider/feature/payement_information/view/payment_information_screen.dart';
+import 'package:jassdbx_provider/feature/profile/view/view/auto_assign_settings_screen.dart';
+import 'package:jassdbx_provider/feature/settings/notification/view/notification_settings_screen.dart';
+import 'package:jassdbx_provider/feature/subscriptions/view/business/business_plan_screen.dart';
+import 'package:jassdbx_provider/feature/support/support_screen.dart';
+import 'package:jassdbx_provider/feature/booking_requests/view/calendar_order_screen.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 

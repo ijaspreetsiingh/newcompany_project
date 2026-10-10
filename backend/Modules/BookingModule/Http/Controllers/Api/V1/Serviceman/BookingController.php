@@ -330,15 +330,9 @@ class BookingController extends Controller
             }
         });
 
-        // provider ko notify karo ki serviceman ne accept kar liya
-        try {
-            $provider = $booking?->provider;
-            $fcmToken = $provider?->owner?->fcm_token ?? null;
-            if (!is_null($fcmToken)) {
-                device_notification($fcmToken, 'Serviceman accepted the booking', null, null, $booking->id, 'booking');
-            }
-        } catch (\Exception $exception) {
-        }
+        // Provider ko push: model observer (serviceman_assign / booking_accepted job)
+        // already bhej deta hai — direct push hataya taki provider ko 2-3 baar
+        // same info na mile.
 
         return response()->json(response_formatter(BOOKING_STATUS_UPDATE_SUCCESS_200, $booking), 200);
     }

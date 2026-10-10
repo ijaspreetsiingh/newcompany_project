@@ -1,5 +1,5 @@
-import 'package:demandium_serviceman/helper/string_parser.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/helper/string_parser.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:get/get.dart';
 
 class VerificationScreen extends StatefulWidget {

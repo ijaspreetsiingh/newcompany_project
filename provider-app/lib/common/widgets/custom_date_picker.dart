@@ -1,4 +1,4 @@
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class CustomDatePicker extends StatefulWidget {
   final String title;

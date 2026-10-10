@@ -50,19 +50,32 @@ class _SignInScreenState extends State<SignInScreen> {
                   key: customerSignInKey,
                   child: Column(
                     children: [
-                      SizedBox(height: MediaQuery.of(context).padding.top + 10),
+                          SizedBox(height: MediaQuery.of(context).padding.top + 10),
 
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Icon(
-                            Icons.arrow_back_rounded,
-                            color: NestInk.primary,
-                            size: 20,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              IconButton(
+                                onPressed: () => Navigator.pop(context),
+                                icon: Icon(
+                                  Icons.arrow_back_rounded,
+                                  color: NestInk.primary,
+                                  size: 24,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Get.offAllNamed(RouteHelper.getMainRoute("home")),
+                                child: Text(
+                                  'skip'.tr,
+                                  style: robotoBold.copyWith(
+                                    fontSize: Dimensions.fontSizeDefault,
+                                    color: NestInk.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
 
                       Expanded(
                         child: SingleChildScrollView(

@@ -1,4 +1,4 @@
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 /// Body type family used across the app (matches reference "Figtree").
 const String kBodyFont = 'Figtree';

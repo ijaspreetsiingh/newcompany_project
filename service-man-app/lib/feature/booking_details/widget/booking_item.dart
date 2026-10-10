@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 class BookingItem extends StatelessWidget {
   const BookingItem({super.key, required this.img, required this.title, required this.subTitle, this.mainAxisAlignment = MainAxisAlignment.start,  this.subtitleTextStyle});

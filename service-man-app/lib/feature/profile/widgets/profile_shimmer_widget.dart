@@ -1,4 +1,4 @@
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 class ProfileShimmer extends StatelessWidget {
   const ProfileShimmer({super.key});

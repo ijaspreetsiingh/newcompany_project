@@ -89,6 +89,7 @@ class LoginSetupController extends Controller
                     'google' => $request->has('google') ? 1: 0,
                     'facebook' => $request->has('facebook') ? 1: 0,
                     'apple' => $request->has('apple') ? 1: 0,
+                    'google_web_client_id' => trim((string) $request->input('google_web_client_id', '')),
                 ])
             ]
         );

@@ -21,6 +21,8 @@ use Illuminate\Validation\ValidationException;
 use Modules\BookingModule\Entities\Booking;
 use Modules\BookingModule\Entities\BookingRepeat;
 use Modules\BookingModule\Entities\BookingStatusHistory;
+use Modules\ChattingModule\Entities\Call;
+use Modules\ChattingModule\Entities\ChannelList;
 use Modules\BusinessSettingsModule\Entities\PackageSubscriber;
 use Modules\BusinessSettingsModule\Entities\PackageSubscriberFeature;
 use Modules\BusinessSettingsModule\Entities\PackageSubscriberLimit;
@@ -320,6 +322,141 @@ class ProviderController extends Controller
         ];
 
         return view('providermanagement::admin.provider.view-stats', compact('provider', 'stats', 'servicemen'));
+    }
+
+    public function providerDashboard($id, Request $request): View|Factory|Application
+    {
+        $this->authorize('provider_view');
+
+        $provider = $this->provider->with(['owner.account', 'zone', 'assignedMainCategory'])
+            ->withCount(['bookings', 'servicemen', 'subscribed_services'])
+            ->find($id);
+
+        abort_unless($provider, 404);
+
+        $from = $request->filled('from') ? $request->date('from')->startOfDay() : null;
+        $to = $request->filled('to') ? $request->date('to')->endOfDay() : null;
+
+        $periodBookings = DB::table('bookings')->where('provider_id', $id)
+            ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('created_at', '<=', $to));
+
+        $periodStatuses = (clone $periodBookings)
+            ->select('booking_status', DB::raw('count(*) as total'))
+            ->groupBy('booking_status')->get()->pluck('total', 'booking_status');
+
+        $allStatuses = DB::table('bookings')->where('provider_id', $id)
+            ->select('booking_status', DB::raw('count(*) as total'))
+            ->groupBy('booking_status')->get()->pluck('total', 'booking_status');
+
+        $periodEarning = (float) (clone $periodBookings)->where('booking_status', 'completed')
+            ->sum('total_booking_amount');
+
+        $account = $provider->owner?->account;
+        $totalEarning = (float) (($account->received_balance ?? 0) + ($account->total_withdrawn ?? 0));
+
+        $servicemen = $this->serviceman->with('user:id,first_name,last_name,phone,profile_image,is_active')
+            ->where('provider_id', $id)->latest()->get();
+
+        $servicemanStats = collect();
+        if ($servicemen->isNotEmpty()) {
+            $servicemanStats = DB::table('bookings')
+                ->whereIn('serviceman_id', $servicemen->pluck('id'))
+                ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
+                ->when($to, fn ($q) => $q->where('created_at', '<=', $to))
+                ->select('serviceman_id', 'booking_status', DB::raw('count(*) as total'))
+                ->groupBy('serviceman_id', 'booking_status')->get()->groupBy('serviceman_id');
+        }
+
+        $categories = SubscribedService::with(['category:id,name', 'sub_category:id,name'])
+            ->where('provider_id', $id)->get();
+
+        $memberUserIds = array_values(array_filter(array_merge(
+            [$provider->user_id],
+            $servicemen->pluck('user_id')->all()
+        )));
+
+        $channels = collect();
+        $calls = collect();
+        if ($memberUserIds) {
+            $channels = ChannelList::with(['channelUsers.user:id,first_name,last_name,user_type,profile_image', 'channelLastConversation.user:id,first_name,last_name'])
+                ->whereHas('channelUsers', fn ($q) => $q->whereIn('user_id', $memberUserIds))
+                ->latest()->limit(30)->get();
+
+            $calls = Call::with(['caller:id,first_name,last_name,user_type', 'callee:id,first_name,last_name,user_type'])
+                ->where(fn ($q) => $q->whereIn('caller_id', $memberUserIds)->orWhereIn('callee_id', $memberUserIds))
+                ->latest()->limit(30)->get();
+        }
+
+        $recentBookings = DB::table('bookings')
+            ->where('bookings.provider_id', $id)
+            ->when($from, fn ($q) => $q->where('bookings.created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('bookings.created_at', '<=', $to))
+            ->leftJoin('users', 'users.id', '=', 'bookings.customer_id')
+            ->select('bookings.id', 'bookings.booking_status', 'bookings.total_booking_amount', 'bookings.created_at', 'bookings.auto_assigned', 'users.first_name', 'users.last_name')
+            ->orderByDesc('bookings.created_at')->limit(15)->get();
+
+        return view('providermanagement::admin.provider.dashboard', compact(
+            'provider', 'from', 'to', 'periodStatuses', 'allStatuses', 'periodEarning', 'totalEarning',
+            'servicemen', 'servicemanStats', 'categories', 'channels', 'calls', 'recentBookings'
+        ));
+    }
+
+    public function servicemanDashboard($id, Request $request): View|Factory|Application
+    {
+        $this->authorize('provider_view');
+
+        $serviceman = $this->serviceman->with(['user', 'provider:id,company_name'])->find($id);
+
+        abort_unless($serviceman, 404);
+
+        $from = $request->filled('from') ? $request->date('from')->startOfDay() : now()->startOfMonth();
+        $to = $request->filled('to') ? $request->date('to')->endOfDay() : null;
+
+        $periodBookings = DB::table('bookings')->where('serviceman_id', $id)
+            ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('created_at', '<=', $to));
+
+        $periodStatuses = (clone $periodBookings)
+            ->select('booking_status', DB::raw('count(*) as total'))
+            ->groupBy('booking_status')->get()->pluck('total', 'booking_status');
+
+        $allStatuses = DB::table('bookings')->where('serviceman_id', $id)
+            ->select('booking_status', DB::raw('count(*) as total'))
+            ->groupBy('booking_status')->get()->pluck('total', 'booking_status');
+
+        $assignedByProvider = (clone $periodBookings)->where('auto_assigned', 0)->count();
+        $autoAssigned = (clone $periodBookings)->where('auto_assigned', 1)->count();
+
+        $currentBooking = DB::table('bookings')
+            ->where('serviceman_id', $id)
+            ->where('booking_status', 'ongoing')
+            ->leftJoin('users', 'users.id', '=', 'bookings.customer_id')
+            ->select('bookings.*', 'users.first_name', 'users.last_name', 'users.phone')
+            ->orderByDesc('bookings.created_at')->first();
+
+        $userId = $serviceman->user_id;
+
+        $channels = $userId ? ChannelList::with(['channelUsers.user:id,first_name,last_name,user_type,profile_image', 'channelLastConversation.user:id,first_name,last_name'])
+            ->whereHas('channelUsers', fn ($q) => $q->where('user_id', $userId))
+            ->latest()->limit(20)->get() : collect();
+
+        $calls = $userId ? Call::with(['caller:id,first_name,last_name,user_type', 'callee:id,first_name,last_name,user_type'])
+            ->where(fn ($q) => $q->where('caller_id', $userId)->orWhere('callee_id', $userId))
+            ->latest()->limit(30)->get() : collect();
+
+        $recentBookings = DB::table('bookings')
+            ->where('bookings.serviceman_id', $id)
+            ->when($from, fn ($q) => $q->where('bookings.created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('bookings.created_at', '<=', $to))
+            ->leftJoin('users', 'users.id', '=', 'bookings.customer_id')
+            ->select('bookings.id', 'bookings.booking_status', 'bookings.total_booking_amount', 'bookings.created_at', 'bookings.auto_assigned', 'users.first_name', 'users.last_name', 'users.phone')
+            ->orderByDesc('bookings.created_at')->limit(20)->get();
+
+        return view('providermanagement::admin.provider.serviceman-dashboard', compact(
+            'serviceman', 'from', 'to', 'periodStatuses', 'allStatuses', 'assignedByProvider', 'autoAssigned',
+            'currentBooking', 'channels', 'calls', 'recentBookings'
+        ));
     }
 
     /**

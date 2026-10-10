@@ -98,7 +98,7 @@ class ServiceNotAvailableScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          "set_on_map".tr ?? "Set on Map",
+                          "Choose Location on Map",
                           style: GoogleFonts.dmSans(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,

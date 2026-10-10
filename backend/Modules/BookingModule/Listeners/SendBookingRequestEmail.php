@@ -39,14 +39,8 @@ class SendBookingRequestEmail
             info($exception);
         }
 
-        $notification= isNotificationActive(null, 'booking', 'notification', 'user');
-        $config = business_config('booking', 'notification_settings');
-        if ($config->live_values['push_notification_booking']) {
-            $repeatOrRegular = $event->booking?->is_repeated ? 'repeat' : 'regular';
-            $title = get_push_notification_message('booking_place', 'customer_notification', $event->booking?->customer?->current_language_key);
-            if (isset($event->booking->customer->fcm_token) && $title && $notification) {
-                device_notification($event->booking->customer->fcm_token, $title, null, null, $event->booking->id, 'booking', '', '', '', '', $repeatOrRegular);
-            }
-        }
+        // Push notification yahan NAHI bhejte — booking_place push model observer
+        // (SendBookingNotificationsJob) se already jaata hai. Pehle dono jagah se
+        // bhejne par customer ko same notification 2 baar milta tha.
     }
 }

@@ -1,6 +1,6 @@
-import 'package:demandium_serviceman/feature/booking_details/widget/booking_details_widget.dart';
+import 'package:jassdbx_serviceman/feature/booking_details/widget/booking_details_widget.dart';
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 class BookingStatus extends StatelessWidget {
   final String? bookingId;

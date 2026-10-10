@@ -1,7 +1,7 @@
 
-import 'package:demandium_provider/common/widgets/custom_switch_widget.dart';
-import 'package:demandium_provider/feature/payement_information/controller/payment_info_controller.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/common/widgets/custom_switch_widget.dart';
+import 'package:jassdbx_provider/feature/payement_information/controller/payment_info_controller.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 

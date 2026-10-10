@@ -1,6 +1,6 @@
-import 'package:demandium_provider/feature/reporting/model/booking_report_model.dart';
-import 'package:demandium_provider/feature/reporting/model/transaction_report_model.dart';
-import 'package:demandium_provider/util/core_export.dart' hide BookingsCount;
+import 'package:jassdbx_provider/feature/reporting/model/booking_report_model.dart';
+import 'package:jassdbx_provider/feature/reporting/model/transaction_report_model.dart';
+import 'package:jassdbx_provider/util/core_export.dart' hide BookingsCount;
 import 'package:get/get.dart';
 
  TextStyle _tableHeadStyle = TextStyle(

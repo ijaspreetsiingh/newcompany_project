@@ -1,5 +1,5 @@
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/reporting/model/business_report_expense_model.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/reporting/model/business_report_expense_model.dart';
 import 'package:get/get.dart';
 
  TextStyle _expLabelStyle = TextStyle(

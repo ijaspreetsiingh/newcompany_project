@@ -1,4 +1,4 @@
-import 'package:demandium_serviceman/feature/booking_request/model/booking_request_model.dart';
+import 'package:jassdbx_serviceman/feature/booking_request/model/booking_request_model.dart';
 
 class DashboardModel {
   String? responseCode;

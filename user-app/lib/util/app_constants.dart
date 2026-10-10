@@ -8,7 +8,7 @@ class AppConstants {
   static const String appVersion = '3.7'; /// Flutter SDK : 3.38.9
   static const String baseUrl = 'http://10.0.2.2:8000';
   static const String websiteUrl =  'http://localhost:5000'; // Local web development
-  static const String googleServerClientId = 'YOUR_CLIENT_ID_HERE'; /// find that in android/app/google-services.json || use client_type 3
+  static const String googleServerClientId = 'YOUR_CLIENT_ID_HERE'; /// fallback only: app prefers admin Login Setup > "Google Web Client ID" (Google Cloud OAuth client_type 3 / Web)
   static const bool avoidMaintenanceMode = false;
   static const LocalCachesTypeEnum cachesType = LocalCachesTypeEnum.all;
   static const String categoryUrl = '/api/v1/client/group?limit=20';

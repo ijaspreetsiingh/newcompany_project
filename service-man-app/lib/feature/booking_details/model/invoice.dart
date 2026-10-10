@@ -1,5 +1,5 @@
 
-import 'package:demandium_serviceman/feature/booking_details/model/provider.dart';
+import 'package:jassdbx_serviceman/feature/booking_details/model/provider.dart';
 class Invoice {
   final InvoiceInfo info;
   final Provider provider;

@@ -1,4 +1,4 @@
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 /// Shared gradient header used across the main screens (Home, Bookings,
 /// History, Inbox) so every tab speaks the same visual language.

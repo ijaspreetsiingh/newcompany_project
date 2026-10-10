@@ -1,5 +1,5 @@
-import 'package:demandium_provider/util/dimensions.dart';
-import 'package:demandium_provider/util/styles.dart';
+import 'package:jassdbx_provider/util/dimensions.dart';
+import 'package:jassdbx_provider/util/styles.dart';
 import 'package:flutter/material.dart';
 
 class CategoryItemWidget extends StatelessWidget {

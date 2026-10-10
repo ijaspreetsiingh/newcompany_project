@@ -1,6 +1,6 @@
-import 'package:demandium_serviceman/theme/custom_theme_colors.dart';
-import 'package:demandium_serviceman/theme/ios27_tokens.dart';
-import 'package:demandium_serviceman/utils/styles.dart';
+import 'package:jassdbx_serviceman/theme/custom_theme_colors.dart';
+import 'package:jassdbx_serviceman/theme/ios27_tokens.dart';
+import 'package:jassdbx_serviceman/utils/styles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

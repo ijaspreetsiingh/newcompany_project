@@ -1,5 +1,5 @@
-import 'package:demandium_provider/feature/reporting/view/report_search_filter.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/reporting/view/report_search_filter.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 class BusinessReport extends StatelessWidget {

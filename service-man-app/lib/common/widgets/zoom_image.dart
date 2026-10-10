@@ -1,4 +1,4 @@
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:photo_view/photo_view.dart';
 
 class ZoomImage extends StatefulWidget {

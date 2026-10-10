@@ -1,6 +1,6 @@
-import 'package:demandium_serviceman/feature/dashboard/model/booking_statistics_model.dart';
+import 'package:jassdbx_serviceman/feature/dashboard/model/booking_statistics_model.dart';
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 class  DashboardController extends GetxController implements GetxService{
   final DashboardRepository dashboardRepository;

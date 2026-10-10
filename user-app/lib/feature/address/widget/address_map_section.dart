@@ -105,7 +105,7 @@ class _AddressMapSectionState extends State<AddressMapSection> {
                     children: [
                       TileLayer(
                         urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'com.sixamtech.demandium.user',
+                        userAgentPackageName: 'com.jassdbx.jassods',
                       ),
                     ],
                   ),

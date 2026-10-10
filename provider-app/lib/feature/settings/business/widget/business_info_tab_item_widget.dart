@@ -1,9 +1,9 @@
-import 'package:demandium_provider/feature/profile/model/provider_model.dart';
-import 'package:demandium_provider/feature/settings/business/controller/identity_controller.dart';
-import 'package:demandium_provider/feature/settings/business/widget/identity_info_widget.dart';
-import 'package:demandium_provider/feature/tutorial/controller/tutorial_controller.dart';
+import 'package:jassdbx_provider/feature/profile/model/provider_model.dart';
+import 'package:jassdbx_provider/feature/settings/business/controller/identity_controller.dart';
+import 'package:jassdbx_provider/feature/settings/business/widget/identity_info_widget.dart';
+import 'package:jassdbx_provider/feature/tutorial/controller/tutorial_controller.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class BusinessInfoTabItemWidget extends StatefulWidget {

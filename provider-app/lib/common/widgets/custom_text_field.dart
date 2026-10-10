@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:demandium_provider/common/widgets/code_picker_widget.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/common/widgets/code_picker_widget.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
-import 'package:demandium_provider/feature/payement_information/widgets/payment_info_card.dart';
-import 'package:demandium_provider/feature/transaction/model/dropdown_method_method.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/payement_information/widgets/payment_info_card.dart';
+import 'package:jassdbx_provider/feature/transaction/model/dropdown_method_method.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 class WithdrawRequestScreen extends StatefulWidget {

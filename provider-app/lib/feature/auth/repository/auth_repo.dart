@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 
 class AuthRepo {
@@ -113,13 +113,24 @@ class AuthRepo {
       deviceToken = await _saveDeviceToken();
     }
 
+    // Token null hai to backend ko '@' mat bhejo — purana valid token
+    // overwrite hota tha aur notifications aana band ho jaate the
+    if (deviceToken == null || deviceToken.isEmpty || deviceToken == '@') {
+      if (kDebugMode) {
+        print('updateToken skipped: fcm token unavailable');
+      }
+      return null;
+    }
+
     FirebaseMessaging.instance.subscribeToTopic(AppConstants.topic);
-    FirebaseMessaging.instance.subscribeToTopic('${AppConstants.topic}-${Get.find<UserProfileController>().myZoneId}');
+    if (Get.find<UserProfileController>().myZoneId != null) {
+      FirebaseMessaging.instance.subscribeToTopic('${AppConstants.topic}-${Get.find<UserProfileController>().myZoneId}');
+    }
     return await apiClient.putData(AppConstants.tokenUrl, {"fcm_token": deviceToken});
   }
 
   Future<String?> _saveDeviceToken() async {
-    String? deviceToken = '@';
+    String? deviceToken;
     if(!GetPlatform.isWeb) {
       try {
         deviceToken = await FirebaseMessaging.instance.getToken();

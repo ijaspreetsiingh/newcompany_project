@@ -1,5 +1,5 @@
-import 'package:demandium_provider/feature/profile/controller/user_controller.dart';
-import 'package:demandium_provider/feature/tutorial/repo/tutorial_repo.dart';
+import 'package:jassdbx_provider/feature/profile/controller/user_controller.dart';
+import 'package:jassdbx_provider/feature/tutorial/repo/tutorial_repo.dart';
 import 'package:get/get.dart';
 
 class TutorialController extends GetxController implements GetxService{

@@ -1,5 +1,5 @@
-import 'package:demandium_serviceman/helper/extension_helper.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/helper/extension_helper.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:get/get.dart';
 
 void showCustomSnackBar(String? message, {

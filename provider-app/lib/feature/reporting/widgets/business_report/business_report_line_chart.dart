@@ -1,5 +1,5 @@
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/reporting/model/chart_model.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/reporting/model/chart_model.dart';
 import 'package:get/get.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 

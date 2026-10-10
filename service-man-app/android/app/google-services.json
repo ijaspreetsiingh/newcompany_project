@@ -1,94 +1,64 @@
 {
   "project_info": {
-    "project_number": "889759666168",
-    "project_id": "demancms",
-    "storage_bucket": "demancms.appspot.com"
+    "project_number": "418974405325",
+    "project_id": "newcompany-ebf01",
+    "storage_bucket": "newcompany-ebf01.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:889759666168:android:e0fa950568fe69a784d00d",
+        "mobilesdk_app_id": "1:418974405325:android:4b1835837c5cc32d3b0f84",
         "android_client_info": {
-          "package_name": "com.sixamtech.demandium.provider"
+          "package_name": "com.jassdbx.jassods"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "889759666168-ruq4mnv8fonls4gfvn01t2jap0f0662u.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBYMyaGbvQhVf6YIfH1TEVT56Zs83QASxg"
+          "current_key": "AIzaSyD8PuTDJaGxlkl9vtZxzGHMpIbyGTXep7A"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "889759666168-ruq4mnv8fonls4gfvn01t2jap0f0662u.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:889759666168:android:f49fc09445e6d8f884d00d",
+        "mobilesdk_app_id": "1:418974405325:android:5e9e61aefd909c213b0f84",
         "android_client_info": {
-          "package_name": "com.sixamtech.demandium.serviceman"
+          "package_name": "com.jassdbx.jassods.provider"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "889759666168-ruq4mnv8fonls4gfvn01t2jap0f0662u.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBYMyaGbvQhVf6YIfH1TEVT56Zs83QASxg"
+          "current_key": "AIzaSyD8PuTDJaGxlkl9vtZxzGHMpIbyGTXep7A"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "889759666168-ruq4mnv8fonls4gfvn01t2jap0f0662u.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:889759666168:android:64e5375b02e6121d84d00d",
+        "mobilesdk_app_id": "1:418974405325:android:80ab96be5f0fed743b0f84",
         "android_client_info": {
-          "package_name": "com.sixamtech.demandium.user"
+          "package_name": "com.jassdbx.jassods.serviceman"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "889759666168-ruq4mnv8fonls4gfvn01t2jap0f0662u.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBYMyaGbvQhVf6YIfH1TEVT56Zs83QASxg"
+          "current_key": "AIzaSyD8PuTDJaGxlkl9vtZxzGHMpIbyGTXep7A"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "889759666168-ruq4mnv8fonls4gfvn01t2jap0f0662u.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

@@ -1,5 +1,5 @@
-﻿import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:get/get.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class AdvertisementSection extends StatefulWidget {
   const AdvertisementSection({super.key});

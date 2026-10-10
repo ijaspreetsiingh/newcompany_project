@@ -1,6 +1,6 @@
-import 'package:demandium_provider/feature/settings/business/widget/business_info_tab_item_widget.dart';
+import 'package:jassdbx_provider/feature/settings/business/widget/business_info_tab_item_widget.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class BusinessSettingScreen extends StatefulWidget{
   final int? tabIndex;

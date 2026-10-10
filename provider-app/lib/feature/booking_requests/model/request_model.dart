@@ -1,5 +1,5 @@
-import 'package:demandium_provider/feature/booking_details/model/bookings_details_model.dart';
-import 'package:demandium_provider/feature/custom_post/model/post_model.dart';
+import 'package:jassdbx_provider/feature/booking_details/model/bookings_details_model.dart';
+import 'package:jassdbx_provider/feature/custom_post/model/post_model.dart';
 
 class BookingRequestModel {
   String? id;

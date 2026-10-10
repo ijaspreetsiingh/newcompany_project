@@ -42,7 +42,25 @@ class _LanguageScreenState extends State<LanguageScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (widget.fromPage != "fromSettingsPage") ...[
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            Get.find<SplashController>().disableShowinttialLanguageScreen();
+                            Get.find<SplashController>().disableShowOnboardingScreen();
+                            Get.offAllNamed('${RouteHelper.signIn}?page=${RouteHelper.splash}');
+                          },
+                          child: Text(
+                            'skip'.tr,
+                            style: NestInk.body(
+                              size: 14,
+                              color: NestInk.mutedText,
+                              weight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
                       Center(
                         child: Container(
                           height: 45,
@@ -152,12 +170,13 @@ class _LanguageScreenState extends State<LanguageScreen> {
                             ),
                             isinttial: true,
                           );
-                          if (Get.find<SplashController>().isShowOnboardingScreen() && !kIsWeb) {
-                            Get.offNamed(RouteHelper.onBoardScreen);
-                          } else {
+                          if (widget.fromPage == "fromSettingsPage") {
                             Get.find<SplashController>().getConfigData();
                             HomeScreen.loadData(true);
                             Get.offAllNamed(RouteHelper.getMainRoute("home"));
+                          } else {
+                            Get.find<SplashController>().disableShowOnboardingScreen();
+                            Get.offAllNamed('${RouteHelper.signIn}?page=${RouteHelper.splash}');
                           }
                         },
                       ),

@@ -1,4 +1,4 @@
-import 'package:demandium_provider/feature/category/model/sub_category_model.dart';
+import 'package:jassdbx_provider/feature/category/model/sub_category_model.dart';
 
 class MySubscriptionModel {
   String? responseCode;

@@ -85,7 +85,11 @@ class SendBookingNotificationsJob implements ShouldQueue
             $serviceman = $booking->serviceman?->user;
             $title = get_push_notification_message($key, $settingsType, $serviceman?->current_language_key);
             if ($serviceman?->fcm_token && $title) {
-                device_notification($serviceman?->fcm_token, $title, null, null, $booking->id, 'booking');
+                // serviceman_assign par type 'new_booking_request' taki app me
+                // incoming-booking popup khule (sirf 'booking' se sirf list refresh hoti hai)
+                $type = $key === 'serviceman_assign' ? 'new_booking_request' : 'booking';
+                $body = $key === 'serviceman_assign' ? 'You have been assigned a new service. Accept before the timer ends.' : null;
+                device_notification($serviceman?->fcm_token, $title, $body, null, $booking->id, $type);
             }
         }
     }

@@ -1,7 +1,7 @@
-import 'package:demandium_provider/feature/payement_information/controller/payment_info_controller.dart';
-import 'package:demandium_provider/feature/payement_information/model/payment_method_list_model.dart';
-import 'package:demandium_provider/feature/payement_information/widgets/method_popup_button_widget.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/payement_information/controller/payment_info_controller.dart';
+import 'package:jassdbx_provider/feature/payement_information/model/payment_method_list_model.dart';
+import 'package:jassdbx_provider/feature/payement_information/widgets/method_popup_button_widget.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 class PaymentInfoCard extends StatelessWidget {

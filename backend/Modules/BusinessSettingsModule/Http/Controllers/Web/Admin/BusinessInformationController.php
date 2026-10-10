@@ -1317,7 +1317,7 @@ class BusinessInformationController extends Controller
         if (!File::exists(storage_path('backup'))) {
             File::makeDirectory(storage_path('backup'), 0777, true);
         }
-        $files = File::files('storage/backup');
+        $files = File::files(storage_path('backup'));
 
         $fileNames = [];
         foreach ($files as $file) {
@@ -1398,9 +1398,9 @@ class BusinessInformationController extends Controller
             }
             $sqlFileName = 'database_backup_' . date("Y-m-d_H-i") . '.sql';
 
-            $file = base_path($sqlFileName);
+            $freshBackup = base_path($sqlFileName);
             $destination = storage_path('backup/' . $sqlFileName);
-            File::move($file, $destination);
+            File::move($freshBackup, $destination);
 
             //restore operation
             //db operations
@@ -1411,7 +1411,7 @@ class BusinessInformationController extends Controller
             return back();
 
         } catch (\Exception $exception) {
-            Toastr::success(translate('Database restored failed'));
+            Toastr::error(translate('Database restored failed'));
             return back();
         }
 

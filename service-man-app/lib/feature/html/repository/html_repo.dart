@@ -1,5 +1,5 @@
-import 'package:demandium_serviceman/api/api_client.dart';
-import 'package:demandium_serviceman/utils/app_constants.dart';
+import 'package:jassdbx_serviceman/api/api_client.dart';
+import 'package:jassdbx_serviceman/utils/app_constants.dart';
 import 'package:get/get_connect/http/src/response/response.dart';
 
 class HtmlRepository{

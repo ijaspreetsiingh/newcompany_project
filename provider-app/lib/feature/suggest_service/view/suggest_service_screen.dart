@@ -1,5 +1,5 @@
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/suggest_service/widgets/suggest_service_input_field.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/suggest_service/widgets/suggest_service_input_field.dart';
 import 'package:get/get.dart';
 
 class SuggestServiceScreen extends StatefulWidget {

@@ -1,5 +1,5 @@
-import 'package:demandium_serviceman/feature/inbox/widgets/inbox_channel_card.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/feature/inbox/widgets/inbox_channel_card.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:get/get.dart';
 
 class InboxScreen extends StatefulWidget {

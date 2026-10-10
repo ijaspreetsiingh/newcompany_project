@@ -1,6 +1,6 @@
-import 'package:demandium_provider/helper/booking_helper.dart';
+import 'package:jassdbx_provider/helper/booking_helper.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class BookingRequestItem extends StatelessWidget {
   final BookingRequestModel booking;

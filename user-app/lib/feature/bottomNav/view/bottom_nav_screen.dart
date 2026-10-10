@@ -39,6 +39,13 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     // Load home screen data
     HomeScreen.loadData(false);
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || widget.pagetndex != 0) return;
+      if (Get.find<LocationController>().getUserAddress() == null) {
+        EnableLocationPopup.show(context, barrierDismissible: true);
+      }
+    });
+
     if(_pagetndex==1){
       Get.find<BottomNavController>().changePage(BnbItem.bookings, shouldUpdate: false);
     }else if(_pagetndex==2){

@@ -1,12 +1,12 @@
-﻿import 'dart:convert';
-import 'package:demandium_provider/feature/payement_information/controller/payment_info_controller.dart';
-import 'package:demandium_provider/feature/payement_information/repository/payment_info_repo.dart';
-import 'package:demandium_provider/feature/settings/business/controller/identity_controller.dart';
-import 'package:demandium_provider/feature/tutorial/controller/tutorial_controller.dart';
-import 'package:demandium_provider/feature/tutorial/repo/tutorial_repo.dart';
-import 'package:demandium_provider/feature/booking_requests/controller/calendar_controller.dart';
-import 'package:demandium_provider/feature/booking_requests/controller/calender_order_filter_controller.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'dart:convert';
+import 'package:jassdbx_provider/feature/payement_information/controller/payment_info_controller.dart';
+import 'package:jassdbx_provider/feature/payement_information/repository/payment_info_repo.dart';
+import 'package:jassdbx_provider/feature/settings/business/controller/identity_controller.dart';
+import 'package:jassdbx_provider/feature/tutorial/controller/tutorial_controller.dart';
+import 'package:jassdbx_provider/feature/tutorial/repo/tutorial_repo.dart';
+import 'package:jassdbx_provider/feature/booking_requests/controller/calendar_controller.dart';
+import 'package:jassdbx_provider/feature/booking_requests/controller/calender_order_filter_controller.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 

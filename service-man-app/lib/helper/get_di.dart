@@ -1,7 +1,7 @@
-﻿import 'dart:convert';
-import 'package:demandium_serviceman/utils/core_export.dart';
-import 'package:demandium_serviceman/feature/html/repository/html_repo.dart';
-import 'package:demandium_serviceman/feature/notifications/repository/notification_repo.dart';
+import 'dart:convert';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/feature/html/repository/html_repo.dart';
+import 'package:jassdbx_serviceman/feature/notifications/repository/notification_repo.dart';
 import 'package:get/get.dart';
 
 

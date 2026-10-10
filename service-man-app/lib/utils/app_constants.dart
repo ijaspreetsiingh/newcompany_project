@@ -1,4 +1,4 @@
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 class AppConstants {
   static const String appName = 'JS Partner';
@@ -44,6 +44,7 @@ class AppConstants {
   static const String paymentStatusUpdate = '/api/v1/technician/order/pay-state-change';
   static const String verifyTokenUri = '/api/v1/access/token-probe';
   static const String tokenUri = '/api/v1/technician/modify/push-key';
+  static const String workStatusUri = '/api/v1/technician/work-status';
 
   static const String pagesDetailsApi = '/api/v1/technician/setup/page-facts';
   static const String serviceListBasedOnSubCategory = '/api/v1/technician/task/records/child-group-wise';

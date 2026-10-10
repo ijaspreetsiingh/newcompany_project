@@ -1,9 +1,9 @@
 
-import 'package:demandium_provider/common/widgets/custom_shimmer_widget.dart';
-import 'package:demandium_provider/feature/payement_information/controller/payment_info_controller.dart';
-import 'package:demandium_provider/feature/payement_information/widgets/payment_info_card.dart';
-import 'package:demandium_provider/feature/tutorial/controller/tutorial_controller.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/common/widgets/custom_shimmer_widget.dart';
+import 'package:jassdbx_provider/feature/payement_information/controller/payment_info_controller.dart';
+import 'package:jassdbx_provider/feature/payement_information/widgets/payment_info_card.dart';
+import 'package:jassdbx_provider/feature/tutorial/controller/tutorial_controller.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 class PaymentInformationScreen extends StatefulWidget {

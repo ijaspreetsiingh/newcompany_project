@@ -1,6 +1,6 @@
-import 'package:demandium_provider/helper/help_me.dart';
+import 'package:jassdbx_provider/helper/help_me.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class DashboardHeader extends StatelessWidget implements PreferredSizeWidget {
   const DashboardHeader({super.key});

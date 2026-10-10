@@ -1,4 +1,4 @@
-import 'package:demandium_serviceman/feature/booking_details/model/booking_details_model.dart';
+import 'package:jassdbx_serviceman/feature/booking_details/model/booking_details_model.dart';
 
 class ProfileDataModel {
   ProfileDataModel({

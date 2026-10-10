@@ -1,5 +1,5 @@
-import 'package:demandium_provider/common/model/language_model.dart';
-import 'package:demandium_provider/util/images.dart';
+import 'package:jassdbx_provider/common/model/language_model.dart';
+import 'package:jassdbx_provider/util/images.dart';
 
 class AppConstants {
 

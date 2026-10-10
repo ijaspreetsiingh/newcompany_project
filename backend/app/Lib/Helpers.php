@@ -3082,6 +3082,7 @@ if (!function_exists('findNearestServicemen')) {
         [$bookingLat, $bookingLng] = getBookingCoordinates($booking);
 
         $servicemen = Serviceman::where('provider_id', $providerId)
+            ->where('is_on_duty', 1)
             ->whereNotIn('id', $excludeServicemanIds)
             ->whereHas('user', function ($query) {
                 $query->where('is_active', 1);
@@ -3130,18 +3131,24 @@ if (!function_exists('assignBookingToServiceman')) {
             ['status' => BookingServiceman::STATUS_PENDING, 'expires_at' => $expiresAt]
         );
 
+        $previousServicemanId = $booking->serviceman_id;
         $booking->serviceman_id = $booking->serviceman_id ?: $serviceman->id;
         $booking->serviceman_assign_expires_at = $expiresAt;
         $booking->save();
 
-        try {
-            $fcmToken = $serviceman?->user?->fcm_token ?? null;
-            if (!is_null($fcmToken)) {
-                $title = 'New Service Assignment';
-                device_notification($fcmToken, $title, 'You have been assigned a new service. Accept before the timer ends.', null, $booking->id, 'new_booking_request');
+        // Agar serviceman_id change hua to model observer (serviceman_assign job)
+        // naye serviceman ko push bhej dega — direct push tabhi bhejo jab id same
+        // rahi (job fire hi nahi hoga), warna serviceman ko 2 notification milte the.
+        if ($previousServicemanId === $booking->serviceman_id) {
+            try {
+                $fcmToken = $serviceman?->user?->fcm_token ?? null;
+                if (!is_null($fcmToken)) {
+                    $title = 'New Service Assignment';
+                    device_notification($fcmToken, $title, 'You have been assigned a new service. Accept before the timer ends.', null, $booking->id, 'new_booking_request');
+                }
+            } catch (\Throwable $e) {
+                Log::error('assignBookingToServiceman notification failed: ' . $e->getMessage());
             }
-        } catch (\Throwable $e) {
-            Log::error('assignBookingToServiceman notification failed: ' . $e->getMessage());
         }
     }
 }

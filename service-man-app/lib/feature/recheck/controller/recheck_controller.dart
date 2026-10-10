@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 class RecheckController extends GetxController implements GetxService {
   final BookingRequestRepo bookingRequestRepo;

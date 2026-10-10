@@ -1,6 +1,6 @@
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/service_details/model/service_faq_model.dart';
-import 'package:demandium_provider/feature/service_details/widget/empty_faq_widget.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/service_details/model/service_faq_model.dart';
+import 'package:jassdbx_provider/feature/service_details/widget/empty_faq_widget.dart';
 import 'package:get/get.dart';
 
 class FaqScreen extends StatelessWidget {

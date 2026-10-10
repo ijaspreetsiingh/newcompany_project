@@ -43,23 +43,23 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   @override
-  void initState() {
-    super.initState();
-    if (Get.isRegistered<RadiusSearchController>()) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        unawaited(Get.find<RadiusSearchController>().checkAvailabilityAndPrompt());
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     Get.find<BannerController>().setCurrentIndex(0, false);
     
     return GetBuilder<ServiceController>(builder: (serviceController) {
       bool isAvailableService = serviceController.popularServiceList != null && serviceController.popularServiceList!.isNotEmpty;
-      
+
+      // Services available nahi hain → radius expand popup turant dikhao
+      // (ServiceNotAvailableScreen background me rahegi, popup upar aayega)
+      if (!isAvailableService && serviceController.popularServiceList != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          if (Get.isRegistered<RadiusSearchController>()) {
+            unawaited(Get.find<RadiusSearchController>().promptWhenServicesUnavailable());
+          }
+        });
+      }
+
       return Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: isAvailableService ? _buildHome(context) : const ServiceNotAvailableScreen(),

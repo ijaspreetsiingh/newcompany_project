@@ -1,5 +1,5 @@
-import 'package:demandium_serviceman/common/widgets/zoom_image.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/common/widgets/zoom_image.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:get/get.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 

@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
-import 'package:demandium_serviceman/feature/notifications/model/notofication_model.dart';
-import 'package:demandium_serviceman/feature/notifications/repository/notification_repo.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/feature/notifications/model/notofication_model.dart';
+import 'package:jassdbx_serviceman/feature/notifications/repository/notification_repo.dart';
 
 
 

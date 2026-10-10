@@ -1,5 +1,5 @@
 
-import 'package:demandium_serviceman/common/models/user_model.dart';
+import 'package:jassdbx_serviceman/common/models/user_model.dart';
 
 class Serviceman {
   String? id;

@@ -668,6 +668,14 @@ $logo = getBusinessSettingsImageFullPath(key: 'business_logo', settingType: 'bus
                                 </a>
                             </li>
                         @endcan
+                        @can('page_view')
+                            <li>
+                                <a href="{{ route('admin.configuration.app-content') }}"
+                                   class="{{ request()->is('admin/configuration/app-content*') ? 'active-menu' : '' }}">
+                                    {{ translate('App Content') }}
+                                </a>
+                            </li>
+                        @endcan
                             @can('page_view')
                                 <li>
                                     <a href="{{ route('admin.social-media.index') }}"
@@ -730,6 +738,13 @@ $logo = getBusinessSettingsImageFullPath(key: 'business_logo', settingType: 'bus
                        class="{{request()->is('admin/configuration/get-banner-settings') || request()->is('admin/configuration/banner-settings') ?'active-menu':''}}">
                         <span class="material-icons" title="{{translate('App_banner_settings')}}">tune</span>
                         <span class="link-title">{{translate('App Setting')}}</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{route('admin.business-settings.location-settings.index')}}"
+                       class="{{request()->is('admin/business-settings/location-settings*') ?'active-menu':''}}">
+                        <span class="material-icons" title="{{translate('Location_Search_Settings')}}">location_searching</span>
+                        <span class="link-title">{{translate('Location Search')}}</span>
                     </a>
                 </li>
             @endcan

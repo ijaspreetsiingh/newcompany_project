@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/booking_details/model/bookings_details_model.dart';
-import 'package:demandium_provider/feature/booking_details/model/assign_suggestion_model.dart';
-import 'package:demandium_provider/feature/booking_requests/controller/booking_timer_controller.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/booking_details/model/bookings_details_model.dart';
+import 'package:jassdbx_provider/feature/booking_details/model/assign_suggestion_model.dart';
+import 'package:jassdbx_provider/feature/booking_requests/controller/booking_timer_controller.dart';
 
 /// AUTO-ASSIGN: full-screen booking popup jab provider ko new booking request aati hai.
 /// Decision window ke andar provider distance-sorted serviceman list se

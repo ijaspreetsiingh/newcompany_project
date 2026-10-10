@@ -1,6 +1,6 @@
-import 'package:demandium_provider/feature/reporting/model/booking_report_model.dart';
-import 'package:demandium_provider/feature/reporting/model/transaction_report_model.dart';
-import 'package:demandium_provider/feature/reporting/repository/report_repo.dart';
+import 'package:jassdbx_provider/feature/reporting/model/booking_report_model.dart';
+import 'package:jassdbx_provider/feature/reporting/model/transaction_report_model.dart';
+import 'package:jassdbx_provider/feature/reporting/repository/report_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';

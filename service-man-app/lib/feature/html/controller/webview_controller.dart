@@ -1,6 +1,6 @@
-import 'package:demandium_serviceman/api/api_checker.dart';
-import 'package:demandium_serviceman/feature/html/model/pages_details_model.dart';
-import 'package:demandium_serviceman/feature/html/repository/html_repo.dart';
+import 'package:jassdbx_serviceman/api/api_checker.dart';
+import 'package:jassdbx_serviceman/feature/html/model/pages_details_model.dart';
+import 'package:jassdbx_serviceman/feature/html/repository/html_repo.dart';
 import 'package:get/get.dart';
 
 

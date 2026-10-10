@@ -1,7 +1,7 @@
-import 'package:demandium_provider/common/widgets/circular_icon_button_widget.dart';
-import 'package:demandium_provider/helper/help_me.dart';
+import 'package:jassdbx_provider/common/widgets/circular_icon_button_widget.dart';
+import 'package:jassdbx_provider/helper/help_me.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;

@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 
 class AdvertisementController extends GetxController with GetSingleTickerProviderStateMixin implements GetxService {

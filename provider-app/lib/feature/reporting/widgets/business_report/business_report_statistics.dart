@@ -1,6 +1,6 @@
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/reporting/model/business_report_earning_model.dart';
-import 'package:demandium_provider/feature/reporting/widgets/business_report/business_report_statistics_card.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/reporting/model/business_report_earning_model.dart';
+import 'package:jassdbx_provider/feature/reporting/widgets/business_report/business_report_statistics_card.dart';
 import 'package:get/get.dart';
 
 class BusinessReportStatistics extends StatelessWidget {

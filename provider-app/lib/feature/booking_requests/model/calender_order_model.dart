@@ -4,7 +4,7 @@
 
 import 'dart:convert';
 
-import 'package:demandium_provider/common/enums/enums.dart';
+import 'package:jassdbx_provider/common/enums/enums.dart';
 
 CalenderOrderModel calenderOrderModelFromJson(String str) => CalenderOrderModel.fromJson(json.decode(str));
 

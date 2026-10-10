@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'package:demandium_serviceman/common/enums/enums.dart';
-import 'package:demandium_serviceman/common/widgets/custom_snackbar.dart';
-import 'package:demandium_serviceman/feature/splash/controller/splash_controller.dart';
-import 'package:demandium_serviceman/utils/app_constants.dart';
+import 'package:jassdbx_serviceman/common/enums/enums.dart';
+import 'package:jassdbx_serviceman/common/widgets/custom_snackbar.dart';
+import 'package:jassdbx_serviceman/feature/splash/controller/splash_controller.dart';
+import 'package:jassdbx_serviceman/utils/app_constants.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';

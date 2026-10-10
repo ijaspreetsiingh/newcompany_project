@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:demandium_serviceman/utils/dimensions.dart';
-import 'package:demandium_serviceman/utils/images.dart';
+import 'package:jassdbx_serviceman/utils/dimensions.dart';
+import 'package:jassdbx_serviceman/utils/images.dart';
 class ImageDialog extends StatelessWidget {
   final String imageUrl;
   const ImageDialog({super.key, required this.imageUrl}) ;

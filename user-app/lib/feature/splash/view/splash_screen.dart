@@ -94,10 +94,8 @@ class SplashScreenState extends State<SplashScreen> {
           } else {
             if (Get.find<SplashController>().isShowinttialLanguageScreen()) {
               Get.offNamed(RouteHelper.getLanguageScreen('fromOthers'));
-            } else if (Get.find<SplashController>().isShowOnboardingScreen()) {
-              Get.offAllNamed(RouteHelper.onBoardScreen);
             } else {
-              Get.offNamed(RouteHelper.getinitialRoute());
+              Get.offNamed('${RouteHelper.signIn}?page=${RouteHelper.splash}');
             }
           }
         }

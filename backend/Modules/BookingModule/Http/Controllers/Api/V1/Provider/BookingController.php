@@ -814,6 +814,30 @@ class BookingController extends Controller
                 return response()->json(response_formatter(BOOKING_ALREADY_CANCELED_200), 200);
             }
 
+            // Guards: pehle koi aur provider accept kar chuka to data corruption
+            // hoti thi (provider_id overwrite). Idempotent: agar ye provider hi
+            // accept kar chuka hai to success wapas.
+            if ($booking->booking_status == 'accepted') {
+                if ($booking->provider_id == $provider?->id) {
+                    return response()->json(response_formatter(BOOKING_STATUS_UPDATE_SUCCESS_200), 200);
+                }
+                return response()->json(response_formatter(BOOKING_ALREADY_ACCEPTED), 200);
+            }
+
+            if ($booking->booking_status != 'pending') {
+                return response()->json(response_formatter(BOOKING_ALREADY_ACCEPTED), 200);
+            }
+
+            // Auto-assign: sirf assigned provider hi accept kar sakta hai
+            if ($booking->auto_assigned && $booking->assigned_provider_id && $booking->assigned_provider_id != $provider?->id) {
+                return response()->json(response_formatter(BOOKING_ALREADY_ACCEPTED), 200);
+            }
+
+            // Zone mismatch: booking isi provider ke zone ki honi chahiye
+            if ($provider?->zone_id && $booking->zone_id && $provider->zone_id != $booking->zone_id) {
+                return response()->json(response_formatter(BOOKING_ALREADY_ACCEPTED), 200);
+            }
+
             $nextBookingEligibility = nextBookingEligibility($provider->id);
             if (!$nextBookingEligibility) {
                 return response()->json(response_formatter(BOOKING_LIMIT_END), 200);

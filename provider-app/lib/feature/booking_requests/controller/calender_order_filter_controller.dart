@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/booking_requests/controller/calendar_controller.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/booking_requests/controller/calendar_controller.dart';
 
 class CalenderOrderFilterController extends GetxController implements GetxService {
   

@@ -1,4 +1,4 @@
-import 'package:demandium_serviceman/common/models/service_details_model.dart';
+import 'package:jassdbx_serviceman/common/models/service_details_model.dart';
 
 class CartModel {
   String? id;

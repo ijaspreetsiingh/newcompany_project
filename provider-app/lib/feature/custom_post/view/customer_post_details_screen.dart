@@ -1,7 +1,7 @@
 import 'dart:math';
-import 'package:demandium_provider/helper/extension_helper.dart';
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/custom_post/model/post_model.dart';
+import 'package:jassdbx_provider/helper/extension_helper.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/custom_post/model/post_model.dart';
 import 'package:get/get.dart';
 
 class CustomerPostDetailsScreen extends StatefulWidget {

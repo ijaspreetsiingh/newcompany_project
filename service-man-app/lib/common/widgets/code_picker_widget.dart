@@ -1,6 +1,6 @@
 import 'package:country_code_picker/country_code_picker.dart';
-import 'package:demandium_serviceman/utils/dimensions.dart';
-import 'package:demandium_serviceman/utils/styles.dart';
+import 'package:jassdbx_serviceman/utils/dimensions.dart';
+import 'package:jassdbx_serviceman/utils/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

@@ -48,6 +48,8 @@ Route::group(['prefix' => 'technician', 'as' => 'serviceman.', 'namespace' => 'A
         Route::get('dossier', [ServicemanController::class, 'index']);
         Route::put('modify/account', [ServicemanController::class, 'updateProfile']);
         Route::put('modify/push-key', [ServicemanController::class, 'updateFcmToken']);
+        Route::put('modify/work-status', [ServicemanController::class, 'updateWorkStatus']);
+        Route::get('work-status', [ServicemanController::class, 'getWorkStatus']);
         Route::put('modify/position', [ServicemanController::class, 'updateLocation']);
         Route::get('push-alerts', [ServicemanController::class, 'pushNotifications']);
 

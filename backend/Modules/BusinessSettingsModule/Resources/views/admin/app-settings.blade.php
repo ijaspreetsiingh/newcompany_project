@@ -14,7 +14,7 @@
                     <div class="mb-3">
                         <ul class="nav nav--tabs nav--tabs__style2">
                             <li class="nav-item">
-                                <button data-bs-toggle="tab" data-bs-target="#customercustomer" class="nav-link active">
+                                <button data-bs-toggle="tab" data-bs-target="#customer" class="nav-link {{($webPage ?? '') != 'location_search' ? 'active' : ''}}">
                                     {{translate('Customer')}}
                                 </button>
                             </li>
@@ -35,7 +35,7 @@
                                 </button>
                             </li>
                             <li class="nav-item">
-                                <button data-bs-toggle="tab" data-bs-target="#location-search" class="nav-link">
+                                <button data-bs-toggle="tab" data-bs-target="#location-search" class="nav-link {{($webPage ?? '') == 'location_search' ? 'active' : ''}}">
                                     {{translate('Location_Search')}}
                                 </button>
                             </li>
@@ -43,7 +43,7 @@
                     </div>
 
                     <div class="tab-content">
-                        <div class="tab-pane fade show active" id="customer">
+                        <div class="tab-pane fade {{($webPage ?? '') != 'location_search' ? 'show active' : ''}}" id="customer">
                             <div class="card">
                                 <div class="card-header">
                                     <h4 class="page-title">{{translate('Customer_app_configuration')}}</h4>
@@ -252,9 +252,7 @@
                             </div>
                         </div>
                     <div class="tab-content">
-                        <div class="tab-pane fade" id="location-search">
-                            @include('businesssettingsmodule::admin.partials.location-search-settings')
-                        </div>
+                        @include('businesssettingsmodule::admin.partials.location-search-settings')
                     </div>
                 </div>
             </div>

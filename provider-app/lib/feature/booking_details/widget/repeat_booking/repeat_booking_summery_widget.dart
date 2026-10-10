@@ -1,8 +1,8 @@
-import 'package:demandium_provider/feature/booking_details/widget/repeat_booking/repeat_booking_edit_history_widget.dart';
-import 'package:demandium_provider/helper/booking_helper.dart';
-import 'package:demandium_provider/helper/extension_helper.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/repeat_booking/repeat_booking_edit_history_widget.dart';
+import 'package:jassdbx_provider/helper/booking_helper.dart';
+import 'package:jassdbx_provider/helper/extension_helper.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class RepeatBookingSummeryWidget extends StatelessWidget{
   final BookingDetailsContent bookingDetails;

@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:get/get.dart';
 
 class ConversationBubbleWidget extends StatefulWidget {

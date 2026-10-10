@@ -1,7 +1,7 @@
 
 
-import 'package:demandium_provider/api/api_client.dart';
-import 'package:demandium_provider/util/app_constants.dart';
+import 'package:jassdbx_provider/api/api_client.dart';
+import 'package:jassdbx_provider/util/app_constants.dart';
 import 'package:get/get.dart';
 
 class PaymentInfoRepo {

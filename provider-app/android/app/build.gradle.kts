@@ -1,6 +1,6 @@
 import java.util.Properties
 import java.io.FileInputStream
-//com.sixamtech.demandium.provider
+//com.jassdbx.jassods.provider
 
 plugins {
     id("com.android.application")
@@ -15,13 +15,13 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.sixamtech.demandium.provider"
+    namespace = "com.jassdbx.jassods.provider"
     compileSdk = 36
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
         multiDexEnabled = true
-        applicationId = "com.sixamtech.demandium.provider"
+        applicationId = "com.jassdbx.jassods.provider"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode

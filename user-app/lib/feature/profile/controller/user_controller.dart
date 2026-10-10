@@ -57,7 +57,7 @@ class UserController extends GetxController implements GetxService {
 
         AddressModel? addressModel = Get.find<LocationController>().getUserAddress();
 
-        if(_userInfoModel !=null && (addressModel?.contactPersonNumber == "" || addressModel?.contactPersonNumber == null)){
+if(_userInfoModel !=null){
           String? firstName;
           if( Get.find<UserController>().userInfoModel?.phone!=null && Get.find<UserController>().userInfoModel?.fName !=null){
             firstName = "${Get.find<UserController>().userInfoModel?.fName} ";

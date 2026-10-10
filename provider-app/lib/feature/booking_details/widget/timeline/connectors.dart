@@ -1,4 +1,4 @@
-import 'package:demandium_provider/feature/booking_details/widget/timeline/line_painter.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/timeline/line_painter.dart';
 import 'package:flutter/material.dart';
 import 'connector_theme.dart';
 

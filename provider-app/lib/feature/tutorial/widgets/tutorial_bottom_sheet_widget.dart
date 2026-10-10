@@ -1,15 +1,15 @@
 
-import 'package:demandium_provider/feature/language/controller/localization_controller.dart';
-import 'package:demandium_provider/feature/nav/bottom_nav_screen.dart';
-import 'package:demandium_provider/feature/payement_information/view/payment_information_screen.dart';
-import 'package:demandium_provider/feature/profile/controller/user_controller.dart';
-import 'package:demandium_provider/feature/profile/model/provider_model.dart';
-import 'package:demandium_provider/feature/settings/business/view/business_settings_screen.dart';
-import 'package:demandium_provider/feature/tutorial/controller/tutorial_controller.dart';
-import 'package:demandium_provider/feature/tutorial/widgets/tutorial_item_widget.dart' show TutorialItemWidget;
-import 'package:demandium_provider/feature/tutorial/widgets/tutorial_progressbar_widget.dart' show TutorialProgressbarWidget;
-import 'package:demandium_provider/util/dimensions.dart';
-import 'package:demandium_provider/util/styles.dart';
+import 'package:jassdbx_provider/feature/language/controller/localization_controller.dart';
+import 'package:jassdbx_provider/feature/nav/bottom_nav_screen.dart';
+import 'package:jassdbx_provider/feature/payement_information/view/payment_information_screen.dart';
+import 'package:jassdbx_provider/feature/profile/controller/user_controller.dart';
+import 'package:jassdbx_provider/feature/profile/model/provider_model.dart';
+import 'package:jassdbx_provider/feature/settings/business/view/business_settings_screen.dart';
+import 'package:jassdbx_provider/feature/tutorial/controller/tutorial_controller.dart';
+import 'package:jassdbx_provider/feature/tutorial/widgets/tutorial_item_widget.dart' show TutorialItemWidget;
+import 'package:jassdbx_provider/feature/tutorial/widgets/tutorial_progressbar_widget.dart' show TutorialProgressbarWidget;
+import 'package:jassdbx_provider/util/dimensions.dart';
+import 'package:jassdbx_provider/util/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

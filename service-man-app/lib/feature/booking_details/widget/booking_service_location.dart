@@ -1,5 +1,5 @@
-import 'package:demandium_serviceman/feature/booking_details/view/location_tracking_screen.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/feature/booking_details/view/location_tracking_screen.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 

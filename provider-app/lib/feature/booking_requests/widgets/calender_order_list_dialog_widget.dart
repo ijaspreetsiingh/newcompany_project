@@ -1,6 +1,6 @@
-import 'package:demandium_provider/feature/booking_requests/controller/calendar_controller.dart';
-import 'package:demandium_provider/feature/booking_requests/widgets/booking_item_card.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/booking_requests/controller/calendar_controller.dart';
+import 'package:jassdbx_provider/feature/booking_requests/widgets/booking_item_card.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 class CalenderOrderListDialogWidget extends StatelessWidget {

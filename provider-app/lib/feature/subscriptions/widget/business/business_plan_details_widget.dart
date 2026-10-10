@@ -1,6 +1,6 @@
-import 'package:demandium_provider/common/widgets/custom_bottom_sheet_widget.dart';
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/profile/model/provider_model.dart';
+import 'package:jassdbx_provider/common/widgets/custom_bottom_sheet_widget.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/profile/model/provider_model.dart';
 import 'package:get/get.dart';
 
 

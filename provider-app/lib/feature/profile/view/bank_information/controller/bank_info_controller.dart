@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/profile/view/bank_information/model/bank_info_nodel.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/profile/view/bank_information/model/bank_info_nodel.dart';
 
 
 class BankInfoController extends GetxController implements GetxService{

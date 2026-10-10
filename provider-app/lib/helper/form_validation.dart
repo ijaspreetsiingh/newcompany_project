@@ -1,4 +1,4 @@
-import 'package:demandium_provider/helper/validation_helper.dart';
+import 'package:jassdbx_provider/helper/validation_helper.dart';
 import 'package:get/get.dart';
 
 class FormValidationHelper {

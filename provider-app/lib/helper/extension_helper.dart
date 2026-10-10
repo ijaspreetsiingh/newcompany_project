@@ -1,4 +1,4 @@
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 extension ContextInfo on BuildContext {
   ThemeData get theme => Theme.of(this);

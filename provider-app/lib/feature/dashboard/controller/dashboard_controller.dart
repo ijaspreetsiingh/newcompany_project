@@ -1,8 +1,8 @@
-import 'package:demandium_provider/feature/custom_post/model/post_model.dart';
-import 'package:demandium_provider/feature/dashboard/model/additional_info_count.dart';
-import 'package:demandium_provider/feature/dashboard/model/earnig_data_model.dart';
+import 'package:jassdbx_provider/feature/custom_post/model/post_model.dart';
+import 'package:jassdbx_provider/feature/dashboard/model/additional_info_count.dart';
+import 'package:jassdbx_provider/feature/dashboard/model/earnig_data_model.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 enum EarningType { monthly, yearly }
 

@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
-import 'package:demandium_provider/feature/serviceman/widget/add_new_serviceman_acount_info.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/serviceman/widget/add_new_serviceman_acount_info.dart';
 
 class AddNewServicemanScreen extends StatefulWidget {
   final bool? isEditScreen;

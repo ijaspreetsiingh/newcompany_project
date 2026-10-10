@@ -231,13 +231,12 @@
                                                             </button>
                                                         @endif
                                                         @can('provider_view')
-                                                            <button type="button"
-                                                                    class="action-btn btn--light-primary provider-view-stats"
-                                                                    style="--size: 30px"
-                                                                    title="{{translate('View')}}"
-                                                                    data-url="{{route('admin.provider.view_stats', [$provider->id])}}">
+                                                            <a href="{{ route('admin.provider.dashboard', [$provider->id]) }}"
+                                                               class="action-btn btn--light-primary"
+                                                               style="--size: 30px"
+                                                               title="{{translate('View')}}">
                                                                 <span class="material-icons">visibility</span>
-                                                            </button>
+                                                            </a>
                                                         @endcan
                                                         @can('provider_update')
                                                             <a href="{{route('admin.provider.edit',[$provider->id])}}"

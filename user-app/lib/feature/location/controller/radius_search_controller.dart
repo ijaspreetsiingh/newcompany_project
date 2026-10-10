@@ -19,6 +19,10 @@ class RadiusSearchController extends GetxService {
   // DEFAULT VALUES - NO WAIT FOR API
   double _initial = 5.0;
   double _max = 50.0;
+  double _step = 5.0;
+  int _maxAttempts = 5;
+  bool _popupEnabled = true;
+  int _attempts = 0;
   double _current = 0;
   bool _checking = false;
   bool _dialogOpen = false;
@@ -55,6 +59,10 @@ class RadiusSearchController extends GetxService {
   void resetForNewLocation() {
     _initial = 5.0;      // Reset to defaults
     _max = 50.0;
+    _step = 5.0;
+    _maxAttempts = 5;
+    _popupEnabled = true;
+    _attempts = 0;
     _current = 0;
     _checking = false;
     _dialogOpen = false;
@@ -88,9 +96,15 @@ class RadiusSearchController extends GetxService {
           if (content is Map) {
             double initial = (content['initial_radius'] as num?)?.toDouble() ?? 5;
             double max = (content['max_radius'] as num?)?.toDouble() ?? 50;
+            double step = (content['radius_increment_step'] as num?)?.toDouble() ?? 5;
+            int attempts = (content['max_search_attempts'] as num?)?.toInt() ?? 5;
+            bool popup = content['show_popup_on_location_change'] != false;
             if (initial > 0 && max >= initial) {
               _initial = initial;
               _max = max;
+              if (step > 0) _step = step;
+              if (attempts > 0) _maxAttempts = attempts;
+              _popupEnabled = popup;
               SearchRadiusState.initialRadius = initial;
               SearchRadiusState.maxRadius = max;
             }
@@ -139,96 +153,187 @@ class RadiusSearchController extends GetxService {
 
     _checking = true;
     try {
-      // Setup radius IMMEDIATELY using defaults
       if (_current <= 0) {
         _current = initialRadius;
         SearchRadiusState.activeRadius = _current;
       }
 
-      // Check providers
-      final bool? found = await _providersWithinCurrentRadius();
-      
+      final bool? found = await _providersWithinCurrentRadius(address);
+
       if (found == null) {
         _checking = false;
         return;
       }
-      
+
       if (_locationKey != key) {
         _checking = false;
         return;
       }
 
       if (found) {
+        _dismissed = true;
         _openHomeGateIfZoneEmpty(address);
         _checking = false;
         return;
       }
 
-      // NOT FOUND - SHOW POPUP IMMEDIATELY
-      if (_dialogOpen || _dismissed || _finalShown) {
+      if (!_popupEnabled) {
+        _dismissed = true;
         _checking = false;
         return;
       }
 
-      if (_current >= maxRadius) {
+      if (_current >= maxRadius || _attempts >= _maxAttempts) {
         _finalShown = true;
         _showFinalDialog();
         _checking = false;
         return;
       }
 
-      // Calculate next radius
-      final double step = initialRadius;
-      final double next = (_current + step) > maxRadius ? maxRadius : (_current + step);
-
-      _dialogOpen = true;
       _checking = false;
-      
-      // 🔥 POPUP SHOWS INSTANTLY - NO WAIT
-      RadiusSearchBottomSheet.show(
-        currentRadius: _current,
-        nextRadius: next,
-        step: step,
-        maxRadius: maxRadius,
-        onExpand: () {
-          _dialogOpen = false;
-          _current = next;
-          SearchRadiusState.activeRadius = next;
-          unawaited(_reloadAfterRadiusChange(address));
-          unawaited(checkAvailabilityAndPrompt());
-        },
-        onSetManually: () {
-          _dialogOpen = false;
-          _dismissed = true;
-          _navigateToLocationScreen();
-        },
-        onDismiss: () {
-          _dialogOpen = false;
-          _dismissed = true;
-        },
-      );
+      _showExpandPopup(address);
     } catch (e) {
       _checking = false;
       if (kDebugMode) print('RadiusSearch Error: $e');
     }
   }
 
-  /// Fast provider check - 1 API call
-  Future<bool?> _providersWithinCurrentRadius() async {
+  /// Expand popup dikhata hai — button tap pe async expand hota hai
+  /// (loading sheet me dikhta hai), aur found=true pe permanently band.
+  void _showExpandPopup(AddressModel address) {
+    if (_dialogOpen || _dismissed || _finalShown) return;
+
+    final double step = _step;
+    final double current = _current;
+    final double next =
+        (current + step) > maxRadius ? maxRadius : (current + step);
+
+    _dialogOpen = true;
+    RadiusSearchBottomSheet.show(
+      currentRadius: current,
+      nextRadius: next,
+      step: step,
+      maxRadius: maxRadius,
+      onExpand: () => _handleExpand(address, next),
+      onSetManually: () {
+        _dialogOpen = false;
+        _dismissed = true;
+        _navigateToLocationScreen();
+      },
+      onDismiss: () {
+        _dialogOpen = false;
+        _dismissed = true;
+      },
+    );
+  }
+
+  /// Expand tap hone par:
+  /// 1. Sheet already band ho chuki hoti hai (button ne pop kar diya)
+  /// 2. Loading overlay dikhao (user ko feedback mile)
+  /// 3. Naye radius me provider check karo
+  /// 4. Found → overlay hatao, reload background me, done (koi popup nahi)
+  /// 5. Nahi mila (found=null, timeout, error) → overlay hatao, reload background me
+  ///    — "next radius" tabahi na chahiye, kyunki check fail ho gaya tha.
+  Future<void> _handleExpand(AddressModel address, double next) async {
+    if (_checking) return;
+    _checking = true;
+
+    _attempts++;
+    _current = next;
+    SearchRadiusState.activeRadius = next;
+
+    _showSearchingOverlay(next);
+
+    try {
+      final bool? found = await _providersWithinCurrentRadius(address);
+
+      _hideSearchingOverlay();
+
+      if (found == true) {
+        _dismissed = true;
+        _dialogOpen = false;
+        _openHomeGateIfZoneEmpty(address);
+        unawaited(_reloadAfterRadiusChange(address));
+        _checking = false;
+        return;
+      }
+
+      // found == null → check timeout/error gayab ho gaya, bas reload karo
+      // ageya radius baadana ya next popup dikhna mat chahiye
+      unawaited(_reloadAfterRadiusChange(address));
+      _dialogOpen = false;
+      _checking = false;
+      return;
+    } catch (_) {
+      _hideSearchingOverlay();
+      _dialogOpen = false;
+      _checking = false;
+    }
+  }
+
+  /// Chhota loading overlay — "Searching providers within X km..."
+  void _showSearchingOverlay(double radius) {
+    try {
+      Get.dialog(
+        PopScope(
+          canPop: false,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 28),
+              decoration: BoxDecoration(
+                color: Get.context?.theme.cardColor ?? Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Searching within ${radius.toStringAsFixed(0)} km...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Get.context?.theme.textTheme.bodyMedium?.color,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        barrierDismissible: false,
+      );
+    } catch (_) {}
+  }
+
+  void _hideSearchingOverlay() {
+    try {
+      if (Get.isDialogOpen == true) {
+        Get.back();
+      }
+    } catch (_) {}
+  }
+
+  /// Fast provider check - 1 API call (lat/lng + radius dono bhejte hain
+  /// taaki backend radius filter sach me apply ho sake)
+  Future<bool?> _providersWithinCurrentRadius(AddressModel address) async {
     try {
       final Response response = await locationRepo.apiClient.postData(
         AppConstants.getProviderList,
         {
           'limit': 1,
           'offset': 1,
+          'lat': address.latitude,
+          'lng': address.longitude,
           'radius': _current,
         },
       ).timeout(const Duration(seconds: 5));
-      
+
       if (response.statusCode != 200) return null;
       final dynamic body = response.body;
       if (body is! Map || body['response_code'] != 'default_200') return null;
-      
+
       final dynamic content = body['content'];
       if (content is Map && content['data'] is List) {
         return (content['data'] as List).isNotEmpty;
@@ -238,6 +343,45 @@ class RadiusSearchController extends GetxService {
     } catch (_) {
       return null;
     }
+  }
+
+  /// Home screen par services available nahi hain (ServiceNotAvailableScreen
+  /// dikh rahi hai) — seedha expand popup dikhao, background me screen rahegi.
+  Future<void> promptWhenServicesUnavailable() async {
+    if (_checking || _dialogOpen || _dismissed || _finalShown) return;
+    if (!Get.isRegistered<LocationController>()) return;
+
+    final AddressModel? address = Get.find<LocationController>().getUserAddress();
+    if (address == null) return;
+
+    final double lat = double.tryParse(address.latitude ?? '') ?? 0;
+    final double lng = double.tryParse(address.longitude ?? '') ?? 0;
+    if (lat == 0 && lng == 0) return;
+
+    final String key = locationKeyOf(address);
+    if (key != _locationKey) {
+      resetForNewLocation();
+      _locationKey = key;
+      _fetchConfigInBackground();
+    }
+
+    if (_current <= 0) {
+      _current = initialRadius;
+      SearchRadiusState.activeRadius = _current;
+    }
+
+    if (!_popupEnabled) {
+      _dismissed = true;
+      return;
+    }
+
+    if (_current >= maxRadius || _attempts >= _maxAttempts) {
+      _finalShown = true;
+      _showFinalDialog();
+      return;
+    }
+
+    _showExpandPopup(address);
   }
 
   void _openHomeGateIfZoneEmpty(AddressModel address) {

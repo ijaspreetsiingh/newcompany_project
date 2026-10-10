@@ -1,5 +1,5 @@
-import 'package:demandium_serviceman/feature/booking_details/controller/location_tracking_controller.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/feature/booking_details/controller/location_tracking_controller.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
@@ -87,7 +87,7 @@ class LocationTrackingScreen extends StatelessWidget {
       children: [
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.sixamtech.demandium.serviceman',
+          userAgentPackageName: 'com.jassdbx.jassods.serviceman',
         ),
         if (controller.routePoints.length >= 2 &&
             controller.routeDistanceMeter >= 2)

@@ -1,4 +1,4 @@
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 /// Cover image with a safe placeholder — [CustomImage] crashes on null.
 class ServiceCover extends StatelessWidget {

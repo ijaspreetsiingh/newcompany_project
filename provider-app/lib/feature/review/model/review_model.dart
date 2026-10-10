@@ -1,4 +1,4 @@
-import 'package:demandium_provider/feature/booking_details/model/bookings_details_model.dart';
+import 'package:jassdbx_provider/feature/booking_details/model/bookings_details_model.dart';
 
 class Review {
   String? id;

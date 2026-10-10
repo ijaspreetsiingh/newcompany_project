@@ -1,7 +1,7 @@
-import 'package:demandium_provider/feature/booking_details/widget/repeat_booking/repeat_booking_details.dart';
-import 'package:demandium_provider/feature/booking_details/widget/repeat_booking/repeat_booking_service_log.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/repeat_booking/repeat_booking_details.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/repeat_booking/repeat_booking_service_log.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 
 class RepeatBookingDetailsScreen extends StatefulWidget {

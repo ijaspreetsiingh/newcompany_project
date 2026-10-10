@@ -858,6 +858,19 @@ class AuthController extends GetxController implements GetxService {
   }
 
 
+  String get _googleWebClientId {
+    final configured = Get.find<SplashController>()
+        .configModel
+        .content
+        ?.customerLogin
+        ?.socialMediaLoginOptions
+        ?.googleWebClientId;
+    if (configured != null && configured.isNotEmpty) {
+      return configured;
+    }
+    return AppConstants.googleServerClientId;
+  }
+
   Future<SocialLogInBody?> googleLogin() async {
     SocialLogInBody? socialLoginModel;
 
@@ -867,16 +880,23 @@ class AuthController extends GetxController implements GetxService {
     } else {
       try {
         if(signIn.supportsAuthenticate()) {
-          await signIn.initialize(serverClientId: AppConstants.googleServerClientId)
+          await signIn.initialize(serverClientId: _googleWebClientId)
               .then((_) async {
 
             googleAccount = await signIn.authenticate();
+            final String idToken = googleAccount?.authentication.idToken ?? '';
             const List<String> scopes = <String>['email'];
             final auth = await googleAccount?.authorizationClient.authorizationForScopes(scopes);
+            final String token = idToken.isNotEmpty ? idToken : (auth?.accessToken ?? '');
+
+            if (token.isEmpty) {
+              customSnackBar('Google sign-in failed. Please try again.', type: ToasterMessageType.error);
+              return;
+            }
 
             socialLoginModel = SocialLogInBody(
-              uniqueId: auth?.accessToken,
-              token: auth?.accessToken,
+              uniqueId: token,
+              token: token,
               medium: SocialLoginType.google.name,
               email: googleAccount?.email,
               userName: googleAccount?.displayName,
@@ -885,9 +905,11 @@ class AuthController extends GetxController implements GetxService {
           });
         }else {
           debugPrint("Google Sign-In not supported on this device.");
+          customSnackBar('Google sign-in is not supported on this device.', type: ToasterMessageType.error);
         }
       } catch (e) {
         debugPrint("google_login: $e");
+        customSnackBar('Google sign-in failed. Please try again.', type: ToasterMessageType.error);
       }
     }
 

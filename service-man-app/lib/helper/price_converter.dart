@@ -1,5 +1,5 @@
-import 'package:demandium_serviceman/common/models/service_details_model.dart';
-import 'package:demandium_serviceman/feature/splash/controller/splash_controller.dart';
+import 'package:jassdbx_serviceman/common/models/service_details_model.dart';
+import 'package:jassdbx_serviceman/feature/splash/controller/splash_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

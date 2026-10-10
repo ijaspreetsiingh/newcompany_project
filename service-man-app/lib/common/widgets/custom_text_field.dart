@@ -1,6 +1,6 @@
-import 'package:demandium_serviceman/common/widgets/code_picker_widget.dart';
+import 'package:jassdbx_serviceman/common/widgets/code_picker_widget.dart';
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 class CustomTextField extends StatefulWidget {
   final String? hintText;

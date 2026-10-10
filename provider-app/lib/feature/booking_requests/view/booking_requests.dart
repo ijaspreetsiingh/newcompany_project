@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class BookingRequestScreen extends StatefulWidget {
   const BookingRequestScreen({super.key});

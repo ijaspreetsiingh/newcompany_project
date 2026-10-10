@@ -1,4 +1,4 @@
-import 'package:demandium_serviceman/feature/booking_details/widget/timeline/timeline_tile_builder.dart';
+import 'package:jassdbx_serviceman/feature/booking_details/widget/timeline/timeline_tile_builder.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;

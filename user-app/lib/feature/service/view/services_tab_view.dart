@@ -76,12 +76,6 @@ class _ServicesTabViewState extends State<ServicesTabView> {
       shouldUpdate: false,
       reload: true,
     );
-
-    if (Get.isRegistered<RadiusSearchController>()) {
-      unawaited(
-        Get.find<RadiusSearchController>().checkAvailabilityAndPrompt(),
-      );
-    }
   }
 
   void _listenForHomeCategoryRequest(BottomNavController navController) {

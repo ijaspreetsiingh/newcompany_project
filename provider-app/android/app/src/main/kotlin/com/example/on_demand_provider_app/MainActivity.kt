@@ -1,4 +1,4 @@
-package com.sixamtech.demandium.provider
+package com.jassdbx.jassods.provider
 
 import io.flutter.embedding.android.FlutterActivity
 

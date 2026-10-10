@@ -1,7 +1,7 @@
-import 'package:demandium_provider/feature/booking_requests/controller/calendar_controller.dart';
-import 'package:demandium_provider/feature/booking_requests/widgets/calender_header_widget.dart';
-import 'package:demandium_provider/feature/booking_requests/widgets/month_cell_order_count_widget.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/booking_requests/controller/calendar_controller.dart';
+import 'package:jassdbx_provider/feature/booking_requests/widgets/calender_header_widget.dart';
+import 'package:jassdbx_provider/feature/booking_requests/widgets/month_cell_order_count_widget.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 /// Design month grid card: weekday header, day cells with per-day booking
 /// status dots driven by the real month data of [BookingCalendarController]

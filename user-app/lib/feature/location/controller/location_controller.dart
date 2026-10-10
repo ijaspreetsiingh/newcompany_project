@@ -166,29 +166,41 @@ class LocationController extends GetxController implements GetxService {
           throw StateError('Location permission was not granted');
         }
 
-        Position? recentPosition;
-        try {
-          recentPosition = await Geolocator.getLastKnownPosition();
-        } catch (_) {
-          // A cached fix is optional; fall back to a fresh fix below.
-        }
-        final Duration? positionAge = recentPosition == null
-            ? null
-            : DateTime.now().difference(recentPosition.timestamp);
-        if (recentPosition != null &&
-            positionAge != null &&
-            positionAge >= Duration.zero &&
-            positionAge <= const Duration(minutes: 2) &&
-            recentPosition.accuracy <= 100 &&
-            (recentPosition.latitude != 0 || recentPosition.longitude != 0)) {
-          myPosition = recentPosition;
-        } else {
+        // "Use current location" button pressed → always fresh GPS fix,
+        // stale cached position kabhi mat use karo.
+        if (deviceCurrentLocation) {
           myPosition = await Geolocator.getCurrentPosition(
             locationSettings: const LocationSettings(
-              accuracy: LocationAccuracy.medium,
-              timeLimit: Duration(seconds: 12),
+              accuracy: LocationAccuracy.high,
+              timeLimit: Duration(seconds: 20),
             ),
           );
+        } else {
+          Position? recentPosition;
+          try {
+            recentPosition = await Geolocator.getLastKnownPosition();
+          } catch (_) {
+            // A cached fix is optional; fall back to a fresh fix below.
+          }
+          final Duration? positionAge = recentPosition == null
+              ? null
+              : DateTime.now().difference(recentPosition.timestamp);
+          // 30 second se purana cache mat lo — live location chahiye
+          if (recentPosition != null &&
+              positionAge != null &&
+              positionAge >= Duration.zero &&
+              positionAge <= const Duration(seconds: 30) &&
+              recentPosition.accuracy <= 50 &&
+              (recentPosition.latitude != 0 || recentPosition.longitude != 0)) {
+            myPosition = recentPosition;
+          } else {
+            myPosition = await Geolocator.getCurrentPosition(
+              locationSettings: const LocationSettings(
+                accuracy: LocationAccuracy.high,
+                timeLimit: Duration(seconds: 20),
+              ),
+            );
+          }
         }
       }
     } catch (e) {

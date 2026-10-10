@@ -1,5 +1,5 @@
-import 'package:demandium_provider/feature/booking_details/widget/repeat_booking/repeat_history_expenssion_tile.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/booking_details/widget/repeat_booking/repeat_history_expenssion_tile.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 class RepeatBookingEditHistoryDialog extends StatelessWidget {

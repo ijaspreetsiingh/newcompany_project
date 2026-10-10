@@ -1,8 +1,8 @@
-import 'package:demandium_provider/feature/subscriptions/widget/subcategory/category_item_widget.dart';
-import 'package:demandium_provider/feature/subscriptions/widget/subcategory/no_subscription_widget.dart';
-import 'package:demandium_provider/feature/subscriptions/widget/subcategory/subscription_item_shimmer.dart';
+import 'package:jassdbx_provider/feature/subscriptions/widget/subcategory/category_item_widget.dart';
+import 'package:jassdbx_provider/feature/subscriptions/widget/subcategory/no_subscription_widget.dart';
+import 'package:jassdbx_provider/feature/subscriptions/widget/subcategory/subscription_item_shimmer.dart';
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 
 class SubscriptionScreen extends StatefulWidget {

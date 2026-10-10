@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:demandium_provider/util/core_export.dart';
+import 'package:jassdbx_provider/util/core_export.dart';
 
 class SignUpStep5 extends StatefulWidget {
   const SignUpStep5({super.key});

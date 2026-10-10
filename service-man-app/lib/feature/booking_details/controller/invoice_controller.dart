@@ -1,17 +1,17 @@
 import 'dart:io';
 
-import 'package:demandium_serviceman/helper/date_converter.dart';
-import 'package:demandium_serviceman/feature/booking_details/controller/booking_details_controller.dart';
-import 'package:demandium_serviceman/feature/booking_details/controller/pdf_controller.dart';
-import 'package:demandium_serviceman/feature/booking_details/model/booking_details_model.dart';
-import 'package:demandium_serviceman/feature/booking_details/model/invoice.dart';
-import 'package:demandium_serviceman/feature/booking_details/model/supplier.dart';
-import 'package:demandium_serviceman/feature/splash/controller/splash_controller.dart';
-import 'package:demandium_serviceman/utils/app_constants.dart';
-import 'package:demandium_serviceman/utils/dimensions.dart';
+import 'package:jassdbx_serviceman/helper/date_converter.dart';
+import 'package:jassdbx_serviceman/feature/booking_details/controller/booking_details_controller.dart';
+import 'package:jassdbx_serviceman/feature/booking_details/controller/pdf_controller.dart';
+import 'package:jassdbx_serviceman/feature/booking_details/model/booking_details_model.dart';
+import 'package:jassdbx_serviceman/feature/booking_details/model/invoice.dart';
+import 'package:jassdbx_serviceman/feature/booking_details/model/supplier.dart';
+import 'package:jassdbx_serviceman/feature/splash/controller/splash_controller.dart';
+import 'package:jassdbx_serviceman/utils/app_constants.dart';
+import 'package:jassdbx_serviceman/utils/dimensions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:demandium_serviceman/feature/booking_details/model/provider.dart' as provider;
+import 'package:jassdbx_serviceman/feature/booking_details/model/provider.dart' as provider;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/widgets.dart';
