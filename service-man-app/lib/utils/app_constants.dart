@@ -5,7 +5,7 @@ class AppConstants {
   static const String shortAppName = 'JS Partner';
   static const String appUser = 'Partner App';
   static const String appVersion = '3.6'; /// Flutter SDK: 3.38.5
-  static const String baseUrl = 'http://10.0.2.2:8000';
+  static const String baseUrl = 'https://newcompanyproject-production.up.railway.app';
   static const bool avoidMaintenanceMode = false;
   static const String loginUrl = '/api/v1/technician/access/signin';
   static const String configUrl = '/api/v1/technician/setup';
