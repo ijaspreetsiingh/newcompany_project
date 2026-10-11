@@ -40,6 +40,11 @@ class SMS_gateway
             return self::alphanet_sms($receiver, $otp);
         }
 
+        $config = self::get_settings('textbee');
+        if (isset($config) && $config['status'] == 1) {
+            return self::textbee($receiver, $otp);
+        }
+
 
         return 'not_found';
     }
@@ -224,6 +229,54 @@ class SMS_gateway
             if ((int) data_get(json_decode($response,true),'error') === 0) {
                 $response = 'success';
             } else {
+                $response = 'error';
+            }
+        }
+        return $response;
+    }
+
+    public static function textbee($receiver, $otp): string
+    {
+        $config = self::get_settings('textbee');
+        $response = 'error';
+        if (isset($config) && $config['status'] == 1) {
+            $message = str_replace("#OTP#", $otp, $config['otp_template']);
+            $apiUrl = rtrim($config['api_url'], '/') . '/gateway/send-sms';
+
+            try {
+                $payload = [
+                    'message' => $message,
+                    'receivers' => [$receiver],
+                ];
+                if (isset($config['device_id']) && $config['device_id'] != '') {
+                    $payload['deviceId'] = $config['device_id'];
+                }
+
+                $ch = curl_init();
+                curl_setopt_array($ch, [
+                    CURLOPT_URL => $apiUrl,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_MAXREDIRS => 10,
+                    CURLOPT_TIMEOUT => 30,
+                    CURLOPT_CUSTOMREQUEST => 'POST',
+                    CURLOPT_POSTFIELDS => json_encode($payload),
+                    CURLOPT_HTTPHEADER => [
+                        'Content-Type: application/json',
+                        'Accept: application/json',
+                        'x-api-key: ' . $config['api_key'],
+                    ],
+                ]);
+                $result = curl_exec($ch);
+                $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $err = curl_error($ch);
+                curl_close($ch);
+
+                if (!$err && $httpCode >= 200 && $httpCode < 300 && $result !== false) {
+                    $response = 'success';
+                } else {
+                    $response = 'error';
+                }
+            } catch (\Exception $exception) {
                 $response = 'error';
             }
         }

@@ -309,6 +309,7 @@ class BookingController extends Controller
                 'category',
                 'subCategory:id,name',
                 'serviceman.user',
+                'extraServices',
                 'booking_partial_payments',
                 'repeat.scheduleHistories',
                 'repeat.repeatHistories'
@@ -411,11 +412,14 @@ class BookingController extends Controller
     {
         $booking = $this->bookingRepeat->with([
             'detail.service', 'scheduleHistories.user', 'statusHistories.user', 'booking.customer', 'provider', 'serviceman.user'
-        ])->where(['id' => $id])->first();
-
-        $booking->booking->service_address = $booking->booking->service_address_location != null ? json_decode($booking->booking->service_address_location) : $booking->booking->service_address;
+        ])->where('id', $id)
+            ->whereHas('booking', fn ($query) => $query->where('customer_id', $request->user()->id))
+            ->first();
 
         if (isset($booking)) {
+            $booking->booking->service_address = $booking->booking->service_address_location != null
+                ? json_decode($booking->booking->service_address_location)
+                : $booking->booking->service_address;
             if (isset($booking->provider)){
                 $booking->provider->chatEligibility = chatEligibility($booking->provider_id);
                 $booking->provider->callingEnabled = (bool)($booking->provider->calling_enabled ?? false);
@@ -441,7 +445,7 @@ class BookingController extends Controller
         }
 
         $booking = $this->booking
-            ->with(['detail.service', 'schedule_histories.user', 'status_histories.user', 'customer', 'provider', 'zone', 'serviceman.user'])
+            ->with(['detail.service', 'schedule_histories.user', 'status_histories.user', 'customer', 'provider', 'zone', 'serviceman.user', 'extraServices'])
             ->where(['readable_id' => $id])
             ->whereHas('service_address', fn($query) => $query->where('contact_person_number', $request['phone']))
             ->first();

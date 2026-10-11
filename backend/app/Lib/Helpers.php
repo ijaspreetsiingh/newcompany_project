@@ -2710,7 +2710,7 @@ if (!function_exists('startWithinProviderAssignment')) {
             }
 
             // SPEC: provider kabhi accept/decline nahi karega — booking seedha
-            // nearest serviceman ko request ke liye jaati hai. Serviceman hi
+            // nearest serviceman request par jaati hai. Serviceman hi
             // accept/decline karega.
             $booking->assignment_mode = 'auto';
             $booking->auto_assigned = 0;
@@ -2808,7 +2808,14 @@ if (!function_exists('dispatchNearestServicemanRequest')) {
             $candidates = findNearestServicemen($booking, $provider->id, $alreadyTried);
 
             if ($candidates->isEmpty()) {
-                // sab reject/expire ho chuke (ya koi hai hi nahi) — provider manually assign kare
+                // SPEC: sabne reject/expire kiya -> CYCLE: nearest serviceman
+                // (jo pehle try hua) ko dubara request bhejo. Ek hi serviceman
+                // ho to usi par cycle chalegi (timer har baar naya chance dega).
+                $candidates = findNearestServicemen($booking, $provider->id, []);
+            }
+
+            if ($candidates->isEmpty()) {
+                // Provider ke paas koi serviceman hi nahi hai — manually assign kare
                 notifyProviderToAssignManually($provider, $booking);
                 return;
             }
@@ -3094,9 +3101,9 @@ if (!function_exists('findNearestServicemen')) {
                 $lat = $serviceman->user?->current_lat;
                 $lng = $serviceman->user?->current_lng;
 
-                // location fresh honi chahiye (7 din andar update hui) — warna distance nahi
+                // live location fresh honi chahiye (5 minute ke andar), warna nearest calculation me count na ho
                 $isFresh = $serviceman->user?->last_location_updated_at
-                    ? Carbon::parse($serviceman->user->last_location_updated_at)->gt(now()->subDays(7))
+                    ? Carbon::parse($serviceman->user->last_location_updated_at)->gt(now()->subMinutes(5))
                     : false;
 
                 $serviceman->distance_km = ($bookingLat !== null && $bookingLng !== null

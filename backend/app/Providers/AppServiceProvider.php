@@ -35,12 +35,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(Request $request)
     {
-        if(env('FORCE_HTTPS', false) || env('RAILWAY_PUBLIC_DOMAIN')) {
+        if(env('FORCE_HTTPS', false)) {
             \URL::forceScheme('https');
         }
 
-        Config::set('addon_admin_routes',$this->get_addon_admin_routes());
-        Config::set('get_payment_publish_status',$this->get_payment_publish_status());
+        // Directory scans over the Windows→Docker bind-mount are ~50x slower per file
+        // (measured: Modules tree = 18s vs native vendor volume = 369ms). These two scan
+        // the Modules tree on every request (~6.7s). Cache forever; cleared on cache:clear
+        // (addon install/remove is rare — run `php artisan cache:clear` after changing addons).
+        Config::set('addon_admin_routes', Cache::rememberForever(
+            'addon_admin_routes',
+            fn () => $this->get_addon_admin_routes()
+        ));
+        Config::set('get_payment_publish_status', Cache::rememberForever(
+            'get_payment_publish_status',
+            fn () => $this->get_payment_publish_status()
+        ));
 
         try {
             Config::set('default_pagination', 25);

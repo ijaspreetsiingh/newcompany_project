@@ -31,42 +31,26 @@ if (!function_exists('business_config')) {
 if (!function_exists('login_setup')) {
     function login_setup($key)
     {
-        $cacheKey = "ls_{$key}";
-        $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
-        if ($cached !== null) {
-            return $cached;
-        }
-
         try {
             $config = LoginSetup::where('key', $key)->first();
         } catch (Exception $exception) {
             return null;
         }
 
-        $result = (isset($config)) ? $config : null;
-        \Illuminate\Support\Facades\Cache::put($cacheKey, $result, 3600);
-        return $result;
+        return (isset($config)) ? $config : null;
     }
 }
 
 if (!function_exists('data_config')) {
     function data_config($key, $settings_type)
     {
-        $cacheKey = "dc_{$settings_type}_{$key}";
-        $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
-        if ($cached !== null) {
-            return $cached;
-        }
-
         try {
             $config = DataSetting::where('key', $key)->where('type', $settings_type)->first();
         } catch (Exception $exception) {
             return null;
         }
 
-        $result = (isset($config)) ? $config : null;
-        \Illuminate\Support\Facades\Cache::put($cacheKey, $result, 3600);
-        return $result;
+        return (isset($config)) ? $config : null;
     }
 }
 

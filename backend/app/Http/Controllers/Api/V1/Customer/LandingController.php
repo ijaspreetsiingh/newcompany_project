@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\V1\Customer;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Cache;
 use Modules\BusinessSettingsModule\Entities\BusinessSettings;
 use Modules\BusinessSettingsModule\Entities\DataSetting;
 use Modules\BusinessSettingsModule\Entities\LandingPageTestimonial;
@@ -24,12 +23,6 @@ class LandingController extends Controller
 
     public function index()
     {
-        $cacheKey = 'api_landing_blocks_response_v1';
-        $cached = Cache::get($cacheKey);
-        if ($cached !== null) {
-            return response()->json($cached, 200);
-        }
-
         $data = [];
 
         $data = [
@@ -52,9 +45,7 @@ class LandingController extends Controller
         $values = $this->business_setting->where('key_name', 'social_media')->first();
         $data['social_media'] = isset($values) && !is_null($values->live_values) ? $values->live_values : null;
 
-        $payload = response_formatter(DEFAULT_200, $data);
-        Cache::put($cacheKey, $payload, 600);
-        return response()->json($payload, 200);
+        return response()->json(response_formatter(DEFAULT_200, $data), 200);
     }
 
 }

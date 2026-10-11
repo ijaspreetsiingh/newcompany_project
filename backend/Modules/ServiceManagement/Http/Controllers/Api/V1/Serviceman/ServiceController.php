@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
 use Modules\ProviderManagement\Entities\Provider;
 use Modules\ProviderManagement\Entities\SubscribedService;
+use Modules\CategoryManagement\Entities\Category;
 use Modules\ReviewModule\Entities\Review;
 use Modules\ServiceManagement\Entities\Service;
 
@@ -45,7 +46,20 @@ class ServiceController extends Controller
         if (!request()?->user()?->serviceman) return response()->json(response_formatter(DEFAULT_403), 403);
 
         $provider = Provider::find(request()?->user()?->serviceman?->provider_id);
-        $services = $this->service
+        if (!$provider) {
+            return response()->json(response_formatter(DEFAULT_403), 403);
+        }
+
+        $subCategory = Category::find($request['sub_category_id']);
+        $providerHasAssignment = $provider && $subCategory
+            && subcategory_has_serviceable_provider(
+                $subCategory->id,
+                $subCategory->parent_id,
+                $provider->zone_id,
+                $provider->id
+            );
+
+        $servicesQuery = $this->service
             ->with(['category.zonesBasicInfo', 'service_discount', 'campaign_discount', 'variations' => function ($query) use ($provider) {
         $query->where('zone_id', $provider->zone_id)->with('zone:id,name');
     }])
@@ -53,6 +67,16 @@ class ServiceController extends Controller
             ->whereHas('category.zones', function ($query) use ($provider) {
                 $query->where('zone_id', $provider->zone_id);
             })
+            ->where(function ($query) use ($provider) {
+                $query->where('is_single_provider', 0)
+                    ->orWhere('single_provider_id', $provider->id);
+            });
+
+        if (!$providerHasAssignment) {
+            $servicesQuery->whereRaw('1 = 0');
+        }
+
+        $services = $servicesQuery
             ->latest()
             ->paginate($request['limit'], ['*'], 'offset', $request['offset'])
             ->withPath('');

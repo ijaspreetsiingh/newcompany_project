@@ -38,7 +38,7 @@ class SMSConfigController extends Controller
     public function smsConfigSet(Request $request): JsonResponse
     {
         $validation = [
-            'gateway' => 'required|in:releans,twilio,nexmo,2factor,msg91',
+            'gateway' => 'required|in:releans,twilio,nexmo,2factor,msg91,textbee',
             'mode' => 'required|in:live,test'
         ];
 
@@ -80,6 +80,14 @@ class SMSConfigController extends Controller
                 'template_id' => 'required',
                 'auth_key' => 'required',
             ];
+        } elseif ($request['gateway'] == 'textbee') {
+            $additionalData = [
+                'status' => 'required|in:1,0',
+                'api_url' => 'required',
+                'api_key' => 'required',
+                'device_id' => 'required',
+                'otp_template' => 'required'
+            ];
         }
         $validator = Validator::make($request->all(), array_merge($validation, $additionalData));
 
@@ -97,7 +105,7 @@ class SMSConfigController extends Controller
         ]);
 
         if ($request['status'] == 1) {
-            foreach (['releans', 'twilio', 'nexmo', '2factor', 'msg91'] as $gateway) {
+            foreach (['releans', 'twilio', 'nexmo', '2factor', 'msg91', 'textbee'] as $gateway) {
                 if ($request['gateway'] != $gateway) {
                     $keep = $this->business_setting->where(['key_name' => $gateway, 'settings_type' => 'sms_config'])->first();
                     if (isset($keep)) {

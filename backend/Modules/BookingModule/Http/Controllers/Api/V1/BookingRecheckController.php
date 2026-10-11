@@ -13,7 +13,7 @@ class BookingRecheckController extends Controller
 {
     /**
      * Customer: completed booking ko "rechecking" me daalta hai.
-     * Sirf completion ke 15 din tak. Recheck 15 din ka hota hai
+     * Sirf completion ke 7 din tak. Recheck 7 din ka hota hai
      * (requested -> in_progress -> completed | expired).
      */
     public function requestRecheck(Request $request, string $bookingId): JsonResponse
@@ -208,7 +208,7 @@ class BookingRecheckController extends Controller
 
         $providerId = $request->user()->provider?->id;
 
-        // Har serviceman ki recheck count (15 din ki window me)
+        // Har serviceman ki recheck count (7 din ki window me)
         $since = now()->subDays(BookingRecheck::WINDOW_DAYS);
 
         $counts = BookingRecheck::where('provider_id', $providerId)

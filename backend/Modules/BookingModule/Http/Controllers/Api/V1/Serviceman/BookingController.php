@@ -80,6 +80,25 @@ class BookingController extends Controller
                 }
             }
 
+            // SPEC: serviceman customer ke 300m radius me aakar "Reached" mark
+            // karta hai -> start OTP generate hota hai (customer app me dikhta
+            // hai). 'ongoing' start karne se pehle wo OTP verify karega.
+            if ($bookingStatus == 'ongoing') {
+                if ($booking->booking_status !== 'accepted') {
+                    return response()->json(response_formatter(DEFAULT_400, null, [
+                        ['error_code' => 'status', 'message' => translate('Only an accepted booking can be started.')],
+                    ]), 400);
+                }
+                if (is_null($booking->start_otp)) {
+                    return response()->json(response_formatter(DEFAULT_400, null, [
+                        ['error_code' => 'otp', 'message' => translate('Reach the customer location (within 300m) and generate the start OTP first.')],
+                    ]), 400);
+                }
+                if ($request['start_otp'] != $booking->start_otp) {
+                    return response()->json(response_formatter(OTP_VERIFICATION_FAIL_403), 200);
+                }
+            }
+
             if ($bookingStatus == 'completed' && (business_config('service_complete_photo_evidence', 'booking_setup'))?->live_values == 1) {
                 if ($request->has('evidence_photos')) {
                     foreach ($request->evidence_photos as $image) {
@@ -132,6 +151,22 @@ class BookingController extends Controller
         $bookingStatus = $request->booking_status;
 
         if (isset($booking)) {
+
+            if ($bookingStatus == 'ongoing') {
+                if ($booking->booking_status !== 'accepted') {
+                    return response()->json(response_formatter(DEFAULT_400, null, [
+                        ['error_code' => 'status', 'message' => translate('Only an accepted booking can be started.')],
+                    ]), 400);
+                }
+                if (is_null($booking->start_otp) || is_null($booking->serviceman_reached_at)) {
+                    return response()->json(response_formatter(DEFAULT_400, null, [
+                        ['error_code' => 'otp', 'message' => translate('Reach the customer location (within 300m) and generate the start OTP first.')],
+                    ]), 400);
+                }
+                if ((string) $request->input('start_otp') !== (string) $booking->start_otp) {
+                    return response()->json(response_formatter(OTP_VERIFICATION_FAIL_403), 200);
+                }
+            }
 
             $evidencePhotos = [];
             if ($bookingStatus == 'completed' && (business_config('booking_otp', 'booking_setup'))?->live_values == 1) {
@@ -386,12 +421,19 @@ class BookingController extends Controller
                 // agla nearest serviceman (jo pehle try nahi hua)
                 $alreadyTried = getTriedServicemanIds($booking);
                 $nextServiceman = findNearestServicemen($booking, $booking->provider_id, $alreadyTried)->first();
+
+                // SPEC: sab reject kar chuke -> CYCLE: nearest (jo pehle try
+                // hua) ko dubara request bhejo. Timer naya chance dega.
+                if (!$nextServiceman) {
+                    $nextServiceman = findNearestServicemen($booking, $booking->provider_id, [])->first();
+                }
+
                 if ($nextServiceman) {
                     $provider = $booking->provider;
                     $waitTime = max(30, (int) ($provider->auto_assign_wait_time ?: 60));
                     assignBookingToServiceman($booking, $nextServiceman, $waitTime);
                 } else {
-                    // sab reject/mana -> provider manually assign kare
+                    // provider ke paas koi serviceman hi nahi
                     if ($booking->provider) {
                         notifyProviderToAssignManually($booking->provider, $booking);
                     }
@@ -416,24 +458,253 @@ class BookingController extends Controller
             });
         }
 
-        // provider ko notify karo
-        try {
-            $provider = $booking?->provider;
-            $fcmToken = $provider?->owner?->fcm_token ?? null;
-            if (!is_null($fcmToken)) {
-                device_notification($fcmToken, 'Serviceman rejected the booking', null, null, $booking->id, 'booking');
-            }
-        } catch (\Exception $exception) {
-        }
+        // NOTE: reject par provider ko direct push hataya — rotation automatic
+        // hai, provider sirf update chahta hai (list poll / accepted par push).
+        // Har reject par push notification spam tha.
 
         return response()->json(response_formatter(DEFAULT_200), 200);
     }
 
+    /**
+     * SPEC: serviceman customer ke ghar pahuncha (300m radius ke andar) to
+     * "Reached" mark karega -> start OTP generate hoga jo customer app ke
+     * booking details me dikhega (+ notification). Serviceman OTP verify
+     * karke hi service start (ongoing) kar payega.
+     */
+    public function reachedBooking(Request $request, string $bookingId): JsonResponse
+    {
+        $servicemanId = $request->user()->serviceman->id;
+        $booking = $this->booking
+            ->where('id', $bookingId)
+            ->where('serviceman_id', $servicemanId)
+            ->whereIn('booking_status', ['accepted', 'ongoing'])
+            ->first();
+        $isRepeatBooking = false;
+
+        if (!$booking) {
+            $booking = $this->bookingRepeat
+                ->with('booking.customer')
+                ->where('id', $bookingId)
+                ->where('serviceman_id', $servicemanId)
+                ->whereIn('booking_status', ['accepted', 'ongoing'])
+                ->first();
+            $isRepeatBooking = $booking !== null;
+        }
+
+        if (!$booking) {
+            return response()->json(response_formatter(DEFAULT_204), 200);
+        }
+
+        // Pehle se reached (OTP already hai) — dubara generate na karo
+        if (!is_null($booking->start_otp) && !is_null($booking->serviceman_reached_at)) {
+            return response()->json(response_formatter(BOOKING_STATUS_UPDATE_SUCCESS_200, $booking), 200);
+        }
+
+        // Serviceman ki current location (app regular location update bhejti hai)
+        $servLat = $request->user()->current_lat;
+        $servLng = $request->user()->current_lng;
+
+        $locationBooking = $isRepeatBooking ? ($booking->booking ?? $booking) : $booking;
+        [$bookingLat, $bookingLng] = getBookingCoordinates($locationBooking);
+
+        $locationUpdatedAt = $request->user()->last_location_updated_at;
+        if (!$locationUpdatedAt || \Carbon\Carbon::parse($locationUpdatedAt)->lt(now()->subMinutes(5))) {
+            return response()->json(response_formatter(DEFAULT_400, null, [
+                ['error_code' => 'location', 'message' => translate('Location is outdated. Turn on GPS and update your location first.')],
+            ]), 400);
+        }
+
+        if (is_null($servLat) || is_null($servLng) || is_null($bookingLat) || is_null($bookingLng)) {
+            return response()->json(response_formatter(DEFAULT_400, null, [
+                ['error_code' => 'location', 'message' => translate('Location not available. Turn on GPS and update your location first.')],
+            ]), 400);
+        }
+
+        $distanceKm = calculateDistance((float)$servLat, (float)$servLng, $bookingLat, $bookingLng);
+        $radiusKm = 0.3; // 300 meter
+
+        if ($distanceKm > $radiusKm) {
+            return response()->json(response_formatter(DEFAULT_400, null, [
+                ['error_code' => 'location', 'message' => translate('You are ') . round($distanceKm * 1000) . 'm ' . translate('away from the customer location. Get within 300m to start.')],
+            ]), 400);
+        }
+
+        $booking->start_otp = (string) random_int(100000, 999999);
+        $booking->start_otp_generated_at = now();
+        $booking->serviceman_reached_at = now();
+        $booking->save();
+
+        // Customer ko OTP notification (customer app me booking details me bhi dikhega)
+        try {
+            $customer = $isRepeatBooking ? $booking->booking?->customer : $booking->customer;
+            if ($customer?->fcm_token) {
+                device_notification(
+                    $customer->fcm_token,
+                    translate('Your serviceman has arrived'),
+                    translate('Share this OTP to start your service') . ': ' . $booking->start_otp,
+                    null,
+                    $booking->id,
+                    'booking'
+                );
+            }
+        } catch (\Throwable $e) {
+        }
+
+        return response()->json(response_formatter(BOOKING_STATUS_UPDATE_SUCCESS_200, $booking), 200);
+    }
+
+    /**
+     * SPEC: serviceman extra work ke liye apne provider ki subscribed
+     * categories ki existing services select kar sakta hai (external) ya
+     * manual add kar sakta hai. Ye endpoint provider ki services deta hai.
+     */
+    public function providerServices(Request $request): JsonResponse
+    {
+        $serviceman = $request->user()->serviceman;
+        $provider = \Modules\ProviderManagement\Entities\Provider::where('id', $serviceman->provider_id)->first();
+
+        if (!$provider) {
+            return response()->json(response_formatter(DEFAULT_200, []), 200);
+        }
+
+        $subCategoryIds = \Modules\ProviderManagement\Entities\SubscribedService::where('provider_id', $provider->id)
+            ->where('is_subscribed', 1)
+            ->pluck('sub_category_id')
+            ->toArray();
+
+        if (empty($subCategoryIds)) {
+            return response()->json(response_formatter(DEFAULT_200, []), 200);
+        }
+
+        $services = \Modules\ServiceManagement\Entities\Service::withoutGlobalScopes()
+            ->whereIn('sub_category_id', $subCategoryIds)
+            ->where('is_active', 1)
+            ->with(['variations' => function ($query) {
+                $query->select('id', 'service_id', 'variant_key', 'variant', 'price');
+            }])
+            ->get(['id', 'name', 'sub_category_id', 'zone_id'])
+            ->map(function ($service) {
+                $defaultVariant = $service->variations->firstWhere('variant_key', 'default') ?? $service->variations->first();
+                return [
+                    'id' => $service->id,
+                    'name' => $service->name,
+                    'price' => (float) ($defaultVariant?->price ?? 0),
+                    'variant_key' => $defaultVariant?->variant_key ?? 'default',
+                ];
+            })
+            ->values();
+
+        return response()->json(response_formatter(DEFAULT_200, $services), 200);
+    }
+
+    /**
+     * SPEC: serviceman on-site customer ki extra chije add karega — custom
+     * name + custom price (external services bhi). Final bill/invoice me
+     * include hoga (total_booking_amount update hota hai).
+     */
+    public function storeExtraService(Request $request, string $bookingId): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:120',
+            'price' => 'required|numeric|min:0',
+            'quantity' => 'required|integer|min:1|max:99',
+            'type' => 'nullable|in:custom,external',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
+        }
+
+        $booking = $this->booking
+            ->where('id', $bookingId)
+            ->where('serviceman_id', $request->user()->serviceman->id)
+            ->whereIn('booking_status', ['accepted', 'ongoing'])
+            ->first();
+
+        if (!$booking) {
+            return response()->json(response_formatter(DEFAULT_204), 200);
+        }
+
+        $amount = ((float)$request['price']) * ((int)$request['quantity']);
+
+        $extra = new \Modules\BookingModule\Entities\BookingExtraService();
+        $extra->booking_id = $booking->id;
+        $extra->serviceman_id = $request->user()->serviceman->id;
+        $extra->name = $request['name'];
+        $extra->price = (float)$request['price'];
+        $extra->quantity = (int)$request['quantity'];
+        $extra->type = $request['type'] ?? 'custom';
+        $extra->save();
+
+        // Final bill update — total + additional_charge dono sync
+        $booking->total_booking_amount += $amount;
+        $booking->additional_charge += $amount;
+        $booking->save();
+        $this->notifyExtraServiceChanged($booking, $extra, true);
+
+        return response()->json(response_formatter(DEFAULT_STORE_200, $booking->fresh(['extraServices'])), 200);
+    }
+
+    /**
+     * Extra service remove — total se amount wapas minus.
+     */
+    public function deleteExtraService(Request $request, string $bookingId, string $id): JsonResponse
+    {
+        $booking = $this->booking
+            ->where('id', $bookingId)
+            ->where('serviceman_id', $request->user()->serviceman->id)
+            ->whereIn('booking_status', ['accepted', 'ongoing'])
+            ->first();
+
+        if (!$booking) {
+            return response()->json(response_formatter(DEFAULT_204), 200);
+        }
+
+        $extra = \Modules\BookingModule\Entities\BookingExtraService::where('booking_id', $booking->id)
+            ->where('id', $id)
+            ->first();
+
+        if (!$extra) {
+            return response()->json(response_formatter(DEFAULT_204), 200);
+        }
+
+        $amount = ((float)$extra->price) * ((int)$extra->quantity);
+        $extra->delete();
+
+        $booking->total_booking_amount = max(0, $booking->total_booking_amount - $amount);
+        $booking->additional_charge = max(0, $booking->additional_charge - $amount);
+        $booking->save();
+        $this->notifyExtraServiceChanged($booking, $extra, false);
+
+        return response()->json(response_formatter(DEFAULT_200, $booking->fresh(['extraServices'])), 200);
+    }
+
+    private function notifyExtraServiceChanged(Booking $booking, $extra, bool $added): void
+    {
+        try {
+            $booking->loadMissing(['customer', 'provider.owner']);
+            $title = translate($added ? 'Extra service added to your booking' : 'Extra service removed from your booking');
+            $description = trim((string) $extra->name) . ' x' . (int) $extra->quantity
+                . ' — ' . number_format((float) $extra->price * (int) $extra->quantity, 2);
+            $tokens = [
+                $booking->customer?->fcm_token,
+                $booking->provider?->owner?->fcm_token,
+            ];
+
+            foreach (array_unique(array_filter($tokens)) as $token) {
+                device_notification($token, $title, $description, null, $booking->id, 'booking');
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Extra-service notification failed: ' . $e->getMessage(), [
+                'booking_id' => $booking->id,
+            ]);
+        }
+    }
     public function bookingDetails(Request $request, string $id): JsonResponse
     {
         $booking = $this->booking->with([
             'detail.service', 'schedule_histories.user', 'status_histories.user', 'customer', 'provider', 'zone', 'serviceman.user', 'booking_partial_payments',
-            'servicemenAssignments.serviceman.user'
+            'servicemenAssignments.serviceman.user', 'extraServices'
         ])->where(function ($query) use ($request) {
             return $query->where('serviceman_id', $request->user()->serviceman->id)
                 ->orWhereHas('servicemenAssignments', function ($subQuery) use ($request) {

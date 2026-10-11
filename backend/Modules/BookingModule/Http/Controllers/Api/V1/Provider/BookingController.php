@@ -683,7 +683,7 @@ class BookingController extends Controller
         $booking = $this->booking->with([
             'detail.service', 'schedule_histories.user', 'status_histories.user', 'customer',
             'provider', 'zone', 'serviceman.user', 'booking_partial_payments', 'booking_offline_payments',
-            'repeat.detail.service', 'repeat.repeatHistories'
+            'repeat.detail.service', 'repeat.repeatHistories', 'extraServices'
         ])->where(function ($query) use ($provider_id, $request) {
             return $query->where(function ($query) use ($provider_id) {
                 $query->where('provider_id', $provider_id)
@@ -1070,6 +1070,12 @@ class BookingController extends Controller
 
         if (isset($booking)) {
 
+            if ($request->booking_status === 'ongoing' && $booking->booking_status !== 'ongoing') {
+                return response()->json(response_formatter(DEFAULT_400, null, [
+                    ['error_code' => 'otp', 'message' => translate('Only the assigned serviceman can start this booking after verifying the customer OTP.')],
+                ]), 400);
+            }
+
             if ($booking->payment_method == 'offline_payment' && $booking->is_paid == 0 && in_array($request->booking_status, ['ongoing', 'completed'])) {
                 if ($booking->booking_offline_payments->isEmpty()) {
                     return response()->json(response_formatter(UPDATE_FAILED_FOR_OFFLINE_PAYMENT_VERIFICATION_200), 200);
@@ -1155,6 +1161,12 @@ class BookingController extends Controller
         })->first();
 
         if (isset($booking)) {
+            if ($request->booking_status === 'ongoing' && $booking->booking_status !== 'ongoing') {
+                return response()->json(response_formatter(DEFAULT_400, null, [
+                    ['error_code' => 'otp', 'message' => translate('Only the assigned serviceman can start this booking after verifying the customer OTP.')],
+                ]), 400);
+            }
+
             $evidence_photos = [];
             if ($request['booking_status'] == 'completed') {
                 if (business_config('booking_otp', 'booking_setup')?->live_values == 1 && $booking->booking_otp != $request['booking_otp']) {

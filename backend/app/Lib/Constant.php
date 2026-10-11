@@ -109,6 +109,7 @@ const SMS_GATEWAY = [
     ['key' => 'twilio', 'value' => 'Twilio'],
     ['key' => 'nexmo', 'value' => 'Nexmo'],
     ['key' => 'releans', 'value' => 'Releans'],
+    ['key' => 'textbee', 'value' => 'TextBee'],
 ];
 
 

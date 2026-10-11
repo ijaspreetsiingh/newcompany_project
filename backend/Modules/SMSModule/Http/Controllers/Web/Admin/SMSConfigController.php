@@ -63,7 +63,7 @@ class SMSConfigController extends Controller
     public function smsConfigSet(Request $request): RedirectResponse|JsonResponse
     {
         $validation = [
-            'gateway' => 'required|in:releans,twilio,nexmo,2factor,msg91',
+            'gateway' => 'required|in:releans,twilio,nexmo,2factor,msg91,textbee',
             'mode' => 'required|in:live,test'
         ];
 
@@ -106,6 +106,14 @@ class SMSConfigController extends Controller
                 'template_id' => 'required_if:status,1',
                 'auth_key' => 'required_if:status,1',
             ];
+        } elseif ($request['gateway'] == 'textbee') {
+            $additionalData = [
+                'status' => 'required|in:1,0',
+                'api_url' => 'required_if:status,1',
+                'api_key' => 'required_if:status,1',
+                'device_id' => 'required_if:status,1',
+                'otp_template' => 'required_if:status,1'
+            ];
         }
         $validation = $request->validate(array_merge($validation, $additionalData));
 
@@ -119,7 +127,7 @@ class SMSConfigController extends Controller
         ]);
 
         if ($request['status'] == 1) {
-            foreach (['releans', 'twilio', 'nexmo', '2factor', 'msg91'] as $gateway) {
+            foreach (['releans', 'twilio', 'nexmo', '2factor', 'msg91', 'textbee'] as $gateway) {
                 if ($request['gateway'] != $gateway) {
                     $keep = $this->addonSettings->where(['key_name' => $gateway, 'settings_type' => 'sms_config'])->first();
                     if (isset($keep)) {

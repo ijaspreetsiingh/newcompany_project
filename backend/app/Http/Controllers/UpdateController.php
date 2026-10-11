@@ -1375,6 +1375,25 @@ class UpdateController extends Controller
             ]);
         }
 
+        //textbee sms gateway (phone as sms gateway)
+        if (!Setting::where(['key_name' => 'textbee', 'settings_type' => 'sms_config'])->exists()) {
+            $textbeeValues = [
+                'status' => 0,
+                'api_url' => '',
+                'api_key' => '',
+                'device_id' => '',
+                'otp_template' => 'Your verification OTP is: #OTP#',
+            ];
+            Setting::updateOrCreate(['key_name' => 'textbee', 'settings_type' => 'sms_config'], [
+                'key_name' => 'textbee',
+                'live_values' => $textbeeValues,
+                'test_values' => $textbeeValues,
+                'settings_type' => 'sms_config',
+                'mode' => 'live',
+                'is_active' => 0,
+            ]);
+        }
+
         // version 3.2
         $this->version3_2Update();
         $this->version3_3Update();

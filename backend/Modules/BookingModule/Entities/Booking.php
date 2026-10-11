@@ -47,6 +47,8 @@ class Booking extends Model
         'auto_assigned' => 'integer',
         'auto_assign_expires_at' => 'datetime',
         'serviceman_assign_expires_at' => 'datetime',
+        'start_otp_generated_at' => 'datetime',
+        'serviceman_reached_at' => 'datetime',
         'total_referral_discount_amount' => 'float',
     ];
 
@@ -87,7 +89,10 @@ class Booking extends Model
         'auto_assign_expires_at',
         'assigned_provider_id',
         'serviceman_assign_expires_at',
-        'assignment_mode'
+        'assignment_mode',
+        'start_otp',
+        'start_otp_generated_at',
+        'serviceman_reached_at'
     ];
 
     protected $appends = ['evidence_photos_full_path'];
@@ -131,6 +136,11 @@ class Booking extends Model
     public function detail(): HasMany
     {
         return $this->hasMany(BookingDetail::class);
+    }
+
+    public function extraServices(): HasMany
+    {
+        return $this->hasMany(BookingExtraService::class);
     }
 
     public function repeatDetail(): HasMany

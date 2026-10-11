@@ -20,7 +20,7 @@ Route::group(['prefix' => 'client', 'as' => 'customer.', 'namespace' => 'Api\V1\
         Route::post('change-pay-mode', [BookingController::class, 'switchPaymentMethod'])->withoutMiddleware('auth:api');
         Route::get('serviceman-location/{booking_id}', [BookingController::class, 'servicemanLocation']);
 
-        // ----- RECHECK (15 din ka window) -----
+        // ----- RECHECK (7 din ka window) -----
         Route::post('recheck/{booking_id}', [BookingRecheckController::class, 'requestRecheck']);
         Route::get('recheck-status/{booking_id}', [BookingRecheckController::class, 'recheckStatus']);
     });
@@ -86,6 +86,14 @@ Route::group(['prefix' => 'technician', 'as' => 'serviceman.', 'namespace' => 'A
         // ----- SERVICEMAN ACCEPT / REJECT -----
         Route::put('approve/{booking_id}', [ServicemanBookingController::class, 'acceptBooking']);
         Route::put('decline/{booking_id}', [ServicemanBookingController::class, 'rejectBooking']);
+
+        // ----- REACHED (300m) + START OTP -----
+        Route::put('reached/{booking_id}', [ServicemanBookingController::class, 'reachedBooking']);
+
+        // ----- EXTRA SERVICES (serviceman custom work) -----
+        Route::post('extra-service/{booking_id}', [ServicemanBookingController::class, 'storeExtraService']);
+        Route::delete('extra-service/{booking_id}/{id}', [ServicemanBookingController::class, 'deleteExtraService']);
+        Route::get('provider-services', [ServicemanBookingController::class, 'providerServices']);
 
         // ----- RECHECK TASKS -----
         Route::get('recheck-list', [BookingRecheckController::class, 'servicemanRecheckList']);

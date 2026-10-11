@@ -492,7 +492,7 @@ class ConfigurationController extends Controller
 
         if ($request['party_name'] == 'firebase_otp_verification'){
             if ($request->status == 1) {
-                foreach (['twilio', 'nexmo', '2factor', 'msg91', 'signal_wire'] as $gateway) {
+                foreach (['twilio', 'nexmo', '2factor', 'msg91', 'signal_wire', 'textbee'] as $gateway) {
                     $keep = Setting::where(['key_name' => $gateway, 'settings_type' => 'sms_config'])->first();
                     if (isset($keep)) {
                         $hold = $keep->live_values;
@@ -1149,7 +1149,7 @@ class ConfigurationController extends Controller
 
         if (array_key_exists('web_api_key', $data))
         {
-            collect(['twilio', 'nexmo', '2factor', 'msg91', 'signal_wire'])->each(function ($gateway) {
+            collect(['twilio', 'nexmo', '2factor', 'msg91', 'signal_wire', 'textbee'])->each(function ($gateway) {
                 if ($setting = Setting::where('key_name', $gateway)->where('settings_type', 'sms_config')->first()) {
                     tap($setting, function ($setting) {
                         $updatedValues = array_merge($setting->live_values, ['status' => 0]);

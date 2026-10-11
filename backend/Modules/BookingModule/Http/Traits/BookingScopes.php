@@ -141,9 +141,6 @@ trait BookingScopes
                             });
                         })
                         ->where(function($query) use ($provider) {
-                            // SPEC: sirf unassigned (provider_id NULL) pending bookings
-                            // dikhao. Auto-assign ke baad booking provider ke pending
-                            // list me accept/decline ke liye nahi aani chahiye.
                             $query->whereNull('provider_id');
                         });
                 } else {

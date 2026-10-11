@@ -19,8 +19,8 @@ class BookingRecheck extends Model
     public const STATUS_COMPLETED = 'completed';
     public const STATUS_EXPIRED = 'expired';
 
-    /** Recheck window — 15 din (request bhi 15 din tak, aur state bhi 15 din tak). */
-    public const WINDOW_DAYS = 15;
+    /** Recheck window — 7 din (customer request bhi 7 din tak). */
+    public const WINDOW_DAYS = 7;
 
     protected $fillable = [
         'id',
@@ -63,7 +63,7 @@ class BookingRecheck extends Model
     }
 
     /**
-     * 15 din ka window cross ho chuka hai to recheck expire.
+     * 7 din ka window cross ho chuka hai to recheck expire.
      */
     public function isOverdue(): bool
     {
@@ -90,7 +90,7 @@ class BookingRecheck extends Model
     }
 
     /**
-     * Booking completion ke kitne din baat hai — 15 din ka request window.
+     * Booking completion ke kitne din baat hai — 7 din ka request window.
      */
     public static function canRequestFor(Booking $booking): bool
     {

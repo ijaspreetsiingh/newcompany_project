@@ -13,12 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        if (Schema::hasTable('subscribed_services') && Schema::hasIndex('subscribed_services', 'unique_zone_sub_category')) {
-            Schema::table('subscribed_services', function (Blueprint $table) {
-                // Remove unique constraint - enforce single provider at application level instead
-                $table->dropUnique('unique_zone_sub_category');
-            });
-        }
+        Schema::table('subscribed_services', function (Blueprint $table) {
+            // Remove unique constraint - enforce single provider at application level instead
+            $table->dropUnique('unique_zone_sub_category');
+        });
     }
 
     /**
