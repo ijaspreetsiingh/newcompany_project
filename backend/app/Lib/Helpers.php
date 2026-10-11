@@ -2709,16 +2709,15 @@ if (!function_exists('startWithinProviderAssignment')) {
                 return;
             }
 
-            if ((int) $provider->auto_assign_mode === 1) {
-                startProviderDecisionWindow($booking, $provider);
-            } else {
-                $booking->assignment_mode = 'auto';
-                $booking->auto_assigned = 0;
-                $booking->auto_assign_expires_at = null;
-                $booking->save();
+            // SPEC: provider kabhi accept/decline nahi karega — booking seedha
+            // nearest serviceman ko request ke liye jaati hai. Serviceman hi
+            // accept/decline karega.
+            $booking->assignment_mode = 'auto';
+            $booking->auto_assigned = 0;
+            $booking->auto_assign_expires_at = null;
+            $booking->save();
 
-                dispatchNearestServicemanRequest($booking);
-            }
+            dispatchNearestServicemanRequest($booking);
         } catch (\Throwable $e) {
             Log::error('startWithinProviderAssignment failed: ' . $e->getMessage());
         }
