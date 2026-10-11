@@ -6,6 +6,7 @@ use App\Traits\MaintenanceModeTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
@@ -35,6 +36,12 @@ class ConfigController extends Controller
      */
     public function configuration(Request $request): JsonResponse
     {
+        $cacheKey = 'api_client_config_response_v1';
+        $cached = Cache::get($cacheKey);
+        if ($cached !== null) {
+            return response()->json($cached, 200);
+        }
+
         $playstore = business_config('app_url_playstore', 'landing_button_and_links');
         $appstore = business_config('app_url_appstore', 'landing_button_and_links');
 
@@ -85,7 +92,6 @@ class ConfigController extends Controller
         $socialMediaLoginValue = LoginSetup::where(['key' => 'social_media_for_login'])?->first()?->value;
         $socialMediaLoginOptions = json_decode($socialMediaLoginValue);
 
-
         $customerLogin = [
             'login_option' => $loginOptions,
             'social_media_login_options' => $socialMediaLoginOptions
@@ -114,7 +120,7 @@ class ConfigController extends Controller
         ];
 
 
-        return response()->json(response_formatter(DEFAULT_200, [
+        $payload = response_formatter(DEFAULT_200, [
             'default_location' => [
                 'latitude' => (business_config('address_latitude', 'business_information'))->live_values ?? 23.811842872190,
                 'longitude' => (business_config('address_longitude', 'business_information'))->live_values ?? 90.66504678008192
@@ -201,7 +207,9 @@ class ConfigController extends Controller
             }),
             'max_image_upload_size' => uploadMaxFileSize('image'),
             'max_video_upload_size' => uploadMaxFileSize('file'),
-        ]), 200);
+        ]);
+        Cache::put($cacheKey, $payload, 600);
+        return response()->json($payload, 200);
     }
 
     /**

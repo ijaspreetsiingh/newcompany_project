@@ -8,6 +8,7 @@ use Grimzy\LaravelMysqlSpatial\Types\Point;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Modules\BusinessSettingsModule\Entities\BusinessPageSetting;
@@ -29,6 +30,12 @@ class ConfigController extends Controller
      */
     public function configuration(Request $request): JsonResponse
     {
+        $cacheKey = 'api_serviceman_config_response_v1';
+        $cached = Cache::get($cacheKey);
+        if ($cached !== null) {
+            return response()->json($cached, 200);
+        }
+
         $advancedBooking =  [
             'advanced_booking_restriction_value' => (int) business_config('advanced_booking_restriction_value', 'booking_setup')?->live_values,
             'advanced_booking_restriction_type' => business_config('advanced_booking_restriction_type', 'booking_setup')?->live_values,
@@ -65,7 +72,7 @@ class ConfigController extends Controller
             'email' => $emailConfig
         ];
 
-        return response()->json(response_formatter(DEFAULT_200, [
+        $payload = response_formatter(DEFAULT_200, [
             'maintenance' => $this->checkMaintenanceMode(),
             'currency_symbol_position' => (business_config('currency_symbol_position', 'business_information'))->live_values ?? null,
             'serviceman_can_cancel_booking' => (int)(business_config('serviceman_can_cancel_booking', 'serviceman_config'))?->live_values,
@@ -121,7 +128,9 @@ class ConfigController extends Controller
             }),
             'max_image_upload_size' => uploadMaxFileSize('image'),
             'max_video_upload_size' => uploadMaxFileSize('file'),
-        ]), 200);
+        ]);
+        Cache::put($cacheKey, $payload, 600);
+        return response()->json($payload, 200);
     }
 
     public function pageDetails($key)
