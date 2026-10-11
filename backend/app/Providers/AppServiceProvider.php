@@ -35,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(Request $request)
     {
-        if(env('FORCE_HTTPS', false)) {
+        if(env('FORCE_HTTPS', false) || env('RAILWAY_PUBLIC_DOMAIN')) {
             \URL::forceScheme('https');
         }
 
