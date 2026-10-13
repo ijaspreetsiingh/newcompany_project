@@ -8,7 +8,7 @@ use Modules\CustomerModule\Http\Controllers\Api\V1\Customer\ConfigController;
 use  Modules\CustomerModule\Http\Controllers\Api\V1\Customer\AddressController;
 
 
-Route::group(['prefix' => 'admin', 'as'=>'admin.', 'namespace' => 'Api\V1\Admin','middleware'=>['auth:api']], function () {
+Route::group(['prefix' => 'admin', 'as'=>'admin.', 'namespace' => 'Api\V1\Admin','middleware'=>['auth:api', 'admin']], function () {
 //    Route::resource('customer', 'CustomerController', ['only' => ['index', 'store', 'edit', 'update']]);
     Route::group(['prefix' => 'customer', 'as' => 'customer.',], function () {
         Route::put('status/update', [AdminCustomerController::class, 'statusUpdate']);

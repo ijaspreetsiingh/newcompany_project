@@ -1,5 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Http;
+use App\Jobs\SendFcmPushJob;
 
 
  function sendNotificationToHttp(array|null $data): bool
@@ -20,7 +21,8 @@ use Illuminate\Support\Facades\Http;
         'Content-Type' => 'application/json',
     ];
     try {
-        Http::withHeaders($headers)->post($url, $data);
+        // TIMEOUT: FCM hang hone par web worker kabhi block nahi hoga
+        Http::withHeaders($headers)->timeout(10)->connectTimeout(5)->post($url, $data);
         return true;
     }catch (\Exception){
         return false;
@@ -28,25 +30,29 @@ use Illuminate\Support\Facades\Http;
 }
 
  function getAccessToken($clientEmail, $privateKey)
-{
-    $jwtToken = [
-        'iss' => $clientEmail,
-        'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
-        'aud' => 'https://oauth2.googleapis.com/token',
-        'exp' => time() + 3600,
-        'iat' => time(),
-    ];
-    $jwtHeader = base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
-    $jwtPayload = base64_encode(json_encode($jwtToken));
-    $unsignedJwt = $jwtHeader . '.' . $jwtPayload;
-    openssl_sign($unsignedJwt, $signature, $privateKey, OPENSSL_ALGO_SHA256);
-    $jwt = $unsignedJwt . '.' . base64_encode($signature);
+ {
+    // CACHE: har push par JWT sign + OAuth roundtrip (~200-400ms) na chale.
+    // Token ~1h valid hota hai; 50 min par refresh.
+    return cache()->remember('fcm_oauth_access_token_' . md5($clientEmail), now()->addMinutes(50), function () use ($clientEmail, $privateKey) {
+        $jwtToken = [
+            'iss' => $clientEmail,
+            'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
+            'aud' => 'https://oauth2.googleapis.com/token',
+            'exp' => time() + 3600,
+            'iat' => time(),
+        ];
+        $jwtHeader = base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
+        $jwtPayload = base64_encode(json_encode($jwtToken));
+        $unsignedJwt = $jwtHeader . '.' . $jwtPayload;
+        openssl_sign($unsignedJwt, $signature, $privateKey, OPENSSL_ALGO_SHA256);
+        $jwt = $unsignedJwt . '.' . base64_encode($signature);
 
-    $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
-        'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-        'assertion' => $jwt,
-    ]);
-    return $response->json('access_token');
+        $response = Http::asForm()->timeout(10)->connectTimeout(5)->post('https://oauth2.googleapis.com/token', [
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion' => $jwt,
+        ]);
+        return $response->json('access_token');
+    });
 }
 
 if (!function_exists('device_notification')) {
@@ -87,7 +93,8 @@ if (!function_exists('device_notification')) {
             ]
         ];
 
-        return sendNotificationToHttp($postData);
+        SendFcmPushJob::dispatch($postData); // QUEUE: web worker block nahi hoga
+        return true;
     }
 }
 
@@ -126,7 +133,8 @@ if (!function_exists('topic_notification')) {
             ]
         ];
 
-        return sendNotificationToHttp($postData);
+        SendFcmPushJob::dispatch($postData); // QUEUE: web worker block nahi hoga
+        return true;
     }
 }
 
@@ -168,7 +176,8 @@ if (!function_exists('device_notification_for_bidding')) {
             ]
         ];
 
-        return sendNotificationToHttp($postData);
+        SendFcmPushJob::dispatch($postData); // QUEUE: web worker block nahi hoga
+        return true;
     }
 }
 
@@ -212,7 +221,8 @@ if (!function_exists('device_notification_for_chatting')) {
             ]
         ];
 
-        return sendNotificationToHttp($postData);
+        SendFcmPushJob::dispatch($postData); // QUEUE: web worker block nahi hoga
+        return true;
     }
 }
 
@@ -265,7 +275,8 @@ if (!function_exists('device_notification_for_calling')) {
             ]
         ];
 
-        return sendNotificationToHttp($postData);
+        SendFcmPushJob::dispatch($postData); // QUEUE: web worker block nahi hoga
+        return true;
     }
 }
 

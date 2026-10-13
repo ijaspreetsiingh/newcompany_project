@@ -231,7 +231,9 @@ class CheckOutController extends GetxController implements GetxService{
     if(Get.find<CartController>().cartList.isNotEmpty){
       // Confirmation screen ke liye amount + service name capture (cart clear
       // hone se pehle) — sirf cart-based regular checkout par.
-      if (serviceType == ServiceType.regular.name && repeatBookingType == RepeatBookingType.regular.name) {
+      // RepeatBookingType me 'regular' constant hai hi nahi (enum: daily/weekly/
+      // custom) — serviceType regular hi repeat-ka opposite hai.
+      if (serviceType == ServiceType.regular.name) {
         final CartController cartController = Get.find<CartController>();
         placedBookingAmount = cartController.totalPrice;
         placedServiceName = cartController.cartList

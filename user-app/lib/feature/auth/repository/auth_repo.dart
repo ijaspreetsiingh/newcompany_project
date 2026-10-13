@@ -1,10 +1,18 @@
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 
 class AuthRepo {
   final ApiClient apiClient;
   final SharedPreferences sharedPreferences;
+
+  // W3.18: token ab Android Keystore/iOS Keychain-backed secure storage me
+  // jaata hai. Sync API (getUserToken/isLoggedIn) chalane ke liye in-memory
+  // cache rakhte hain — get_di.dart me app startup par secure se load hota hai.
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+  static String? tokenCache;
+
   AuthRepo({required this.apiClient, required this.sharedPreferences});
 
   Future<Response> registration(SignUpBody signUpBody) async {
@@ -198,15 +206,19 @@ class AuthRepo {
     apiClient.updateHeader(token, sharedPreferences.getString(AppConstants.userAddress) != null ?
     AddressModel.fromJson(jsonDecode(sharedPreferences.getString(AppConstants.userAddress)!)).zoneId :
     null, sharedPreferences.getString(AppConstants.languageCode), sharedPreferences.getString(AppConstants.guestId));
-    return await sharedPreferences.setString(AppConstants.token, token);
+    tokenCache = token;
+    await _secureStorage.write(key: AppConstants.token, value: token);
+    // Plaintext prefs copy hatao — source of truth secure storage hai
+    await sharedPreferences.remove(AppConstants.token);
+    return true;
   }
 
   String getUserToken() {
-    return sharedPreferences.getString(AppConstants.token) ?? "";
+    return tokenCache ?? sharedPreferences.getString(AppConstants.token) ?? "";
   }
 
   bool isLoggedIn() {
-    return sharedPreferences.containsKey(AppConstants.token);
+    return tokenCache != null || sharedPreferences.containsKey(AppConstants.token);
   }
 
   bool clearSharedData({Response? response}) {
@@ -219,6 +231,8 @@ class AuthRepo {
       }
     }
     apiClient.putData(AppConstants.tokenUri, {"fcm_token": '@'});
+    tokenCache = null;
+    _secureStorage.delete(key: AppConstants.token);
     sharedPreferences.remove(AppConstants.token);
     sharedPreferences.remove(AppConstants.referredBottomSheet);
     Get.find<AuthController>().updateSavedLocalAddress(saveContactPersonInfo: false);
@@ -236,7 +250,9 @@ class AuthRepo {
 
   Future<void> saveUserNumberAndPassword(String number, String password, String countryCode) async {
     try {
-      await sharedPreferences.setString(AppConstants.userPassword, password);
+      // W3.18: plaintext password kabhi store nahi — sirf identifier (number)
+      // aur dial code prefill ke liye. Purana stored password turant delete.
+      await sharedPreferences.remove(AppConstants.userPassword);
       await sharedPreferences.setString(AppConstants.userNumber, number);
       await sharedPreferences.setString(AppConstants.userCountryCode, countryCode);
 
@@ -254,7 +270,8 @@ class AuthRepo {
   }
 
   String getUserPassword() {
-    return sharedPreferences.getString(AppConstants.userPassword) ?? "";
+    // W3.18: password persist nahi hota — login screen hamesha khali field dikhata hai
+    return "";
   }
 
   bool isNotificationActive() {

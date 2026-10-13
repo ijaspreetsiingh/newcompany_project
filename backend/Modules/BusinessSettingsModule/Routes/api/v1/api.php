@@ -9,7 +9,7 @@ use Modules\BusinessSettingsModule\Http\Controllers\Api\V1\Provider\Configuratio
 use Modules\BusinessSettingsModule\Http\Controllers\Api\V1\Provider\SubscriptionPackageController;
 
 
-Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admin', 'middleware' => ['auth:api']], function () {
+Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admin', 'middleware' => ['auth:api', 'admin']], function () {
     Route::group(['prefix' => 'business-settings'], function () {
         Route::get('get-business-information', [AdminBusinessInformationController::class, 'business_information_get']);
         Route::put('set-business-information', [AdminBusinessInformationController::class, 'business_information_set']);

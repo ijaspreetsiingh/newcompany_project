@@ -176,7 +176,10 @@ class CustomerController extends Controller
         $user->save();
 
         try {
-            $otp = env('APP_ENV') != 'live' ? '1234' : rand(1000, 9999);
+            // SECURITY: fixed OTP sirf local/demo env; prod/live me hamesha random.
+            $otp = in_array(config('app.env'), ['local', 'demo'], true)
+                ? '1234'
+                : (string) random_int(1000, 9999);
 
             $webUrl = business_config('web_url', 'landing_button_and_links');
             $token = base64_encode(json_encode(["identity" => $user->email, "identity_type" => "email", "otp" => $otp, "from_url" => 1]));

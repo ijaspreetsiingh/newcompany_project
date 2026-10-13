@@ -6,7 +6,7 @@ use Modules\UserManagement\Http\Controllers\Api\V1\PasswordResetController;
 use Modules\UserManagement\Http\Controllers\Api\V1\Admin\UserController;
 
 //admin
-Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admin', 'middleware' => ['auth:api']], function () {
+Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admin', 'middleware' => ['auth:api', 'admin']], function () {
     Route::group(['prefix' => 'user', 'as' => 'user.',], function () {
         Route::get('list', [UserController::class, 'index']);
     });

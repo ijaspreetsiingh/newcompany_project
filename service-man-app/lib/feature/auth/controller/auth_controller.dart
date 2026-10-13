@@ -335,6 +335,11 @@ class AuthController extends GetxController implements GetxService {
   }
 
   bool clearSharedData() {
+    // W3.21: logout par GPS upload band — warna LocationService background
+    // me 10s interval par dead token ke saath location bhejta rehta hai
+    if (Get.isRegistered<LocationService>()) {
+      Get.find<LocationService>().stopLocationTracking();
+    }
     return authRepo.clearSharedData();
   }
 

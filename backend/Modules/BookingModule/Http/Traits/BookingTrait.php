@@ -155,7 +155,7 @@ trait BookingTrait
                 $booking->coupon_code = $cartData->first()->coupon_code;
                 $booking->service_schedule = date('Y-m-d H:i:s', strtotime($request['service_schedule'])) ?? now()->addHours(5);
                 $booking->service_address_id = $request['service_address_id'] ?? '';
-                $booking->booking_otp = rand(100000, 999999);
+                $booking->booking_otp = (string) random_int(100000, 999999);
                 $booking->is_guest = $isGuest;
                 $booking->extra_fee = $extraFee;
                 $booking->total_referral_discount_amount = $referralDiscount;
@@ -509,7 +509,7 @@ trait BookingTrait
                     }
                     $repeatBooking->extra_fee = $index < 1 ? $extraFee : 0;
                     $repeatBooking->total_referral_discount_amount = $index < 1 ? $referralDiscount : 0;
-                    $repeatBooking->booking_otp = rand(100000, 999999);
+                    $repeatBooking->booking_otp = (string) random_int(100000, 999999);
                     $repeatBooking->readable_id = $booking->readable_id . '-' . $suffix;
                     $repeatBooking->service_address_location = $serviceAddress;
                     $repeatBooking->service_location = $request->service_location;
@@ -700,7 +700,7 @@ trait BookingTrait
             $booking->total_coupon_discount_amount = 0;
             $booking->service_schedule = date('Y-m-d H:i:s', strtotime($data['service_schedule'])) ?? now()->addHours(5);
             $booking->service_address_id = $data['service_address_id'] ?? '';
-            $booking->booking_otp = rand(100000, 999999);
+            $booking->booking_otp = (string) random_int(100000, 999999);
             $booking->is_guest = 0;
             $booking->extra_fee = $extraFee;
             $booking->total_referral_discount_amount = $referralDiscount;

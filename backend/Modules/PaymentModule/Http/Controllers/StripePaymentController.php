@@ -91,6 +91,7 @@ class StripePaymentController extends Controller
             'mode' => 'payment',
             'success_url' => url('/') . '/payment/stripe/success?session_id={CHECKOUT_SESSION_ID}&payment_id=' . $data->id,
             'cancel_url' => url()->previous(),
+            'metadata' => ['payment_id' => (string) $data->id],
         ]);
 
         return response()->json(['id' => $checkout_session->id]);
@@ -101,9 +102,26 @@ class StripePaymentController extends Controller
         Stripe::setApiKey($this->config_values->api_key);
         $session = Session::retrieve($request->get('session_id'));
 
-        if ($session->payment_status == 'paid' && $session->status == 'complete') {
+        $data = $this->payment::where(['id' => $request['payment_id']])->first();
 
-            $this->payment::where(['id' => $request['payment_id']])->update([
+        // IDEMPOTENCY: already paid -> success page dobara, hook dobara mat chalao
+        if (isset($data) && (int) $data->is_paid === 1) {
+            return $this->payment_response($data, 'success');
+        }
+
+        // SECURITY: session ko hamare payment row se bind karo (metadata + amount + currency)
+        // bina verify session_id badal ke kisi aur ka payment mark nahi karwa sakta.
+        $expectedMinor = (int) round(((float) ($data->payment_amount ?? 0)) * 100);
+        $amountMatch = isset($data) && (int) ($session->amount_total ?? -1) === $expectedMinor;
+        $currencyMatch = !isset($data) || ($session->currency ?? null) === null
+            || strtolower((string) $session->currency) === strtolower((string) $data->currency_code);
+        $metaPid = $session->metadata->payment_id ?? null;
+        $metaMatch = $metaPid === null || $metaPid === (string) ($data->id ?? '');
+
+        if ($session->payment_status == 'paid' && $session->status == 'complete' && $amountMatch && $currencyMatch && $metaMatch) {
+
+            // IDEMPOTENCY: sirf tab update+hook jab 0 se 1 transition ho
+            $updated = $this->payment::where(['id' => $request['payment_id']])->where('is_paid', 0)->update([
                 'payment_method' => 'stripe',
                 'is_paid' => 1,
                 'transaction_id' => $session->payment_intent,
@@ -111,16 +129,25 @@ class StripePaymentController extends Controller
 
             $data = $this->payment::where(['id' => $request['payment_id']])->first();
 
-            if (isset($data) && function_exists($data->success_hook)) {
+            if ($updated > 0 && isset($data) && function_exists($data->success_hook)) {
                 call_user_func($data->success_hook, $data);
             }
 
             return $this->payment_response($data,'success');
         }
+
+        \Log::warning('Stripe success rejected', [
+            'payment_id' => $request['payment_id'] ?? null,
+            'session_id' => $request->get('session_id'),
+            'payment_status' => $session->payment_status ?? null,
+            'amount_total' => $session->amount_total ?? null,
+            'expected' => $expectedMinor ?? null,
+        ]);
+
         $payment_data = $this->payment::where(['id' => $request['payment_id']])->first();
         if (isset($payment_data) && function_exists($payment_data->failure_hook)) {
             call_user_func($payment_data->failure_hook, $payment_data);
         }
-        return $this->payment_response($payment_data,'fail');
+        return isset($payment_data) ? $this->payment_response($payment_data, 'fail') : redirect()->route('payment-fail');
     }
 }

@@ -615,7 +615,10 @@ class ProviderController extends Controller
             ->first();
 
         if (isset($customer)) {
-            $token = env('APP_ENV') != 'live' ? '1234' : rand(1000, 9999);
+            // SECURITY: fixed token sirf local/demo env; prod/live me hamesha random.
+            $token = in_array(config('app.env'), ['local', 'demo'], true)
+                ? '1234'
+                : (string) random_int(1000, 9999);
 
             DB::table('password_resets')->insert([
                 'phone' => $customer['phone'],

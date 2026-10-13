@@ -24,6 +24,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_PASSWORD=zCpalUqrsPNhXmo72QE9ie4gJADRGdwu
       - QUEUE_CONNECTION=redis
 
   db:
@@ -32,9 +33,9 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: demandium_db
-      MYSQL_ROOT_PASSWORD: "1234"
+      MYSQL_ROOT_PASSWORD: "S72eDYA3a9sToG5gFRrnhmiEdPJx"
     ports:
-      - "3307:3306"
+      - "127.0.0.1:3307:3306"
     volumes:
       - db-data:/var/lib/mysql
       # NOTE: mysql-optimization.cnf bind-mount hamesha world-writable aata hai (Windows)
@@ -51,12 +52,15 @@ services:
     container_name: jdds-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis-data:/data
     networks:
       - jdds-network
-    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+    # noeviction: paise/sessions kabhi silently delete nahi honge (memory full par
+    # writes error denge — loud failure > data loss). allkeys-lru tha jo wallet
+    # cache keys bhi udata tha.
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy noeviction --requirepass zCpalUqrsPNhXmo72QE9ie4gJADRGdwu
 
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
@@ -67,8 +71,8 @@ services:
       RABBITMQ_DEFAULT_PASS: demandium123
       RABBITMQ_DEFAULT_VHOST: /
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     networks:
@@ -84,7 +88,7 @@ services:
     container_name: jdds-nginx
     restart: unless-stopped
     ports:
-      - "8000:80"
+      - "127.0.0.1:8000:80"
     volumes:
       - .:/var/www
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
@@ -104,9 +108,9 @@ services:
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
-      MYSQL_ROOT_PASSWORD: "1234"
+      MYSQL_ROOT_PASSWORD: "S72eDYA3a9sToG5gFRrnhmiEdPJx"
     ports:
-      - "8080:80"
+      - "127.0.0.1:8080:80"
     networks:
       - jdds-network
     depends_on:
@@ -116,7 +120,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: jdds-queue-worker
+    # container_name hataya — --scale queue-worker=5 chalane ke liye
     restart: unless-stopped
     working_dir: /var/www
     volumes:
@@ -133,6 +137,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_PASSWORD=zCpalUqrsPNhXmo72QE9ie4gJADRGdwu
       - QUEUE_CONNECTION=redis
     command: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3", "--timeout=60", "--max-time=3600"]
 
@@ -155,6 +160,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_PASSWORD=zCpalUqrsPNhXmo72QE9ie4gJADRGdwu
       - QUEUE_CONNECTION=redis
     # AUTO-ASSIGN: schedule:work har minute scheduler tick karta hai (jobs everyThirtySeconds handle karta hai)
     command: ["php", "artisan", "schedule:work"]

@@ -82,17 +82,45 @@ class RazorPayController extends Controller
     {
         $input = $request->all();
         $api = new Api(config('razor_config.api_key'), config('razor_config.api_secret'));
-        $payment = $api->payment->fetch($input['razorpay_payment_id']);
 
         if (count($input) && !empty($input['razorpay_payment_id'])) {
+            $data = $this->payment::where(['id' => $request['payment_id']])->first();
+            if (!isset($data)) {
+                return redirect()->route('payment-fail');
+            }
+
+            // IDEMPOTENCY: pehle se paid hai to success page dobara, hook dobara mat chalao
+            if ((int) $data->is_paid === 1) {
+                return $this->payment_response($data, 'success');
+            }
+
+            // VERIFY: payment Razorpay par exist karta hai + amount match karti hai
+            // (attacker kisi aur ka payment_id bhej ke free booking nahi kara sakta)
+            try {
+                $payment = $api->payment->fetch($input['razorpay_payment_id']);
+            } catch (\Throwable $e) {
+                \Log::warning('RazorPay payment fetch failed: ' . $e->getMessage());
+                return redirect()->route('payment-fail');
+            }
+
+            $expectedMinor = (int) round(((float) $data->payment_amount) * 100);
+            if ((int) ($payment['amount'] ?? 0) < $expectedMinor) {
+                \Log::warning('RazorPay amount mismatch', [
+                    'payment_id' => $data->id,
+                    'expected' => $expectedMinor,
+                    'got' => $payment['amount'] ?? null,
+                ]);
+                return redirect()->route('payment-fail');
+            }
+
             $response = $api->payment->fetch($input['razorpay_payment_id'])->capture(array('amount' => $payment['amount'] - $payment['fee']));
-            $this->payment::where(['id' => $request['payment_id']])->update([
+            $updated = $this->payment::where(['id' => $request['payment_id']])->where('is_paid', 0)->update([
                 'payment_method' => 'razor_pay',
                 'is_paid' => 1,
                 'transaction_id' => $input['razorpay_payment_id'],
             ]);
             $data = $this->payment::where(['id' => $request['payment_id']])->first();
-            if (isset($data) && function_exists($data->success_hook)) {
+            if ($updated > 0 && isset($data) && function_exists($data->success_hook)) {
                 call_user_func($data->success_hook, $data);
             }
             return $this->payment_response($data, 'success');
@@ -151,13 +179,19 @@ class RazorPayController extends Controller
         $payment = $api->payment->fetch($request['payment_id']);
 
         if ($payment && isset($payment['status']) && $payment['status'] == 'captured') {
-            $this->payment::where(['id' => $request['payment_request_id']])->update([
+            $data = $this->payment::where(['id' => $request['payment_request_id']])->first();
+            if (isset($data) && (int) $data->is_paid === 1) {
+                return $this->payment_response($data, 'success');
+            }
+
+            // IDEMPOTENCY: sirf tab update+hook jab 0 se 1 transition ho
+            $updated = $this->payment::where(['id' => $request['payment_request_id']])->where('is_paid', 0)->update([
                 'payment_method' => 'razor_pay',
                 'is_paid' => 1,
                 'transaction_id' => $request['payment_id'],
             ]);
             $data = $this->payment::where(['id' => $request['payment_request_id']])->first();
-            if (isset($data) && function_exists($data->success_hook)) {
+            if ($updated > 0 && isset($data) && function_exists($data->success_hook)) {
                 call_user_func($data->success_hook, $data);
             }
             return $this->payment_response($data, 'success');
@@ -172,15 +206,50 @@ class RazorPayController extends Controller
     public function callback(Request $request): JsonResponse|Redirector|RedirectResponse|Application
     {
         $input = $request->all();
-        $data_id= base64_decode($request?->payment_data);
+        $data_id = base64_decode($request?->payment_data);
+
         if (count($input) && !empty($input['razorpay_payment_id'])) {
-            $data = $this->payment::where(['id' =>$data_id])->first();
-            if (isset($data) && function_exists($data->success_hook)) {
-                $data->payment_method=  'razor_pay';
-                $data->is_paid=  1;
-                $data->transaction_id= $input['razorpay_payment_id'] ;
-                $data->save();
-                call_user_func($data->success_hook, $data);
+            $data = $this->payment::where(['id' => $data_id])->first();
+
+            // IDEMPOTENCY: already paid -> success page, hook dobara mat chalao
+            if (isset($data) && (int) $data->is_paid === 1) {
+                return $this->payment_response($data, 'success');
+            }
+
+            if (isset($data)) {
+                // SECURITY: callback par payment Razorpay API se verify karo
+                // (existence + status + amount) — bina verify mark-paid = free booking.
+                try {
+                    $api = new Api(config('razor_config.api_key'), config('razor_config.api_secret'));
+                    $rzPayment = $api->payment->fetch($input['razorpay_payment_id']);
+                } catch (\Throwable $e) {
+                    \Log::warning('RazorPay callback verify failed: ' . $e->getMessage());
+                    return redirect()->route('payment-fail');
+                }
+
+                $expectedMinor = (int) round(((float) $data->payment_amount) * 100);
+                $rzAmount = (int) ($rzPayment['amount'] ?? 0);
+                $rzStatus = $rzPayment['status'] ?? '';
+
+                if ($rzAmount < $expectedMinor || !in_array($rzStatus, ['captured', 'authorized'], true)) {
+                    \Log::warning('RazorPay callback rejected', [
+                        'payment_id' => $data->id,
+                        'expected' => $expectedMinor,
+                        'got' => $rzAmount,
+                        'status' => $rzStatus,
+                    ]);
+                    return redirect()->route('payment-fail');
+                }
+
+                $updated = $this->payment::where(['id' => $data_id])->where('is_paid', 0)->update([
+                    'payment_method' => 'razor_pay',
+                    'is_paid' => 1,
+                    'transaction_id' => $input['razorpay_payment_id'],
+                ]);
+                $data = $this->payment::where(['id' => $data_id])->first();
+                if ($updated > 0 && isset($data) && function_exists($data->success_hook)) {
+                    call_user_func($data->success_hook, $data);
+                }
                 return $this->payment_response($data, 'success');
             }
         }

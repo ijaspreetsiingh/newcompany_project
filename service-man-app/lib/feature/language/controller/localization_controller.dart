@@ -31,7 +31,8 @@ class LocalizationController extends GetxController implements GetxService {
     ///pick zone id to update header
 
     saveLanguage(_locale);
-    apiClient.updateHeader(sharedPreferences.getString(AppConstants.token), [], locale.languageCode);
+    // W3.18: token secure storage se — prefs copy migration ke baad khatam
+    apiClient.updateHeader(AuthRepo.tokenCache ?? sharedPreferences.getString(AppConstants.token), [], locale.languageCode);
     Get.find<SplashController>().updateLanguage(isInitial);
     update();
   }

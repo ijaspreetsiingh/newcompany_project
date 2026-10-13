@@ -1,3 +1,4 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:jassdbx_provider/util/core_export.dart';
 
@@ -5,6 +6,11 @@ import 'package:jassdbx_provider/util/core_export.dart';
 class AuthRepo {
   final ApiClient apiClient;
   final SharedPreferences sharedPreferences;
+
+  // W3.18: token secure storage (Keystore/Keychain) + in-memory cache
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+  static String? tokenCache;
+
   AuthRepo({required this.apiClient, required this.sharedPreferences});
 
   Future<Response?> registration({
@@ -159,15 +165,18 @@ class AuthRepo {
   Future<bool?> saveUserToken(String token) async {
     apiClient.token = token;
     apiClient.updateHeader(token, sharedPreferences.getString(AppConstants.languageCode));
-    return await sharedPreferences.setString(AppConstants.token, token);
+    tokenCache = token;
+    await _secureStorage.write(key: AppConstants.token, value: token);
+    await sharedPreferences.remove(AppConstants.token);
+    return true;
   }
 
   String getUserToken() {
-    return sharedPreferences.getString(AppConstants.token) ?? "";
+    return tokenCache ?? sharedPreferences.getString(AppConstants.token) ?? "";
   }
 
   bool isLoggedIn() {
-    return sharedPreferences.containsKey(AppConstants.token);
+    return tokenCache != null || sharedPreferences.containsKey(AppConstants.token);
   }
 
   bool clearSharedData() {
@@ -176,6 +185,8 @@ class AuthRepo {
       FirebaseMessaging.instance.unsubscribeFromTopic('${AppConstants.topic}-${Get.find<UserProfileController>().myZoneId}');
       apiClient.putData(AppConstants.tokenUrl, {"fcm_token": "@"});
     }
+    tokenCache = null;
+    _secureStorage.delete(key: AppConstants.token);
     sharedPreferences.remove(AppConstants.token);
     sharedPreferences.remove(AppConstants.userAddress);
     apiClient.token = null;
@@ -184,7 +195,8 @@ class AuthRepo {
   }
   Future<void> saveUserNumberAndPassword(String number, String password) async {
     try {
-      await sharedPreferences.setString(AppConstants.userPassword, password);
+      // W3.18: plaintext password kabhi store nahi — purana copy delete
+      await sharedPreferences.remove(AppConstants.userPassword);
       await sharedPreferences.setString(AppConstants.userNumber, number);
     } catch (e) {
       rethrow;
@@ -213,7 +225,8 @@ class AuthRepo {
   }
 
   String getUserPassword() {
-    return sharedPreferences.getString(AppConstants.userPassword) ?? "";
+    // W3.18: password persist nahi hota
+    return "";
   }
 
   void setRememberMeValue(bool rememberMeValue) {

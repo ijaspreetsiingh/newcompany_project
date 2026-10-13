@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-lint:
+    name: Backend PHP lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: php -l (all PHP files)
+        working-directory: backend
+        run: |
+          set -e
+          count=0
+          while IFS= read -r -d '' file; do
+            php -l "$file" > /dev/null
+            count=$((count+1))
+          done < <(find app Modules routes config database -name '*.php' -print0)
+          echo "Linted $count PHP files OK"
+
+  flutter-analyze:
+    name: Flutter analyze (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: user-app
+            dir: user-app
+          - app: provider-app
+            dir: provider-app
+          - app: service-man-app
+            dir: service-man-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: pub get
+        working-directory: ${{ matrix.dir }}
+        run: flutter pub get
+      - name: dart analyze
+        working-directory: ${{ matrix.dir }}
+        run: dart analyze lib

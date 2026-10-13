@@ -18,7 +18,9 @@ class ApiClient extends GetxService {
   final http.Client _httpClient = http.Client();
 
   ApiClient({required this.appBaseUrl, required this.sharedPreferences}) {
-    token = sharedPreferences.getString(AppConstants.token);
+    // W3.18: token secure storage se AuthRepo.tokenCache me aata hai (get_di
+    // startup par). Prefs sirf legacy fallback hai.
+    token = AuthRepo.tokenCache ?? sharedPreferences.getString(AppConstants.token);
     AddressModel? addressModel;
     try {
       String? addressJson = sharedPreferences.getString(AppConstants.userAddress);
@@ -155,8 +157,15 @@ class ApiClient extends GetxService {
       }
     }
     request.fields.addAll(body);
-    http.Response response = await http.Response.fromStream(await _httpClient.send(request));
-    return handleResponse(response, uri);
+    try {
+      // W3.20: slow/dead connection par upload hang na ho
+      http.Response response = await http.Response.fromStream(
+        await _httpClient.send(request).timeout(const Duration(seconds: 120)),
+      );
+      return handleResponse(response, uri);
+    } catch (e) {
+      return Response(statusCode: 1, statusText: noInternetMessage);
+    }
   }
 
   Future<Response> postMultipartData(String? uri, Map<String, String> body, List<MultipartBody>? multipartBody, {Map<String, String>? headers}) async {
@@ -179,7 +188,10 @@ class ApiClient extends GetxService {
         }
       }
       request.fields.addAll(body);
-      http.Response response = await http.Response.fromStream(await _httpClient.send(request));
+      // W3.20: slow/dead connection par upload hang na ho
+      http.Response response = await http.Response.fromStream(
+        await _httpClient.send(request).timeout(const Duration(seconds: 120)),
+      );
       return handleResponse(response, uri);
     } catch (e) {
       return Response(statusCode: 1, statusText: noInternetMessage);

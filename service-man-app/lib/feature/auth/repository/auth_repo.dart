@@ -1,9 +1,15 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 class AuthRepo {
   final ApiClient apiClient;
   final SharedPreferences sharedPreferences;
+
+  // W3.18: token secure storage (Keystore/Keychain) + in-memory cache
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+  static String? tokenCache;
+
   AuthRepo({required this.apiClient, required this.sharedPreferences});
 
   Future<Response?> login({
@@ -168,11 +174,14 @@ class AuthRepo {
       null,
       sharedPreferences.getString(AppConstants.languageCode),
     );
-    return await sharedPreferences.setString(AppConstants.token, token);
+    tokenCache = token;
+    await _secureStorage.write(key: AppConstants.token, value: token);
+    await sharedPreferences.remove(AppConstants.token);
+    return true;
   }
 
   bool isLoggedIn() {
-    return sharedPreferences.containsKey(AppConstants.token);
+    return tokenCache != null || sharedPreferences.containsKey(AppConstants.token);
   }
 
   bool clearSharedData() {
@@ -185,6 +194,8 @@ class AuthRepo {
         "fcm_token": "@",
       });
     }
+    tokenCache = null;
+    _secureStorage.delete(key: AppConstants.token);
     sharedPreferences.remove(AppConstants.token);
 
     apiClient.token = null;
@@ -199,7 +210,8 @@ class AuthRepo {
     String countryCode,
   ) async {
     try {
-      await sharedPreferences.setString(AppConstants.userPassword, password);
+      // W3.18: plaintext password kabhi store nahi — purana copy delete
+      await sharedPreferences.remove(AppConstants.userPassword);
       await sharedPreferences.setString(AppConstants.userNumber, number);
       await sharedPreferences.setString(
         AppConstants.userCountryCode,
@@ -219,7 +231,8 @@ class AuthRepo {
   }
 
   String getUserPassword() {
-    return sharedPreferences.getString(AppConstants.userPassword) ?? "";
+    // W3.18: password persist nahi hota
+    return "";
   }
 
   Future<bool> clearUserNumberAndPassword() async {

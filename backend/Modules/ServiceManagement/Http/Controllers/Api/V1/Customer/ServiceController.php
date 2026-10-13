@@ -89,9 +89,7 @@ class ServiceController extends Controller
             ->paginate($request['limit'], ['*'], 'offset', $request['offset'])
             ->withPath('');
 
-        foreach ($services as $service){
-            $service['is_favorite'] = $this->favoriteService->where('customer_user_id',$this->customer_user_id)->where('service_id',$service->id)->exists() ? 1 : 0;
-        }
+        $this->attachFavoriteStatus($services);
 
         return response()->json(response_formatter(DEFAULT_200, self::variationMapper($services)), 200);
     }
@@ -237,15 +235,22 @@ class ServiceController extends Controller
                 $query->havingRaw('service_filter_min_price >= ? AND service_filter_min_price <= ?', [$request['min_price'], $request['max_price']]);
             })
             ->when(is_null($request['sort_by_type']) && is_null($request['sort_by']), function ($query) use ($decodedString){
+                // SECURITY: user search string ko kabhi raw SQL me mat interpolate karo —
+                // pehle 'name = $decodedString' par SQL injection tha; ab ? bindings.
                 $query->orderByRaw("
                     CASE
-                        WHEN name = '$decodedString' THEN 0
-                        WHEN name LIKE '$decodedString%' THEN 1
-                        WHEN name LIKE '%$decodedString%' THEN 2
-                        WHEN name LIKE '%$decodedString' THEN 3
+                        WHEN name = ? THEN 0
+                        WHEN name LIKE ? THEN 1
+                        WHEN name LIKE ? THEN 2
+                        WHEN name LIKE ? THEN 3
                         ELSE 4
                     END
-                ");
+                ", [
+                    $decodedString,
+                    "$decodedString%",
+                    "%$decodedString%",
+                    "%$decodedString",
+                ]);
             });
 
         $variationPriceFilter = $servicesQuery->get();
@@ -278,8 +283,8 @@ class ServiceController extends Controller
 
         $services = $servicesQuery->paginate($request['limit'], ['*'], 'offset', $request['offset'])->withPath('');
 
+        $this->attachFavoriteStatus($services);
         foreach ($services as $service){
-            $service['is_favorite'] = $this->favoriteService->where('customer_user_id',$this->customer_user_id)->where('service_id',$service->id)->exists() ? 1 : 0;
             unset($service->tags, $service->faqs, $service->favorites);
         }
 
@@ -367,11 +372,15 @@ class ServiceController extends Controller
             ->unique();
 
         $authUser = auth('api')->user();
-        $services = $results->map(function ($serviceName) use ($authUser) {
-            $recentSearched = 0;
-            if ($authUser) {
-                $recentSearched = $this->recentSearch->where('keyword', $serviceName)->exists() ? 1 : 0;
-            }
+        // W4.25: N+1 fix — har keyword ke liye alag exists() query ki jagah ek query
+        $searchedKeywords = collect();
+        if ($authUser) {
+            $searchedKeywords = $this->recentSearch
+                ->whereIn('keyword', $results->all())
+                ->pluck('keyword');
+        }
+        $services = $results->map(function ($serviceName) use ($searchedKeywords) {
+            $recentSearched = $searchedKeywords->contains($serviceName) ? 1 : 0;
             return [
                 'name' => $serviceName,
                 'is_searched' => $recentSearched
@@ -419,12 +428,7 @@ class ServiceController extends Controller
 
         $services = $servicesQuery->paginate($request['limit'], ['*'], 'offset', $request['offset'])->withPath('');
 
-        foreach ($services as $service) {
-            $service['is_favorite'] = $this->favoriteService
-                ->where('customer_user_id', $this->customer_user_id)
-                ->where('service_id', $service->id)
-                ->exists() ? 1 : 0;
-        }
+        $this->attachFavoriteStatus($services);
 
         return response()->json(response_formatter(DEFAULT_200, self::variationMapper($services)), 200);
     }
@@ -481,12 +485,7 @@ class ServiceController extends Controller
                 ->paginate($request['limit'], ['*'], 'offset', $request['offset'])
                 ->withPath('');
 
-            foreach ($services as $service) {
-                $service['is_favorite'] = $this->favoriteService
-                    ->where('customer_user_id', $user->id)
-                    ->where('service_id', $service->id)
-                    ->exists() ? 1 : 0;
-            }
+            $this->attachFavoriteStatus($services, $user->id);
         } else {
             $services = $servicesQuery->active()
                 ->inRandomOrder()
@@ -494,12 +493,7 @@ class ServiceController extends Controller
                 ->paginate($request['limit'], ['*'], 'offset', $request['offset'])
                 ->withPath('');
 
-            foreach ($services as $service) {
-                $service['is_favorite'] = $this->favoriteService
-                    ->where('customer_user_id', $this->customer_user_id)
-                    ->where('service_id', $service->id)
-                    ->exists() ? 1 : 0;
-            }
+            $this->attachFavoriteStatus($services);
         }
 
         return response()->json(response_formatter(DEFAULT_200, self::variationMapper($services)), 200);
@@ -518,9 +512,7 @@ class ServiceController extends Controller
             ->inRandomOrder()
             ->take(5)->get();
 
-        foreach ($services as $service){
-            $service['is_favorite'] = $this->favoriteService->where('customer_user_id', $this->customer_user_id)->where('service_id',$service->id)->exists() ? 1 : 0;
-        }
+        $this->attachFavoriteStatus($services);
 
         return response()->json(response_formatter(DEFAULT_200, self::variationMapper($services)), 200);
     }
@@ -567,12 +559,7 @@ class ServiceController extends Controller
 
         $services = $servicesQuery->paginate($request['limit'], ['*'], 'offset', $request['offset'])->withPath('');
 
-        foreach ($services as $service) {
-            $service['is_favorite'] = $this->favoriteService
-                ->where('customer_user_id', $this->customer_user_id)
-                ->where('service_id', $service->id)
-                ->exists() ? 1 : 0;
-        }
+        $this->attachFavoriteStatus($services);
 
         return response()->json(response_formatter(DEFAULT_200, self::variationMapper($services)), 200);
     }
@@ -620,9 +607,7 @@ class ServiceController extends Controller
             ->paginate($request['limit'], ['*'], 'offset', $request['offset'])
             ->withPath('');
 
-        foreach ($services as $service){
-            $service['is_favorite'] = $this->favoriteService->where('customer_user_id',$this->customer_user_id)->where('service_id',$service->id)->exists() ? 1 : 0;
-        }
+        $this->attachFavoriteStatus($services);
 
         return response()->json(response_formatter(DEFAULT_200, self::variationMapper($services)), 200);
     }
@@ -718,11 +703,32 @@ class ServiceController extends Controller
             ->orderBy('avg_rating', 'DESC')
             ->paginate($request['limit'], ['*'], 'offset', $request['offset'])->withPath('');
 
-        foreach ($services as $service){
-            $service['is_favorite'] = $this->favoriteService->where('customer_user_id', $this->customer_user_id)->where('service_id',$service->id)->exists() ? 1 : 0;
-        }
+        $this->attachFavoriteStatus($services);
 
         return response()->json(response_formatter(DEFAULT_200, self::variationMapper($services)), 200);
+    }
+
+    /**
+     * W4.25: N+1 fix — purane code me har service ke liye alag
+     * favoriteService->exists() query chalti thi (page size = queries).
+     * Ab page ke saare favorite IDs ek hi query me aate hain.
+     */
+    private function attachFavoriteStatus($services, ?int $userId = null): void
+    {
+        $userId ??= $this->customer_user_id;
+        $favoriteIds = collect();
+        if ($userId) {
+            $serviceIds = collect($services->pluck('id')->all())->filter()->values()->all();
+            if (!empty($serviceIds)) {
+                $favoriteIds = $this->favoriteService
+                    ->where('customer_user_id', $userId)
+                    ->whereIn('service_id', $serviceIds)
+                    ->pluck('service_id');
+            }
+        }
+        foreach ($services as $service) {
+            $service['is_favorite'] = $favoriteIds->contains($service->id) ? 1 : 0;
+        }
     }
 
     private function variationMapper($services)
@@ -882,9 +888,7 @@ class ServiceController extends Controller
             ->paginate($request['limit'], ['*'], 'offset', $request['offset'])
             ->withPath('');
 
-        foreach ($services as $service){
-            $service['is_favorite'] = $this->favoriteService->where('customer_user_id', $this->customer_user_id)->where('service_id',$service->id)->exists() ? 1 : 0;
-        }
+        $this->attachFavoriteStatus($services);
 
         if (count($services) > 0) {
             $authUser = auth('api')->user();

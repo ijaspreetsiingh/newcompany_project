@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jdds/api/local/cache_response.dart';
 import 'package:jdds/common/repo/data_sync_repo.dart';
 import 'package:jdds/feature/auth/controller/facebook_login_controller.dart';
@@ -11,6 +12,23 @@ final database = AppDatabase();
 Future<Map<String, Map<String, String>>> intt() async {
 
   final sharedPreferences = await SharedPreferences.getInstance();
+
+  // W3.18: token ko plaintext SharedPreferences → secure storage (Keystore/
+  // Keychain) me migrate karo. AuthRepo.tokenCache sync API ka source hai —
+  // isse ApiClient constructor bhi header ke liye padhta hai.
+  try {
+    const secure = FlutterSecureStorage();
+    String? token = await secure.read(key: AppConstants.token);
+    token ??= sharedPreferences.getString(AppConstants.token);
+    if (token != null && token.isNotEmpty) {
+      await secure.write(key: AppConstants.token, value: token);
+    }
+    AuthRepo.tokenCache = (token != null && token.isNotEmpty) ? token : null;
+    await sharedPreferences.remove(AppConstants.token);
+  } catch (_) {
+    // Secure storage unavailable (e.g. web) — legacy prefs fallback rehne do
+    AuthRepo.tokenCache = sharedPreferences.getString(AppConstants.token);
+  }
 
   Get.lazyPut(() => sharedPreferences, fenix: true);
 

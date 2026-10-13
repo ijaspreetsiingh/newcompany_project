@@ -4,6 +4,11 @@
 # Only the application code is baked here via COPY for native-speed file reads.
 FROM php-base:local
 
+# mysqldump — spatie/laravel-backup (W2.15 daily DB backups) ke liye chahiye.
+# ssl=0: MariaDB client MySQL 8 ke self-signed cert par TLS error deta tha.
+RUN apk add --no-cache mysql-client \
+    && printf '[client]\nssl=0\n\n[mysqld]\nsymbolic-links=0\n\n!includedir /etc/my.cnf.d\n' > /etc/my.cnf
+
 WORKDIR /var/www
 
 # Code ko image me bake karo (Windows bind-mount hata kar native-speed file reads).

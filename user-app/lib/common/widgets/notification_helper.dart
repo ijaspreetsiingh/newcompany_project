@@ -249,7 +249,7 @@ class NotificationHelper {
 
           Future.delayed(const Duration(milliseconds: 1700), (){
             Get.dialog(PushNotificationDialog(
-                title: message.notification!.title,
+                title: message.notification?.title ?? message.data['title'] ?? '',
                 notificationBody: notificationBody
             ));
           });
@@ -263,7 +263,7 @@ class NotificationHelper {
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage? message) {
-      printLog("onMessageOpenApp: ${message?.notification!.title}/${message?.notification!.body}/${message?.notification!.titleLocKey} || ${message?.data}");
+      printLog("onMessageOpenApp: ${message?.notification?.title}/${message?.notification?.body}/${message?.notification?.titleLocKey} || ${message?.data}");
 
      try{
        if(message !=null && message.data.isNotEmpty) {
@@ -337,28 +337,30 @@ class NotificationHelper {
 
   static Future<void> showNotification(RemoteMessage message, FlutterLocalNotificationsPlugin fln, bool data) async {
     if(!GetPlatform.isIOS) {
-      String? title;
+      String title;
       String body;
       String? orderID;
       String? image;
       String playLoad = jsonEncode(message.data);
 
-      title = message.data['title'];
-      body = message.data['body'] ?? "";
-      orderID = message.data['booking_id'].toString();
+      // W3.19: data-only FCM messages me notification null hoti hai —
+      // title/body kabhi null crash na kare, data se fallback lo
+      title = message.data['title'] ?? message.notification?.title ?? 'notification';
+      body = message.data['body'] ?? message.notification?.body ?? "";
+      orderID = message.data['booking_id']?.toString() ?? "";
       image = (message.data['image'] != null && message.data['image'].isNotEmpty)
           ? message.data['image'].startsWith('http') ? message.data['image']
           : '${AppConstants.baseUrl}/storage/app/public/notification/${message.data['image']}' : null;
 
       if(image != null && image.isNotEmpty) {
         try{
-          await showBigPictureNotificationHiddenLargeIcon(title!, body, playLoad, image, fln);
+          await showBigPictureNotificationHiddenLargeIcon(title, body, playLoad, image, fln);
         }catch(e) {
-          await showBigTextNotification(title!, '',playLoad, orderID,fln);
+          await showBigTextNotification(title, '',playLoad, orderID,fln);
         }
 
       }else {
-        await showBigTextNotification(title!, body, playLoad, orderID, fln);
+        await showBigTextNotification(title, body, playLoad, orderID, fln);
       }
     }
   }

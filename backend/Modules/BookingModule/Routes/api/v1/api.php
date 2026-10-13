@@ -32,7 +32,7 @@ Route::group(['prefix' => 'client', 'as' => 'customer.', 'namespace' => 'Api\V1\
 });
 Route::any('gateway-booking-reply', [BookingController::class, 'digitalPaymentBookingResponse']);
 
-Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admin', 'middleware' => ['auth:api']], function () {
+Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admin', 'middleware' => ['auth:api', 'admin']], function () {
     Route::group(['prefix' => 'booking', 'as' => 'booking.'], function () {
         Route::post('/', [AdminBookingController::class, 'index']);
         Route::get('{id}', [AdminBookingController::class, 'show']);

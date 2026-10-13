@@ -25,3 +25,16 @@ Schedule::call(function () {
         ->where('due_at', '<', now())
         ->update(['status' => 'expired', 'updated_at' => now()]);
 })->dailyAt('00:15')->name('expire-booking-rechecks')->withoutOverlapping();
+
+// W4.28: pehle se maujood lekin kabhi schedule nahi kiye gaye commands
+Schedule::command('email:subscription-time-end-mail')->dailyAt('00:30')->withoutOverlapping();
+Schedule::command('email:free-trial-end-mail')->dailyAt('00:40')->withoutOverlapping();
+Schedule::command('app:maintenance-mode-end')->dailyAt('00:50')->withoutOverlapping();
+Schedule::command('email:send-renewal-reminder')->dailyAt('01:00')->withoutOverlapping();
+
+// W2.15/W4.24: Laravel 12 me app/Console/Kernel.php schedule() call hi nahi hota —
+// isliye backup + queue prune yahin routes/console.php se schedule ho rahe hain
+Schedule::command('backup:run --disable-notifications')->dailyAt('02:30')->withoutOverlapping();
+Schedule::command('backup:clean --disable-notifications')->dailyAt('03:30')->withoutOverlapping();
+Schedule::command('queue:prune-failed --hours=48')->dailyAt('04:00');
+Schedule::command('queue:prune --hours=48')->dailyAt('04:15');

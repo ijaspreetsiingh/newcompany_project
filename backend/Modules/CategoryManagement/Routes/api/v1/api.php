@@ -7,7 +7,7 @@ use Modules\CategoryManagement\Http\Controllers\Api\V1\Admin\CategoryController 
 use Modules\CategoryManagement\Http\Controllers\Api\V1\Admin\SubCategoryController as AdminSubCategoryController;
 use Modules\CategoryManagement\Http\Controllers\Api\V1\Provider\CategoryController as ProviderCategoryController;
 
-Route::group(['prefix' => 'admin', 'as'=>'admin.', 'namespace' => 'Api\V1\Admin', 'middleware'=>['auth:api']], function () {
+Route::group(['prefix' => 'admin', 'as'=>'admin.', 'namespace' => 'Api\V1\Admin', 'middleware'=>['auth:api', 'admin']], function () {
     Route::post('category/store', [AdminCategoryController::class, 'store']);
     Route::get('category/edit/{id}', [AdminCategoryController::class, 'edit']);
     Route::put('category/update/{id}', [AdminCategoryController::class, 'update']);

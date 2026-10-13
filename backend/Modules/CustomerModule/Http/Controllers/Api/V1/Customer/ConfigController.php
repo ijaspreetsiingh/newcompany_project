@@ -77,7 +77,13 @@ class ConfigController extends Controller
             }
         }
 
-        $errorLogs = ErrorLog::where('redirect_url', '!=', null)->get();
+        // W4.25: config endpoint har request par poora error_logs table nahi
+        // padhega — sirf redirect_url column, capped at 1000 rows.
+        $errorLogs = ErrorLog::query()
+            ->whereNotNull('redirect_url')
+            ->select('id', 'redirect_url')
+            ->limit(1000)
+            ->get();
 
         $loginOptionsValue = LoginSetup::where(['key' => 'login_options'])?->first()?->value;
         $loginOptions = json_decode($loginOptionsValue);

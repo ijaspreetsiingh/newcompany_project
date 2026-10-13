@@ -179,7 +179,7 @@ class SplashScreenState extends State<SplashScreen> {
         );
         break;
       case "booking" || 'booking_ignored':
-        if (widget.body!.bookingId != null && widget.body!.bookingId != "") {
+        if (widget.body != null && widget.body!.bookingId != null && widget.body!.bookingId != "") {
           if (widget.body?.bookingType == "repeat" &&
               widget.body?.repeatBookingType == "single") {
             Get.toNamed(

@@ -3106,14 +3106,40 @@ if (!function_exists('findNearestServicemen')) {
     {
         [$bookingLat, $bookingLng] = getBookingCoordinates($booking);
 
-        $servicemen = Serviceman::where('provider_id', $providerId)
-            ->where('is_on_duty', 1)
-            ->whereNotIn('id', $excludeServicemanIds)
-            ->whereHas('user', function ($query) {
-                $query->where('is_active', 1);
-            })
-            ->with('user:id,fcm_token,current_language_key,first_name,last_name,profile_image,current_lat,current_lng,last_location_updated_at')
-            ->get();
+        $baseQuery = function () use ($providerId, $excludeServicemanIds) {
+            return Serviceman::where('provider_id', $providerId)
+                ->where('is_on_duty', 1)
+                ->whereNotIn('id', $excludeServicemanIds)
+                ->whereHas('user', function ($query) {
+                    $query->where('is_active', 1);
+                })
+                ->with('user:id,fcm_token,current_language_key,first_name,last_name,profile_image,current_lat,current_lng,last_location_updated_at');
+        };
+
+        // CAPACITY (W2.10): bounding-box pre-filter — poor provider ke 1000+
+        // servicemen me se sirf ~55km radius ke candidates load hote hain
+        // (index-friendly). Agar box me koi nahi mila to original full scan
+        // fallback (business behaviour same: door wale bhi end me dikhte hain).
+        $servicemen = collect();
+        if ($bookingLat !== null && $bookingLng !== null) {
+            $latDelta = 0.5; // ~55 km
+            $lngDelta = 0.5 / max(cos(deg2rad((float) $bookingLat)), 0.01);
+            $freshCutoff = now()->subMinutes(5);
+
+            $servicemen = $baseQuery()
+                ->whereHas('user', function ($query) use ($bookingLat, $bookingLng, $latDelta, $lngDelta, $freshCutoff) {
+                    $query->whereNotNull('current_lat')
+                        ->whereNotNull('current_lng')
+                        ->whereBetween('current_lat', [$bookingLat - $latDelta, $bookingLat + $latDelta])
+                        ->whereBetween('current_lng', [$bookingLng - $lngDelta, $bookingLng + $lngDelta])
+                        ->where('last_location_updated_at', '>', $freshCutoff);
+                })
+                ->get();
+        }
+
+        if ($servicemen->isEmpty()) {
+            $servicemen = $baseQuery()->get();
+        }
 
         return $servicemen
             ->map(function ($serviceman) use ($bookingLat, $bookingLng) {

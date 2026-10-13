@@ -120,7 +120,7 @@ Route::group(['prefix' => 'client', 'as' => 'customer.', 'namespace' => 'Api\V1\
 });
 
 //admin
-Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admin', 'middleware' => ['auth:api']], function () {
+Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admin', 'middleware' => ['auth:api', 'admin']], function () {
    // Route::resource('provider', 'ProviderController', ['only' => ['index', 'store', 'edit', 'update']]);
     Route::group(['prefix' => 'provider', 'as' => 'provider.',], function () {
         Route::get('data/overview/{user_id}', [AdminProviderController::class, 'overview']);

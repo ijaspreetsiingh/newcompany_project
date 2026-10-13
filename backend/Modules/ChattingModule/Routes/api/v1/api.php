@@ -8,7 +8,7 @@ use Modules\ChattingModule\Http\Controllers\Api\V1\Serviceman\ChattingController
 use Modules\ChattingModule\Http\Controllers\Api\V1\GlobalChattingController;
 use Modules\ChattingModule\Http\Controllers\Api\V1\CallController;
 
-Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admin', 'middleware' => ['auth:api']], function () {
+Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admin', 'middleware' => ['auth:api', 'admin']], function () {
     Route::group(['prefix' => 'chat'], function () {
         Route::get('channel-list', [AdminChattingController::class, 'channelList']);
         Route::get('referenced-channel-list', [AdminChattingController::class, 'referencedChannelList']);

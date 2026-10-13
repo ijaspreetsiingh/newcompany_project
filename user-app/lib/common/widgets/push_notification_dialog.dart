@@ -42,8 +42,8 @@ class _NewRequestDialogState extends State<PushNotificationDialog> {
               Icon(Icons.notifications_active, size: 60, color: Theme.of(context).colorScheme.primary),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeLarge),
-                child: Text(
-                  widget.title!,
+            child: Text(
+                  widget.title ?? '',
                   textAlign: TextAlign.center,
                   style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge),
             ),

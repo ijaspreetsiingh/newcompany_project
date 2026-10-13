@@ -17,7 +17,8 @@ class ApiClient extends GetxService {
   final http.Client _httpClient = http.Client();
 
   ApiClient({required this.appBaseUrl, required this.sharedPreferences}) {
-    token = sharedPreferences.getString(AppConstants.token);
+    // W3.18: token secure storage se AuthRepo.tokenCache me aata hai
+    token = AuthRepo.tokenCache ?? sharedPreferences.getString(AppConstants.token);
     updateHeader(
       token,[],
       sharedPreferences.getString(AppConstants.languageCode),
@@ -84,8 +85,15 @@ class ApiClient extends GetxService {
       }
     }
     request.fields.addAll(body);
-    http.Response response = await http.Response.fromStream(await _httpClient.send(request));
-    return handleResponse(response, uri);
+    // W3.20: slow/dead connection par upload hang na ho
+    try {
+      http.Response response = await http.Response.fromStream(
+        await _httpClient.send(request).timeout(const Duration(seconds: 120)),
+      );
+      return handleResponse(response, uri);
+    } catch (e) {
+      return Response(statusCode: 1, statusText: noInternetMessage);
+    }
   }
 
   Future<Response> postMultipartData(
@@ -124,9 +132,15 @@ class ApiClient extends GetxService {
 
     request.fields.addAll(body);
 
-    http.Response response = await http.Response.fromStream(await _httpClient.send(request));
-
-    return handleResponse(response, uri);
+    // W3.20: slow/dead connection par upload hang na ho
+    try {
+      http.Response response = await http.Response.fromStream(
+        await _httpClient.send(request).timeout(const Duration(seconds: 120)),
+      );
+      return handleResponse(response, uri);
+    } catch (e) {
+      return Response(statusCode: 1, statusText: noInternetMessage);
+    }
   }
 
   Future<Response> putData(String? uri, dynamic body, {Map<String, String>? headers}) async {

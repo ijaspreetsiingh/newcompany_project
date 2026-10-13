@@ -86,14 +86,20 @@ if (!function_exists('placeBookingTransactionForPartialCas')) {
     function placeBookingTransactionForPartialCas($booking): void
     {
         $admin_user_id = User::where('user_type', ADMIN_USER_TYPES[0])->first()->id;
-        $user_wallet_balance = User::find($booking->customer_id)?->wallet_balance;
-        $paid_amount = $user_wallet_balance;
 
-        DB::transaction(function () use ($booking, $admin_user_id, $paid_amount) {
+        DB::transaction(function () use ($booking, $admin_user_id) {
             /** wallet partial */
 
+            // SECURITY: row-lock karke wallet balance padho — warna 2 parallel bookings
+            // same balance par dono pass kar jaate the (double-spend race).
+            $user = User::where('id', $booking['customer_id'])->lockForUpdate()->first();
+            if (!$user || round((float) $user->wallet_balance, 3) + 0.0005 <= 0) {
+                throw new \RuntimeException('Insufficient wallet balance for partial payment');
+            }
+            $paid_amount = min(round((float) $user->wallet_balance, 3), (float) $booking['total_booking_amount']);
+
             //Admin transaction
-            $account = Account::where('user_id', $admin_user_id)->first();
+            $account = Account::where('user_id', $admin_user_id)->lockForUpdate()->first();
             $account->balance_pending += $paid_amount;
             $account->save();
 
@@ -110,9 +116,8 @@ if (!function_exists('placeBookingTransactionForPartialCas')) {
                 'to_user_account' => ACCOUNT_STATES[0]['value']
             ]);
 
-            //customer transaction (wallet)
-            $user = User::find($booking['customer_id']);
-            if ($user->wallet_balance >= $paid_amount) $user->wallet_balance -= $paid_amount;
+            //customer transaction (wallet) — balance lock ke andar hi debit
+            $user->wallet_balance = $user->wallet_balance - $paid_amount;
             $user->save();
 
             Transaction::create([
@@ -142,15 +147,20 @@ if (!function_exists('placeBookingTransactionForPartialDigital')) {
     function placeBookingTransactionForPartialDigital($booking): void
     {
         $admin_user_id = User::where('user_type', ADMIN_USER_TYPES[0])->first()->id;
-        $user_wallet_balance = User::find($booking->customer_id)?->wallet_balance;
 
-        $paid_amount =$user_wallet_balance;
-        $due_amount =  $booking['total_booking_amount'] - $paid_amount;
-
-        DB::transaction(function () use ($booking, $admin_user_id, $paid_amount, $due_amount) {
+        DB::transaction(function () use ($booking, $admin_user_id) {
             /** wallet partial */
+
+            // SECURITY: row-lock karke wallet balance padho (double-spend race band)
+            $user = User::where('id', $booking['customer_id'])->lockForUpdate()->first();
+            if (!$user || round((float) $user->wallet_balance, 3) + 0.0005 <= 0) {
+                throw new \RuntimeException('Insufficient wallet balance for partial payment');
+            }
+            $paid_amount = min(round((float) $user->wallet_balance, 3), (float) $booking['total_booking_amount']);
+            $due_amount = (float) $booking['total_booking_amount'] - $paid_amount;
+
             //Admin transaction
-            $account = Account::where('user_id', $admin_user_id)->first();
+            $account = Account::where('user_id', $admin_user_id)->lockForUpdate()->first();
             $account->balance_pending += $paid_amount;
             $account->save();
 
@@ -167,9 +177,8 @@ if (!function_exists('placeBookingTransactionForPartialDigital')) {
                 'to_user_account' => ACCOUNT_STATES[0]['value']
             ]);
 
-            //customer transaction (wallet)
-            $user = User::find($booking['customer_id']);
-            if ($user->wallet_balance >= $paid_amount) $user->wallet_balance -= $paid_amount;
+            //customer transaction (wallet) — lock ke andar hi debit
+            $user->wallet_balance = $user->wallet_balance - $paid_amount;
             $user->save();
 
             Transaction::create([
@@ -187,7 +196,7 @@ if (!function_exists('placeBookingTransactionForPartialDigital')) {
 
             /** CAS partial */
             //Admin transaction
-            $account = Account::where('user_id', $admin_user_id)->first();
+            $account = Account::where('user_id', $admin_user_id)->lockForUpdate()->first();
             $account->balance_pending += $due_amount;
             $account->save();
 
@@ -213,8 +222,16 @@ if (!function_exists('placeBookingTransactionForWalletPayment')) {
     {
         $admin_user_id = User::where('user_type', ADMIN_USER_TYPES[0])->first()->id;
         DB::transaction(function () use ($booking, $admin_user_id) {
+            // SECURITY: row-lock + in-transaction check — parallel bookings me
+            // insufficient balance par booking rollback hogi (double-spend band).
+            $user = User::where('id', $booking['customer_id'])->lockForUpdate()->first();
+            $total_amount = round((float) $booking['total_booking_amount'], 3);
+            if (!$user || round((float) $user->wallet_balance, 3) + 0.0005 < $total_amount) {
+                throw new \RuntimeException('Insufficient wallet balance for this booking');
+            }
+
             //Admin account update
-            $account = Account::where('user_id', $admin_user_id)->first();
+            $account = Account::where('user_id', $admin_user_id)->lockForUpdate()->first();
             $account->balance_pending += $booking['total_booking_amount'];
             $account->save();
 
@@ -232,13 +249,8 @@ if (!function_exists('placeBookingTransactionForWalletPayment')) {
                 'to_user_account' => ACCOUNT_STATES[0]['value']
             ]);
 
-
-
-            //Customer wallet update
-            $user = User::find($booking['customer_id']);
-            if ($user->wallet_balance >= $booking['total_booking_amount']) {
-                $user->wallet_balance -= $booking['total_booking_amount'];
-            }
+            //Customer wallet update — decimal-safe subtract, lock ke andar
+            $user->wallet_balance = $user->wallet_balance - $booking['total_booking_amount'];
             $user->save();
 
             //customer transaction (wallet)
@@ -293,8 +305,8 @@ if (!function_exists('removeBookingServiceTransactionForDigitalPayment')) {
             $primary_transaction = Transaction::where('booking_id', $booking['id'])->whereNull('ref_trx_id')->first()?->id;
 
             DB::transaction(function () use ($booking, $admin_user_id, $amount, $primary_transaction) {
-                //Admin transaction
-                $account = Account::where('user_id', $admin_user_id)->first();
+                //Admin transaction — row-lock (parallel refund race band)
+                $account = Account::where('user_id', $admin_user_id)->lockForUpdate()->first();
                 if ($account->balance_pending >= $amount) {
                     $account->balance_pending -= $amount;
                 }
@@ -313,8 +325,8 @@ if (!function_exists('removeBookingServiceTransactionForDigitalPayment')) {
                     'to_user_account' => ACCOUNT_STATES[0]['value']
                 ]);
 
-                //customer transaction
-                $user = User::find($booking['customer_id']);
+                //customer transaction — row-lock (parallel credit race band)
+                $user = User::where('id', $booking['customer_id'])->lockForUpdate()->first();
                 $user->wallet_balance += $amount;
                 $user->save();
 

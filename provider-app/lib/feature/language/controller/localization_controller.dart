@@ -35,7 +35,8 @@ class LocalizationController extends GetxController implements GetxService {
     }
     saveLanguage(locale);
 
-    apiClient.updateHeader(sharedPreferences.getString(AppConstants.token), locale.languageCode);
+    // W3.18: token secure storage se — prefs copy migration ke baad khatam ho jaati hai
+    apiClient.updateHeader(AuthRepo.tokenCache ?? sharedPreferences.getString(AppConstants.token), locale.languageCode);
     if(Get.find<AuthController>().isLoggedIn()){
       Get.find<BusinessSettingController>().getBookingSettingsDataFromServer();
     }

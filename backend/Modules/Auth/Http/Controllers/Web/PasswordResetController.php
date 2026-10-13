@@ -70,7 +70,10 @@ class PasswordResetController extends Controller
             return redirect(route('provider.auth.reset-password.index'));
         }
 
-        $otp = env('APP_ENV') != 'live' ? '123456' : rand(100000, 999999);
+        // SECURITY: fixed OTP sirf local/demo env; prod/live me hamesha random.
+        $otp = in_array(config('app.env'), ['local', 'demo'], true)
+            ? '123456'
+            : (string) random_int(100000, 999999);
         $this->user_verification->updateOrCreate([
             'identity' => $request['identity'],
             'identity_type' => $request['identity_type']

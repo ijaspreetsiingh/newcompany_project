@@ -336,7 +336,33 @@ class BookingController extends Controller
 
         $isFirstAccept = $booking->booking_status === 'pending';
 
-        DB::transaction(function () use ($booking, $slot, $serviceman, $request, $isFirstAccept) {
+        DB::transaction(function () use ($booking, $bookingId, $slot, $serviceman, $request, $isFirstAccept) {
+            // SECURITY: booking row-lock + andar hi re-check — 2 parallel accepts me
+            // sirf ek hi pehla accept (lead) banega, doosra "already accepted" ho jayega.
+            $booking = \Modules\BookingModule\Entities\Booking::withoutGlobalScopes()
+                ->where('id', $bookingId)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$booking
+                || $booking->provider_id !== $serviceman->provider_id
+                || !in_array($booking->booking_status, ['pending', 'accepted'], true)) {
+                return; // lock ke baad status badal chuka — kuch mat karo
+            }
+
+            // slot bhi lock karke dobara padho (parallel slot updates race band)
+            $slot = \Modules\BookingModule\Entities\BookingServiceman::where('booking_id', $booking->id)
+                ->where('serviceman_id', $serviceman->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$slot && $booking->serviceman_id !== $serviceman->id) {
+                return;
+            }
+
+            // LOCKED state se hi first-accept decide karo (bahar wale stale value par nahi)
+            $isFirstAccept = $booking->booking_status === 'pending';
+
             if ($slot) {
                 $slot->status = \Modules\BookingModule\Entities\BookingServiceman::STATUS_ACCEPTED;
                 $slot->save();
@@ -399,7 +425,20 @@ class BookingController extends Controller
         }
 
         if ($booking->booking_status === 'pending') {
-            DB::transaction(function () use ($booking, $slot, $serviceman) {
+            DB::transaction(function () use ($booking, $bookingId, $slot, $serviceman) {
+                // SECURITY: row-lock + re-check (parallel reject/accept race band)
+                $booking = \Modules\BookingModule\Entities\Booking::withoutGlobalScopes()
+                    ->where('id', $bookingId)
+                    ->lockForUpdate()
+                    ->first();
+                if (!$booking || $booking->booking_status !== 'pending') {
+                    return;
+                }
+                $slot = \Modules\BookingModule\Entities\BookingServiceman::where('booking_id', $booking->id)
+                    ->where('serviceman_id', $serviceman->id)
+                    ->lockForUpdate()
+                    ->first();
+
                 if ($slot) {
                     $slot->status = \Modules\BookingModule\Entities\BookingServiceman::STATUS_REJECTED;
                     $slot->save();
@@ -441,7 +480,20 @@ class BookingController extends Controller
             }
         } else {
             // booking already accepted (team) — ye member exit kar raha hai
-            DB::transaction(function () use ($booking, $slot, $serviceman) {
+            DB::transaction(function () use ($booking, $bookingId, $slot, $serviceman) {
+                // SECURITY: row-lock + re-check (parallel lead-exit race band)
+                $booking = \Modules\BookingModule\Entities\Booking::withoutGlobalScopes()
+                    ->where('id', $bookingId)
+                    ->lockForUpdate()
+                    ->first();
+                if (!$booking || $booking->booking_status !== 'accepted') {
+                    return;
+                }
+                $slot = \Modules\BookingModule\Entities\BookingServiceman::where('booking_id', $booking->id)
+                    ->where('serviceman_id', $serviceman->id)
+                    ->lockForUpdate()
+                    ->first();
+
                 if ($slot) {
                     $slot->status = \Modules\BookingModule\Entities\BookingServiceman::STATUS_REJECTED;
                     $slot->save();

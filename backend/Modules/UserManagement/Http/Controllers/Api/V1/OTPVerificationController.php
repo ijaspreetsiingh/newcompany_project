@@ -86,7 +86,11 @@ class OTPVerificationController extends Controller
             ]), 401);
         }
 
-        $otp = env('APP_ENV') != 'live' ? '123456' : rand(100000, 999999);
+        // SECURITY: fixed OTP sirf local/demo env; prod/live me hamesha random.
+        // config() use karo — env() config:cache ke baad null deta hai (audit blocker).
+        $otp = in_array(config('app.env'), ['local', 'demo'], true)
+            ? '123456'
+            : (string) random_int(100000, 999999);
         $this->userVerification->updateOrCreate([
                 'identity' => $request['identity'],
                 'identity_type'=> $request['identity_type']

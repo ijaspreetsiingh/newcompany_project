@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:jassdbx_serviceman/utils/core_export.dart';
 import 'package:jassdbx_serviceman/feature/html/repository/html_repo.dart';
 import 'package:jassdbx_serviceman/feature/notifications/repository/notification_repo.dart';
@@ -9,6 +10,21 @@ Future<Map<String, Map<String, String>>> init() async{
 
   /// Core
   final sharedPreferences = await SharedPreferences.getInstance();
+
+  // W3.18: token plaintext prefs → secure storage migration
+  try {
+    const secure = FlutterSecureStorage();
+    String? token = await secure.read(key: AppConstants.token);
+    token ??= sharedPreferences.getString(AppConstants.token);
+    if (token != null && token.isNotEmpty) {
+      await secure.write(key: AppConstants.token, value: token);
+    }
+    AuthRepo.tokenCache = (token != null && token.isNotEmpty) ? token : null;
+    await sharedPreferences.remove(AppConstants.token);
+  } catch (_) {
+    AuthRepo.tokenCache = sharedPreferences.getString(AppConstants.token);
+  }
+
   Get.lazyPut(() => sharedPreferences, fenix: true);
   Get.lazyPut(() => ApiClient(appBaseUrl: AppConstants.baseUrl, sharedPreferences: Get.find()), fenix: true);
 

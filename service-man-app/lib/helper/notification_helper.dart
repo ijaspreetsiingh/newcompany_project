@@ -249,25 +249,27 @@ class NotificationHelper {
 
   static Future<void> showNotification(RemoteMessage message, FlutterLocalNotificationsPlugin fln, bool data) async {
     if(!GetPlatform.isIOS) {
-      String? title;
-      String? body;
+      // W3.19: data-only push me title/body null hota hai — fallback se crash band
+      String title;
+      String body;
       String? image;
       String playLoad = jsonEncode(message.data);
 
-      title = message.data['title']?.replaceAll('_', ' ').toString().capitalize;
-      body = message.data['body'];
+      final String dataTitle = message.data['title']?.toString() ?? '';
+      title = dataTitle.isNotEmpty ? dataTitle.replaceAll('_', ' ').capitalize ?? dataTitle : (message.notification?.title ?? 'notification');
+      body = message.data['body']?.toString() ?? message.notification?.body ?? '';
       image = (message.data['image'] != null && message.data['image'].isNotEmpty)
           ? message.data['image'].startsWith('http') ? message.data['image']
           : '${AppConstants.baseUrl}/storage/app/public/notification/${message.data['image']}' : null;
 
       if(image != null && image.isNotEmpty) {
         try{
-          await showBigPictureNotificationHiddenLargeIcon(title!, body ?? '', playLoad, image, fln);
+          await showBigPictureNotificationHiddenLargeIcon(title, body, playLoad, image, fln);
         }catch(e) {
-          await showBigTextNotification(title :title!, body: body ?? '',payload: playLoad, fln : fln);
+          await showBigTextNotification(title :title, body: body,payload: playLoad, fln : fln);
         }
       }else {
-        await showBigTextNotification(title : title ??"", body: body ?? '',payload: playLoad, fln : fln);
+        await showBigTextNotification(title : title, body: body,payload: playLoad, fln : fln);
       }
     }
   }
