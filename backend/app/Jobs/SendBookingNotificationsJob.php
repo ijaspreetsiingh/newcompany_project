@@ -64,14 +64,11 @@ class SendBookingNotificationsJob implements ShouldQueue
         }
 
         if ($settingsType == 'provider_notification') {
+            // NOTE: pehle yahan if/else ke dono branches me same
+            // device_notification call tha — matlab suspended provider ya
+            // non-pending booking par bhi push chala jaata tha (unwanted
+            // notifications). Ab sirf valid condition par hi bhejo.
             if ((!business_config('suspend_on_exceed_cash_limit_provider', 'provider_config')->live_values || $booking->provider?->is_suspended == 0) && $booking->booking_status == 'pending') {
-                $provider = $booking->provider?->owner;
-                $repeatOrRegular = $booking->is_repeated ? 'repeat' : 'regular';
-                $title = get_push_notification_message($key, $settingsType, $provider?->current_language_key);
-                if ($provider?->fcm_token && $title && sendDeviceNotificationPermission($booking->provider_id)) {
-                    device_notification($provider?->fcm_token, $title, null, null, $booking->id, 'booking', null, null, null, null, $repeatOrRegular);
-                }
-            } else {
                 $provider = $booking->provider?->owner;
                 $repeatOrRegular = $booking->is_repeated ? 'repeat' : 'regular';
                 $title = get_push_notification_message($key, $settingsType, $provider?->current_language_key);

@@ -2806,6 +2806,26 @@ if (!function_exists('dispatchNearestServicemanRequest')) {
             $waitTime = max(30, (int) ($provider->auto_assign_wait_time ?: 60));
             $alreadyTried = getTriedServicemanIds($booking);
 
+            // CIRCUIT BREAKER: har expiry par exclude-list clear karke same
+            // nearest serviceman ko dubara FCM popup jaata tha — booking pending
+            // rehti toh dinon tak 30s-interval par notification spam chalta rehta
+            // (stale "New Booking Assignment/Expired" popups isi se the). Ab ek
+            // full pass ke baad rotation band: booking pending rehti hai aur
+            // provider ko EK baar (6h throttle) manual-assign push jaata hai.
+            $totalServicemen = Serviceman::where('provider_id', $provider->id)
+                ->whereHas('user', function ($query) {
+                    $query->where('is_active', 1);
+                })->count();
+            $maxAttempts = max(3, $totalServicemen);
+            if (count($alreadyTried) >= $maxAttempts) {
+                $notifiedKey = 'auto_assign_manual_notified:' . $booking->id;
+                if (!\Illuminate\Support\Facades\Cache::get($notifiedKey)) {
+                    notifyProviderToAssignManually($provider, $booking);
+                    \Illuminate\Support\Facades\Cache::put($notifiedKey, 1, now()->addHours(6));
+                }
+                return;
+            }
+
             // "Book again with same serviceman": preferred serviceman ko pehle
             // chance — accept nahi kiya (decline/timeout) to slot tried list me
             // add ho chuka hai aur neeche normal nearest flow age badhega.
@@ -2827,15 +2847,13 @@ if (!function_exists('dispatchNearestServicemanRequest')) {
             $candidates = findNearestServicemen($booking, $provider->id, $alreadyTried);
 
             if ($candidates->isEmpty()) {
-                // SPEC: sabne reject/expire kiya -> CYCLE: nearest serviceman
-                // (jo pehle try hua) ko dubara request bhejo. Ek hi serviceman
-                // ho to usi par cycle chalegi (timer har baar naya chance dega).
-                $candidates = findNearestServicemen($booking, $provider->id, []);
-            }
-
-            if ($candidates->isEmpty()) {
-                // Provider ke paas koi serviceman hi nahi hai — manually assign kare
-                notifyProviderToAssignManually($provider, $booking);
+                // sabne try kar liya — circuit breaker (upar) rotation rok chuka
+                // hoga; safety: koi candidate na ho toh manual push (throttled)
+                $notifiedKey = 'auto_assign_manual_notified:' . $booking->id;
+                if (!\Illuminate\Support\Facades\Cache::get($notifiedKey)) {
+                    notifyProviderToAssignManually($provider, $booking);
+                    \Illuminate\Support\Facades\Cache::put($notifiedKey, 1, now()->addHours(6));
+                }
                 return;
             }
 

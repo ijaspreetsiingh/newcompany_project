@@ -48,6 +48,20 @@ class BookingTimerController extends GetxController implements GetxService {
           _team = content['team'];
         }
       }
+
+      // STALE NOTIFICATION: din-purani assignment (ya already expired booking)
+      // par popup kholne se "Expired" screen 4 second tak ghurti thi (user ko
+      // lagta tha koi ajeeb error aa gaya). Ab turant band + toast.
+      if (_remainingSeconds <= 0) {
+        _isLoading = false;
+        _expired = true;
+        update();
+        showCustomSnackBar('booking_request_expired'.tr, type: ToasterMessageType.info);
+        Future.delayed(const Duration(milliseconds: 800), () {
+          _closePopupAndRefresh();
+        });
+        return;
+      }
     }
     _isLoading = false;
 
