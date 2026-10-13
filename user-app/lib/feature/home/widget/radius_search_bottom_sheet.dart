@@ -111,7 +111,7 @@ class RadiusSearchBottomSheet extends StatefulWidget {
 }
 
 class _RadiusSearchBottomSheetState extends State<RadiusSearchBottomSheet> {
-  bool _loading = false;
+  final bool _loading = false;
 
   @override
   Widget build(BuildContext context) {

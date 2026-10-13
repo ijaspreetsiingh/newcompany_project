@@ -21,7 +21,8 @@ class _PaymentMethodState extends State<PaymentMethod> {
       PaymentMethodButton(title: "pay_now".tr,paymentMethodName: PaymentMethodName.digitalPayment, assetName: Images.pay,),
     if(Get.find<SplashController>().configModel.content?.cashAfterService==1)
       PaymentMethodButton(title: "cash_after_service".tr,paymentMethodName: PaymentMethodName.cos,assetName: Images.cod,),
-    if(Get.find<SplashController>().configModel.content?.walletStatus==1)
+    if(Get.find<SplashController>().configModel.content?.walletStatus==1 &&
+        (Get.find<SplashController>().configModel.content?.walletPayment ?? 1)==1)
     PaymentMethodButton(title: "pay_via_wallet".tr,paymentMethodName: PaymentMethodName.walletMoney,assetName: Images.walletMenu,),
   ];
 

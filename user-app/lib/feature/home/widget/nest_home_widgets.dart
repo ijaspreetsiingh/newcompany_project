@@ -367,7 +367,7 @@ class NestServiceRow extends StatelessWidget {
                     fontWeight: FontWeight.w400,
                     color: mutedColor,
                   )),
-                Text(' Â· ${service.ratingCount ?? 0}',
+                Text(' · ${service.ratingCount ?? 0}',
                   style: GoogleFonts.dmSans(
                     fontSize: 10,
                     fontWeight: FontWeight.w400,

@@ -58,6 +58,28 @@ class CheckOutController extends GetxController implements GetxService{
     _providerPaymentOverrideId = providerId;
   }
 
+  /// "Book again with same serviceman" — checkout ke dauran ye serviceman
+  /// pehle chance par assign ho. Place-order par backend ko bheja jata hai;
+  /// decline/expire par backend khud nearest serviceman par fallback karta hai.
+  String? preferredServicemanId;
+  String? preferredServicemanName;
+  String? preferredServicemanImage;
+
+  void setPreferredServiceman({String? id, String? name, String? image}) {
+    preferredServicemanId =
+        (id == null || id.isEmpty || id == 'null') ? null : id;
+    preferredServicemanName = preferredServicemanId == null ? null : name;
+    preferredServicemanImage = preferredServicemanId == null ? null : image;
+    update();
+  }
+
+  void clearPreferredServiceman() {
+    preferredServicemanId = null;
+    preferredServicemanName = null;
+    preferredServicemanImage = null;
+    update();
+  }
+
 
 
 
@@ -76,6 +98,11 @@ class CheckOutController extends GetxController implements GetxService{
   /// Tracking API ko actual booking (UUID) chahiye hota hai — readable (#1234) nahi
   String _bookingId = "";
   String get bookingId => _bookingId;
+
+  /// Confirmation screen: order place hote waqt cart se capture — place-order
+  /// ke baad cart clear ho jata hai, tab tak amount/service name yahan safe hai.
+  double placedBookingAmount = 0;
+  String placedServiceName = "";
 
   bool _isLoading= false;
   bool get isLoading => _isLoading;
@@ -202,6 +229,16 @@ class CheckOutController extends GetxController implements GetxService{
    update();
 
     if(Get.find<CartController>().cartList.isNotEmpty){
+      // Confirmation screen ke liye amount + service name capture (cart clear
+      // hone se pehle) — sirf cart-based regular checkout par.
+      if (serviceType == ServiceType.regular.name && repeatBookingType == RepeatBookingType.regular.name) {
+        final CartController cartController = Get.find<CartController>();
+        placedBookingAmount = cartController.totalPrice;
+        placedServiceName = cartController.cartList
+            .map((e) => e.service?.name ?? '')
+            .where((name) => name.isNotEmpty)
+            .join(', ');
+      }
       try{
       Response response = await checkoutRepo.placeBookingRequest(
         paymentMethod : paymentMethod,
@@ -214,12 +251,15 @@ class CheckOutController extends GetxController implements GetxService{
         bookingType: repeatBookingType.name,
         dates: repeatBookingDates,
         newUserInfo: newUserInfo,
+        preferredServicemanId: preferredServicemanId,
         serviceLocation: Get.find<FriendLocationController>().isBookingForOther
             ? ServiceLocationType.customer.name
             : Get.find<LocationController>().selectedServiceLocationType.name
       );
       if(response.statusCode == 200 && response.body["response_code"] == "booking_place_success_200"){
         _isPlacedOrderSuccessfully = true;
+        // Preferred serviceman sirf ek checkout attempt ke liye — order placed.
+        clearPreferredServiceman();
         _bookingReadableId = response.body['content']['readable_id'].toString();
         try { _bookingId = response.body['content']['booking_id'][0].toString(); } catch (_) {}
         String? token = response.body['content']['token'];
@@ -520,6 +560,14 @@ class CheckOutController extends GetxController implements GetxService{
 
 
     final ConfigModel configModel = Get.find<SplashController>().configModel;
+
+    // GLOBAL admin gate: payment screen par wallet tabhi tab dikhega jab
+    // customer_wallet feature (wallet_status) DONO ON hon + service_setup ka
+    // wallet_payment toggle ON ho. (wallet_payment missing = purana backend —
+    // allowed maan lo.)
+    final bool walletGloballyAllowed = configModel.content?.walletStatus == 1 &&
+        (configModel.content?.walletPayment ?? 1) == 1;
+
     _digitalPaymentList = [];
     _othersPaymentList = [];
     _isLoading = false;
@@ -528,7 +576,7 @@ class CheckOutController extends GetxController implements GetxService{
 
       if(configModel.content?.partialPaymentCombinator == "digital_payment"){
         _othersPaymentList = [
-          if(configModel.content?.walletStatus == 1 && Get.find<AuthController>().isLoggedIn() && Get.find<CartController>().walletBalance > 0 && !avoidPartialPayment)
+          if(walletGloballyAllowed && Get.find<AuthController>().isLoggedIn() && Get.find<CartController>().walletBalance > 0 && !avoidPartialPayment)
             PaymentMethodButton(title: "pay_via_wallet".tr,paymentMethodName: PaymentMethodName.walletMoney,assetName: Images.walletMenu,),
         ];
         if(configModel.content?.digitalPayment == 1){
@@ -539,7 +587,7 @@ class CheckOutController extends GetxController implements GetxService{
       else if(configModel.content?.partialPaymentCombinator == "cash_after_service"){
         _digitalPaymentList = [];
         _othersPaymentList = [
-          if(configModel.content?.walletStatus == 1 && Get.find<AuthController>().isLoggedIn() && Get.find<CartController>().walletBalance > 0 && !avoidPartialPayment)
+          if(walletGloballyAllowed && Get.find<AuthController>().isLoggedIn() && Get.find<CartController>().walletBalance > 0 && !avoidPartialPayment)
             PaymentMethodButton(title: "pay_via_wallet".tr,paymentMethodName: PaymentMethodName.walletMoney,assetName: Images.walletMenu,),
           if(configModel.content?.cashAfterService == 1)
             PaymentMethodButton(title: "pay_after_service".tr,paymentMethodName: PaymentMethodName.cos,assetName: Images.cod,),
@@ -548,7 +596,7 @@ class CheckOutController extends GetxController implements GetxService{
 
       else if(configModel.content?.partialPaymentCombinator == "offline_payment"){
         _othersPaymentList = [
-          if(configModel.content?.walletStatus == 1 && Get.find<AuthController>().isLoggedIn() && Get.find<CartController>().walletBalance > 0 && !avoidPartialPayment)
+          if(walletGloballyAllowed && Get.find<AuthController>().isLoggedIn() && Get.find<CartController>().walletBalance > 0 && !avoidPartialPayment)
             PaymentMethodButton(title: "pay_via_wallet".tr,paymentMethodName: PaymentMethodName.walletMoney,assetName: Images.walletMenu,),
         ];
         if(configModel.content?.offlinePayment == 1){
@@ -562,7 +610,7 @@ class CheckOutController extends GetxController implements GetxService{
     }else{
 
       _othersPaymentList = [
-        if(configModel.content?.walletStatus == 1 && Get.find<AuthController>().isLoggedIn() && Get.find<CartController>().walletBalance > 0 && !avoidPartialPayment)
+        if(walletGloballyAllowed && Get.find<AuthController>().isLoggedIn() && Get.find<CartController>().walletBalance > 0 && !avoidPartialPayment)
           PaymentMethodButton(title: "pay_via_wallet".tr,paymentMethodName: PaymentMethodName.walletMoney,assetName: Images.walletMenu,),
 
         if(configModel.content?.cashAfterService == 1)

@@ -256,6 +256,9 @@ export 'package:jassdbx_provider/feature/conversation/widgets/chat_call_screen.d
 export 'package:jassdbx_provider/feature/recheck/repo/recheck_repo.dart';
 export 'package:jassdbx_provider/feature/recheck/controller/recheck_controller.dart';
 export 'package:jassdbx_provider/feature/recheck/view/recheck_dashboard_screen.dart';
+export 'package:jassdbx_provider/feature/unsatisfied/repo/unsatisfied_repo.dart';
+export 'package:jassdbx_provider/feature/unsatisfied/controller/unsatisfied_controller.dart';
+export 'package:jassdbx_provider/feature/unsatisfied/view/unsatisfied_dashboard_screen.dart';
 export 'package:jassdbx_provider/feature/conversation/widgets/conversation_send_message_widget.dart';
 export 'package:jassdbx_provider/feature/conversation/widgets/conversation_list_shimmer.dart';
 export 'package:jassdbx_provider/feature/conversation/widgets/conversation_listview.dart';

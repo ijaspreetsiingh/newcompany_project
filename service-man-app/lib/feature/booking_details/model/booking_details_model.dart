@@ -54,6 +54,7 @@ class BookingContent {
 class BookingDetailsContent {
   String? id;
   String? readableId;
+  int? isReService;
   String? customerId;
   String? providerId;
   String? zoneId;
@@ -89,6 +90,9 @@ class BookingDetailsContent {
   double ? totalReferralDiscountAmount;
   BookingDetailsContent? subBooking;
   String? serviceLocation;
+  String? startOtp;
+  String? servicemanReachedAt;
+  List<ExtraService>? extraServices;
 
   BookingDetailsContent({
     this.id,
@@ -127,7 +131,10 @@ class BookingDetailsContent {
     this.additionalCharge,
     this.totalReferralDiscountAmount,
     this.subBooking,
-    this.serviceLocation
+    this.serviceLocation,
+    this.startOtp,
+    this.servicemanReachedAt,
+    this.extraServices
   });
 
   BookingDetailsContent.fromJson(Map<String, dynamic> json){
@@ -138,6 +145,7 @@ class BookingDetailsContent {
     zoneId = json['zone_id'];
     bookingStatus = json['booking_status'];
     isPaid = json['is_paid'];
+    isReService = int.tryParse(json['is_re_service']?.toString() ?? '0');
     paymentMethod = json['payment_method'];
     transactionId = json['transaction_id'];
     totalBookingAmount = double.tryParse(json['total_booking_amount'].toString());
@@ -200,6 +208,14 @@ class BookingDetailsContent {
         ? BookingDetailsContent.fromJson(json['booking'])
         : null;
     serviceLocation = json['service_location'];
+    startOtp = json['start_otp']?.toString();
+    servicemanReachedAt = json['serviceman_reached_at']?.toString();
+    if (json['extra_services'] != null) {
+      extraServices = <ExtraService>[];
+      json['extra_services'].forEach((v) {
+        extraServices!.add(ExtraService.fromJson(v));
+      });
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -855,3 +871,37 @@ class PartialPayment {
 
 
 
+
+class ExtraService {
+  String? id;
+  String? bookingId;
+  String? servicemanId;
+  String? name;
+  double? price;
+  int? quantity;
+  String? type;
+
+  ExtraService({this.id, this.bookingId, this.servicemanId, this.name, this.price, this.quantity, this.type});
+
+  ExtraService.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    bookingId = json['booking_id'];
+    servicemanId = json['serviceman_id'];
+    name = json['name'];
+    price = double.tryParse(json['price'].toString());
+    quantity = int.tryParse(json['quantity'].toString());
+    type = json['type'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['booking_id'] = bookingId;
+    data['serviceman_id'] = servicemanId;
+    data['name'] = name;
+    data['price'] = price;
+    data['quantity'] = quantity;
+    data['type'] = type;
+    return data;
+  }
+}

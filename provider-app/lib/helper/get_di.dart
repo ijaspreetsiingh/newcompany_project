@@ -23,6 +23,7 @@ Future<Map<String, Map<String, String>>> init() async{
   Get.lazyPut(() => ConversationRepo(apiClient: Get.find()), fenix: true);
   Get.lazyPut(() => CallRepo(apiClient: Get.find()), fenix: true);
   Get.lazyPut(() => RecheckRepo(apiClient: Get.find()), fenix: true);
+  Get.lazyPut(() => UnsatisfiedRepo(apiClient: Get.find()), fenix: true);
   Get.lazyPut(() => SuggestServiceRepo(apiClient: Get.find()), fenix: true);
   Get.lazyPut(() => ReviewRepo(apiClient: Get.find()), fenix: true);
   Get.lazyPut(() => SplashRepo(sharedPreferences: Get.find(), apiClient: Get.find()), fenix: true);
@@ -72,6 +73,7 @@ Future<Map<String, Map<String, String>>> init() async{
   Get.lazyPut(() => ConversationController(conversationRepo: Get.find()));
   Get.lazyPut(() => CallController(callRepo: Get.find()), fenix: true);
   Get.lazyPut(() => RecheckController(recheckRepo: Get.find()));
+  Get.lazyPut(() => UnsatisfiedController(unsatisfiedRepo: Get.find()));
   Get.lazyPut(() => SuggestServiceController(suggestServiceRepo: Get.find()));
   Get.lazyPut(() => NotificationController(notificationRepo: Get.find()));
   Get.lazyPut(() => BusinessSubscriptionController(subscriptionRepo: SubscriptionRepo(apiClient: Get.find(), sharedPreferences: Get.find())));

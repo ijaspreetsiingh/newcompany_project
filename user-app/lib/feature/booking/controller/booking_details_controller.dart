@@ -229,12 +229,13 @@ class BookingDetailsController extends GetxController implements GetxService{
       _bookingDetailsContent = BookingDetailsContent.fromJson(response.body['content']);
       update();
       getRecheckStatus(bookingId: bookingId);
+      getUnsatisfiedStatus(bookingId: bookingId);
     } else {
       ApiChecker.checkApi(response);
     }
   }
 
-  // --------------------- RECHECK (15 din ka window) ---------------------
+  // --------------------- RECHECK (7 din ka window) ---------------------
   bool _isRequestingRecheck = false;
   bool get isRequestingRecheck => _isRequestingRecheck;
 
@@ -311,11 +312,99 @@ class BookingDetailsController extends GetxController implements GetxService{
       update();
     }
   }
+
+  // --------------------- UNSATISFIED (free re-service) ---------------------
+  // Service kharab gayi -> customer admin-set window tak "Not satisfied"
+  // raise karta hai -> backend SAME serviceman ke paas free (amount 0)
+  // re-service booking bana deta hai.
+  bool _isRequestingUnsatisfied = false;
+  bool get isRequestingUnsatisfied => _isRequestingUnsatisfied;
+
+  bool _canRaiseUnsatisfied = false;
+  bool get canRaiseUnsatisfied => _canRaiseUnsatisfied;
+
+  int _unsatisfiedDaysLeft = 0;
+  int get unsatisfiedDaysLeft => _unsatisfiedDaysLeft;
+
+  int _unsatisfiedWindowDays = 7;
+  int get unsatisfiedWindowDays => _unsatisfiedWindowDays;
+
+  Map<String, dynamic>? _unsatisfiedInfo;
+  Map<String, dynamic>? get unsatisfiedInfo => _unsatisfiedInfo;
+
+  String get unsatisfiedStatus {
+    final dynamic status = _unsatisfiedInfo?['status'];
+    return status is String ? status : '';
+  }
+
+  Future<void> getUnsatisfiedStatus({required String bookingId}) async {
+    try {
+      final Response response = await bookingDetailsRepo.getUnsatisfiedStatus(
+        bookingID: bookingId,
+      );
+      if (response.statusCode == 200 &&
+          response.body is Map &&
+          response.body['content'] is Map) {
+        final Map<String, dynamic> content = Map<String, dynamic>.from(
+          response.body['content'] as Map,
+        );
+        _unsatisfiedInfo = content['unsatisfied'] is Map
+            ? Map<String, dynamic>.from(content['unsatisfied'] as Map)
+            : null;
+        _canRaiseUnsatisfied = content['can_raise'] == true;
+        _unsatisfiedDaysLeft = (content['window_ends_in_days'] is num)
+            ? (content['window_ends_in_days'] as num).toInt()
+            : 0;
+        _unsatisfiedWindowDays = (content['window_days'] is num)
+            ? (content['window_days'] as num).toInt()
+            : 7;
+        update();
+      }
+    } catch (_) {
+      // unsatisfied status optional hai — ignore karo
+    }
+  }
+
+  Future<void> raiseUnsatisfied({
+    required String bookingId,
+    String reason = '',
+  }) async {
+    if (bookingId.isEmpty || _isRequestingUnsatisfied) return;
+    _isRequestingUnsatisfied = true;
+    update();
+    try {
+      final Response response = await bookingDetailsRepo.raiseUnsatisfied(
+        bookingID: bookingId,
+        reason: reason,
+      );
+      final body = response.body is Map ? response.body as Map : const {};
+
+      if (response.statusCode == 200) {
+        customSnackBar('unsatisfied_requested_successfully'.tr, type: ToasterMessageType.success);
+        await getUnsatisfiedStatus(bookingId: bookingId);
+      } else {
+        customSnackBar(
+          (body['message'] ?? 'error_loading').toString(),
+          type: ToasterMessageType.error,
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('unsatisfied request failed: $e');
+      }
+      customSnackBar('error_loading'.tr, type: ToasterMessageType.error);
+    } finally {
+      _isRequestingUnsatisfied = false;
+      update();
+    }
+  }
   // -------------------------------------------------------------------------
 
-  Future<void> getSubBookingDetails({required String bookingId})async{
+  Future<void> getSubBookingDetails({required String bookingId, bool reload = true})async{
 
-    _subBookingDetailsContent = null;
+    if(reload){
+      _subBookingDetailsContent = null;
+    }
     Response response = await bookingDetailsRepo.getSubBookingDetails(bookingID: bookingId);
     if(response.statusCode == 200){
       _subBookingDetailsContent = BookingDetailsContent.fromJson(response.body['content']);

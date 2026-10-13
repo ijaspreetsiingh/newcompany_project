@@ -2,15 +2,34 @@
 
 @section('title',translate('service_update'))
 
+@php
+    /*
+    | AI module may be disabled (modules_statuses.json) - in that case the
+    | admin.product.* routes are not registered and route() throws.
+    | Safe wrapper: route missing => null.
+    */
+    $aiRoute = function (string $name) {
+        if (\Illuminate\Support\Facades\Route::has($name)) {
+            try { return route($name); } catch (\Throwable $e) { return null; }
+        }
+        return null;
+    };
+@endphp
+
 @push('css_or_js')
     <link rel="stylesheet" href="{{asset('public/assets/admin-module')}}/plugins/select2/select2.min.css"/>
     <link rel="stylesheet" href="{{asset('public/assets/admin-module')}}/plugins/dataTables/jquery.dataTables.min.css"/>
     <link rel="stylesheet" href="{{asset('public/assets/admin-module')}}/plugins/dataTables/select.dataTables.min.css"/>
     <link rel="stylesheet" href="{{asset('public/assets/admin-module')}}/plugins/wysiwyg-editor/froala_editor.min.css"/>
     <link rel="stylesheet" href="{{asset('public/assets/admin-module')}}/css/tags-input.min.css"/>
+    <link rel="stylesheet" href="{{asset('public/assets/admin-module')}}/plugins/cropper/cropper.min.css"/>
 
     {{--AI--}}
     <link rel="stylesheet" href="{{asset('public/assets/admin-module/css/ai-sidebar.css') }}"/>
+
+    <style>
+        .h-150px { height: 150px !important; }
+    </style>
 
 @endpush
 
@@ -68,7 +87,7 @@
                                                                             id="title-default-action-btn"
                                                                             data-lang="default"
                                                                             data-item='@json(["name" => $service?->getRawOriginal('name') ?? ''])'
-                                                                            data-route="{{ route('admin.product.title-auto-fill') }}">
+                                                                            data-route="{{ $aiRoute('admin.product.title-auto-fill') }}">
                                                                         <div class="btn-svg-wrapper">
                                                                             <img width="18" height="18" class="" src="{{ asset(path: 'public/assets/admin-module/img/ai/blink-right-small.svg') }}" alt="">
                                                                         </div>
@@ -99,7 +118,7 @@
                                                                     <div class="mb-30 d-none lang-form" id="{{$lang['code']}}-form">
                                                                         <button type="button" class="btn bg-white text-primary bg-transparent shadow-none border-0 opacity-1 generate_btn_wrapper p-0 auto_fill_title title-btn-wrapper"
                                                                                 id="title-{{ $lang['code'] }}-action-btn"
-                                                                                data-route="{{ route('admin.product.title-auto-fill') }}"
+                                                                                data-route="{{ $aiRoute('admin.product.title-auto-fill') }}"
                                                                                 data-lang="{{ $lang['code'] }}"
                                                                                 data-item='@json(["name" => $translate[$lang['code']]['name'] ?? ''])'
                                                                         >
@@ -136,7 +155,7 @@
                                                                 <button type="button" class="btn bg-white text-primary bg-transparent shadow-none border-0 opacity-1 generate_btn_wrapper p-0 auto_fill_title title-btn-wrapper"
                                                                         id="title-en-action-btn"
                                                                         data-lang="en"
-                                                                        data-route="{{ route('admin.product.title-auto-fill') }}">
+                                                                        data-route="{{ $aiRoute('admin.product.title-auto-fill') }}">
                                                                     <div class="btn-svg-wrapper">
                                                                         <img width="18" height="18" class="" src="{{ asset(path: 'public/assets/admin-module/img/ai/blink-right-small.svg') }}" alt="">
                                                                     </div>
@@ -155,7 +174,7 @@
                                                                                 id="short-description-default-action-btn"
                                                                                 data-lang="default"
                                                                                 data-item='@json(["short_description" => $service?->getRawOriginal('short_description') ?? ''])'
-                                                                                data-route="{{ route('admin.product.short-description-auto-fill') }}">
+                                                                                data-route="{{ $aiRoute('admin.product.short-description-auto-fill') }}">
                                                                             <div class="btn-svg-wrapper">
                                                                                 <img width="18" height="18" class=""
                                                                                      src="{{ asset(path: 'public/assets/admin-module/img/ai/blink-right-small.svg') }}" alt="">
@@ -177,7 +196,7 @@
                                                                                     id="description-default-action-btn"
                                                                                     data-lang="default"
                                                                                     data-item='@json(["description" => $service?->getRawOriginal("description") ?? ""])'
-                                                                                    data-route="{{ route('admin.product.description-auto-fill') }}">
+                                                                                    data-route="{{ $aiRoute('admin.product.description-auto-fill') }}">
                                                                                 <div class="btn-svg-wrapper">
                                                                                     <img width="18" height="18" class=""
                                                                                          src="{{ asset(path: 'public/assets/admin-module/img/ai/blink-right-small.svg') }}" alt="">
@@ -216,7 +235,7 @@
                                                                                         id="short-description-{{ $lang['code'] }}-action-btn"
                                                                                         data-lang="{{ $lang['code'] }}"
                                                                                         data-item='@json(["description" => $translate[$lang['code']]['description'] ?? $service?->getRawOriginal('description') ?? ""])'
-                                                                                        data-route="{{ route('admin.product.short-description-auto-fill') }}">
+                                                                                        data-route="{{ $aiRoute('admin.product.short-description-auto-fill') }}">
                                                                                     <div class="btn-svg-wrapper">
                                                                                         <img width="18" height="18" class=""
                                                                                              src="{{ asset(path: 'public/assets/admin-module/img/ai/blink-right-small.svg') }}" alt="">
@@ -238,7 +257,7 @@
                                                                                 <button type="button" class="btn bg-white text-primary bg-transparent shadow-none border-0 mb-0 opacity-1 generate_btn_wrapper p-0 auto_fill_description description-btn-wrapper"
                                                                                         id="description-{{ $lang['code'] }}-action-btn"  data-lang="{{ $lang['code'] }}"
                                                                                         data-item='@json(["description" => $translate[$lang['code']]['description'] ?? ''])'
-                                                                                        data-route="{{ route('admin.product.description-auto-fill') }}">
+                                                                                        data-route="{{ $aiRoute('admin.product.description-auto-fill') }}">
                                                                                     <div class="btn-svg-wrapper">
                                                                                         <img width="18" height="18" class="" src="{{ asset(path: 'public/assets/admin-module/img/ai/blink-right-small.svg') }}" alt="">
                                                                                     </div>
@@ -267,7 +286,7 @@
                                                                 </div>
                                                                 <button type="button" class="btn bg-white text-primary bg-transparent shadow-none border-0 opacity-1 generate_btn_wrapper p-0 auto_fill_short_description short-description-btn-wrapper"
                                                                         id="short-description-en-action-btn"  data-lang="en"
-                                                                        data-route="{{ route('admin.product.short-description-auto-fill') }}">
+                                                                        data-route="{{ $aiRoute('admin.product.short-description-auto-fill') }}">
                                                                     <div class="btn-svg-wrapper">
                                                                         <img width="18" height="18" class=""
                                                                              src="{{ asset(path: 'public/assets/admin-module/img/ai/blink-right-small.svg') }}" alt="">
@@ -287,7 +306,7 @@
                                                                 </div>
                                                                 <button type="button" class="btn bg-white text-primary bg-transparent shadow-none border-0 opacity-1 generate_btn_wrapper p-0 auto_fill_description description-btn-wrapper"
                                                                         id="description-en-action-btn"  data-lang="en"
-                                                                        data-route="{{ route('admin.product.description-auto-fill') }}">
+                                                                        data-route="{{ $aiRoute('admin.product.description-auto-fill') }}">
                                                                     <div class="btn-svg-wrapper">
                                                                         <img width="18" height="18" class=""
                                                                              src="{{ asset(path: 'public/assets/admin-module/img/ai/blink-right-small.svg') }}" alt="">
@@ -342,12 +361,12 @@
                                                                     <span class="fs-12 text-color">{{ translate('Upload your cover Image') }}</span>
                                                                 </div>
                                                                 <div class="mb-30">
-                                                                    <div class="upload-file h-100px">
+                                                                    <div class="upload-file h-150px">
                                                                         <input type="file" class="upload-file__input"
                                                                                name="cover_image"
                                                                                accept=".{{ implode(',.', array_column(IMAGEEXTENSION, 'key')) }}, |image/*"
                                                                                data-maxFileSize="{{ readableUploadMaxFileSize('image') }}">
-                                                                        <div class="upload-file__img h-100px  border-dashed-1-gray rounded upload-file__img_banner">
+                                                                        <div class="upload-file__img h-150px  border-dashed-1-gray rounded upload-file__img_banner">
                                                                             <img alt="{{ translate('cover-image') }}"
                                                                                 src="{{$service->cover_image_full_path}}" class="w-100 h-100">
                                                                         </div>
@@ -359,7 +378,7 @@
                                                                 <p class="text-center fs-10 text-color mb-0">
                                                                     {{ translate('Image format')}} - {{ implode(', ', array_column(IMAGEEXTENSION, 'key')) }}
                                                                     {{ translate("Image Size") }} - {{ translate('maximum size') }} {{ readableUploadMaxFileSize('image') }}
-                                                                    {{ translate('Image Ratio') }} - 3:1
+                                                                    {{ translate('Image Ratio') }} - 2:1
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -368,17 +387,131 @@
                                             </div>
                                         </div>
 
+                                        <!-- Cover Media Section (slider images + video) -->
+                                        <div class="card mt-4">
+                                            <div class="card-body">
+                                                <h5 class="mb-1 fs-14 font-semibold text-dark">{{ translate('Cover media') }}</h5>
+                                                <span class="fs-12 text-color d-block mb-1">{{ translate('Optional: upload additional cover images for a slider in the app. Same 2:1 ratio is used for all.') }}</span>
+                                                <span class="fs-12 text-color d-block mb-3">{{ translate('If only one cover image is set, it shows as a fixed image. If a cover video is set, the app shows the video as the cover.') }}</span>
+
+                                                {{-- Cover media type toggle --}}
+                                                <div class="mb-4">
+                                                    <label class="mb-2 fs-13 font-semibold text-dark">{{ translate('Cover media type') }}</label>
+                                                    <div class="d-flex gap-3">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="cover_media_type" id="cover_media_type_0" value="0" {{ ($service->cover_media_type ?? 0) == 0 ? 'checked' : '' }}>
+                                                            <label class="form-check-label fs-12" for="cover_media_type_0">
+                                                                {{ translate('Single cover image') }}
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="cover_media_type" id="cover_media_type_1" value="1" {{ ($service->cover_media_type ?? 0) == 1 ? 'checked' : '' }}>
+                                                            <label class="form-check-label fs-12" for="cover_media_type_1">
+                                                                {{ translate('Image slider') }}
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="cover_media_type" id="cover_media_type_2" value="2" {{ ($service->cover_media_type ?? 0) == 2 ? 'checked' : '' }}>
+                                                            <label class="form-check-label fs-12" for="cover_media_type_2">
+                                                                {{ translate('Cover video') }}
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Existing cover slider images --}}
+                                                @if($service->cover_images_full_paths && count($service->cover_images_full_paths) > 0)
+                                                    <div class="row g-2 mb-3" id="coverMediaPreviewWrap">
+                                                        @foreach($service->cover_images_full_paths as $imgKey => $imgPath)
+                                                            <div class="col-md-2 col-4 cover-media-item position-relative">
+                                                                <input type="hidden" name="existing_cover_images[]" value="{{ ($service->cover_images ?? [])[$imgKey] ?? '' }}">
+                                                                <img src="{{ $imgPath }}" class="w-100 rounded border" style="height:90px;object-fit:cover" alt="cover">
+                                                                <button type="button" class="btn btn-sm btn-danger position-absolute" style="top:4px;right:4px;padding:0 6px;line-height:1.4" onclick="this.closest('.cover-media-item').remove()">&times;</button>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                @else
+                                                    <div class="row g-2 mb-3" id="coverMediaPreviewWrap"></div>
+                                                @endif
+
+                                                <label for="coverMediaInput" class="d-block" style="cursor:pointer">
+                                                    <div class="border-dashed rounded p-4 text-center" style="border:2px dashed #dee2e6;background:#f8f9fa;border-radius:8px">
+                                                        <span class="material-icons mb-1" style="font-size:36px;color:#999">add_photo_alternate</span>
+                                                        <p class="mb-0 fs-12 text-color">{{ translate('Click to select multiple cover images (each will be cropped to 2:1)') }}</p>
+                                                        <p class="mb-0 fs-10 text-color">{{ implode(', ', array_column(IMAGEEXTENSION, 'key')) }} | Max {{ readableUploadMaxFileSize('image') }} | {{ translate('Image Ratio') }} - 2:1</p>
+                                                    </div>
+                                                </label>
+                                                <input type="file" class="d-none"
+                                                       name="cover_images[]"
+                                                       id="coverMediaInput"
+                                                       multiple
+                                                       accept=".{{ implode(',.', array_column(IMAGEEXTENSION, 'key')) }}, |image/*"
+                                                       data-maxFileSize="{{ readableUploadMaxFileSize('image') }}">
+
+                                                {{-- Cover video --}}
+                                                <div class="mt-4 pt-3" style="border-top:1px solid #e9ecef">
+                                                    <h6 class="mb-1 fs-14 font-semibold text-dark">{{ translate('Cover video') }} <span class="text-muted fs-10">({{ translate('optional') }})</span></h6>
+                                                    <span class="fs-12 text-color d-block mb-3">{{ implode(', ', array_column(VIDEO_EXTENSIONS, 'key')) }} | Max {{ readableUploadMaxFileSize('video') }} - {{ translate('Selecting a video auto-sets the cover type to video') }}</span>
+
+                                                    @if($service->cover_video_full_path)
+                                                        <div class="row g-2 mb-3">
+                                                            <div class="col-md-3 col-6">
+                                                                <video src="{{ $service->cover_video_full_path }}" class="w-100 rounded border" style="height:130px;object-fit:cover;background:#000" muted playsinline></video>
+                                                                <div class="text-center mt-1">
+                                                                    <label class="fs-10 text-color d-block mb-0">
+                                                                        <input type="checkbox" name="remove_cover_video" value="1"> {{ translate('Remove video') }}
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+
+                                                    <input type="file" class="form-control"
+                                                           name="cover_video"
+                                                           accept=".{{ implode(',.', array_column(VIDEO_EXTENSIONS, 'key')) }}, |video/*"
+                                                           data-maxFileSize="{{ readableUploadMaxFileSize('video') }}">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Cover media preview JS with cropping support -->
+                                        <script>
+                                            (function () {
+                                                var input = document.getElementById('coverMediaInput');
+                                                if (!input) return;
+                                                input.addEventListener('change', function (e) {
+                                                    var preview = document.getElementById('coverMediaPreviewWrap');
+                                                    if (!preview) return;
+                                                    // Auto-select "Image slider" type when cover images are picked
+                                                    var sliderRadio = document.getElementById('cover_media_type_1');
+                                                    if (sliderRadio && e.target.files && e.target.files.length > 0) sliderRadio.checked = true;
+                                                    processMultipleImagesWithCrop(e.target.files, preview, 2, 'cover-media-item', 90);
+                                                });
+                                            })();
+
+                                            // Auto-select "Cover video" type when a video is picked
+                                            (function () {
+                                                var videoInput = document.querySelector('input[name="cover_video"]');
+                                                if (!videoInput) return;
+                                                videoInput.addEventListener('change', function () {
+                                                    var videoRadio = document.getElementById('cover_media_type_2');
+                                                    if (videoRadio && videoInput.files && videoInput.files.length > 0) videoRadio.checked = true;
+                                                });
+                                            })();
+                                        </script>
+
                                         <!-- Gallery Images Section -->
                                         <div class="card mt-4">
                                             <div class="card-body">
                                                 <h5 class="mb-1 fs-14 font-semibold text-dark">{{translate('gallery_image')}}</h5>
                                                 <span class="fs-12 text-color d-block mb-3">{{ translate('Upload gallery images (multiple)') }}</span>
 
-                                                @if($service->gallery_images && count($service->gallery_images) > 0)
+                                                @if($service->gallery_full_paths && count($service->gallery_full_paths) > 0)
                                                     <div class="row g-2 mb-3" id="galleryPreviewWrap">
-                                                        @foreach($service->gallery_images as $image)
+                                                        @foreach($service->gallery_full_paths as $galleryKey => $galleryPath)
                                                             <div class="col-md-2 col-4 gallery-item position-relative">
-                                                                <img src="{{ $image['image_full_path'] ?? '' }}" class="w-100 rounded border" style="height:120px;object-fit:cover" alt="gallery">
+                                                                <input type="hidden" name="existing_gallery[]" value="{{ ($service->gallery ?? [])[$galleryKey] ?? '' }}">
+                                                                <img src="{{ $galleryPath }}" class="w-100 rounded border" style="height:120px;object-fit:cover" alt="gallery">
                                                                 <button type="button" class="btn btn-sm btn-danger position-absolute" style="top:4px;right:4px;padding:0 6px;line-height:1.4" onclick="this.closest('.gallery-item').remove()">&times;</button>
                                                             </div>
                                                         @endforeach
@@ -390,8 +523,8 @@
                                                 <label for="galleryInput" class="d-block" style="cursor:pointer">
                                                     <div class="border-dashed rounded p-4 text-center" style="border:2px dashed #dee2e6;background:#f8f9fa;border-radius:8px">
                                                         <span class="material-icons mb-1" style="font-size:36px;color:#999">add_photo_alternate</span>
-                                                        <p class="mb-0 fs-12 text-color">{{ translate('Click to select multiple images') }}</p>
-                                                        <p class="mb-0 fs-10 text-color">{{ implode(', ', array_column(IMAGEEXTENSION, 'key')) }} | Max {{ readableUploadMaxFileSize('image') }}</p>
+                                                        <p class="mb-0 fs-12 text-color">{{ translate('Click to select multiple gallery images (each will be cropped to 1:1)') }}</p>
+                                                        <p class="mb-0 fs-10 text-color">{{ implode(', ', array_column(IMAGEEXTENSION, 'key')) }} | Max {{ readableUploadMaxFileSize('image') }} | {{ translate('Image Ratio') }} - 1:1</p>
                                                     </div>
                                                 </label>
                                                 <input type="file" class="d-none"
@@ -403,6 +536,19 @@
                                             </div>
                                         </div>
 
+                                        <!-- Gallery preview JS with cropping support -->
+                                        <script>
+                                            (function () {
+                                                var input = document.getElementById('galleryInput');
+                                                if (!input) return;
+                                                input.addEventListener('change', function (e) {
+                                                    var preview = document.getElementById('galleryPreviewWrap');
+                                                    if (!preview) return;
+                                                    processMultipleImagesWithCrop(e.target.files, preview, 1, 'gallery-item', 120);
+                                                });
+                                            })();
+                                        </script>
+
                                         <div class="general_wrapper mt-4">
                                             <div class="outline-wrapper">
                                                 <div class="card bg-animate">
@@ -410,7 +556,7 @@
                                                         <button type="button"
                                                                 class="btn bg-white text-primary mt-0 mb-md-0 mb-2 bg-transparent shadow-none border-0 opacity-1 generate_btn_wrapper p-0 general_setup_auto_fill"
                                                                 id="general_setup_auto_fill"
-                                                                data-route="{{ route('admin.product.general-setup-auto-fill') }}"  data-lang="default">
+                                                                data-route="{{ $aiRoute('admin.product.general-setup-auto-fill') }}"  data-lang="default">
                                                             <div class="btn-svg-wrapper">
                                                                 <img width="18" height="18" class=""
                                                                      src="{{ asset(path: 'public/assets/admin-module/img/ai//blink-right-small.svg') }}" alt="">
@@ -489,7 +635,7 @@
                                                     <div class="card-body">
                                                         <button type="button" class="btn bg-white text-primary bg-transparent shadow-none border-0 opacity-1 generate_btn_wrapper p-0 variation_setup_auto_fill"
                                                                 id="description-en-action-btn"  data-lang="en"
-                                                                data-route="{{ route('admin.product.variation-setup-auto-fill') }}">
+                                                                data-route="{{ $aiRoute('admin.product.variation-setup-auto-fill') }}">
                                                             <div class="btn-svg-wrapper">
                                                                 <img width="18" height="18" class=""
                                                                      src="{{ asset(path: 'public/assets/admin-module/img/ai/blink-right-small.svg') }}" alt="">
@@ -577,12 +723,35 @@
             </div>
         </div>
     </div>
+
+    {{-- Service image crop modal (thumbnail 1:1 / cover 2:1) - same as create page --}}
+    <div class="modal fade" id="serviceImageCropModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ translate('Crop Your Image') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2 text-muted" id="serviceCropRatioHint">Required ratio: 1:1</p>
+                    <div style="max-height:60vh; overflow:hidden; background:#f5f5f5; border-radius:8px;">
+                        <img id="serviceCropImage" src="" alt="crop" style="max-width:100%; display:block;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" id="serviceCropCancelBtn" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="serviceCropApplyBtn">Crop &amp; Use</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('script')
     <script src="{{asset('public/assets/admin-module')}}/js//tags-input.min.js"></script>
     <script src="{{asset('public/assets/admin-module')}}/plugins/select2/select2.min.js"></script>
     <script src="{{asset('public/assets/admin-module')}}/plugins/jquery-steps/jquery.steps.min.js"></script>
+    <script src="{{asset('public/assets/admin-module')}}/plugins/cropper/cropper.min.js"></script>
     <script src="{{asset('public/assets/admin-module/plugins/tinymce/tinymce.min.js')}}"></script>
     <script src="{{asset('public/assets/ckeditor/jquery.js')}}"></script>
 
@@ -804,6 +973,236 @@
                 $(".from_part_2").addClass('d-none');
             }
         });
+
+        //===== Service image cropper (thumbnail 1:1 / cover 2:1) - same as create page =====
+        (function () {
+            if (typeof Cropper === 'undefined') return;
+            var cropRules = { thumbnail: 1, cover_image: 2 };
+            var cropper = null, activeInput = null, pendingFile = null, savedPreviewSrc = '';
+
+            document.addEventListener('change', function (e) {
+                var input = e.target;
+                if (!input || !input.matches || !input.matches('.upload-file__input')) return;
+                var fieldName = input.getAttribute('name');
+                if (!cropRules[fieldName]) return;
+                if (!input.files || !input.files[0]) return;
+                var file = input.files[0];
+                if (file.type && file.type.indexOf('image/') !== 0) return;
+
+                var card = input.closest('.upload-file');
+                var previewImg = card ? card.querySelector('.upload-file__img img') : null;
+                savedPreviewSrc = previewImg ? (previewImg.getAttribute('src') || '') : '';
+                openServiceImageCropper(input, file, cropRules[fieldName]);
+            }, true);
+
+            function openServiceImageCropper(input, file, aspect) {
+                activeInput = input;
+                pendingFile = file;
+                var modalEl = document.getElementById('serviceImageCropModal');
+                var imgEl = document.getElementById('serviceCropImage');
+                var hintEl = document.getElementById('serviceCropRatioHint');
+                if (!modalEl || !imgEl) return;
+                hintEl.textContent = aspect === 1
+                    ? 'Required ratio: 1:1 (square thumbnail)'
+                    : 'Required ratio: 2:1 (wide cover banner - same as app service detail cover)';
+                var reader = new FileReader();
+                reader.onload = function (ev) {
+                    imgEl.src = ev.target.result;
+                    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                    modalEl.addEventListener('shown.bs.modal', function onShown() {
+                        modalEl.removeEventListener('shown.bs.modal', onShown);
+                        if (cropper) { cropper.destroy(); cropper = null; }
+                        cropper = new Cropper(imgEl, {
+                            aspectRatio: aspect,
+                            viewMode: 1,
+                            autoCropArea: 1,
+                            responsive: true,
+                            background: false
+                        });
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+
+            var applyBtn = document.getElementById('serviceCropApplyBtn');
+            if (applyBtn) applyBtn.addEventListener('click', function () {
+                if (!cropper || !activeInput || !pendingFile) return;
+                var mime = pendingFile.type === 'image/png' ? 'image/png' : 'image/jpeg';
+                cropper.getCroppedCanvas().toBlob(function (blob) {
+                    if (!blob || !activeInput) return;
+                    var ext = mime === 'image/png' ? 'png' : 'jpg';
+                    var base = (pendingFile.name || 'image').replace(/\.[^.]+$/, '');
+                    var croppedFile = new File([blob], base + '_crop.' + ext, { type: mime });
+                    var dt = new DataTransfer();
+                    dt.items.add(croppedFile);
+                    activeInput.files = dt.files;
+                    var card = activeInput.closest('.upload-file');
+                    var previewImg = card ? card.querySelector('.upload-file__img img') : null;
+                    if (previewImg) {
+                        var r = new FileReader();
+                        r.onload = function (ev2) { previewImg.src = ev2.target.result; };
+                        r.readAsDataURL(croppedFile);
+                    }
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('serviceImageCropModal')).hide();
+                    if (typeof toastr !== 'undefined') toastr.success('Image cropped successfully');
+                }, mime, 0.92);
+            });
+
+            var cancelBtn = document.getElementById('serviceCropCancelBtn');
+            if (cancelBtn) cancelBtn.addEventListener('click', function () {
+                if (activeInput) {
+                    activeInput.value = '';
+                    var card = activeInput.closest('.upload-file');
+                    var previewImg = card ? card.querySelector('.upload-file__img img') : null;
+                    if (previewImg && savedPreviewSrc) previewImg.src = savedPreviewSrc;
+                }
+            });
+
+            var cropModalEl = document.getElementById('serviceImageCropModal');
+            if (cropModalEl) cropModalEl.addEventListener('hidden.bs.modal', function () {
+                if (cropper) { cropper.destroy(); cropper = null; }
+                activeInput = null;
+                pendingFile = null;
+                savedPreviewSrc = '';
+                var imgEl = document.getElementById('serviceCropImage');
+                if (imgEl) imgEl.removeAttribute('src');
+            });
+        })();
+
+        //===== Multiple image cropping for cover_images[] and gallery[] =====
+        (function () {
+            var multipleCropper = null;
+            var multipleFiles = [];
+            var multipleFileIndex = 0;
+            var multiplePreviewContainer = null;
+            var multipleItemClass = '';
+            var multipleHeight = 0;
+            var multipleAspect = 1;
+
+            window.processMultipleImagesWithCrop = function (files, previewContainer, aspect, itemClass, height) {
+                if (!files || files.length === 0) return;
+                multipleFiles = Array.from(files);
+                multipleFileIndex = 0;
+                multiplePreviewContainer = previewContainer;
+                multipleItemClass = itemClass;
+                multipleHeight = height;
+                multipleAspect = aspect;
+                openMultipleImageCropper();
+            };
+
+            function openMultipleImageCropper() {
+                if (multipleFileIndex >= multipleFiles.length) {
+                    multipleFiles = [];
+                    multipleFileIndex = 0;
+                    return;
+                }
+
+                var file = multipleFiles[multipleFileIndex];
+                if (file.type && file.type.indexOf('image/') !== 0) {
+                    multipleFileIndex++;
+                    openMultipleImageCropper();
+                    return;
+                }
+
+                var modalEl = document.getElementById('serviceImageCropModal');
+                var imgEl = document.getElementById('serviceCropImage');
+                var hintEl = document.getElementById('serviceCropRatioHint');
+                if (!modalEl || !imgEl) return;
+
+                hintEl.textContent = multipleAspect === 1
+                    ? 'Required ratio: 1:1 (square image) - Image ' + (multipleFileIndex + 1) + ' of ' + multipleFiles.length
+                    : 'Required ratio: 2:1 (wide banner - same as app service detail cover) - Image ' + (multipleFileIndex + 1) + ' of ' + multipleFiles.length;
+
+                var reader = new FileReader();
+                reader.onload = function (ev) {
+                    imgEl.src = ev.target.result;
+                    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+                    modalEl.addEventListener('shown.bs.modal', function onShown() {
+                        modalEl.removeEventListener('shown.bs.modal', onShown);
+                        if (multipleCropper) { multipleCropper.destroy(); multipleCropper = null; }
+                        multipleCropper = new Cropper(imgEl, {
+                            aspectRatio: multipleAspect,
+                            viewMode: 1,
+                            autoCropArea: 1,
+                            responsive: true,
+                            background: false
+                        });
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+
+            var applyBtn = document.getElementById('serviceCropApplyBtn');
+            if (applyBtn) {
+                applyBtn.addEventListener('click', function () {
+                    if (!multipleCropper || multipleFiles.length === 0) return;
+                    var file = multipleFiles[multipleFileIndex];
+                    var mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+                    multipleCropper.getCroppedCanvas().toBlob(function (blob) {
+                        if (!blob) return;
+                        var ext = mime === 'image/png' ? 'png' : 'jpg';
+                        var base = (file.name || 'image').replace(/\.[^.]+$/, '');
+                        var croppedFile = new File([blob], base + '_crop.' + ext, { type: mime });
+
+                        // Add to preview
+                        var reader = new FileReader();
+                        reader.onload = function (ev) {
+                            var div = document.createElement('div');
+                            div.className = 'col-md-2 col-4 ' + multipleItemClass + ' position-relative';
+                            div.innerHTML = '<img src="' + ev.target.result + '" class="w-100 rounded border" style="height:' + multipleHeight + 'px;object-fit:cover" alt="preview">' +
+                                '<button type="button" class="btn btn-sm btn-danger position-absolute" style="top:4px;right:4px;padding:0 6px;line-height:1.4" onclick="this.closest(\'' + '.' + multipleItemClass + '\').remove()">&times;</button>';
+                            multiplePreviewContainer.appendChild(div);
+                        };
+                        reader.readAsDataURL(croppedFile);
+
+                        // Store cropped file for form submission
+                        var originalInput = multipleItemClass === 'cover-media-item'
+                            ? document.getElementById('coverMediaInput')
+                            : document.getElementById('galleryInput');
+                        if (originalInput) {
+                            var dt = new DataTransfer();
+                            var existingFiles = Array.from(originalInput.files || []);
+                            for (var i = 0; i < existingFiles.length; i++) {
+                                if (i !== multipleFileIndex) {
+                                    dt.items.add(existingFiles[i]);
+                                }
+                            }
+                            dt.items.add(croppedFile);
+                            originalInput.files = dt.files;
+                        }
+
+                        // Move to next image
+                        multipleFileIndex++;
+                        if (multipleFileIndex < multipleFiles.length) {
+                            bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                            setTimeout(openMultipleImageCropper, 300);
+                        } else {
+                            bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                            if (typeof toastr !== 'undefined') toastr.success('All images cropped successfully');
+                            multipleFiles = [];
+                            multipleFileIndex = 0;
+                        }
+                    }, mime, 0.92);
+                });
+            }
+
+            var cancelBtn = document.getElementById('serviceCropCancelBtn');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function () {
+                    multipleFiles = [];
+                    multipleFileIndex = 0;
+                });
+            }
+
+            var cropModalEl = document.getElementById('serviceImageCropModal');
+            if (cropModalEl) {
+                cropModalEl.addEventListener('hidden.bs.modal', function () {
+                    if (multipleCropper) { multipleCropper.destroy(); multipleCropper = null; }
+                    var imgEl = document.getElementById('serviceCropImage');
+                    if (imgEl) imgEl.removeAttribute('src');
+                });
+            }
+        })();
     </script>
 @endpush
 

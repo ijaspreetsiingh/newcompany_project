@@ -36,7 +36,7 @@ class BookingDetailsRepo{
     );
   }
 
-  /// Completed booking ko rechecking me dalna (15 din ka window).
+  /// Completed booking ko rechecking me dalna (7 din ka window).
   Future<Response> requestRecheck({required String bookingID, String reason = ''}) async {
     return await apiClient.postData(
       '${AppConstants.recheckRequest}/$bookingID',
@@ -47,6 +47,20 @@ class BookingDetailsRepo{
 
   Future<Response> getRecheckStatus({required String bookingID}) async {
     return await apiClient.getData('${AppConstants.recheckStatus}/$bookingID');
+  }
+
+  /// UNSATISFIED: completed booking par free re-service raise
+  /// (same serviceman ke paas, admin-set window tak).
+  Future<Response> raiseUnsatisfied({required String bookingID, String reason = ''}) async {
+    return await apiClient.postData(
+      '${AppConstants.unsatisfiedRequest}/$bookingID',
+      {'reason': reason},
+      timeout: 30,
+    );
+  }
+
+  Future<Response> getUnsatisfiedStatus({required String bookingID}) async {
+    return await apiClient.getData('${AppConstants.unsatisfiedStatus}/$bookingID');
   }
 
   Future<void>  setLastIncompleteOfflineBookingId(String bookingId) async {

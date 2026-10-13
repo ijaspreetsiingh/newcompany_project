@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'package:jassdbx_serviceman/utils/core_export.dart';
 
 /// Serviceman ka "Recheck Tasks" screen — customer ki completed booking
-/// par 15 din ke andar recheck aaya hai, yahan se wapas jakar check kare.
+/// par 7 din ke andar recheck aaya hai, yahan se wapas jakar check kare.
 class RecheckListScreen extends StatefulWidget {
   const RecheckListScreen({super.key});
 

@@ -258,6 +258,25 @@ class CartController extends GetxController implements GetxService {
 
   }
 
+  /// Cart items server par sync karo; ek failure hone par ek retry pass chalta
+  /// hai (transient network/rate-limit recover). Result = sab sync hue ya nahi.
+  Future<bool> _syncCartItemsToServer(List<CartModel> items, String providerId) async {
+    bool allSynced = true;
+    for (final CartModel item in items) {
+      final bool ok = await addToCartApi(item, providerId: providerId);
+      allSynced = ok && allSynced;
+    }
+    if (!allSynced) {
+      bool retrySynced = true;
+      for (final CartModel item in items) {
+        final bool ok = await addToCartApi(item, providerId: providerId);
+        retrySynced = ok && retrySynced;
+      }
+      allSynced = retrySynced;
+    }
+    return allSynced;
+  }
+
   Future<void> addMultipleCartToServer({bool fromServiceCenterDialog = true, required String providerId}) async {
     _isLoading = true;
     update();
@@ -276,58 +295,68 @@ class CartController extends GetxController implements GetxService {
           Get.back();
           Get.dialog(const CustomLoader(), barrierDismissible: false,);
           await cartRepo.removeAllCartFromServer();
-          if(_inttialCartList.isNotEmpty){
-            for (int index=0; index<_inttialCartList.length;index++){
-              await addToCartApi(_inttialCartList[index], providerId: providerId);
-            }
-          }
+          final bool allSynced = await _syncCartItemsToServer(_inttialCartList, providerId);
          await getCartListFromServer();
           _isLoading = false;
           Get.back();
           if(fromServiceCenterDialog){
-            customSnackBar("successfully_added_to_cart".tr,type : ToasterMessageType.success);
+            if(allSynced){
+              customSnackBar("successfully_added_to_cart".tr,type : ToasterMessageType.success);
+            }else{
+              customSnackBar('cart_sync_failed_please_retry'.tr, type: ToasterMessageType.error);
+            }
           }
         },
       ));
     }
     else{
       await cartRepo.removeAllCartFromServer();
-      if(_cartList.isNotEmpty){
-        for (int index=0; index<_cartList.length;index++){
-          await addToCartApi(_cartList[index], providerId: providerId);
-        }
-      }
+      final bool allSynced = await _syncCartItemsToServer(_cartList, providerId);
 
       if(fromServiceCenterDialog){
         Get.back();
-        customSnackBar("successfully_added_to_cart".tr,type : ToasterMessageType.success);
+        if(allSynced){
+          customSnackBar("successfully_added_to_cart".tr,type : ToasterMessageType.success);
+        }else{
+          // Fake success mat dikhao — server cart khali/re galat hai to place
+          // order wahi par fail hoga.
+          customSnackBar('cart_sync_failed_please_retry'.tr, type: ToasterMessageType.error);
+        }
       }
     }
     _isLoading = false;
     update();
   }
 
-  Future<void> addToCartApi(CartModel cartModel, {required String providerId})async{
-
-    if( providerId!= ""){
-     await cartRepo.addToCartListToServer(CartModelBody(
-        serviceId:cartModel.service?.id,
-        categoryId: cartModel.categoryId,
-        variantKey: cartModel.variantKey,
-        quantity: cartModel.quantity.toString(),
-        subCategoryId: cartModel.subCategoryId,
-        providerId: providerId,
-        guestId: Get.find<SplashController>().getGuestId(),
-      ));
-    }else{
-       await cartRepo.addToCartListToServer(CartModelBody(
-        serviceId:cartModel.service?.id,
-        categoryId: cartModel.categoryId,
-        variantKey: cartModel.variantKey,
-        quantity: cartModel.quantity.toString(),
-        subCategoryId: cartModel.subCategoryId,
-        guestId: Get.find<SplashController>().getGuestId(),
-      ));
+  Future<bool> addToCartApi(CartModel cartModel, {required String providerId})async{
+    // Failure surface karo — pehle response ignore ho jata tha aur server cart
+    // khali reh jaata tha (place order par "Booking Place failed").
+    try {
+      Response response;
+      if( providerId!= ""){
+       response = await cartRepo.addToCartListToServer(CartModelBody(
+          serviceId:cartModel.service?.id,
+          categoryId: cartModel.categoryId,
+          variantKey: cartModel.variantKey,
+          quantity: cartModel.quantity.toString(),
+          subCategoryId: cartModel.subCategoryId,
+          providerId: providerId,
+          guestId: Get.find<SplashController>().getGuestId(),
+        ));
+      }else{
+         response = await cartRepo.addToCartListToServer(CartModelBody(
+          serviceId: cartModel.service?.id,
+          categoryId: cartModel.categoryId,
+          variantKey: cartModel.variantKey,
+          quantity: cartModel.quantity.toString(),
+          subCategoryId: cartModel.subCategoryId,
+          guestId: Get.find<SplashController>().getGuestId(),
+        ));
+      }
+      return response.statusCode == 200 &&
+          response.body['response_code'] == 'default_store_200';
+    } catch (_) {
+      return false;
     }
   }
 

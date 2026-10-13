@@ -95,24 +95,17 @@ class BookingRequestItem extends StatelessWidget {
             ),
           ),
 
+          // SPEC: provider kabhi accept/decline nahi karega — booking automatic
+          // nearest serviceman ko jaati hai. Sirf status chip + details.
           if (isPending) ...[
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(
-                  child: _CardActionButton(
-                    label: 'accept'.tr,
-                    solid: true,
-                    onTap: () => _acceptBooking(booking),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _CardActionButton(
-                    label: 'Decline',
-                    solid: false,
-                    onTap: () => _declineBooking(booking),
-                  ),
+                Icon(Icons.autorenew, size: 14, color: InkColors.mutedForeground),
+                const SizedBox(width: 6),
+                Text(
+                  'serviceman_searching'.tr,
+                  style: robotoMedium.copyWith(fontSize: 12, color: InkColors.mutedForeground),
                 ),
               ],
             ),
@@ -140,77 +133,5 @@ class BookingRequestItem extends StatelessWidget {
     }else{
       Get.toNamed(RouteHelper.getBookingDetailsRoute(bookingId : booking.id!));
     }
-  }
-
-  void _acceptBooking(BookingRequestModel booking){
-    if(Get.find<UserProfileController>().isSubscriptionRequired && Get.find<UserProfileController>().providerModel?.content?.subscriptionInfo?.subscribedPackageDetails?.isCanceled == 1){
-      showCustomSnackBar("your_subscription_plan_has_been_cancelled_you_will_not_able_to_accept_any_booking_request".tr, type : ToasterMessageType.info);
-    }else{
-      Get.find<BusinessSubscriptionController>().openTrialEndBottomSheet().then((isTrial){
-        if(isTrial){
-          showCustomDialog(child:  ConfirmationDialog(
-            noButtonColor: Theme.of(Get.context!).colorScheme.error,
-            noTextColor: Colors.white,
-            yesButtonColor: Theme.of(Get.context!).primaryColor,
-            title: "want_accept_this_booking?".tr,
-            icon: Images.servicemanImage,
-            description: 'accept_booking_hint_text'.tr,
-            onYesPressed: (){
-              Get.find<BookingDetailsController>().acceptBookingRequest(booking.id!);
-              Get.back();
-            },
-            onNoPressed: () => Get.back(),
-          ));
-        }
-      });
-    }
-  }
-
-  void _declineBooking(BookingRequestModel booking){
-    showCustomDialog(child:  ConfirmationDialog(
-      yesButtonColor: Theme.of(Get.context!).primaryColor,
-      title: "are_you_sure_to_ignore_the_booking_request".tr,
-      description: "once_you_ignore_the_request",
-      noButtonColor: Theme.of(Get.context!).colorScheme.error,
-      noTextColor: Colors.white,
-      icon: Images.warning,
-      noButtonText: "cancel",
-      onYesPressed: () {
-        Get.find<BookingDetailsController>().ignoreBookingRequest(booking.id!);
-        Get.back();
-      },
-      onNoPressed: () => Get.back(),
-    ),);
-  }
-}
-
-class _CardActionButton extends StatelessWidget {
-  final String label;
-  final bool solid;
-  final VoidCallback onTap;
-
-  const _CardActionButton({required this.label, required this.solid, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Container(
-        height: 36,
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: solid ? InkColors.foreground : InkColors.card,
-          borderRadius: BorderRadius.circular(50),
-          border: solid ? null : Border.all(color: InkColors.border),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: robotoSemiBold.copyWith(fontSize: 12, height: 1.2, color: solid ? InkColors.background : InkColors.foreground),
-        ),
-      ),
-    );
   }
 }

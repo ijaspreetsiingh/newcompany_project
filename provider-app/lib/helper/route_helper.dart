@@ -51,6 +51,7 @@ class RouteHelper {
   static const String reviewReply = '/review-reply';
   static const String helpAndSupport = '/help-and-support';
   static const String recheckDashboard = '/recheck-dashboard';
+  static const String unsatisfiedDashboard = '/unsatisfied-dashboard';
   static const String paymentInformation = '/payment-information';
   static const String addPaymentInfo = '/add-payment-information';
   static const String calendarOrder = '/calendar-order';
@@ -122,6 +123,7 @@ class RouteHelper {
 
   static String getHelpAndSupportScreen() => helpAndSupport;
   static String getRecheckDashboardRoute() => recheckDashboard;
+  static String getUnsatisfiedDashboardRoute() => unsatisfiedDashboard;
   static String getPaymentInformationRoute() => paymentInformation;
   static String getAddPaymentInformationRoute({int? index, String? methodName, String? methodId, bool? isActive, bool? isDefault}) => "$addPaymentInfo?index=$index&method_name=$methodName&method_id=$methodId&is_active=${isActive ?? false}&is_default=${isDefault ?? false}";
   static String getCalendarOrderRoute() => calendarOrder;
@@ -192,6 +194,7 @@ class RouteHelper {
     GetPage(transition: Transition.fadeIn , name: languageScreen, page: () => const ChooseLanguageScreen()),
     GetPage(name: reporting, page: () => const ReportNavigationView()),
     GetPage(name: recheckDashboard, page: () => getRoute(const RecheckDashboardScreen())),
+    GetPage(name: unsatisfiedDashboard, page: () => getRoute(const UnsatisfiedDashboardScreen())),
     GetPage(name: bankInfo,binding: BankInfoBinding(), page: () => const BankInformation()),
     GetPage(name: sendOtpScreen, page:() =>  const ForgetPassScreen()),
     GetPage(name: verification, page:() {

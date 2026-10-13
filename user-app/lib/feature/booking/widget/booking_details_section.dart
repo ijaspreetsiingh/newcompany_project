@@ -1,4 +1,5 @@
 import 'package:jdds/feature/booking/widget/booking_otp_widget.dart';
+import 'package:jdds/feature/booking/widget/booking_start_otp_widget.dart';
 import 'package:jdds/feature/booking/widget/booking_photo_evidence.dart';
 import 'package:jdds/feature/booking/widget/booking_service_location.dart';
 import 'package:jdds/feature/booking/widget/payment_info_widget.dart';
@@ -44,6 +45,17 @@ class BookingDetailsSection extends StatelessWidget {
                     padding: const EdgeInsets.only(top: Dimensions.paddingSizeDefault),
                     child: BookingOtpWidget(bookingDetails: bookingDetails),
                   ) : const SizedBox(height: Dimensions.paddingSizeDefault,),
+
+                  // SPEC: serviceman 300m radius me pahuncha -> START OTP dikhao
+                  // (customer ye OTP serviceman ko service start karne ke liye dega)
+                  (bookingDetails.servicemanReachedAt != null
+                      && bookingDetails.startOtp != null
+                      && bookingDetails.startOtp!.isNotEmpty
+                      && (bookingStatus == "accepted" || bookingStatus == "ongoing"))
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: Dimensions.paddingSizeDefault),
+                      child: BookingStartOtpWidget(bookingDetails: bookingDetails),
+                    ) : const SizedBox.shrink(),
 
                   PaymentView(bookingDetails: bookingDetails, isSubBooking: isSubBooking),
 
@@ -125,13 +137,20 @@ class BookingDetailsSection extends StatelessWidget {
 
                       GetBuilder<ServiceBookingController>(
                           builder: (serviceBookingController) {
+                            final BookingDetailsContent details = bookingDetailsController.bookingDetailsContent!;
                             return Expanded(
                               child: CustomButton(
                                 radius: 5,
                                 isLoading: serviceBookingController.isLoading,
-                                buttonText: "rebook".tr,
+                                buttonText: "book_again".tr,
                                 onPressed: () {
-                                  serviceBookingController.checkCartSubcategory(bookingDetailsController.bookingDetailsContent!.id!, bookingDetailsController.bookingDetailsContent!.subCategoryId!);
+                                  serviceBookingController.showBookAgainOptions(
+                                    bookingId: details.id!,
+                                    subCategoryId: details.subCategoryId!,
+                                    servicemanId: details.serviceman?.id,
+                                    servicemanName: '${details.serviceman?.user?.firstName ?? ''} ${details.serviceman?.user?.lastName ?? ''}'.trim(),
+                                    servicemanImage: details.serviceman?.user?.profileImageFullPath ?? '',
+                                  );
                                 },
                               ),
                             );

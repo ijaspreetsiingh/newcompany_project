@@ -54,15 +54,17 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
             }
           }
 
-          return RefreshIndicator(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.6),
-            onRefresh: () async{
-              bookingRequestController.getBookingHistory(
-                bookingRequestController.bookingHistoryStatus[bookingRequestController.bookingHistorySelectedIndex],1
-              );
-            },
-            child: CustomScrollView(
+          return SafeArea(
+            bottom: false,
+            child: RefreshIndicator(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.6),
+              onRefresh: () async{
+                bookingRequestController.getBookingHistory(
+                  bookingRequestController.bookingHistoryStatus[bookingRequestController.bookingHistorySelectedIndex],1
+                );
+              },
+              child: CustomScrollView(
               controller: bookingRequestController.bookingHistoryScrollController,
               physics: const AlwaysScrollableScrollPhysics(
                 parent: ClampingScrollPhysics()
@@ -136,6 +138,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
+            ),
             ),
           );
         },

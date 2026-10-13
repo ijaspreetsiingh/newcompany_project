@@ -2,7 +2,7 @@ import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 
 /// Zone Admin (provider) ka Recheck dashboard — har serviceman ki
-/// recheck count + recent recheck requests (15 din ki window).
+/// recheck count + recent recheck requests (7 din ki window).
 class RecheckDashboardScreen extends StatefulWidget {
   const RecheckDashboardScreen({super.key});
 

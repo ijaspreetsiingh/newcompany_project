@@ -76,7 +76,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
                     ],
                     const SizedBox(height: 32),
                     Text(
-                      'Language',
+                      'select_language'.tr,
                       style: NestInk.display(size: 26, weight: FontWeight.w800),
                     ),
                     const SizedBox(height: 8),
@@ -160,7 +160,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: NestPillButton(
-                        label: 'Save language',
+                        label: 'done'.tr,
                         onTap: () {
                           Get.find<SplashController>().disableShowinttialLanguageScreen();
                           localizationController.setLanguage(

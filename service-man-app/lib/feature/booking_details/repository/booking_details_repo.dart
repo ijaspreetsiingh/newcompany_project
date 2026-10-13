@@ -11,9 +11,38 @@ class BookingDetailsRepo{
     return await apiClient.getData("${isSubBooking ? AppConstants.subBookingDetailsUrl : AppConstants.bookingDetailsUrl}$bookingID");
   }
 
-  Future<Response> changeBookingStatus({required String bookingID,required String status, required  String otp, List<MultipartBody>? photoEvidence, required bool isSubBooking}) async {
-    return await apiClient.postMultipartData("${ isSubBooking ? AppConstants.subBookingStatusUpdateUrl : AppConstants.bookingStatusUpdateUrl}/$bookingID",{'booking_status':status,'_method':'put', "booking_otp": otp}, photoEvidence,null
+  Future<Response> changeBookingStatus({required String bookingID,required String status, required  String otp, List<MultipartBody>? photoEvidence, required bool isSubBooking, String? startOtp}) async {
+    final Map<String, String> fields = {'booking_status': status, '_method': 'put', 'booking_otp': otp};
+    if (startOtp != null) {
+      fields['start_otp'] = startOtp;
+    }
+    return await apiClient.postMultipartData("${ isSubBooking ? AppConstants.subBookingStatusUpdateUrl : AppConstants.bookingStatusUpdateUrl}/$bookingID", fields, photoEvidence, null
     );
+  }
+
+  /// Serviceman "Reached" — 300m radius me aakar start OTP generate karo
+  Future<Response> markReached(String bookingID) async {
+    return await apiClient.putData("${AppConstants.reachedBookingUrl}/$bookingID", {});
+  }
+
+  /// Extra service add (custom/external work with custom price)
+  Future<Response> addExtraService({required String bookingID, required String name, required String price, required String quantity, String type = 'custom'}) async {
+    return await apiClient.postData("${AppConstants.extraServiceUrl}/$bookingID", {
+      'name': name,
+      'price': price,
+      'quantity': quantity,
+      'type': type,
+    });
+  }
+
+  /// Extra service remove
+  Future<Response> removeExtraService({required String bookingID, required String extraServiceId}) async {
+    return await apiClient.deleteData("${AppConstants.extraServiceUrl}/$bookingID/$extraServiceId");
+  }
+
+  /// Provider ki subscribed categories ki services (extra work ke liye select)
+  Future<Response> getProviderServices() async {
+    return await apiClient.getData(AppConstants.providerServicesUrl);
   }
 
   Future<Response> changePaymentStatus(String bookingID,String paymentStatus) async {
@@ -21,7 +50,7 @@ class BookingDetailsRepo{
   }
 
   Future<Response> getServiceListBasedOnSubcategory(String subCategoryId) async {
-    return await apiClient.getData("${AppConstants.serviceListBasedOnSubCategory}?limit=50&offset=1&sub_category_id=$subCategoryId");
+    return await apiClient.getData("${AppConstants.serviceListBasedOnSubCategory}?limit=200&offset=1&sub_category_id=$subCategoryId");
   }
 
   Future<Response> sendBookingOTPNotification(String? bookingId) {

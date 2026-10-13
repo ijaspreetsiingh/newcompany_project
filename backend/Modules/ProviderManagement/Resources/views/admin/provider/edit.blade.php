@@ -1212,6 +1212,35 @@
                                 </div>
                             </div>
 
+                            <div class="d-flex flex-wrap gap-4 mt-3">
+                                <div class="col-12">
+                                    <div class="card h-100 border">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                                <div>
+                                                    <h4 class="c1 mb-2">{{translate('Unsatisfied (Re-service) window')}}</h4>
+                                                    <p class="mb-0 opacity-75 fs-12">
+                                                        {{translate('Service complete hone ke baad user app me "Not satisfied with service" button kitne din tak dikhega. Customer click kare to SAME serviceman ke paas FREE re-service chali jayegi (amount 0) — provider ko notification + dashboard section bhi milega. 0 = section hidden.')}}
+                                                    </p>
+                                                </div>
+                                                <div class="flex-shrink-0" style="width:110px">
+                                                    <input type="number"
+                                                           class="form-control"
+                                                           name="unsatisfied_window_days"
+                                                           min="0"
+                                                           max="60"
+                                                           value="{{ $provider->unsatisfied_window_days ?? 7 }}">
+                                                    <div class="fs-11 opacity-60 mt-1">{{translate('days (0 = off)')}}</div>
+                                                </div>
+                                            </div>
+                                            <div class="p-12 rounded bg-primary bg-opacity-10 fs-12">
+                                                {{translate('Default 7. Unsatisfied uthate hi backend original booking ka clone bana kar usi serviceman ko accepted (free) re-service de dega — full reached + OTP + complete flow ke saath.')}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="alert alert-info mt-3 mb-0 fs-12" role="alert">
                                 <span class="material-symbols-outlined me-1 fz-14 align-text-bottom">info</span>
                                 {{translate('Both toggles OFF means the My Services screen becomes view-only: provider can see how many main categories and sub-categories you assigned, and the services inside them, but cannot add or edit anything.')}}

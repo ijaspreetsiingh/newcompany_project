@@ -17,8 +17,11 @@ class CheckoutRepo extends GetxService {
   }
 
   Future<Response> getProviderPaymentConfig(String? providerId) async {
+    // guest_id fallback: provider_id null hone par backend cart se provider
+    // resolve kar sake (stale/local cart case).
+    final String guestId = Get.find<SplashController>().getGuestId();
     return await apiClient.getData(
-      '${AppConstants.providerPaymentConfigUri}?provider_id=${providerId ?? ''}',
+      '${AppConstants.providerPaymentConfigUri}?provider_id=${providerId ?? ''}&guest_id=$guestId',
     );
   }
 
@@ -63,7 +66,8 @@ class CheckoutRepo extends GetxService {
   Future<Response> placeBookingRequest({
     required String paymentMethod, String? serviceAddressID, required AddressModel serviceAddress,String? schedule,
     required String zoneId, required int isPartial, required String serviceLocation,
-    required String serviceType, String? bookingType, String? dates, SignUpBody? newUserInfo
+    required String serviceType, String? bookingType, String? dates, SignUpBody? newUserInfo,
+    String? preferredServicemanId
   }) async {
     String address = jsonEncode(serviceAddress);
     return await apiClient.postData(AppConstants.placeRequest, {
@@ -78,6 +82,7 @@ class CheckoutRepo extends GetxService {
       "booking_type": bookingType,
       "dates": dates,
       "new_user_info": newUserInfo !=null ? jsonEncode(newUserInfo) : null,
+      "preferred_serviceman_id" : preferredServicemanId,
       "service_location": serviceLocation
     }, timeout: 30);
   }

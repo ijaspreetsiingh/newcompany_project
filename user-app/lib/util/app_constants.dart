@@ -6,8 +6,8 @@ class AppConstants {
   static const String appName = 'Jass Booking';
   static const String shortAppName = 'JS';
   static const String appVersion = '3.7'; /// Flutter SDK : 3.38.9
-  static const String baseUrl = 'https://newcompanyproject-production.up.railway.app';
-  static const String websiteUrl =  'https://newcompanyproject-production.up.railway.app';
+  static const String baseUrl = 'http://10.0.2.2:8000';
+  static const String websiteUrl =  'http://10.0.2.2:8000';
   static const String googleServerClientId = 'YOUR_CLIENT_ID_HERE'; /// fallback only: app prefers admin Login Setup > "Google Web Client ID" (Google Cloud OAuth client_type 3 / Web)
   static const bool avoidMaintenanceMode = false;
   static const LocalCachesTypeEnum cachesType = LocalCachesTypeEnum.all;
@@ -49,6 +49,8 @@ class AppConstants {
   static const String bookingCancel = '/api/v1/client/order/state-change';
   static const String recheckRequest = '/api/v1/client/order/recheck';
   static const String recheckStatus = '/api/v1/client/order/recheck-status';
+  static const String unsatisfiedRequest = '/api/v1/client/order/unsatisfied';
+  static const String unsatisfiedStatus = '/api/v1/client/order/unsatisfied-status';
   static const String subBookingCancel = '/api/v1/client/order/individual-recurring-abort';
   static const String serviceReview = '/api/v1/client/feedback/dispatch';
   static const String bookingReviewList = '/api/v1/client/feedback';

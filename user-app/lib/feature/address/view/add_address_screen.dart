@@ -72,14 +72,23 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
 
   Future<void> setControllerData() async {
     _serviceAddressController.text = widget.address?.address??"";
-    _contactPersonNameController.text = widget.address?.contactPersonNumber??'';
+    final UserInfoModel? user = Get.find<UserController>().userInfoModel;
+    final String profileName = [user?.fName, user?.lName]
+        .whereType<String>()
+        .map((String value) => value.trim())
+        .where((String value) => value.isNotEmpty && value != 'null')
+        .join(' ');
+    _contactPersonNameController.text =
+        (widget.address?.contactPersonName?.isNotEmpty ?? false)
+            ? widget.address!.contactPersonName!
+            : profileName;
 
     String numberAfterValidation = PhoneVerificationHelper.isPhoneValid(
-      widget.address?.contactPersonNumber ?? Get.find<UserController>().userInfoModel?.phone ?? "", 
+      widget.address?.contactPersonNumber ?? user?.phone ?? "", 
       fromAuthPage: false
     );
     if(numberAfterValidation == ""){
-      _contactPersonNumberController.text = widget.address?.contactPersonNumber?.replaceAll("null", "") ?? "";
+      _contactPersonNumberController.text = (widget.address?.contactPersonNumber ?? user?.phone ?? "").replaceAll("null", "");
     }else{
       _contactPersonNumberController.text = numberAfterValidation;
     }

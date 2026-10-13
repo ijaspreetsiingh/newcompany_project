@@ -1,4 +1,5 @@
-﻿import 'package:jdds/util/core_export.dart';
+﻿import 'package:jdds/helper/image_url_helper.dart';
+import 'package:jdds/util/core_export.dart';
 
 class CustomImage extends StatelessWidget {
   final String? image;
@@ -25,7 +26,8 @@ class CustomImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = kIsWeb ? '${AppConstants.baseUrl}/image-proxy?url=$image' : image ?? '';
+    final String normalizedUrl = getFullImageUrl(image);
+    final imageUrl = kIsWeb ? '${AppConstants.baseUrl}/image-proxy?url=$normalizedUrl' : normalizedUrl;
 
     // On web, use Image.network for GIFs to preserve animation
     if (kIsWeb && _isGif(imageUrl)) {

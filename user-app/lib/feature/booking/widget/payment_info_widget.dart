@@ -112,6 +112,46 @@ class _PaidPaymentView extends StatelessWidget {
               ),
             ],),
 
+            // SPEC: serviceman ne on-site extra work add kiya (custom price) —
+            // final bill me clearly dikhao
+            (bookingDetails.extraServices != null && bookingDetails.extraServices!.isNotEmpty) ?
+            Padding(
+              padding: const EdgeInsets.only(top: Dimensions.paddingSizeSmall),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Divider(height: 1, thickness: 0.5, color: Theme.of(context).primaryColor.withValues(alpha:0.15)),
+                Padding(
+                  padding: const EdgeInsets.only(top: Dimensions.paddingSizeSmall, bottom: Dimensions.paddingSizeExtraSmall),
+                  child: Text("extra_work".tr, style: robotoBold.copyWith(
+                    fontSize: Dimensions.fontSizeSmall,
+                    color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha: 0.8),
+                  )),
+                ),
+                ...bookingDetails.extraServices!.map((extra) => Padding(
+                  padding: const EdgeInsets.only(bottom: Dimensions.paddingSizeExtraSmall),
+                  child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    Expanded(
+                      child: Text(
+                        "${extra.name ?? ''} (${extra.quantity ?? 1} x ${PriceConverter.convertPrice(extra.price ?? 0)})${extra.type == 'external' ? ' - ${'external'.tr}' : ''}",
+                        style: robotoRegular.copyWith(
+                          fontSize: Dimensions.fontSizeSmall,
+                          color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                        ),
+                        maxLines: 2, overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: Dimensions.paddingSizeSmall),
+                    Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Text(
+                        PriceConverter.convertPrice((extra.price ?? 0) * (extra.quantity ?? 1)),
+                        style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall),
+                      ),
+                    ),
+                  ]),
+                )),
+              ]),
+            ) : const SizedBox(),
+
             bookingDetails.paymentMethod == 'offline_payment' && bookingDetails.bookingOfflinePayment  != null &&  bookingDetails.bookingOfflinePayment!.isNotEmpty ? CustomBookingDetailsExpansionTile(
               isShowExpandIcon:  true,
               tilePadding: EdgeInsets.zero,

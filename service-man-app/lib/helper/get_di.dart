@@ -21,6 +21,10 @@ Future<Map<String, Map<String, String>>> init() async{
   Get.lazyPut(() => CallRepo(apiClient: Get.find()), fenix: true);
   Get.lazyPut(() => NotificationRepo(apiClient:  Get.find(), sharedPreferences: Get.find()), fenix: true);
   Get.lazyPut(() => BookingRequestRepo(apiClient: Get.find()), fenix: true);
+  // AUTO-ASSIGN popup FCM se kabhi bhi khulta hai (booking details screen
+  // ke binding ke bina) — isliye repo globally chahiye, warna crash:
+  // "BookingDetailsRepo" not found.
+  Get.lazyPut(() => BookingDetailsRepo(apiClient: Get.find()), fenix: true);
   Get.lazyPut(() => UserRepo(apiClient: Get.find()), fenix: true);
   Get.lazyPut(() => HtmlRepository(apiClient: Get.find()), fenix: true);
 

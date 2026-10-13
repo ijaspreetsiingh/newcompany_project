@@ -27,7 +27,7 @@ class _CartScreenState extends State<CartScreen> {
   Widget build(BuildContext context) {
     final double itemTotal = _cartItem['price'] * cartCount;
     final double tax = (itemTotal * 0.1).toDouble(); // 10% tax
-    final double discount = couponCode.isEmpty ? 0 : 200; // Example: â‚¹200 off
+    final double discount = couponCode.isEmpty ? 0 : 200; // Example: ₹200 off
     final double totalAmount = itemTotal + tax - discount;
 
     return Scaffold(
@@ -128,7 +128,7 @@ class _CartScreenState extends State<CartScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '${_cartItem['details']} Â· ${_cartItem['date']}',
+                                '${_cartItem['details']} · ${_cartItem['date']}',
                                 style: robotoSmall.copyWith(
                                   fontSize: 10,
                                   color: Colors.grey[600],
@@ -138,7 +138,7 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                         ),
                         Text(
-                          'â‚¹${_cartItem['price']}',
+                          '₹${_cartItem['price']}',
                           style: robotoBold.copyWith(
                             fontSize: Dimensions.fontSizeDefault,
                             color: Theme.of(context).textTheme.bodyLarge!.color,
@@ -302,7 +302,7 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                         ),
                         Text(
-                          'â‚¹${itemTotal.toStringAsFixed(0)}',
+                          '₹${itemTotal.toStringAsFixed(0)}',
                           style: robotoMedium.copyWith(
                             fontSize: Dimensions.fontSizeSmall,
                             color: Theme.of(context).textTheme.bodyLarge!.color,
@@ -322,7 +322,7 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                         ),
                         Text(
-                          'â‚¹${tax.toStringAsFixed(0)}',
+                          '₹${tax.toStringAsFixed(0)}',
                           style: robotoMedium.copyWith(
                             fontSize: Dimensions.fontSizeSmall,
                             color: Theme.of(context).textTheme.bodyLarge!.color,
@@ -343,7 +343,7 @@ class _CartScreenState extends State<CartScreen> {
                             ),
                           ),
                           Text(
-                            'âˆ’â‚¹${discount.toStringAsFixed(0)}',
+                            '−₹${discount.toStringAsFixed(0)}',
                             style: robotoMedium.copyWith(
                               fontSize: Dimensions.fontSizeSmall,
                               color: Theme.of(context).colorScheme.primary,
@@ -366,7 +366,7 @@ class _CartScreenState extends State<CartScreen> {
                           ),
                         ),
                         Text(
-                          'â‚¹${totalAmount.toStringAsFixed(0)}',
+                          '₹${totalAmount.toStringAsFixed(0)}',
                           style: robotoBold.copyWith(
                             fontSize: Dimensions.fontSizeDefault,
                             color: primaryAccent,

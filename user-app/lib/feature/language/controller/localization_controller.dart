@@ -85,24 +85,11 @@ class LocalizationController extends GetxController implements GetxService {
       localLanguageCode.add(element.languageCode!);
     }
 
-    if( ((isChooseLanguage || isinttial) && fromPage != "menuDrawer" ) && adminLanguageList.length == 1 && localLanguageCode.contains(adminLanguageList[0].languageCode)){
+    // NOTE (flow fix): single-language admin config me pehle language screen
+    // auto-skip ho jaati thi (seedha onboarding/initial route pe navigation).
+    // Ab hamesha language screen dikhti hai — user khud Done/Skip karega.
 
-      int index = AppConstants.languages.indexWhere((element) => element.languageCode == adminLanguageList[0].languageCode);
-
-      if(index != -1){
-        _locale = Locale( AppConstants.languages[index].languageCode!,AppConstants.languages[index].countryCode);
-        _isLtr = _locale.languageCode != 'ar';
-        Future.delayed(const Duration(milliseconds: 10), (){
-          setLanguage(_locale, isinttial: true);
-          if(Get.find<SplashController>().isShowOnboardingScreen()){
-            Get.offAllNamed(RouteHelper.onBoardScreen);
-          }else{
-            Get.offAllNamed(RouteHelper.getinitialRoute());
-          }
-        });
-      }
-
-    } else{
+    {
       for (var defaultLanguage in adminLanguageList) {
         if(!localLanguageCode.contains(defaultLanguage.languageCode)){
           showAllLocalLanguage = true;

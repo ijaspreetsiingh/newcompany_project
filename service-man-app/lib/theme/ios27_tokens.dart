@@ -32,8 +32,8 @@ class Ios27Tokens {
   /// Monochrome brand palette — primary is near-black in light mode and
   /// near-white in dark mode (see [accentDark]).
   static const Color accent = Color(0xFF070707);
-  static const Color accentDark = Color(0xFFE2E8F0);
-  static const Color accentDeep = Color(0xFF0F172B);
+  static const Color accentDark = Color(0xFFF1F1F1);
+  static const Color accentDeep = Color(0xFF0D0D0D);
   static const Color accentSoft = Color(0xFF5B5B5B);
   static const Color accentTint = Color(0xFFEBEBEB);
   static const Color systemBlue = Color(0xFF070707);
@@ -58,14 +58,14 @@ class Ios27Tokens {
   static const Color lightFill = Color(0xFFFFFFFF);
   static const Color lightSeparator = Color(0xB3CACACA);
 
-  static const Color darkCanvas = Color(0xFF020618);
-  static const Color darkGrouped = Color(0xFF020618);
-  static const Color darkCard = Color(0xFF0F172B);
-  static const Color darkLabel = Color(0xFFF8FAFC);
-  static const Color darkSecondaryLabel = Color(0xFF90A1B9);
-  static const Color darkTertiaryLabel = Color(0xFF90A1B9);
-  static const Color darkFill = Color(0xFF0F172B);
-  static const Color darkSeparator = Color(0x1AFFFFFF);
+  static const Color darkCanvas = Color(0xFF0D0D0D);
+  static const Color darkGrouped = Color(0xFF0D0D0D);
+  static const Color darkCard = Color(0xFF171717);
+  static const Color darkLabel = Color(0xFFF1F1F1);
+  static const Color darkSecondaryLabel = Color(0xFFB3B3B3);
+  static const Color darkTertiaryLabel = Color(0xFFB3B3B3);
+  static const Color darkFill = Color(0xFF171717);
+  static const Color darkSeparator = Color(0xFF333333);
 
   static bool reduceTransparency(BuildContext context) {
     final features =

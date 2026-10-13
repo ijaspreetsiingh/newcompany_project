@@ -101,7 +101,7 @@ class _ServiceCustomizeSheetState extends State<ServiceCustomizeSheet> {
                       const Icon(Icons.star, size: 14, color: Colors.orange),
                       const SizedBox(width: 4),
                       Text(
-                        '${widget.service['rating'] ?? '4.89'} Â· ${widget.service['reviews'] ?? '8.2k'}',
+                        '${widget.service['rating'] ?? '4.89'} · ${widget.service['reviews'] ?? '8.2k'}',
                         style: robotoSmall.copyWith(
                           fontSize: Dimensions.fontSizeSmall,
                           color: Colors.grey[600],
@@ -154,7 +154,7 @@ class _ServiceCustomizeSheetState extends State<ServiceCustomizeSheet> {
                           ),
                         ),
                         Text(
-                          'â‚¹${price.toStringAsFixed(0)}',
+                          '₹${price.toStringAsFixed(0)}',
                           style: robotoBold.copyWith(
                             fontSize: Dimensions.fontSizeDefault,
                             color: Theme.of(context).textTheme.bodyLarge!.color,

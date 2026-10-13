@@ -62,6 +62,7 @@ class BookingController extends Controller
 
             'post_id' => 'nullable|uuid',
             'provider_id' => 'nullable|uuid',
+            'preferred_serviceman_id' => 'nullable|string|max:36',
 
             'guest_id' => $this->isCustomerLoggedIn ? 'nullable' : 'required|uuid',
             'service_address' => is_null($request['service_address_id']) && $request['service_location'] == 'customer' ? [

@@ -42,7 +42,7 @@ class TestimonialWidget extends StatelessWidget {
                       const SizedBox(height: 50,),
 
                         SizedBox( width: Dimensions.webMaxWidth / 2,
-                          child: Text( "â€˜ ${testimonial.review ?? ""} Ê¼",
+                          child: Text( "‘ ${testimonial.review ?? ""} ’",
                             style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault,),
                             maxLines: 5, overflow: TextOverflow.ellipsis,
                           ),

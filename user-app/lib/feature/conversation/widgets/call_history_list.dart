@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:jdds/feature/conversation/widgets/conversation_search_shimmer.dart';
+import 'package:jdds/helper/image_url_helper.dart';
 import 'package:jdds/util/core_export.dart';
 
 class CallHistoryList extends StatelessWidget {
@@ -68,7 +69,7 @@ class CallHistoryList extends StatelessWidget {
                         CircleAvatar(
                           radius: 22,
                           backgroundColor: Colors.grey.shade300,
-                          backgroundImage: image.isNotEmpty ? NetworkImage(image) : null,
+                          backgroundImage: image.isNotEmpty ? NetworkImage(getFullImageUrl(image)) : null,
                           child: image.isEmpty
                               ? const Icon(Icons.person, size: 24, color: Colors.grey)
                               : null,

@@ -1,4 +1,5 @@
-﻿import 'dart:convert';
+import 'dart:async';
+import 'dart:convert';
 import 'package:jdds/api/local/cache_response.dart';
 import 'package:jdds/common/models/api_response_model.dart';
 import 'package:jdds/helper/db_helper.dart';
@@ -41,7 +42,9 @@ class DataSyncRepo {
       }
 
       if(!kIsWeb && _isAppCachesActive()) {
-        await DbHelper.insertOrUpdate(id: cacheKey, data: cacheData);
+        unawaited(DbHelper.insertOrUpdate(id: cacheKey, data: cacheData).catchError((Object error) {
+          debugPrint('Cache refresh failed for $cacheKey: $error');
+        }));
       }
     }
 

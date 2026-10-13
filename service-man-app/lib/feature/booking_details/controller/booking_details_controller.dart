@@ -38,8 +38,33 @@ class BookingDetailsController extends GetxController implements GetxService {
 
   final List<MultipartBody> _selectedIdentityImageList = [];
   List<MultipartBody> get selectedIdentityImageList => _selectedIdentityImageList;
-  
+
   var bookingPageCurrentState = BookingDetailsTabControllerState.bookingDetails;
+
+  // ----- PROVIDER SERVICES (extra work ke liye existing service select) -----
+  List<Map<String, dynamic>> _providerServices = [];
+  List<Map<String, dynamic>> get providerServices => _providerServices;
+  bool _providerServicesLoading = false;
+  bool get providerServicesLoading => _providerServicesLoading;
+
+  Future<void> loadProviderServices() async {
+    if (_providerServices.isNotEmpty || _providerServicesLoading) return;
+    _providerServicesLoading = true;
+    update();
+    try {
+      Response response = await bookingDetailsRepo.getProviderServices();
+      if (response.statusCode == 200 && response.body['content'] is List) {
+        _providerServices = (response.body['content'] as List)
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      }
+    } catch (_) {
+      _providerServices = [];
+    }
+    _providerServicesLoading = false;
+    update();
+  }
 
 
 
@@ -109,7 +134,7 @@ class BookingDetailsController extends GetxController implements GetxService {
   }
 
 
-  void changeBookingStatus({required String bookingId, required String bookingStatus, required isSubBooking,bool isBack = false} ) async{
+  void changeBookingStatus({required String bookingId, required String bookingStatus, required isSubBooking,bool isBack = false, String? startOtp} ) async{
     _isUpdate = true;
     update();
 
@@ -118,37 +143,110 @@ class BookingDetailsController extends GetxController implements GetxService {
       multiParts.add(MultipartBody('evidence_photos[]', file));
     }
 
-    if(bookingStatus == 'ongoing' && _dropDownValue =='canceled'){
-      showCustomSnackBar('service_ongoing_can_not_cancel_booking'.tr, type: ToasterMessageType.info);
+    // NOTE: target status ab caller ke bookingStatus param se aata hai
+    // (dropdown hataya — sirf explicit buttons: Reached/OTP/Complete/Cancel).
+    Response response = await bookingDetailsRepo.changeBookingStatus(bookingID: bookingId, status: bookingStatus, otp: otp , isSubBooking: isSubBooking, photoEvidence: multiParts, startOtp: startOtp);
+    if(response.statusCode==200 && response.body["response_code"]=="status_update_success_200"){
+
+      getBookingDetails(bookingID: bookingId, isSubBooking: isSubBooking);
+      _manageLocationTracking(bookingStatus);
+
+      if(isBack){
+        Get.back();
+      }
+      showCustomSnackBar(response.body['message'], type : ToasterMessageType.success);
+      Get.find<BookingRequestController>().getBookingList(
+        Get.find<BookingRequestController>().bookingStatusState.name.toLowerCase(),1,
+      );
+      Get.find<BookingRequestController>().getBookingHistory(
+        Get.find<BookingRequestController>().bookingHistoryStatus[ Get.find<BookingRequestController>().bookingHistorySelectedIndex],1,
+      );
+    }else if(response.statusCode==200 && response.body["response_code"] == "default_403"){
+      if((bookingStatus == "completed" && otp.isNotEmpty) || (bookingStatus == "ongoing" && startOtp != null && startOtp.isNotEmpty)){
+        _isWrongOtpSubmitted  = true;
+      }
     }
     else{
-      Response response = await bookingDetailsRepo.changeBookingStatus(bookingID: bookingId, status: _dropDownValue, otp: otp , isSubBooking: isSubBooking, photoEvidence: multiParts);
-      if(response.statusCode==200 && response.body["response_code"]=="status_update_success_200"){
+      showCustomSnackBar(_errorMessage(response));
+    }
+    _isUpdate = false;
+    update();
+  }
 
-        getBookingDetails(bookingID: bookingId, isSubBooking: isSubBooking);
-        _manageLocationTracking(_dropDownValue);
+  /// SPEC: serviceman customer ke ghar (300m radius) pahuncha -> "Reached"
+  /// mark karo -> backend start OTP generate karega (customer app me dikhega).
+  Future<bool> markReached(String bookingId, {bool isSubBooking = false}) async {
+    _isUpdate = true;
+    update();
+    bool isSuccess = false;
 
-        if(isBack){
-          Get.back();
-        }
-        showCustomSnackBar(response.body['message'], type : ToasterMessageType.success);
-        Get.find<BookingRequestController>().getBookingList(
-          Get.find<BookingRequestController>().bookingStatusState.name.toLowerCase(),1,
-        );
-        Get.find<BookingRequestController>().getBookingHistory(
-          Get.find<BookingRequestController>().bookingHistoryStatus[ Get.find<BookingRequestController>().bookingHistorySelectedIndex],1,
-        );
-      }else if(response.statusCode==200 && response.body["response_code"] == "default_403"){
-        if(dropDownValue == "completed" && otp.isNotEmpty){
-          _isWrongOtpSubmitted  = true;
-        }
-      }
-      else{
+    // Backend ko FRESH location chahiye (5-min freshness + 300m radius check).
+    // Background stream ka wait mat karo — turant GPS lo aur upload karo.
+    final LocationService locationService = Get.find<LocationService>();
+    unawaited(locationService.startLocationTracking());
+    final bool locationUploaded = await locationService.forceUploadCurrentLocation();
+    if (!locationUploaded) {
+      _isUpdate = false;
+      update();
+      showCustomSnackBar('enable_gps_for_reached'.tr, type: ToasterMessageType.error);
+      return false;
+    }
+
+    Response response = await bookingDetailsRepo.markReached(bookingId);
+    if (response.statusCode == 200 && response.body['response_code'] == 'status_update_success_200') {
+      isSuccess = true;
+      getBookingDetails(bookingID: bookingId, isSubBooking: isSubBooking);
+      showCustomSnackBar('otp_generated_share_customer'.tr, type: ToasterMessageType.success);
+    } else {
+      ApiChecker.checkApi(response);
+      if (response.statusCode != 401) {
         showCustomSnackBar(_errorMessage(response));
       }
     }
     _isUpdate = false;
     update();
+    return isSuccess;
+  }
+
+  /// Extra service (custom/external work) add karo — total bill update hoga
+  Future<bool> addExtraService({required String bookingId, required String name, required String price, required String quantity, String type = 'custom', bool isSubBooking = false}) async {
+    _isUpdate = true;
+    update();
+    bool isSuccess = false;
+    Response response = await bookingDetailsRepo.addExtraService(
+      bookingID: bookingId, name: name, price: price, quantity: quantity, type: type,
+    );
+    if (response.statusCode == 200 && (response.body['response_code'] == 'default_store_200' || response.body['response_code'] == 'default_200')) {
+      isSuccess = true;
+      getBookingDetails(bookingID: bookingId, isSubBooking: isSubBooking);
+      showCustomSnackBar('extra_service_added'.tr, type: ToasterMessageType.success);
+    } else {
+      ApiChecker.checkApi(response);
+      if (response.statusCode != 401) {
+        showCustomSnackBar(_errorMessage(response));
+      }
+    }
+    _isUpdate = false;
+    update();
+    return isSuccess;
+  }
+
+  /// Extra service remove — total bill se minus hoga
+  Future<bool> removeExtraService({required String bookingId, required String extraServiceId, bool isSubBooking = false}) async {
+    _isUpdate = true;
+    update();
+    bool isSuccess = false;
+    Response response = await bookingDetailsRepo.removeExtraService(bookingID: bookingId, extraServiceId: extraServiceId);
+    if (response.statusCode == 200 && response.body['response_code'] != 'default_204') {
+      isSuccess = true;
+      getBookingDetails(bookingID: bookingId, isSubBooking: isSubBooking);
+      showCustomSnackBar('extra_service_removed'.tr, type: ToasterMessageType.success);
+    } else {
+      showCustomSnackBar(_errorMessage(response));
+    }
+    _isUpdate = false;
+    update();
+    return isSuccess;
   }
 
   String _errorMessage(Response response) {

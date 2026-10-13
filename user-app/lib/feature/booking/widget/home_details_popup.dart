@@ -48,6 +48,7 @@ class _HomeDetailsPopupState extends State<HomeDetailsPopup>
   late final TextEditingController _zipCodeController;
   late final TextEditingController _contactNameController;
   late final TextEditingController _contactNumberController;
+  late final Future<void> _locationPrefill;
 
   static String _prefill(String? value) =>
       (value == null || value == 'null') ? '' : value;
@@ -65,14 +66,64 @@ class _HomeDetailsPopupState extends State<HomeDetailsPopup>
         );
     _slideController.forward();
 
+    final UserInfoModel? user = Get.find<UserController>().userInfoModel;
+    final String profileName = [user?.fName, user?.lName]
+        .whereType<String>()
+        .map((String value) => value.trim())
+        .where((String value) => value.isNotEmpty && value != 'null')
+        .join(' ');
+
     _houseController = TextEditingController(text: _prefill(widget.address.house));
     _floorController = TextEditingController(text: _prefill(widget.address.floor));
     _streetController = TextEditingController(text: _prefill(widget.address.street));
     _zipCodeController = TextEditingController(text: _prefill(widget.address.zipCode));
-    _contactNameController =
-        TextEditingController(text: _prefill(widget.address.contactPersonName));
-    _contactNumberController =
-        TextEditingController(text: _prefill(widget.address.contactPersonNumber));
+    _contactNameController = TextEditingController(
+      text: _prefill(widget.address.contactPersonName).isNotEmpty
+          ? _prefill(widget.address.contactPersonName)
+          : profileName,
+    );
+    _contactNumberController = TextEditingController(
+      text: _prefill(widget.address.contactPersonNumber).isNotEmpty
+          ? _prefill(widget.address.contactPersonNumber)
+          : _prefill(user?.phone),
+    );
+
+    // Saved addresses may predate street/postal-code fields. Reverse-geocode
+    // only missing values from the currently selected coordinates.
+    if (_prefill(widget.address.street).isEmpty ||
+        _prefill(widget.address.zipCode).isEmpty) {
+      _locationPrefill = _fillMissingLocationDetails();
+    } else {
+      _locationPrefill = Future<void>.value();
+    }
+  }
+
+  Future<void> _fillMissingLocationDetails() async {
+    final double? latitude = double.tryParse(widget.address.latitude ?? '');
+    final double? longitude = double.tryParse(widget.address.longitude ?? '');
+    if (latitude == null || longitude == null ||
+        (latitude == 0 && longitude == 0)) return;
+
+    try {
+      final AddressModel result = await Get.find<LocationController>()
+          .getAddressFromGeocode(LatLng(latitude, longitude))
+          .timeout(const Duration(seconds: 8));
+      if (!mounted) return;
+      final String street = _prefill(widget.address.street).isNotEmpty
+          ? _prefill(widget.address.street)
+          : _prefill(result.street);
+      final String zip = _prefill(widget.address.zipCode).isNotEmpty
+          ? _prefill(widget.address.zipCode)
+          : _prefill(result.zipCode);
+      if (_streetController.text.trim().isEmpty && street.isNotEmpty) {
+        _streetController.text = street;
+      }
+      if (_zipCodeController.text.trim().isEmpty && zip.isNotEmpty) {
+        _zipCodeController.text = zip;
+      }
+    } catch (_) {
+      // The customer can still enter these fields manually if geocoding fails.
+    }
   }
 
   @override
@@ -91,7 +142,7 @@ class _HomeDetailsPopupState extends State<HomeDetailsPopup>
     Navigator.of(context).pop(null);
   }
 
-  void _confirm() {
+  Future<void> _confirm() async {
     final String contactName = _contactNameController.text.trim();
     final String contactNumber = _contactNumberController.text.trim();
 
@@ -105,6 +156,11 @@ class _HomeDetailsPopupState extends State<HomeDetailsPopup>
       );
       return;
     }
+
+    // Ensure geocoded street/postal code has had a chance to populate before
+    // persisting the selected location.
+    await _locationPrefill;
+    if (!mounted) return;
 
     widget.address.house = _houseController.text.trim();
     widget.address.floor = _floorController.text.trim();
@@ -287,7 +343,7 @@ class _HomeDetailsPopupState extends State<HomeDetailsPopup>
                 width: maxWidth,
                 height: 46,
                 child: ElevatedButton(
-                  onPressed: _confirm,
+                  onPressed: () => _confirm(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _primary,
                     foregroundColor: NestInk.background,

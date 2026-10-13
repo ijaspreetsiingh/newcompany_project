@@ -145,6 +145,8 @@ class ServiceController extends Controller
                 'sub_category_id' => 'required|string',
                 'cover_image' => 'required|image|max:'. uploadMaxFileSizeInKB('image') .'|mimes:' . implode(',', array_column(IMAGEEXTENSION, 'key')),
                 'thumbnail' => 'required|image|max:'. uploadMaxFileSizeInKB('image') .'|mimes:' . implode(',', array_column(IMAGEEXTENSION, 'key')),
+                'cover_images.*' => 'nullable|image|max:'. uploadMaxFileSizeInKB('image') .'|mimes:' . implode(',', array_column(IMAGEEXTENSION, 'key')),
+                'cover_video' => 'nullable|file|max:'. uploadMaxFileSizeInKB('video') .'|mimes:' . implode(',', array_column(VIDEO_EXTENSIONS, 'key')),
                 'description' => 'required',
                 'description.0' => 'required',
                 'short_description' => 'required',
@@ -189,6 +191,25 @@ class ServiceController extends Controller
         $service->cover_image = file_uploader('service/', 'png', $request->file('cover_image'));
         $service->thumbnail = file_uploader('service/', 'png', $request->file('thumbnail'));
 
+        /* Cover media - additional cover images (slider) + optional cover video.
+           NOTE: gallery section gallery ke liye hai, cover media usko use nahi karta. */
+        $coverImagePaths = [];
+        if ($request->hasFile('cover_images')) {
+            foreach ($request->file('cover_images') as $img) {
+                if ($img && $img->isValid()) {
+                    $uploadedPath = file_uploader('service/', 'png', $img);
+                    if ($uploadedPath && $uploadedPath !== 'def.png') {
+                        $coverImagePaths[] = $uploadedPath;
+                    }
+                }
+            }
+            $service->cover_images = $coverImagePaths;
+        }
+
+        if ($request->hasFile('cover_video')) {
+            $service->cover_video = file_uploader('service/', 'mp4', $request->file('cover_video'));
+        }
+
         /* Gallery images - admin panel "Gallery Image" block */
         if ($request->has('gallery')) {
             $galleryPaths = [];
@@ -199,6 +220,9 @@ class ServiceController extends Controller
             }
             $service->gallery = $galleryPaths;
         }
+
+        // Cover media type toggle
+        $service->cover_media_type = $request->cover_media_type ?? 0;
 
         $service->tax = $request->tax;
         $service->min_bidding_price = $request->min_bidding_price;
@@ -462,6 +486,9 @@ class ServiceController extends Controller
             'cover_image' => 'image|max:'. uploadMaxFileSizeInKB('image') .'|mimes:' . implode(',', array_column(IMAGEEXTENSION, 'key')),
             'thumbnail' => 'image|max:'. uploadMaxFileSizeInKB('image') .'|mimes:' . implode(',', array_column(IMAGEEXTENSION, 'key')),
             'gallery.*' => 'image|max:'. uploadMaxFileSizeInKB('image') .'|mimes:' . implode(',', array_column(IMAGEEXTENSION, 'key')),
+            'cover_images.*' => 'image|max:'. uploadMaxFileSizeInKB('image') .'|mimes:' . implode(',', array_column(IMAGEEXTENSION, 'key')),
+            'cover_video' => 'nullable|file|max:'. uploadMaxFileSizeInKB('video') .'|mimes:' . implode(',', array_column(VIDEO_EXTENSIONS, 'key')),
+            'cover_media_type' => 'nullable|in:0,1,2',
 
         ]);
 
@@ -507,6 +534,34 @@ class ServiceController extends Controller
             $service->thumbnail = file_uploader('service/', 'png', $request->file('thumbnail'), $service->thumbnail);
         }
 
+        /* Cover media - additional cover images (slider) + optional cover video.
+           NOTE: gallery section gallery ke liye hai, cover media usko use nahi karta. */
+        if ($request->boolean('remove_all_cover_images')) {
+            $service->cover_images = [];
+        } else {
+            $coverImagePaths = $request->input('existing_cover_images', []);
+            if (!is_array($coverImagePaths)) {
+                $coverImagePaths = [];
+            }
+            if ($request->hasFile('cover_images')) {
+                foreach ($request->file('cover_images') as $img) {
+                    if ($img && $img->isValid()) {
+                        $uploadedPath = file_uploader('service/', 'png', $img);
+                        if ($uploadedPath && $uploadedPath !== 'def.png') {
+                            $coverImagePaths[] = $uploadedPath;
+                        }
+                    }
+                }
+            }
+            $service->cover_images = array_values(array_filter($coverImagePaths));
+        }
+
+        if ($request->hasFile('cover_video')) {
+            $service->cover_video = file_uploader('service/', 'mp4', $request->file('cover_video'), $service->cover_video);
+        } elseif ($request->boolean('remove_cover_video')) {
+            $service->cover_video = null;
+        }
+
         /* Gallery images - admin panel "Gallery Image" block */
         $galleryPaths = $request->input('existing_gallery', []);
         if ($request->has('gallery')) {
@@ -517,6 +572,9 @@ class ServiceController extends Controller
             }
         }
         $service->gallery = array_values(array_filter($galleryPaths));
+
+        // Cover media type toggle
+        $service->cover_media_type = $request->cover_media_type ?? 0;
 
         $service->tax = $request->tax;
         $service->min_bidding_price = $request->min_bidding_price;

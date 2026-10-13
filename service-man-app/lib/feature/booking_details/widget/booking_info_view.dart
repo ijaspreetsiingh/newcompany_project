@@ -86,7 +86,24 @@ class BookingInformationView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              StatusBadge(status: bookingDetails.bookingStatus ?? ""),
+              Row(children: [
+                StatusBadge(status: bookingDetails.bookingStatus ?? ""),
+                if (bookingDetails.isReService == 1) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Ios27Tokens.systemOrange.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(50),
+                      border: Border.all(color: Ios27Tokens.systemOrange, width: 1),
+                    ),
+                    child: Text(
+                      're_service_badge'.tr,
+                      style: robotoBold.copyWith(fontSize: 10, color: Ios27Tokens.systemOrange),
+                    ),
+                  ),
+                ],
+              ]),
               const SizedBox(height: 12),
               Row(children: [
                 Expanded(

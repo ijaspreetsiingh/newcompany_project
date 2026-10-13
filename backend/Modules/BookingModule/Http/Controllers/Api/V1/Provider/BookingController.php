@@ -683,6 +683,7 @@ class BookingController extends Controller
         $booking = $this->booking->with([
             'detail.service', 'schedule_histories.user', 'status_histories.user', 'customer',
             'provider', 'zone', 'serviceman.user', 'booking_partial_payments', 'booking_offline_payments',
+            'servicemenAssignments.serviceman.user',
             'repeat.detail.service', 'repeat.repeatHistories', 'extraServices'
         ])->where(function ($query) use ($provider_id, $request) {
             return $query->where(function ($query) use ($provider_id) {
@@ -762,6 +763,29 @@ class BookingController extends Controller
                     return $repeat;
                 }, $booking['repeats']);
             }
+
+            // AUTO-ASSIGN: poori assignment cycle (nearest -> accept/decline/expire -> next).
+            // Provider ko booking details me dikhata hai kis serviceman ko kab request gayi,
+            // kisne accept ki, kisne decline ki, kiska timer expire hua.
+            $assignmentTrail = $booking->servicemenAssignments
+                ->sortByDesc(fn ($a) => $a->created_at?->getTimestamp() ?? 0)
+                ->map(function ($assignment) {
+                    $user = $assignment->serviceman?->user;
+                    return [
+                        'serviceman_id' => $assignment->serviceman_id,
+                        'name' => trim(($user?->first_name ?? '') . ' ' . ($user?->last_name ?? '')),
+                        'phone' => $user?->phone ?? null,
+                        'image' => $user?->profile_image_full_path,
+                        'status' => $assignment->status,
+                        'requested_at' => $assignment->created_at?->toIso8601String(),
+                        'responded_at' => in_array($assignment->status, ['accepted', 'rejected'], true)
+                            ? $assignment->updated_at?->toIso8601String()
+                            : null,
+                    ];
+                })->values()->all();
+            unset($booking->servicemenAssignments);
+            $booking['assignment_trail'] = $assignmentTrail;
+            $booking['assignment_trail_count'] = count($assignmentTrail);
 
             return response()->json(response_formatter(DEFAULT_200, $booking), 200);
         }

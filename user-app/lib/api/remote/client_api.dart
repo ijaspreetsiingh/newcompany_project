@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:jdds/common/models/errrors_model.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
@@ -11,20 +11,19 @@ class ApiClient extends GetxService {
   final String? appBaseUrl;
   final SharedPreferences sharedPreferences;
   static final String noInternetMessage = 'connection_to_api_server_failed'.tr;
-  final int timeoutInSeconds = 15;
+  final int timeoutInSeconds = 45;
 
   String? token;
   late Map<String, String> _mainHeaders;
+  final http.Client _httpClient = http.Client();
 
   ApiClient({required this.appBaseUrl, required this.sharedPreferences}) {
     token = sharedPreferences.getString(AppConstants.token);
-    printLog('Token: $token');
     AddressModel? addressModel;
     try {
       String? addressJson = sharedPreferences.getString(AppConstants.userAddress);
       if(addressJson != null) {
         addressModel = AddressModel.fromJson(jsonDecode(addressJson));
-        printLog(addressModel.toJson());
       }
     }catch(e) {
       if (kDebugMode) {
@@ -41,6 +40,7 @@ class ApiClient extends GetxService {
   void updateHeader(String? token, String? zoneIDs, String? languageCode, String? guestID) {
     _mainHeaders = {
       'Content-Type': 'application/json; charset=UTF-8',
+      'Accept': 'application/json',
       AppConstants.zoneId: zoneIDs ?? '',
       AppConstants.localizationKey: languageCode ?? AppConstants.languages[0].languageCode!,
       'Authorization': 'Bearer $token',
@@ -101,8 +101,7 @@ class ApiClient extends GetxService {
   Future<Response> getData(String uri, {Map<String, dynamic>? query, Map<String, String>? headers}) async {
 
     try {
-      printLog('====> API Call: $uri\nHeader: $_mainHeaders');
-      http.Response response = await http.get(
+      http.Response response = await _httpClient.get(
         _requestUri(uri, extraQuery: query),
         headers: headers ?? _mainHeaders,
 
@@ -116,10 +115,8 @@ class ApiClient extends GetxService {
 
   Future<Response> postData(String? uri, dynamic body, {Map<String, String>? headers, int? timeout}) async {
     try {
-      printLog('====> API Call: $uri\nHeader: $_mainHeaders');
-      printLog('====> body : ${body.toString()}');
 
-      http.Response response = await http.post(
+      http.Response response = await _httpClient.post(
         _requestUri(uri),
         body: jsonEncode(body),
         headers: headers ?? _mainHeaders,
@@ -158,7 +155,7 @@ class ApiClient extends GetxService {
       }
     }
     request.fields.addAll(body);
-    http.Response response = await http.Response.fromStream(await request.send());
+    http.Response response = await http.Response.fromStream(await _httpClient.send(request));
     return handleResponse(response, uri);
   }
 
@@ -182,7 +179,7 @@ class ApiClient extends GetxService {
         }
       }
       request.fields.addAll(body);
-      http.Response response = await http.Response.fromStream(await request.send());
+      http.Response response = await http.Response.fromStream(await _httpClient.send(request));
       return handleResponse(response, uri);
     } catch (e) {
       return Response(statusCode: 1, statusText: noInternetMessage);
@@ -190,9 +187,8 @@ class ApiClient extends GetxService {
   }
 
   Future<Response> putData(String? uri, dynamic body, {Map<String, String>? headers, int? timeout}) async {
-    printLog('====> body : ${body.toString()}');
     try {
-      http.Response response = await http.put(
+      http.Response response = await _httpClient.put(
         _requestUri(uri),
         body: jsonEncode(body),
         headers: headers ?? _mainHeaders,
@@ -205,7 +201,7 @@ class ApiClient extends GetxService {
 
   Future<Response> deleteData(String? uri, {Map<String, String>? headers}) async {
     try {
-      http.Response response = await http.delete(
+      http.Response response = await _httpClient.delete(
         _requestUri(uri),
         headers: headers ?? _mainHeaders,
       ).timeout(Duration(seconds: timeoutInSeconds));
@@ -213,6 +209,12 @@ class ApiClient extends GetxService {
     } catch (e) {
       return Response(statusCode: 1, statusText: noInternetMessage);
     }
+  }
+
+  @override
+  void onClose() {
+    _httpClient.close();
+    super.onClose();
   }
 
   Response handleResponse(http.Response response, String? uri) {
@@ -241,7 +243,6 @@ class ApiClient extends GetxService {
     }
     if(foundation.kDebugMode) {
        debugPrint('====> API Response: [${response0.statusCode}] $uri');
-       // debugPrint('====> API Response: [${response0.statusCode}] $uri\n${response0.body}');
     }
     return response0;
   }

@@ -58,6 +58,7 @@ class ConfigContent {
   String? footerText;
   int? phoneNumberVisibility;
   int? walletStatus;
+  int? walletPayment;
   int? addFundToWallet;
   int? loyaltyPointStatus;
   int? referEarnStatus;
@@ -215,6 +216,7 @@ class ConfigContent {
     footerText = json['footer_text'];
     phoneNumberVisibility = json['phone_number_visibility_for_chatting'];
     walletStatus = json['wallet_status'];
+    walletPayment = int.tryParse(json['wallet_payment'].toString());
     addFundToWallet = json['add_to_fund_wallet'];
     loyaltyPointStatus = json['loyalty_point_status'];
     referEarnStatus = json['referral_earning_status'];
@@ -320,6 +322,7 @@ class ConfigContent {
     data['footer_text'] = footerText;
     data['phone_number_visibility_for_chatting'] = phoneNumberVisibility;
     data['wallet_status'] = walletStatus;
+    data['wallet_payment'] = walletPayment;
     data['add_to_fund_wallet'] = addFundToWallet;
     data['loyalty_point_status'] = loyaltyPointStatus;
     data['referral_earning_status'] = referEarnStatus;

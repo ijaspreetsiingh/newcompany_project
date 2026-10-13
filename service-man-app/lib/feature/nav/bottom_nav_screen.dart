@@ -28,13 +28,6 @@ class BottomNavScreenState extends State<BottomNavScreen>
   void _loadData() async {
     await Get.find<DashboardController>().getDashboardData();
     Get.find<DashboardController>().getBookingStatisticData();
-    Get.find<DashboardController>().getMonthlyBookingsDataForChart(
-      DateConverter.stringYear(DateTime.now()),
-      DateTime.now().month.toString(),
-    );
-    Get.find<DashboardController>().getYearlyBookingsDataForChart(
-      DateConverter.stringYear(DateTime.now()),
-    );
     Get.find<BookingRequestController>().updateBookingStatusState(
       BooingListStatus.all,
     );

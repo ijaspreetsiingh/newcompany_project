@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:jassdbx_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/feature/booking_details/widget/extra_work_section.dart';
 
 
 
@@ -69,6 +70,12 @@ class _BookingDetailsWidgetState extends State<BookingDetailsWidget> {
                     const SizedBox(height: 16),
 
                     BookingSummeryView(bookingDetails: bookingDetails),
+
+                    const SizedBox(height: 16),
+
+                    // SPEC: serviceman on-site extra work (custom price) add karta
+                    // hai — final bill/invoice me include hota hai.
+                    ExtraWorkSection(bookingDetails: bookingDetails, isSubBooking: widget.isSubBooking),
 
                     const SizedBox(height: 16),
 

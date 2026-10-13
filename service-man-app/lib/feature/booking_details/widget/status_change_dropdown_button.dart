@@ -1,105 +1,245 @@
 import 'package:get/get.dart';
 import 'package:jassdbx_serviceman/utils/core_export.dart';
+import 'package:jassdbx_serviceman/feature/booking_details/widget/start_otp_sheet.dart';
 
-
-
+/// SPEC (redesigned): serviceman ke paas free status dropdown NAHI hoga.
+///
+/// - accepted (abhi pahuncha nahi): [I Have Reached Customer Location]
+///     → backend 300m check karta hai → start OTP generate
+///     → TURANT OTP popup khulta hai → OTP verify hote hi status
+///       auto 'ongoing' ho jaata hai.
+/// - accepted (start OTP aa chuka hai): [Start Service OTP] → popup dobara.
+/// - ongoing: sirf [Complete Service] + [Cancel] — baaki status
+///   serviceman apne aap nahi badal sakta.
 class StatusChangeDropdownButton extends StatelessWidget {
   final String bookingId;
   final BookingDetailsContent bookingDetails;
   final bool isSubBooking;
-  const StatusChangeDropdownButton({super.key, required this.bookingId, required this.bookingDetails, required this.isSubBooking}) ;
+  const StatusChangeDropdownButton({
+    super.key,
+    required this.bookingId,
+    required this.bookingDetails,
+    required this.isSubBooking,
+  });
+
+  void _openStartOtpSheet() {
+    Get.bottomSheet(
+      StartOtpVerificationSheet(
+        bookingId: bookingDetails.id.toString(),
+        isSubBooking: isSubBooking,
+      ),
+    );
+  }
+
+  Future<void> _markReached(BookingDetailsController controller) async {
+    final bool ok = await controller.markReached(
+      bookingDetails.id.toString(),
+      isSubBooking: isSubBooking,
+    );
+    // Reached (300m) → start OTP generated → seedha OTP popup.
+    // Submit hote hi backend status 'ongoing' set karega.
+    if (ok) {
+      _openStartOtpSheet();
+    }
+  }
+
+  /// Complete flow (pehle dropdown ke "completed" branch me tha) — config ke
+  /// hisaab se: payment dialog / photo evidence / OTP sheet.
+  void _startCompletionFlow(BookingDetailsController controller) {
+    final content = Get.find<SplashController>().configModel?.content;
+    final bool imageVerify = content?.bookingImageVerification == 1;
+    final bool otpVerify = content?.bookingOtpVerification == 1;
+    final bool hasPhotos = controller.pickedPhotoEvidence.isNotEmpty;
+
+    // UI gate: "Request for OTP" button tabhi dikhe jab pending state ho.
+    controller.setSelectedValue('completed');
+
+    if (imageVerify && hasPhotos && otpVerify) {
+      controller.changePhotoEvidenceStatus(status: true);
+    } else if (imageVerify && hasPhotos && !otpVerify) {
+      // Photo ready (image-only config) → seedha submit.
+      controller.changeBookingStatus(
+        bookingId: bookingDetails.id.toString(),
+        bookingStatus: 'completed',
+        isSubBooking: isSubBooking,
+      );
+    } else if (imageVerify) {
+      controller.changePhotoEvidenceStatus(status: true);
+      showCustomBottomSheet(
+        child: CameraButtonSheet(bookingId: bookingId, isSubBooking: isSubBooking),
+      );
+    } else if (otpVerify) {
+      controller.changePhotoEvidenceStatus(status: true);
+    } else {
+      controller.changePhotoEvidenceStatus(status: false);
+      Get.bottomSheet(
+        PaymentReceiveDialog(
+          bookingDetails.id!,
+          bookingDetails.totalBookingAmount.toString(),
+          isSubBooking: isSubBooking,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<BookingDetailsController>(builder: (bookingDetailsController){
+    return GetBuilder<BookingDetailsController>(
+      builder: (bookingDetailsController) {
+        final String status = bookingDetails.bookingStatus ?? '';
+        final bool canCancel =
+            bookingDetailsController.statusTypeList.contains('canceled');
+        final bool otpVerify = Get.find<SplashController>()
+                .configModel
+                ?.content
+                ?.bookingOtpVerification ==
+            1;
 
-      List<String> statusList = [];
-      for (var element in bookingDetailsController.statusTypeList) {
-        statusList.add(element);
-      }
-      if(((isSubBooking && bookingDetails.isPaid == 1)
-          || bookingDetailsController.bookingDetails?.bookingContent?.bookingDetailsContent?.bookingStatus == 'ongoing')
-          && statusList.contains("canceled")){
-        statusList.remove("canceled");
-      }
+        // Pending completion (OTP wala rasta chal raha hai).
+        final bool pendingOtpSubmission =
+            bookingDetailsController.dropDownValue == 'completed' &&
+                bookingDetailsController.showPhotoEvidenceField &&
+                otpVerify;
 
-      return Container(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-        decoration: BoxDecoration(
-          color: context.kBackground,
-          border: Border(top: BorderSide(color: context.kBorder, width: 1)),
-        ),
-        child: bookingDetailsController.dropDownValue == "completed" && bookingDetailsController.showPhotoEvidenceField && Get.find<SplashController>().configModel?.content?.bookingOtpVerification == 1?
-        CustomButton(btnTxt: "request_for_otp".tr, onPressed: () {
-          bookingDetailsController.sendBookingOTPNotification(bookingId, shouldUpdate: false);
-          Get.bottomSheet(OtpVerificationBottomSheet(bookingId: bookingId, isSubBooking: isSubBooking,));
-        },) :
-        Row(children: [
-          Expanded(
-            child: Container(padding: const EdgeInsets.symmetric(horizontal: 14), height: 48,
-              decoration: BoxDecoration(
-                  color: context.kCard,
-                  borderRadius: BorderRadius.circular(kRadiusMd),
-                  border: Border.all(color: context.kInputBorder, width: 1)
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton(
-                  hint: bookingDetailsController.dropDownValue == ''?
-                  Text(bookingDetails.bookingStatus!.tr, style: robotoRegular.copyWith(fontSize: 14, color: context.kForeground)) :
-                  Text(bookingDetailsController.dropDownValue.tr, style: robotoRegular.copyWith(fontSize: 14, color: context.kForeground)),
-                  dropdownColor: context.kCard,
-                  borderRadius: BorderRadius.circular(kRadiusSm),
-                  elevation: 2,
-                  icon: Icon(Icons.keyboard_arrow_down_rounded, color: context.kMutedForeground, size: 20,),
-                  items: statusList.map((String items) {
-                    return DropdownMenuItem(value: items, child: Text(items.tr,
-                      style: robotoRegular.copyWith(fontSize: 14, color: context.kForeground),));
-                  }).toList(),
-                  onChanged:(String? newValue) {
-                    bookingDetailsController.setSelectedValue(newValue!);
+        final bool isUpdating = bookingDetailsController.isUpdate;
 
-                    if(newValue=="completed"){
-
-                      if(Get.find<SplashController>().configModel?.content?.bookingImageVerification == 1 && bookingDetailsController.pickedPhotoEvidence.isNotEmpty){
-                        bookingDetailsController.changePhotoEvidenceStatus(status: true);
-                      }else if(Get.find<SplashController>().configModel?.content?.bookingOtpVerification == 1) {
-                        bookingDetailsController.changePhotoEvidenceStatus(status: true);
-                      }else{
-                        bookingDetailsController.changePhotoEvidenceStatus(status: false);
-                      }
-
-                      if(Get.find<SplashController>().configModel?.content?.bookingImageVerification == 0 && Get.find<SplashController>().configModel?.content?.bookingOtpVerification == 0){
-                        Get.bottomSheet(PaymentReceiveDialog(bookingDetails.id!,bookingDetails.totalBookingAmount.toString(), isSubBooking: isSubBooking,));
-                      }else{
-                        if(Get.find<SplashController>().configModel?.content?.bookingImageVerification == 1  && bookingDetailsController.pickedPhotoEvidence.isEmpty){
-                          showCustomBottomSheet(child: CameraButtonSheet(bookingId: bookingId, isSubBooking: isSubBooking,),);
-                        }
-                      }
-                    }
-                  },
-                ),
-              ),
+        if (status == 'accepted') {
+          final bool notReached = bookingDetails.startOtp == null ||
+              bookingDetails.startOtp!.isEmpty;
+          return _ActionBar(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                isUpdating
+                    ? const _InlineLoader()
+                    : SizedBox(
+                        width: double.infinity,
+                        child: CustomButton(
+                          btnTxt: notReached
+                              ? 'i_have_reached'.tr
+                              : 'start_otp_verification'.tr,
+                          onPressed: notReached
+                              ? () => _markReached(bookingDetailsController)
+                              : _openStartOtpSheet,
+                        ),
+                      ),
+                if (canCancel) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: KButton(
+                      label: 'cancel'.tr,
+                      outline: true,
+                      destructive: true,
+                      onTap: isUpdating
+                          ? null
+                          : () => bookingDetailsController.changeBookingStatus(
+                                bookingId: bookingDetails.id.toString(),
+                                bookingStatus: 'canceled',
+                                isSubBooking: isSubBooking,
+                              ),
+                    ),
+                  ),
+                ],
+              ],
             ),
-          ),
-          const SizedBox(width: 12),
-          bookingDetailsController.isUpdate ?
-          SizedBox(height: 48, width: 112,
-              child:Center(child: CircularProgressIndicator(color: context.kMutedForeground, strokeWidth: 2,))
-          ) : CustomButton(
-            height: 48, width: 112,
-            btnTxt:"change".tr,
-            onPressed: bookingDetails.bookingStatus == "canceled"
-                || bookingDetails.bookingStatus == "completed"
-                || bookingDetails.bookingStatus == bookingDetailsController.dropDownValue? null
-                : (){
-              bookingDetailsController.changeBookingStatus(
-                bookingId:bookingDetails.id.toString(),
-                bookingStatus:bookingDetails.bookingStatus!,
-                isSubBooking: isSubBooking
-              );},
-          )
-        ]),
-      );
-    });
+          );
+        }
+
+        if (status == 'ongoing') {
+          return _ActionBar(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (pendingOtpSubmission)
+                  SizedBox(
+                    width: double.infinity,
+                    child: CustomButton(
+                      btnTxt: 'request_for_otp'.tr,
+                      onPressed: () {
+                        bookingDetailsController.sendBookingOTPNotification(
+                          bookingId,
+                          shouldUpdate: false,
+                        );
+                        Get.bottomSheet(
+                          OtpVerificationBottomSheet(
+                            bookingId: bookingId,
+                            isSubBooking: isSubBooking,
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                else if (isUpdating)
+                  const _InlineLoader()
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    child: CustomButton(
+                      btnTxt: 'complete_service'.tr,
+                      onPressed: () =>
+                          _startCompletionFlow(bookingDetailsController),
+                    ),
+                  ),
+                if (canCancel) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: KButton(
+                      label: 'cancel'.tr,
+                      outline: true,
+                      destructive: true,
+                      onTap: (isUpdating || pendingOtpSubmission)
+                          ? null
+                          : () => bookingDetailsController.changeBookingStatus(
+                                bookingId: bookingDetails.id.toString(),
+                                bookingStatus: 'canceled',
+                                isSubBooking: isSubBooking,
+                              ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }
+
+        return const SizedBox();
+      },
+    );
+  }
+}
+
+class _ActionBar extends StatelessWidget {
+  final Widget child;
+  const _ActionBar({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      decoration: BoxDecoration(
+        color: context.kBackground,
+        border: Border(top: BorderSide(color: context.kBorder, width: 1)),
+      ),
+      child: child,
+    );
+  }
+}
+
+class _InlineLoader extends StatelessWidget {
+  const _InlineLoader();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: Center(
+        child: CircularProgressIndicator(
+          color: context.kMutedForeground,
+          strokeWidth: 2,
+        ),
+      ),
+    );
   }
 }

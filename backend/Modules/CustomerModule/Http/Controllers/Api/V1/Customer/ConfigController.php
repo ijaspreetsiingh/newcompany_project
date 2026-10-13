@@ -213,6 +213,7 @@ class ConfigController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'provider_id' => 'nullable|string|max:191',
+            'guest_id' => 'nullable|string|max:191',
         ]);
 
         if ($validator->fails()) {
@@ -222,6 +223,25 @@ class ConfigController extends Controller
         $provider = null;
         if (!empty($request['provider_id'])) {
             $provider = \Modules\ProviderManagement\Entities\Provider::find($request['provider_id']);
+        }
+
+        // Provider id na bheja ho (stale/local cart) to customer ke cart se
+        // provider resolve karo — warna global (unfiltered) config chali jati hai.
+        if (!$provider) {
+            $authedCustomerId = null;
+            try {
+                $authedCustomerId = auth('api')->id();
+            } catch (\Throwable $exception) {
+                $authedCustomerId = null;
+            }
+            $cartCustomerId = $authedCustomerId ?: $request['guest_id'];
+            if (!empty($cartCustomerId)) {
+                $cartProviderId = \Modules\CartModule\Entities\Cart::where('customer_id', $cartCustomerId)
+                    ->value('provider_id');
+                if (!empty($cartProviderId)) {
+                    $provider = \Modules\ProviderManagement\Entities\Provider::find($cartProviderId);
+                }
+            }
         }
 
         $isPublished = 0;

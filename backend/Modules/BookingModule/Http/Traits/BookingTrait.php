@@ -161,6 +161,9 @@ trait BookingTrait
                 $booking->total_referral_discount_amount = $referralDiscount;
                 $booking->service_address_location = json_encode(UserAddress::find($request['service_address_id'])) ?? null;
                 $booking->service_location = $request['service_location'];
+                // "Book again with same serviceman" — assignment flow pehle isi
+                // serviceman ko request bhejega (decline/expire par nearest).
+                $booking->preferred_serviceman_id = $request['preferred_serviceman_id'] ?? null;
                 $booking->save();
 
                 // ============ AUTO-ASSIGN LOGIC START ============

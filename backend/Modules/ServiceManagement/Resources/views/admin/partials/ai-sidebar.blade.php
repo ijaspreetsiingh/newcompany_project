@@ -109,7 +109,7 @@
                                 <div class="mt-4 text-center analyzeImageBtn_wrapper">
                                     <button type="button" class="btn btn--primary rounded mb-3 d-flex align-items-center gap-2 opacity-1 border-0 mx-auto position-relative"
                                             id="analyzeImageBtn"
-                                            data-url="{{ route('admin.product.analyze-image-auto-fill') }}"
+                                            data-url="{{ \Illuminate\Support\Facades\Route::has('admin.product.analyze-image-auto-fill') ? route('admin.product.analyze-image-auto-fill') : '' }}"
                                             data-lang="default">
                                         <span class="ai-btn-animation d-none">
                                             <span class="gradientRect"></span>
@@ -145,7 +145,7 @@
                             <input type="text" class="form-control" id="productKeywords"
                                    placeholder="{{ translate('Tell_me_about_your_service') }}" data-role="tagsinput">
                             <button type="button" class="btn btn--primary border-0" id="generateTitleBtn"
-                                    data-route="{{ route('admin.product.generate-title-suggestions') }}"
+                                    data-route="{{ \Illuminate\Support\Facades\Route::has('admin.product.generate-title-suggestions') ? route('admin.product.generate-title-suggestions') : '' }}"
                                     data-lang="en">
                                 <span class="ai-loader-animation z-2 d-none">
                                     <span class="loader-circle"></span>

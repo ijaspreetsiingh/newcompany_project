@@ -237,8 +237,7 @@ class RadiusSearchController extends GetxService {
   Future<void> _handleExpand(AddressModel address, double next) async {
     if (_checking) return;
     _checking = true;
-
-    _attempts++;
+    final double previousRadius = _current;
     _current = next;
     SearchRadiusState.activeRadius = next;
 
@@ -250,6 +249,7 @@ class RadiusSearchController extends GetxService {
       _hideSearchingOverlay();
 
       if (found == true) {
+        _attempts++;
         _dismissed = true;
         _dialogOpen = false;
         _openHomeGateIfZoneEmpty(address);
@@ -258,8 +258,13 @@ class RadiusSearchController extends GetxService {
         return;
       }
 
-      // found == null → check timeout/error gayab ho gaya, bas reload karo
-      // ageya radius baadana ya next popup dikhna mat chahiye
+      // API failure means availability is unknown, so restore the old radius.
+      if (found == null) {
+        _current = previousRadius;
+        SearchRadiusState.activeRadius = previousRadius;
+      } else {
+        _attempts++;
+      }
       unawaited(_reloadAfterRadiusChange(address));
       _dialogOpen = false;
       _checking = false;

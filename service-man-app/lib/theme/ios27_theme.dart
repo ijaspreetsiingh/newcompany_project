@@ -53,9 +53,9 @@ class Ios27Theme {
   static InputDecorationTheme _input(bool isDark) {
     final card = isDark ? Ios27Tokens.darkCard : Ios27Tokens.lightCard;
     final border = isDark
-        ? const Color(0x26FFFFFF)
+        ? const Color(0xFF333333)
         : const Color(0xFFDEDEDE);
-    final focus = isDark ? const Color(0xFFE2E8F0) : const Color(0xFF070707);
+    final focus = isDark ? const Color(0xFFF1F1F1) : const Color(0xFF070707);
     final hint = isDark
         ? Ios27Tokens.darkSecondaryLabel
         : Ios27Tokens.lightSecondaryLabel;
@@ -157,41 +157,41 @@ class Ios27Theme {
     const label = Ios27Tokens.darkLabel;
     const secondary = Ios27Tokens.darkSecondaryLabel;
     final scheme = const ColorScheme.dark(
-      primary: Color(0xFFE2E8F0),
-      onPrimary: Color(0xFF0F172B),
-      primaryContainer: Color(0xFFE2E8F0),
-      onPrimaryContainer: Color(0xFF0F172B),
-      secondary: Color(0xFF1D293D),
-      onSecondary: Color(0xFFF8FAFC),
-      secondaryContainer: Color(0xFF1D293D),
-      onSecondaryContainer: Color(0xFFF8FAFC),
+      primary: Color(0xFFF1F1F1),
+      onPrimary: Color(0xFF0D0D0D),
+      primaryContainer: Color(0xFFF1F1F1),
+      onPrimaryContainer: Color(0xFF0D0D0D),
+      secondary: Color(0xFF262626),
+      onSecondary: Color(0xFFF1F1F1),
+      secondaryContainer: Color(0xFF262626),
+      onSecondaryContainer: Color(0xFFF1F1F1),
       tertiary: Color(0xFF008849),
-      onTertiary: Color(0xFFF8FAFC),
+      onTertiary: Color(0xFFF1F1F1),
       tertiaryContainer: Color(0xFF0B3D24),
       onTertiaryContainer: Color(0xFFD8F4DF),
       surface: canvas,
       onSurface: label,
       onSurfaceVariant: secondary,
       surfaceContainerHighest: card,
-      error: Color(0xFFE7000B),
-      onError: Color(0xFFF8FAFC),
-      outline: Color(0x1AFFFFFF),
-      outlineVariant: Color(0x26FFFFFF),
+      error: Color(0xFFE07A7A),
+      onError: Color(0xFF0D0D0D),
+      outline: Color(0xFF333333),
+      outlineVariant: Color(0xFF333333),
       scrim: Colors.black,
     );
     return _base(
       brightness: Brightness.dark,
-      accent: const Color(0xFFE2E8F0),
-      onAccent: const Color(0xFF0F172B),
-      accentDark: const Color(0xFFE2E8F0),
+      accent: const Color(0xFFF1F1F1),
+      onAccent: const Color(0xFF0D0D0D),
+      accentDark: const Color(0xFFF1F1F1),
       canvas: canvas,
       card: card,
       label: label,
       secondary: secondary,
-      hint: const Color(0xFF90A1B9),
-      focus: card,
-      hover: const Color(0xFF1D293D),
-      disabled: const Color(0xFF1D293D),
+      hint: const Color(0xFFB3B3B3),
+      focus: const Color(0xFF262626),
+      hover: const Color(0xFF262626),
+      disabled: const Color(0xFF6B6B6B),
       shadow: Colors.black,
       scheme: scheme,
       overlay: SystemUiOverlayStyle.light.copyWith(
@@ -221,7 +221,7 @@ class Ios27Theme {
     required List<ThemeExtension<dynamic>> extensions,
   }) {
     final isDark = brightness == Brightness.dark;
-    final border = isDark ? const Color(0x1AFFFFFF) : const Color(0xB3CACACA);
+    final border = isDark ? const Color(0xFF333333) : const Color(0xB3CACACA);
 
     return ThemeData(
       useMaterial3: true,
@@ -344,7 +344,7 @@ class Ios27Theme {
           minimumSize: const Size(88, Ios27Tokens.controlHeight),
           padding: const EdgeInsets.symmetric(horizontal: 20),
           side: BorderSide(
-            color: isDark ? const Color(0x26FFFFFF) : const Color(0xFFDEDEDE),
+            color: isDark ? const Color(0xFF333333) : const Color(0xFFDEDEDE),
             width: 1,
           ),
           shape: RoundedRectangleBorder(
@@ -392,13 +392,13 @@ class Ios27Theme {
           if (states.contains(WidgetState.selected)) {
             return const Color(0xFFFCFCFC);
           }
-          return isDark ? const Color(0xFF90A1B9) : const Color(0xFF5B5B5B);
+          return isDark ? const Color(0xFFB3B3B3) : const Color(0xFF5B5B5B);
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return Ios27Tokens.success;
           }
-          return isDark ? const Color(0xFF1D293D) : const Color(0xFFDEDEDE);
+          return isDark ? const Color(0xFF262626) : const Color(0xFFDEDEDE);
         }),
         trackOutlineColor: WidgetStateProperty.resolveWith((_) => Colors.transparent),
       ),
@@ -442,7 +442,7 @@ class Ios27Theme {
           fontWeight: FontWeight.w600,
         ),
         side: BorderSide(
-          color: isDark ? const Color(0x26FFFFFF) : const Color(0xFFDEDEDE),
+          color: isDark ? const Color(0xFF333333) : const Color(0xFFDEDEDE),
           width: 1,
         ),
         shape: RoundedRectangleBorder(

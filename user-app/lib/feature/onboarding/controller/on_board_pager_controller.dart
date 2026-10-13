@@ -48,7 +48,7 @@ class OnBoardController extends GetxController implements GetxService{
     },
     {
       "text": "Safe, Trusted\n& Reliable",
-      "subTitle": "Verified professionals, secure payments and 24/7 support â€” for your complete peace of mind.",
+      "subTitle": "Verified professionals, secure payments and 24/7 support — for your complete peace of mind.",
       "image": "assets/img/3.png",
       "primaryColor": const Color(0xFF7B1FA2),
       "gradientColors": const [

@@ -293,6 +293,42 @@ class BookingSummeryWidget extends StatelessWidget{
                 ),
               ),
 
+            if(bookingDetails.extraServices != null && bookingDetails.extraServices!.isNotEmpty)
+              ...bookingDetails.extraServices!.map((extra) {
+                final int qty = extra.quantity ?? 1;
+                return Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${'extra_work'.tr}${(extra.name ?? '').isNotEmpty ? ' • ${extra.name}' : ''}${qty > 1 ? ' ×$qty' : ''}',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w400,
+                            color: mutedColor,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Text(
+                          "(+) ${PriceConverter.convertPrice((extra.price ?? 0) * qty, isShowLongPrice: true)}",
+                          style: GoogleFonts.dmSans(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w400,
+                            color: primaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+
             if(bookingDetails.additionalCharge != null && additionalCharge < 0 && (bookingDetails.paymentMethod != "cash_after_service" || bookingDetails.partialPayments!.isNotEmpty ))
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

@@ -86,9 +86,13 @@ class BookingItemCard extends StatelessWidget {
                               Get.toNamed(RouteHelper.getBookingDetailsScreen(bookingID :bookingModel.id!,));
                             }
                           }
-                          if(option.title == "rebook"){
+                          if(option.title == "book_again"){
                             serviceBookingController.updateRebookIndex(index);
-                           await serviceBookingController.checkCartSubcategory(bookingModel.id!, bookingModel.subCategoryId!);
+                            serviceBookingController.showBookAgainOptions(
+                              bookingId: bookingModel.id!,
+                              subCategoryId: bookingModel.subCategoryId!,
+                              servicemanId: bookingModel.servicemanId,
+                            );
                           }
 
                           else if(option.title == "download_invoice"){

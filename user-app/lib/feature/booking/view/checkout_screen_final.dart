@@ -20,6 +20,9 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
   /// ASAP mode — jaldi possible service (config.instantBooking on hone par).
   bool _asapMode = false;
 
+  /// Continue button loader (cart refresh + payment config fetch ke dauran).
+  bool _isContinuing = false;
+
   /// Sirf ek baar screen entry par house-details popup.
   bool _housePopupShown = false;
 
@@ -46,15 +49,17 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
     // Friend/relative (book for other location) history
     Get.find<FriendLocationController>().loadHistory();
 
-    // Cart must be loaded for price summary
-    if (cartController.cartList.isEmpty) {
-      cartController.getCartListFromServer();
-    }
-
-    // Per-provider payment config prefetch (allowed gateways + booking fee)
-    Get.find<CheckOutController>().fetchProviderPaymentConfig(
-      cartController.cartList.isNotEmpty ? cartController.cartList.first.provider?.id : null,
-    );
+    // Cart must be loaded for price summary — hamesha server se force refresh.
+    // Stale/local cart par payment filter aur place-order dono galat chalte hain.
+    cartController.getCartListFromServer().then((_) {
+      if (!mounted) return;
+      setState(() {});
+      // Provider payment config bhi fresh cart ke provider id se.
+      Get.find<CheckOutController>().fetchProviderPaymentConfig(
+        cartController.cartList.isNotEmpty ? cartController.cartList.first.provider?.id : null,
+        force: true,
+      );
+    });
 
     // Pre-select saved schedule (if any) on day/time pickers
     _syncSelectionFromSchedule();
@@ -173,6 +178,12 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
     return DateFormat('HH:mm:ss').format(parsed);
   }
 
+  /// Summary card ka text — "Mon, 13 Oct 2026 · 10:00 AM"
+  String _selectedScheduleSummary() {
+    final DateTime date = DateTime.now().add(Duration(days: selectedDay));
+    return '${DateFormat('EEE, d MMM yyyy').format(date)}  ·  $selectedTime';
+  }
+
   void _applySchedule() {
     final scheduleController = Get.find<ScheduleController>();
 
@@ -201,63 +212,73 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
   }
 
   void _onContinue() async {
+    if (_isContinuing) return;
     final locationController = Get.find<LocationController>();
     final scheduleController = Get.find<ScheduleController>();
     final cartController = Get.find<CartController>();
 
-    if (cartController.cartList.isEmpty) {
-      customSnackBar('your_cart_is_empty'.tr, type: ToasterMessageType.info);
-      return;
-    }
+    setState(() => _isContinuing = true);
+    try {
+      // Server cart se fresh state — stale local cart par aage badhne par
+      // payment step/place-order wahi par fail hote hain.
+      await cartController.getCartListFromServer();
 
-    AddressModel? addressModel = _currentAddress(locationController);
+      if (cartController.cartList.isEmpty) {
+        customSnackBar('your_cart_is_empty'.tr, type: ToasterMessageType.info);
+        return;
+      }
 
-    if (addressModel == null) {
-      customSnackBar('add_address_first'.tr, type: ToasterMessageType.info);
-      return;
-    }
+      AddressModel? addressModel = _currentAddress(locationController);
 
-    // House details set nahi hai to confirm karwao (ek hi jagah logic).
-    final AddressModel? confirmedAddress = await _runHouseDetailsFlow(addressModel);
-    if (!mounted) return;
-    if (confirmedAddress == null) return;
-    addressModel = confirmedAddress;
+      if (addressModel == null) {
+        customSnackBar('add_address_first'.tr, type: ToasterMessageType.info);
+        return;
+      }
 
-    if ((addressModel.contactPersonName == null ||
-            addressModel.contactPersonName!.isEmpty ||
-            addressModel.contactPersonName == 'null') ||
-        (addressModel.contactPersonNumber == null ||
-            addressModel.contactPersonNumber!.isEmpty ||
-            addressModel.contactPersonNumber == 'null')) {
-      customSnackBar(
-        'please_input_contact_person_name_and_phone_number'.tr,
-        type: ToasterMessageType.info,
+      // House details set nahi hai to confirm karwao (ek hi jagah logic).
+      final AddressModel? confirmedAddress = await _runHouseDetailsFlow(addressModel);
+      if (!mounted) return;
+      if (confirmedAddress == null) return;
+      addressModel = confirmedAddress;
+
+      if ((addressModel.contactPersonName == null ||
+              addressModel.contactPersonName!.isEmpty ||
+              addressModel.contactPersonName == 'null') ||
+          (addressModel.contactPersonNumber == null ||
+              addressModel.contactPersonNumber!.isEmpty ||
+              addressModel.contactPersonNumber == 'null')) {
+        customSnackBar(
+          'please_input_contact_person_name_and_phone_number'.tr,
+          type: ToasterMessageType.info,
+        );
+        return;
+      }
+
+      _applySchedule();
+
+      if (scheduleController.scheduleTime == null &&
+          scheduleController.selectedScheduleType != ScheduleType.asap) {
+        customSnackBar('select_your_preferable_booking_time'.tr, type: ToasterMessageType.info);
+        return;
+      }
+
+      final configModel = Get.find<SplashController>().configModel;
+      if (scheduleController.selectedScheduleType == ScheduleType.schedule &&
+          configModel.content?.scheduleBookingTimeRestriction == 1 &&
+          scheduleController.checkValidityOfTimeRestriction(configModel.content!.advanceBooking!) != null) {
+        customSnackBar(scheduleController.checkValidityOfTimeRestriction(configModel.content!.advanceBooking!));
+        return;
+      }
+
+      // Per-provider payment config (gateways + fee) payment step se pehle ready
+      await Get.find<CheckOutController>().fetchProviderPaymentConfig(
+        cartController.cartList.isNotEmpty ? cartController.cartList.first.provider?.id : null,
       );
-      return;
+
+      Get.toNamed(RouteHelper.getPaymentFinalRoute());
+    } finally {
+      if (mounted) setState(() => _isContinuing = false);
     }
-
-    _applySchedule();
-
-    if (scheduleController.scheduleTime == null &&
-        scheduleController.selectedScheduleType != ScheduleType.asap) {
-      customSnackBar('select_your_preferable_booking_time'.tr, type: ToasterMessageType.info);
-      return;
-    }
-
-    final configModel = Get.find<SplashController>().configModel;
-    if (scheduleController.selectedScheduleType == ScheduleType.schedule &&
-        configModel.content?.scheduleBookingTimeRestriction == 1 &&
-        scheduleController.checkValidityOfTimeRestriction(configModel.content!.advanceBooking!) != null) {
-      customSnackBar(scheduleController.checkValidityOfTimeRestriction(configModel.content!.advanceBooking!));
-      return;
-    }
-
-    // Per-provider payment config (gateways + fee) payment step se pehle ready
-    await Get.find<CheckOutController>().fetchProviderPaymentConfig(
-      cartController.cartList.isNotEmpty ? cartController.cartList.first.provider?.id : null,
-    );
-
-    Get.toNamed(RouteHelper.getPaymentFinalRoute());
   }
 
   @override
@@ -333,7 +354,7 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Progress Indicator - STEP 1/3
-                  _buildProgressIndicator(1),
+                  const CheckoutProgressIndicator(currentStep: 1),
                   const SizedBox(height: Dimensions.paddingSizeExtraLarge),
 
                   // ADDRESS SECTION
@@ -347,6 +368,64 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
                   const SizedBox(height: Dimensions.paddingSizeDefault),
 
                   ..._buildAddressList(context, locationController, selectedAddressModel),
+                  const SizedBox(height: Dimensions.paddingSizeExtraLarge),
+
+                  // PREFERRED SERVICEMAN (book again with same serviceman)
+                  GetBuilder<CheckOutController>(builder: (checkOutController) {
+                    if (checkOutController.preferredServicemanId == null) {
+                      return const SizedBox.shrink();
+                    }
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+                      decoration: BoxDecoration(
+                        color: primaryAccent.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                        border: Border.all(color: primaryAccent.withValues(alpha: 0.35)),
+                      ),
+                      child: Row(children: [
+                        ClipOval(
+                          child: CustomImage(
+                            image: checkOutController.preferredServicemanImage ?? '',
+                            width: 44,
+                            height: 44,
+                          ),
+                        ),
+                        const SizedBox(width: Dimensions.paddingSizeDefault),
+                        Expanded(
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(
+                              'preferred_serviceman'.tr,
+                              style: robotoMedium.copyWith(fontSize: 11, color: Colors.black54),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              checkOutController.preferredServicemanName ?? '',
+                              style: robotoBold.copyWith(
+                                fontSize: 14,
+                                color: Theme.of(context).textTheme.bodyLarge!.color,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'preferred_serviceman_note'.tr,
+                              style: robotoRegular.copyWith(
+                                fontSize: Dimensions.fontSizeExtraSmall,
+                                color: Colors.black54,
+                                height: 1.3,
+                              ),
+                            ),
+                          ]),
+                        ),
+                        IconButton(
+                          tooltip: 'remove'.tr,
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () => checkOutController.clearPreferredServiceman(),
+                          icon: const Icon(Icons.close, size: 18, color: Colors.black45),
+                        ),
+                      ]),
+                    );
+                  }),
                   const SizedBox(height: Dimensions.paddingSizeExtraLarge),
 
                   // WHEN DO YOU NEED THE SERVICE (ASAP / Schedule toggle)
@@ -458,8 +537,46 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
                       );
                     },
                   ),
-                  const SizedBox(height: Dimensions.paddingSizeExtraLarge),
+                  const SizedBox(height: Dimensions.paddingSizeDefault),
+
+                  // SELECTED SCHEDULE SUMMARY — pick hua date/time turant dikhe
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+                    decoration: BoxDecoration(
+                      color: primaryAccent.withValues(alpha: 0.07),
+                      borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+                      border: Border.all(color: primaryAccent.withValues(alpha: 0.35)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.event_available_outlined, color: primaryAccent, size: 22),
+                        const SizedBox(width: Dimensions.paddingSizeDefault),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'schedule'.tr,
+                                style: robotoMedium.copyWith(fontSize: 11, color: Colors.black54),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _selectedScheduleSummary(),
+                                style: robotoBold.copyWith(
+                                  fontSize: 14,
+                                  color: Theme.of(context).textTheme.bodyLarge!.color,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.edit_calendar_outlined, color: primaryAccent, size: 18),
+                      ],
+                    ),
+                  ),
                   ],
+                  const SizedBox(height: Dimensions.paddingSizeExtraLarge),
 
                   // PRICE SUMMARY (real cart data)
                   Container(
@@ -552,17 +669,24 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: _onContinue,
+                      onPressed: _isContinuing ? null : _onContinue,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryAccent,
+                        disabledBackgroundColor: primaryAccent.withValues(alpha: 0.7),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
                         ),
                       ),
-                      child: Text(
-                        'continue_to_payment'.tr,
-                        style: robotoBold.copyWith(fontSize: 16, color: Colors.white),
-                      ),
+                      child: _isContinuing
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                            )
+                          : Text(
+                              'continue_to_payment'.tr,
+                              style: robotoBold.copyWith(fontSize: 16, color: Colors.white),
+                            ),
                     ),
                   ),
                   const SizedBox(height: Dimensions.paddingSizeLarge),
@@ -722,60 +846,6 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildProgressIndicator(int currentStep) {
-    return Container(
-      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColorLight,
-        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _buildProgressStep(1, 'schedule'.tr, currentStep >= 1),
-          Container(width: 30, height: 2, color: Colors.grey[300]),
-          _buildProgressStep(2, 'payment'.tr, currentStep >= 2),
-          Container(width: 30, height: 2, color: Colors.grey[300]),
-          _buildProgressStep(3, 'confirmed'.tr, currentStep >= 3),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressStep(int step, String label, bool active) {
-    return Expanded(
-      child: Column(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: active ? primaryAccent : Colors.grey[300],
-            ),
-            child: Center(
-              child: active
-                  ? const Icon(Icons.check, color: Colors.white, size: 16)
-                  : Text(
-                      step.toString(),
-                      style: robotoBold.copyWith(color: Colors.grey[600]),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: robotoSmall.copyWith(
-              fontSize: 10,
-              color: active ? primaryAccent : Colors.grey[600],
-            ),
-          ),
-        ],
       ),
     );
   }

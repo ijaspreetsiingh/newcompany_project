@@ -78,6 +78,9 @@ class BookingDetailsContent {
   List<RepeatHistory>? repeatEditHistory;
   BookingDetailsContent? subBooking;
   String? serviceLocation;
+  List<ExtraService>? extraServices;
+  List<AssignmentTrailItem>? assignmentTrail;
+  int? assignmentTrailCount;
 
   BookingDetailsContent({
     this.id,
@@ -130,7 +133,10 @@ class BookingDetailsContent {
     this.repeatBookingList,
     this.subBooking,
     this.repeatEditHistory,
-    this.serviceLocation
+    this.serviceLocation,
+    this.extraServices,
+    this.assignmentTrail,
+    this.assignmentTrailCount
   });
 
   BookingDetailsContent.fromJson(Map<String, dynamic> json) {
@@ -241,6 +247,19 @@ class BookingDetailsContent {
       });
     }
     serviceLocation = json['service_location'];
+    if (json['extra_services'] != null) {
+      extraServices = <ExtraService>[];
+      json['extra_services'].forEach((v) {
+        extraServices!.add(ExtraService.fromJson(v));
+      });
+    }
+    if (json['assignment_trail'] != null) {
+      assignmentTrail = <AssignmentTrailItem>[];
+      json['assignment_trail'].forEach((v) {
+        assignmentTrail!.add(AssignmentTrailItem.fromJson(v));
+      });
+    }
+    assignmentTrailCount = int.tryParse(json['assignment_trail_count']?.toString() ?? '');
 
   }
 
@@ -1100,3 +1119,63 @@ class RepeatHistoryLog {
 }
 
 
+
+class ExtraService {
+  String? id;
+  String? bookingId;
+  String? servicemanId;
+  String? name;
+  double? price;
+  int? quantity;
+  String? type;
+
+  ExtraService({this.id, this.bookingId, this.servicemanId, this.name, this.price, this.quantity, this.type});
+
+  ExtraService.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    bookingId = json['booking_id'];
+    servicemanId = json['serviceman_id'];
+    name = json['name'];
+    price = double.tryParse(json['price'].toString());
+    quantity = int.tryParse(json['quantity'].toString());
+    type = json['type'];
+  }
+}
+
+/// AUTO-ASSIGN trail: ek serviceman ki assignment slot ki history.
+/// Backend `assignment_trail` bhejta hai — kis serviceman ko kab request gayi,
+/// usne accept/decline ki ya timer expire ho gaya.
+class AssignmentTrailItem {
+  String? servicemanId;
+  String? name;
+  String? phone;
+  String? image;
+  String? status; // pending | accepted | rejected | expired
+  String? requestedAt;
+  String? respondedAt;
+
+  AssignmentTrailItem({
+    this.servicemanId,
+    this.name,
+    this.phone,
+    this.image,
+    this.status,
+    this.requestedAt,
+    this.respondedAt,
+  });
+
+  AssignmentTrailItem.fromJson(Map<String, dynamic> json) {
+    servicemanId = json['serviceman_id'];
+    name = json['name'];
+    phone = json['phone'];
+    image = json['image'];
+    status = json['status'];
+    requestedAt = json['requested_at'];
+    respondedAt = json['responded_at'];
+  }
+
+  bool get isAccepted => status == 'accepted';
+  bool get isRejected => status == 'rejected';
+  bool get isExpired => status == 'expired';
+  bool get isPending => status == 'pending';
+}

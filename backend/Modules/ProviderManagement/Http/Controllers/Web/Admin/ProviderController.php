@@ -1228,6 +1228,9 @@ class ProviderController extends Controller
         // Step 6: Service Permission (checkbox present = on, missing = off)
         $provider->allow_service_create = $request->has('allow_service_create') ? 1 : 0;
         $provider->allow_service_edit = $request->has('allow_service_edit') ? 1 : 0;
+        $provider->unsatisfied_window_days = $request->filled('unsatisfied_window_days')
+            ? max(0, min(60, (int) $request->input('unsatisfied_window_days')))
+            : 7;
         $provider->service_approval_required = $request->has('service_approval_required') ? 1 : 0;
         $provider->zone_id = $request['zone_id'];
         $provider->coordinates = ['latitude' => $request['latitude'], 'longitude' => $request['longitude']];

@@ -10,14 +10,14 @@ class ApiClient extends GetxService {
   final String? appBaseUrl;
   final SharedPreferences sharedPreferences;
   static final String noInternetMessage = 'connection_to_api_server_failed'.tr;
-  final int timeoutInSeconds = 30;
+  final int timeoutInSeconds = 45;
 
   String? token;
   late Map<String, String> _mainHeaders;
+  final http.Client _httpClient = http.Client();
 
   ApiClient({required this.appBaseUrl, required this.sharedPreferences}) {
     token = sharedPreferences.getString(AppConstants.token);
-    debugPrint('Token: $token');
     try {
 
     }catch(e) {
@@ -33,6 +33,7 @@ class ApiClient extends GetxService {
   void updateHeader(String? token, String? languageCode) {
     _mainHeaders = {
       'Content-Type': 'application/json; charset=UTF-8',
+      'Accept': 'application/json',
       'Authorization': 'Bearer $token',
       AppConstants.localizationKey: languageCode ?? AppConstants.languages[0].languageCode!,
 
@@ -42,8 +43,7 @@ class ApiClient extends GetxService {
   Future<Response> getData(String uri, {Map<String, dynamic>? query, Map<String, String>? headers}) async {
     try {
       debugPrint('====> API Call: $uri');
-      //debugPrint('====> API Call: $uri\nHeader: $_mainHeaders');
-      http.Response response = await http.get(
+      http.Response response = await _httpClient.get(
         Uri.parse(appBaseUrl!+uri),
         headers: headers ?? _mainHeaders,
       ).timeout(Duration(seconds: timeoutInSeconds));
@@ -56,9 +56,7 @@ class ApiClient extends GetxService {
   Future<Response> postData(String? uri, dynamic body, {Map<String, String>? headers}) async {
     try {
       debugPrint('====> API Call: $uri');
-      //debugPrint('====> API Call: $uri\nHeader: $_mainHeaders');
-      debugPrint('====> API Body: $body');
-      http.Response response = await http.post(
+      http.Response response = await _httpClient.post(
         Uri.parse(appBaseUrl!+uri!),
         body: jsonEncode(body),
         headers: headers ?? _mainHeaders,
@@ -94,7 +92,7 @@ class ApiClient extends GetxService {
       }
     }
     request.fields.addAll(body);
-    http.Response response = await http.Response.fromStream(await request.send());
+    http.Response response = await http.Response.fromStream(await _httpClient.send(request));
     return handleResponse(response, uri);
   }
 
@@ -105,8 +103,6 @@ class ApiClient extends GetxService {
       {Map<String, String>? headers,List<PlatformFile>? otherFile}) async {
 
       debugPrint('====> API Call: $uri');
-      //debugPrint('====> API Call: $uri\nHeader: $_mainHeaders');
-      debugPrint('====> API Body: $body');
       http.MultipartRequest request = http.MultipartRequest('POST', Uri.parse(appBaseUrl!+uri!));
       request.headers.addAll(headers ?? _mainHeaders);
 
@@ -138,16 +134,14 @@ class ApiClient extends GetxService {
 
       request.fields.addAll(body);
 
-      http.Response response = await http.Response.fromStream(await request.send());
+      http.Response response = await http.Response.fromStream(await _httpClient.send(request));
 
       return handleResponse(response, uri);
   }
 
   Future<Response> putData(String? uri, dynamic body, {Map<String, String>? headers}) async {
     try {
-      debugPrint('====> API Call: $uri\nHeader: $_mainHeaders');
-      debugPrint('====> API Body: $body');
-      http.Response response = await http.put(
+      http.Response response = await _httpClient.put(
         Uri.parse(appBaseUrl!+uri!),
         body: jsonEncode(body),
         headers: headers ?? _mainHeaders,
@@ -160,8 +154,7 @@ class ApiClient extends GetxService {
 
   Future<Response> deleteData(String? uri, {Map<String, String>? headers}) async {
     try {
-      debugPrint('====> API Call: $uri\nHeader: $_mainHeaders');
-      http.Response response = await http.delete(
+      http.Response response = await _httpClient.delete(
         Uri.parse(appBaseUrl!+uri!),
         headers: headers ?? _mainHeaders,
       ).timeout(Duration(seconds: timeoutInSeconds));
@@ -169,6 +162,12 @@ class ApiClient extends GetxService {
     } catch (e) {
       return Response(statusCode: 1, statusText: noInternetMessage);
     }
+  }
+
+  @override
+  void onClose() {
+    _httpClient.close();
+    super.onClose();
   }
 
   Response handleResponse(http.Response response, String? uri) {
@@ -196,7 +195,6 @@ class ApiClient extends GetxService {
       response0 = Response(statusCode: 0, statusText: noInternetMessage);
     }
     debugPrint('====> API Response: [${response0.statusCode}] $uri');
-    //debugPrint('====> API Response: [${response0.statusCode}] $uri\n${response0.body}');
     return response0;
   }
 }

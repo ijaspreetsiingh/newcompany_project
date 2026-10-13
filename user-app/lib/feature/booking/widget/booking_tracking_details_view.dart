@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:jdds/feature/booking/widget/regular/booking_summery_widget.dart';
 import 'package:jdds/feature/booking/widget/booking_screen_shimmer.dart';
+import 'package:jdds/feature/booking/widget/booking_otp_widget.dart';
+import 'package:jdds/feature/booking/widget/booking_start_otp_widget.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Mobile booking detail layout based on the customer tracking reference.
@@ -167,8 +169,20 @@ class BookingTrackingDetailsView extends StatelessWidget {
                       muted: muted,
                       border: border,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
+                    if (_showStartOtp(booking)) ...[
+                      BookingStartOtpWidget(bookingDetails: booking),
+                      const SizedBox(height: 12),
+                    ],
+                    if (_showCompletionOtp(booking)) ...[
+                      BookingOtpWidget(bookingDetails: booking),
+                      const SizedBox(height: 12),
+                    ],
                     BookingSummeryWidget(bookingDetails: booking),
+                    if (status == 'completed' && !isSubBooking) ...[
+                      const SizedBox(height: 8),
+                      const UnsatisfiedSectionWidget(),
+                    ],
                     const SizedBox(height: 8),
                   ],
                 ),
@@ -216,9 +230,14 @@ class BookingTrackingDetailsView extends StatelessWidget {
                               if (booking.id != null &&
                                   booking.subCategoryId != null) {
                                 Get.find<ServiceBookingController>()
-                                    .checkCartSubcategory(
-                                      booking.id!,
-                                      booking.subCategoryId!,
+                                    .showBookAgainOptions(
+                                      bookingId: booking.id!,
+                                      subCategoryId: booking.subCategoryId!,
+                                      servicemanId: booking.serviceman?.id,
+                                      servicemanName: professionalName,
+                                      servicemanImage:
+                                          serviceman?.profileImageFullPath ??
+                                              '',
                                     );
                               }
                             },
@@ -229,7 +248,7 @@ class BookingTrackingDetailsView extends StatelessWidget {
                               shape: const StadiumBorder(),
                             ),
                             child: Text(
-                              'repeat'.tr,
+                              'book_again'.tr,
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
                               ),
@@ -317,12 +336,35 @@ class BookingTrackingDetailsView extends StatelessWidget {
       ? 'Service completed'
       : status == 'canceled' || status == 'cancelled'
       ? 'Booking canceled'
-      : 'Everythingâ€™s on track';
+      : 'Everything’s on track';
 
   String _formatDate(String? value) {
     final date = value == null ? null : DateTime.tryParse(value);
     if (date == null) return '';
     return DateConverter.dateMonthYearTimeTwentyFourFormat(date);
+  }
+
+  // START OTP — serviceman ne 300m tak pahunch kar "reached" mark kiya aur
+  // start OTP generate hua, aur booking abhi active (accepted/ongoing) hai.
+  bool _showStartOtp(BookingDetailsContent booking) {
+    final String raw = booking.bookingStatus ?? '';
+    final bool active = raw == 'accepted' || raw == 'ongoing';
+    final String otp = booking.startOtp ?? '';
+    return active &&
+        booking.servicemanReachedAt != null &&
+        otp.isNotEmpty &&
+        otp != 'null';
+  }
+
+  // Completion OTP — tab jab tak config ON hai aur booking active hai
+  // (completed/canceled ke baad chip jaata hai).
+  bool _showCompletionOtp(BookingDetailsContent booking) {
+    final String raw = booking.bookingStatus ?? '';
+    final bool active = raw == 'accepted' || raw == 'ongoing';
+    final bool enabled =
+        Get.find<SplashController>().configModel.content?.confirmationOtpStatus ??
+            false;
+    return active && enabled;
   }
 }
 
@@ -558,7 +600,7 @@ class _ProfessionalCard extends StatelessWidget {
               if (rating != null) ...[
                 const SizedBox(height: 3),
                 Text(
-                  'â˜… ${rating!.toStringAsFixed(2)} Â· ${jobs ?? 0} jobs',
+                  '★ ${rating!.toStringAsFixed(2)} · ${jobs ?? 0} jobs',
                   style: GoogleFonts.dmSans(fontSize: 11, color: muted),
                 ),
               ],
@@ -596,7 +638,7 @@ class _ProfessionalCard extends StatelessWidget {
   );
 
   String _inttials(String name) => name.trim().isEmpty
-      ? 'â€”'
+      ? '—'
       : name
             .trim()
             .split(RegExp(r'\s+'))

@@ -4,6 +4,8 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'package:jdds/helper/image_url_helper.dart';
+
 import '../controller/call_controller.dart';
 import '../model/call_model.dart';
 import 'voice_call_screen.dart';
@@ -133,7 +135,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen> {
               child: CircleAvatar(
                 radius: 56,
                 backgroundColor: Colors.white12,
-                backgroundImage: widget.userImage.isNotEmpty ? NetworkImage(widget.userImage) : null,
+                backgroundImage: widget.userImage.isNotEmpty ? NetworkImage(getFullImageUrl(widget.userImage)) : null,
                 child: widget.userImage.isEmpty
                     ? const Icon(Icons.person, size: 60, color: Colors.white70)
                     : null,

@@ -5,7 +5,7 @@ class AppConstants {
   static const String shortAppName = 'JS Partner';
   static const String appUser = 'Partner App';
   static const String appVersion = '3.6'; /// Flutter SDK: 3.38.5
-  static const String baseUrl = 'https://newcompanyproject-production.up.railway.app';
+  static const String baseUrl = 'http://10.0.2.2:8000';
   static const bool avoidMaintenanceMode = false;
   static const String loginUrl = '/api/v1/technician/access/signin';
   static const String configUrl = '/api/v1/technician/setup';
@@ -62,6 +62,13 @@ class AppConstants {
   static const String changeLanguage = '/api/v1/technician/locale-switch';
   static const String bookingStatisticDataUrl = '/api/v1/technician/overview/order-metrics';
   static const String updateLocationUrl = '/api/v1/technician/modify/position';
+
+  // ----- REACHED (300m) + START OTP -----
+  static const String reachedBookingUrl = '/api/v1/technician/order/reached';
+
+  // ----- EXTRA SERVICES (serviceman custom work) -----
+  static const String extraServiceUrl = '/api/v1/technician/order/extra-service';
+  static const String providerServicesUrl = '/api/v1/technician/order/provider-services';
 
 
   // Shared Key

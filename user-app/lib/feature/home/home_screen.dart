@@ -10,7 +10,6 @@ class HomeScreen extends StatefulWidget {
       Get.find<BannerController>().getBannerList(reload);
     }else{
       await Future.wait([
-        Get.find<ServiceController>().getRecommendedSearchList(),
         Get.find<BannerController>().getBannerList(reload),
         Get.find<CategoryController>().getCategoryList(reload),
         Get.find<ServiceController>().getPopularServiceList(1,reload),
@@ -18,6 +17,7 @@ class HomeScreen extends StatefulWidget {
       ]);
 
       Future.wait([
+        Get.find<ServiceController>().getRecommendedSearchList(),
         Get.find<ServiceController>().getAllServiceList(1,reload),
         Get.find<ProviderBookingController>().getProviderList(1,reload),
         Get.find<NearbyProviderController>().getProviderList(1,reload),

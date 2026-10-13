@@ -403,7 +403,7 @@ class _ProductBottomSheetState extends State<ServiceCenterDialog> {
                                 await cartController.getCartListFromServer(shouldUpdate: true);
                               }
                             }: null,
-                            buttonText: totalNow > 0 ? '$label Â· $totalText' : label,
+                            buttonText: totalNow > 0 ? '$label · $totalText' : label,
                             textStyle: GoogleFonts.dmSans(
                               fontSize: 13, fontWeight: FontWeight.w800,
                               color: canAddNow

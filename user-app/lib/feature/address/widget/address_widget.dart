@@ -43,7 +43,7 @@ class AddressWidget extends StatelessWidget {
     final String contactPhone = (address.contactPersonNumber ?? '').trim();
     final String contactLine = [contactName, contactPhone]
         .where((e) => e.isNotEmpty)
-        .join(' Â· ');
+        .join(' · ');
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),

@@ -124,7 +124,7 @@ class NestServiceListRow extends StatelessWidget {
                     fontSize: Dimensions.fontSizeExtraSmall,
                     color: Theme.of(context).textTheme.bodyLarge!.color,
                   )),
-                Text('  Â·  ${service.ratingCount ?? 0}+ ${'reviews'.tr}',
+                Text('  ·  ${service.ratingCount ?? 0}+ ${'reviews'.tr}',
                   style: robotoRegular.copyWith(
                     fontSize: Dimensions.fontSizeExtraSmall,
                     color: Theme.of(context).hintColor,

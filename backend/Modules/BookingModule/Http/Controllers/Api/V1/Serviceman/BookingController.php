@@ -495,8 +495,13 @@ class BookingController extends Controller
             return response()->json(response_formatter(DEFAULT_204), 200);
         }
 
-        // Pehle se reached (OTP already hai) — dubara generate na karo
+        // Pehle se reached (OTP already hai) — dubara generate mat karo, par
+        // customer ko OTP push DOBARA bhejo (agar pehli baar notification
+        // fail hui ho to yahi "I Have Reached" click uska retry ban jayega).
+        // Same OTP wapas jaata hai — user app ka START OTP card DB se hi
+        // dikhta hai, push sirf instant alert hai.
         if (!is_null($booking->start_otp) && !is_null($booking->serviceman_reached_at)) {
+            $this->sendStartOtpNotification($booking, $isRepeatBooking);
             return response()->json(response_formatter(BOOKING_STATUS_UPDATE_SUCCESS_200, $booking), 200);
         }
 
@@ -534,7 +539,19 @@ class BookingController extends Controller
         $booking->serviceman_reached_at = now();
         $booking->save();
 
-        // Customer ko OTP notification (customer app me booking details me bhi dikhega)
+        // Customer ko OTP notification (user app booking details card + push)
+        $this->sendStartOtpNotification($booking, $isRepeatBooking);
+
+        return response()->json(response_formatter(BOOKING_STATUS_UPDATE_SUCCESS_200, $booking), 200);
+    }
+
+    /**
+     * Customer ko start-OTP push. User app me booking details ka START OTP
+     * card DB se hi dikhta hai — ye push sirf instant alert hai. Idempotent
+     * hai: baar baar call kar sakte ho, same OTP wapas jaata hai.
+     */
+    private function sendStartOtpNotification($booking, bool $isRepeatBooking): void
+    {
         try {
             $customer = $isRepeatBooking ? $booking->booking?->customer : $booking->customer;
             if ($customer?->fcm_token) {
@@ -549,8 +566,6 @@ class BookingController extends Controller
             }
         } catch (\Throwable $e) {
         }
-
-        return response()->json(response_formatter(BOOKING_STATUS_UPDATE_SUCCESS_200, $booking), 200);
     }
 
     /**

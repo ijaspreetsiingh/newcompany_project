@@ -7,7 +7,7 @@ class AppConstants {
   static const String shortAppName = 'JS Admin';
   static const String appUser = 'Provider';
   static const String appVersion = '3.8'; /// Flutter SDK: 3.41.5
-  static const String baseUrl = 'https://newcompanyproject-production.up.railway.app';
+  static const String baseUrl = 'http://10.0.2.2:8000';
   static const bool avoidMaintenanceMode = false;
   static const String configUri = '/api/v1/partner/setup';
   static const String registerUri = '/api/v1/partner/access/signup';
@@ -21,6 +21,7 @@ class AppConstants {
   static const String servicemanUpdateUri = '/api/v1/partner/technician';
   static const String servicemanAssignUri = '/api/v1/partner/order/assign-technician';
   static const String recheckSummaryUri = '/api/v1/partner/order/recheck-summary';
+  static const String unsatisfiedSummaryUri = '/api/v1/partner/order/unsatisfied-summary';
   static const String servicemanUpdateStatus = '/api/v1/partner/technician/state/modify';
   static const String providerProfileUri = '/api/v1/partner/identity/summary';
   static const String providerProfileUpdateUrl = '/api/v1/partner/modify/account';

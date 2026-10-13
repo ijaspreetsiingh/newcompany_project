@@ -33,9 +33,17 @@ class _BookingFindingProviderwidgetstate extends State<BookingFindingProviderWid
   @override
   Widget build(BuildContext context) {
     return GetBuilder<BookingStatusPollingController>(builder: (controller) {
-      return controller.providerFound && controller.bookingDetails != null
-          ? _ProviderFoundCard(bookingDetails: controller.bookingDetails!)
-          : _FindingProviderCard(controller: controller);
+      // provider assign ho gaya (chaahe abhi pending ho ya accepted)
+      final bool providerAssigned = controller.providerFound && controller.bookingDetails != null;
+      final String? status = controller.bookingDetails?.bookingStatus;
+      final bool isFinal = status == 'accepted' || status == 'ongoing';
+
+      if (providerAssigned) {
+        return isFinal
+            ? _ProviderFoundCard(bookingDetails: controller.bookingDetails!)
+            : _ProviderAssignedSearchingCard(bookingDetails: controller.bookingDetails!);
+      }
+      return _FindingProviderCard(controller: controller);
     });
   }
 }
@@ -66,6 +74,73 @@ class _FindingProviderCard extends StatelessWidget {
           ),
           textAlign: TextAlign.center,
         ),
+      ]),
+    );
+  }
+}
+
+/// Provider assign ho gaya par serviceman abhi search ho raha hai —
+/// "In your location, [provider] and their partners are searching" wala state.
+class _ProviderAssignedSearchingCard extends StatelessWidget {
+  final BookingDetailsContent bookingDetails;
+  const _ProviderAssignedSearchingCard({required this.bookingDetails});
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = bookingDetails.provider;
+
+    return Container(
+      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+      ),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+
+        Row(children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
+            child: CustomImage(
+              height: 48, width: 48, fit: BoxFit.cover,
+              image: provider?.logoFullPath ?? '',
+            ),
+          ),
+          const SizedBox(width: Dimensions.paddingSizeDefault),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(provider?.companyName ?? '', style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault), maxLines: 1, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+              Text(
+                'provider_partners_searching_near_you'.tr,
+                style: robotoRegular.copyWith(
+                  fontSize: Dimensions.fontSizeSmall,
+                  color: Theme.of(context).hintColor,
+                ),
+                maxLines: 3,
+              ),
+            ]),
+          ),
+        ]),
+
+        const SizedBox(height: Dimensions.paddingSizeDefault),
+
+        Row(children: [
+          SizedBox(
+            height: 16, width: 16,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).colorScheme.primary),
+          ),
+          const SizedBox(width: Dimensions.paddingSizeSmall),
+          Expanded(
+            child: Text(
+              'serviceman_assigning'.tr,
+              style: robotoRegular.copyWith(
+                fontSize: Dimensions.fontSizeSmall,
+                color: Theme.of(context).hintColor,
+              ),
+            ),
+          ),
+        ]),
       ]),
     );
   }

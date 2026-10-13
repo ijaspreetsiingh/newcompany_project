@@ -170,12 +170,47 @@ class _CustomerInfoInputwidgetstate extends State<_CustomerInfoInputWidget> {
   @override
   void initState() {
     super.initState();
-    _contactPersonNameController.text = widget.address?.contactPersonName ?? "";
+    
+    // FIX 1: Auto-fill from logged-in user account
+    final userInfo = Get.find<UserController>().userInfoModel;
+    final isLoggedIn = Get.find<AuthController>().isLoggedIn();
+    
+    // AUTO-FILL CONTACT PERSON NAME
+    // Priority: 1. Saved address value, 2. User's full name from account, 3. Empty
+    if(widget.address?.contactPersonName != null && 
+        widget.address?.contactPersonName != "" && 
+        !widget.address!.contactPersonName.toString().contains('null')){
+      // Use saved address value
+      _contactPersonNameController.text = widget.address!.contactPersonName!;
+    } else if(isLoggedIn && userInfo != null) {
+      // Use user's full name from account
+      String firstName = userInfo.fName?.trim() ?? "";
+      String lastName = userInfo.lName?.trim() ?? "";
+      String fullName = "$firstName $lastName".trim();
+      _contactPersonNameController.text = fullName.isNotEmpty ? fullName : firstName;
+    } else {
+      _contactPersonNameController.text = "";
+    }
 
+    // AUTO-FILL CONTACT PERSON PHONE
+    // Priority: 1. Saved address value, 2. User's phone from account, 3. Empty
+    String phoneValue = "";
+    
+    if(widget.address?.contactPersonNumber != null && 
+        widget.address?.contactPersonNumber != "" && 
+        !widget.address!.contactPersonNumber.toString().contains('null')){
+      // Use saved address value
+      phoneValue = widget.address!.contactPersonNumber!;
+    } else if(isLoggedIn && userInfo?.phone != null && userInfo!.phone!.isNotEmpty) {
+      // Use user's phone from account
+      phoneValue = userInfo.phone!;
+    }
+    
     String numberAfterValidation = PhoneVerificationHelper.isPhoneValid(
-        widget.address?.contactPersonNumber ?? Get.find<UserController>().userInfoModel?.phone ?? "", fromAuthPage: false);
+        phoneValue, fromAuthPage: false);
+    
     if(numberAfterValidation == ""){
-      _contactPersonNumberController.text = widget.address?.contactPersonNumber?.replaceAll("null", "") ?? "";
+      _contactPersonNumberController.text = phoneValue.replaceAll("null", "");
     }else{
       _contactPersonNumberController.text = numberAfterValidation;
     }
@@ -271,5 +306,3 @@ class _CustomerInfoInputwidgetstate extends State<_CustomerInfoInputWidget> {
     });
   }
 }
-
-

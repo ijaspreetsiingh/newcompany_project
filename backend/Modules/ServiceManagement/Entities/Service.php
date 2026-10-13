@@ -35,11 +35,13 @@ class Service extends Model
         'avg_rating' => 'float',
         'slug'      => 'string',
         'gallery'   => 'array',
+        'cover_images'   => 'array',
+        'cover_media_type' => 'integer',
     ];
 
-    protected $fillable = ['slug'];
+    protected $fillable = ['slug', 'cover_media_type'];
 
-    protected $appends = ['thumbnail_full_path', 'cover_image_full_path', 'gallery_full_paths'];
+    protected $appends = ['thumbnail_full_path', 'cover_image_full_path', 'gallery_full_paths', 'cover_images_full_paths', 'cover_video_full_path'];
 
     public function variations(): HasMany
     {
@@ -319,6 +321,59 @@ class Service extends Model
             }
         }
         return $paths;
+    }
+
+    /**
+     * Cover slider images full paths - admin panel "Cover Image" block se
+     * Array of images stored in JSON column `cover_images`
+     * Empty array => normal cover_image use hoga
+     */
+    public function getCoverImagesFullPathsAttribute(): array
+    {
+        $coverImages = $this->attributes['cover_images'] ?? null;
+        $coverImages = is_array($coverImages) ? $coverImages : (array) json_decode($coverImages ?? '[]', true);
+
+        if (empty($coverImages)) {
+            return [];
+        }
+
+        $paths = [];
+        $s3Storage = $this->storage_cover_image;
+        foreach ($coverImages as $image) {
+            if (empty($image)) {
+                continue;
+            }
+            $fullPath = getSingleImageFullPath(imagePath: 'service/' . $image, s3Storage: $s3Storage, defaultPath: null);
+            if ($fullPath) {
+                $paths[] = $fullPath;
+            }
+        }
+        return $paths;
+    }
+
+    /**
+     * Cover video full path - admin panel se uploaded video for a particular service
+     */
+    public function getCoverVideoFullPathAttribute(): ?string
+    {
+        $video = $this->attributes['cover_video'] ?? null;
+
+        if (empty($video)) {
+            return null;
+        }
+
+        $disk = getDisk();
+        try {
+            if (\Illuminate\Support\Facades\Storage::disk($disk)->exists('service/' . $video)) {
+                if ($disk == 's3') {
+                    return \Illuminate\Support\Facades\Storage::disk($disk)->url('service/' . $video);
+                }
+                return asset('storage/service/' . $video);
+            }
+        } catch (\Exception $e) {
+        }
+
+        return asset('public/storage/service/' . $video);
     }
 
     public static function generateUniqueSlug($name, $ignoreId = null)

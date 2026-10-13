@@ -11,8 +11,6 @@ class BottomNavScreen extends StatefulWidget {
 
   static Future<void> loadData({int pageIndex = 0}) async {
     Get.find<DashboardController>().getDashboardData(reload: true);
-    Get.find<DashboardController>().getEarningData();
-    Get.find<UserProfileController>().getProviderInfo(reload: true);
     Get.find<ServiceCategoryController>().getCategoryList(
       shouldUpdate: true,
       reloadSubcategory: true,

@@ -87,12 +87,21 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<ThemeController>(builder: (themeController) {
+      final bool isDark = themeController.darkTheme;
+      final ThemeData theme = isDark ? Ios27Theme.dark() : Ios27Theme.light();
+      SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        systemNavigationBarColor: theme.scaffoldBackgroundColor,
+        systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      ));
       return GetBuilder<LocalizationController>(builder: (localizeController) {
         return GetMaterialApp(
           title: AppConstants.appName,
           debugShowCheckedModeBanner: false,
           navigatorKey: Get.key,
-          theme: themeController.darkTheme ? Ios27Theme.dark() : Ios27Theme.light(),
+          theme: theme,
           locale: localizeController.locale,
           translations: Messages(languages: languages),
           fallbackLocale: Locale(AppConstants.languages[0].languageCode!, AppConstants.languages[0].countryCode),

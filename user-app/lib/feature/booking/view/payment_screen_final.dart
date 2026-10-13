@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:jdds/helper/image_url_helper.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:universal_html/html.dart' as html;
 
@@ -289,7 +290,7 @@ class _PaymentScreenFinalState extends State<PaymentScreenFinal> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Progress Indicator - STEP 2/3
-                  _buildProgressIndicator(2),
+                  const CheckoutProgressIndicator(currentStep: 2),
                   const SizedBox(height: Dimensions.paddingSizeExtraLarge),
 
                   // Booking Mint Card (real schedule + address)
@@ -324,6 +325,22 @@ class _PaymentScreenFinalState extends State<PaymentScreenFinal> {
                                 overflow: TextOverflow.ellipsis,
                                 style: robotoSmall.copyWith(fontSize: 12, color: Colors.grey[600]),
                               ),
+                              if (checkoutController.preferredServicemanId != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Row(children: [
+                                    Icon(Icons.engineering_outlined, size: 14, color: primaryAccent),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        '${'preferred_serviceman'.tr}: ${checkoutController.preferredServicemanName ?? ''}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: robotoSmall.copyWith(fontSize: 12, color: primaryAccent),
+                                      ),
+                                    ),
+                                  ]),
+                                ),
                             ],
                           ),
                         ),
@@ -505,10 +522,20 @@ class _PaymentScreenFinalState extends State<PaymentScreenFinal> {
                         ),
                       ),
                       child: checkoutController.isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  '${'processing'.tr}...',
+                                  style: robotoBold.copyWith(fontSize: 15, color: Colors.white),
+                                ),
+                              ],
                             )
                           : Text(
                               'place_booking'.tr,
@@ -543,60 +570,6 @@ class _PaymentScreenFinalState extends State<PaymentScreenFinal> {
     } catch (_) {
       return scheduleTime;
     }
-  }
-
-  Widget _buildProgressIndicator(int currentStep) {
-    return Container(
-      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColorLight,
-        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _buildProgressStep(1, 'schedule'.tr, currentStep >= 1),
-          Container(width: 30, height: 2, color: Colors.grey[300]),
-          _buildProgressStep(2, 'payment'.tr, currentStep >= 2),
-          Container(width: 30, height: 2, color: Colors.grey[300]),
-          _buildProgressStep(3, 'confirmed'.tr, currentStep >= 3),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressStep(int step, String label, bool active) {
-    return Expanded(
-      child: Column(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: active ? primaryAccent : Colors.grey[300],
-            ),
-            child: Center(
-              child: active
-                  ? const Icon(Icons.check, color: Colors.white, size: 16)
-                  : Text(
-                      step.toString(),
-                      style: robotoBold.copyWith(color: Colors.grey[600]),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: robotoSmall.copyWith(
-              fontSize: 10,
-              color: active ? primaryAccent : Colors.grey[600],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildPaymentOption(
@@ -686,7 +659,7 @@ class _PaymentScreenFinalState extends State<PaymentScreenFinal> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: Image.network(
-                  digitalMethod.gatewayImageFullPath!,
+                  getFullImageUrl(digitalMethod.gatewayImageFullPath),
                   width: 24,
                   height: 24,
                   fit: BoxFit.contain,

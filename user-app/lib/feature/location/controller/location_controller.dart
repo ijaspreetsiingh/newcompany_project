@@ -166,15 +166,45 @@ class LocationController extends GetxController implements GetxService {
           throw StateError('Location permission was not granted');
         }
 
-        // "Use current location" button pressed → always fresh GPS fix,
-        // stale cached position kabhi mat use karo.
+        // "Use current location" → pehle 30s andar ka cached fix (instant),
+        // warna 10s GPS fix; GPS fail ho to purana cached fix (better than
+        // error dikhana).
         if (deviceCurrentLocation) {
-          myPosition = await Geolocator.getCurrentPosition(
-            locationSettings: const LocationSettings(
-              accuracy: LocationAccuracy.high,
-              timeLimit: Duration(seconds: 20),
-            ),
-          );
+          Position? lastKnown;
+          try {
+            lastKnown = await Geolocator.getLastKnownPosition();
+          } catch (_) {
+            // cached fix optional hai
+          }
+          final Duration? positionAge = lastKnown == null
+              ? null
+              : DateTime.now().difference(lastKnown.timestamp);
+          final bool freshEnough = lastKnown != null &&
+              positionAge != null &&
+              positionAge >= Duration.zero &&
+              positionAge <= const Duration(seconds: 30) &&
+              lastKnown.accuracy <= 50 &&
+              (lastKnown.latitude != 0 || lastKnown.longitude != 0);
+
+          if (freshEnough) {
+            myPosition = lastKnown;
+          } else {
+            try {
+              myPosition = await Geolocator.getCurrentPosition(
+                locationSettings: const LocationSettings(
+                  accuracy: LocationAccuracy.high,
+                  timeLimit: Duration(seconds: 10),
+                ),
+              );
+            } catch (_) {
+              if (lastKnown != null &&
+                  (lastKnown.latitude != 0 || lastKnown.longitude != 0)) {
+                myPosition = lastKnown;
+              } else {
+                rethrow;
+              }
+            }
+          }
         } else {
           Position? recentPosition;
           try {

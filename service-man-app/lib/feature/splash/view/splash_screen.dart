@@ -245,6 +245,16 @@ class SplashScreenState extends State<SplashScreen> with TickerProviderStateMixi
         }
       } break;
 
+      case "new_booking_request": {
+        // App band thi -> notification tap -> seedha assignment/accept screen
+        final String? popupBookingId = widget.body?.bookingId;
+        if (popupBookingId != null && popupBookingId.isNotEmpty) {
+          Get.offAllNamed(RouteHelper.getIncomingBookingPopupRoute(bookingId: popupBookingId));
+        } else {
+          Get.offAllNamed(RouteHelper.getInitialRoute());
+        }
+      } break;
+
       case "privacy_policy": {
         Get.offAllNamed(RouteHelper.getHtmlRoute(HtmlType.privacyPolicy.value));
       } break;

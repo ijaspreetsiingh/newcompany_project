@@ -3,7 +3,7 @@ import 'package:jdds/util/core_export.dart';
 
 /// Completed booking history me "Recheck" card.
 ///
-/// Customer yahan se 15 din tak recheck raise kar sakta hai;
+/// Customer yahan se 7 din tak recheck raise kar sakta hai;
 /// uske baad serviceman wapas jakar dobara check karega.
 class RecheckSectionWidget extends StatelessWidget {
   const RecheckSectionWidget({super.key});

@@ -59,11 +59,17 @@ class _ExistingAccountBottomSheetState extends State<ExistingAccountBottomSheet>
 
               const SizedBox(height: Dimensions.paddingSizeLarge * 1.5),
 
-              ClipRRect(
-                borderRadius: BorderRadius.circular(50),
-                child: CustomImage(
-                  image: widget.userInfoModel.imageFullPath ?? "",
-                  fit: BoxFit.cover, height: 100, width: 100,
+              Container(
+                height: 72,
+                width: 72,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.10),
+                ),
+                child: Icon(
+                  Icons.person_outline_rounded,
+                  size: 36,
+                  color: Theme.of(context).primaryColor,
                 ),
               ),
               const SizedBox(height: Dimensions.paddingSizeSmall),
@@ -101,7 +107,7 @@ class _ExistingAccountBottomSheetState extends State<ExistingAccountBottomSheet>
                     ),
 
                     TextSpan(
-                      text: ' ${StringParser.obfuscateMiddle(widget.userInfoModel.email??"")} ',
+                        text: ' ${StringParser.obfuscateMiddle(widget.userInfoModel.email ?? "")} ',
                       style: robotoBold.copyWith(
                           fontSize: Dimensions.fontSizeDefault,
                           color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
@@ -131,7 +137,7 @@ class _ExistingAccountBottomSheetState extends State<ExistingAccountBottomSheet>
                     onPressed: (){
                       Navigator.pop(context);
                       authProvider.existingAccountCheck(
-                        email: widget.userInfoModel.email!,
+                        email: widget.userInfoModel.email ?? '',
                         userResponse: 0,
                         medium: widget.socialLoginMedium,
                         redtrectUrl: widget.redtrectUrl,
@@ -148,7 +154,7 @@ class _ExistingAccountBottomSheetState extends State<ExistingAccountBottomSheet>
                       Navigator.pop(context);
 
                       authProvider.existingAccountCheck(
-                        email: widget.userInfoModel.email!,
+                        email: widget.userInfoModel.email ?? '',
                         userResponse: 1,
                         medium: widget.socialLoginMedium,
                         redtrectUrl: widget.redtrectUrl,

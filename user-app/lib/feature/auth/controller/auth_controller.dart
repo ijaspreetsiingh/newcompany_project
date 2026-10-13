@@ -228,8 +228,8 @@ class AuthController extends GetxController implements GetxService {
     if (response.statusCode == 200  && response.body['response_code']=="auth_login_200") {
       Map map = response.body;
       String? message = '';
-      String? token = '';
-      String? tempToken = '';
+      String? token;
+      String? tempToken;
       String? email;
       UserInfoModel? userInfoModel;
       try{
@@ -254,6 +254,9 @@ class AuthController extends GetxController implements GetxService {
         }
       }
 
+      if (token?.isEmpty ?? false) token = null;
+      if (tempToken?.isEmpty ?? false) tempToken = null;
+
       try{
         email = map['content']['email'];
       }catch(e){
@@ -263,7 +266,10 @@ class AuthController extends GetxController implements GetxService {
       }
 
 
-      if(map['content']['user'] != null){
+      // If a token was issued, the account is already authenticated. Show the
+      // account-linking confirmation only when the API returned a user without
+      // issuing a token.
+      if(token == null && tempToken == null && map['content']['user'] != null){
         try{
           userInfoModel = UserInfoModel.fromJson(map['content']['user']);
           callback(true, null, message, null, userInfoModel, socialLogInBody.medium, null, null);
@@ -277,13 +283,12 @@ class AuthController extends GetxController implements GetxService {
       if(token != null){
         saveUserNumberAndPassword(number : "", password : "", );
         await authRepo.saveUserToken(token);
-        await authRepo.saveUserToken(token);
         await Get.find<UserController>().getUserInfo(reload: true);
         authRepo.updateToken();
         callback(true, token, message,null, null, null, socialLogInBody.userName, socialLogInBody.email);
       }
 
-      if(tempToken != null){
+      else if(tempToken != null){
         callback(true, null, message, tempToken, null, null, socialLogInBody.userName, socialLogInBody.email ?? email);
       }
 

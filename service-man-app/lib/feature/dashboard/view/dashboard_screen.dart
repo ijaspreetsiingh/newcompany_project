@@ -21,10 +21,6 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
       DateTime.now().month.toString(),
       isRefresh: true,
     );
-    Get.find<DashboardController>().getYearlyBookingsDataForChart(
-      DateConverter.stringYear(DateTime.now()),
-      isRefresh: true,
-    );
     Get.find<NotificationController>().getNotifications(
       1,
       saveNotificationCount: false,
@@ -107,8 +103,9 @@ class _DashBoardScreenState extends State<DashBoardScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final double topInset = MediaQuery.of(context).padding.top;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+      padding: EdgeInsets.fromLTRB(20, 20 + topInset, 20, 20),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

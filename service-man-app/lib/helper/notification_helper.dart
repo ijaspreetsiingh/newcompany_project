@@ -8,6 +8,28 @@ import 'package:http/http.dart' as http;
 
 
 class NotificationHelper {
+
+  // Duplicate FCM pushes (ek hi booking ko team broadcast se 2-3 baar) se
+  // popup baar baar open/hone ka guard
+  static String _lastPopupBookingId = '';
+  static DateTime _lastPopupAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  static void openIncomingBookingPopup(String? bookingId) {
+    final String id = (bookingId ?? '').trim();
+    if (id.isEmpty) return;
+    final DateTime now = DateTime.now();
+    if (id == _lastPopupBookingId && now.difference(_lastPopupAt).inSeconds < 10) return;
+    if (Get.currentRoute.contains(RouteHelper.incomingBookingPopup)) return;
+    try {
+      if (!Get.find<AuthController>().isLoggedIn()) return;
+    } catch (_) {
+      return;
+    }
+    _lastPopupBookingId = id;
+    _lastPopupAt = now;
+    Get.toNamed(RouteHelper.getIncomingBookingPopupRoute(bookingId: id));
+  }
+
   static Future<void> initialize(FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) async {
     var androidInitialize = const AndroidInitializationSettings('notification_icon');
     var iOSInitialize = const DarwinInitializationSettings();
@@ -44,10 +66,14 @@ class NotificationHelper {
         if(notificationResponse!.payload != null &&  notificationResponse.payload!=''){
           try {
             final Map<String, dynamic> pushData = jsonDecode(notificationResponse.payload!) as Map<String, dynamic>;
-            if ((pushData['type'] ?? '').toString().startsWith('call')) {
-              handleCallNotificationTap(pushData);
-              return;
-            }
+          if ((pushData['type'] ?? '').toString().startsWith('call')) {
+            handleCallNotificationTap(pushData);
+            return;
+          }
+          if ((pushData['type'] ?? '').toString() == 'new_booking_request') {
+            openIncomingBookingPopup((pushData['booking_id'] ?? '').toString());
+            return;
+          }
           } catch (_) {}
 
           NotificationBody notificationBody = NotificationBody.fromJson(jsonDecode(notificationResponse.payload!));
@@ -112,10 +138,10 @@ class NotificationHelper {
       // ----- AUTO-ASSIGN: full-screen incoming booking popup -----
       else if(message.data['type']=='new_booking_request'){
         final String? bookingId = message.data['booking_id'];
-        Get.find<BookingRequestController>().getBookingList(BooingListStatus.pending.name.toLowerCase(), 1);
-        if(bookingId != null && bookingId != '' && !Get.currentRoute.contains(RouteHelper.incomingBookingPopup)) {
-          Get.toNamed(RouteHelper.getIncomingBookingPopupRoute(bookingId: bookingId));
-        }
+        try {
+          Get.find<BookingRequestController>().getBookingList(BooingListStatus.pending.name.toLowerCase(), 1);
+        } catch (_) {}
+        openIncomingBookingPopup(bookingId);
       }
 
       // NOTE: ek hi if/else chain — pehle do independent if-chain the jisse
@@ -174,6 +200,11 @@ class NotificationHelper {
         if(message!=null && message.data.isNotEmpty) {
           if ((message.data['type'] ?? '').toString().startsWith('call')) {
             handleCallNotificationTap(Map<String, dynamic>.from(message.data));
+            return;
+          }
+          // Background se notification tap -> New Booking Assignment screen
+          if ((message.data['type'] ?? '').toString() == 'new_booking_request') {
+            openIncomingBookingPopup((message.data['booking_id'] ?? '').toString());
             return;
           }
           NotificationBody notificationBody = convertNotification(message.data);

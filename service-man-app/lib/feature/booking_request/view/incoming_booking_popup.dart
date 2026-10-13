@@ -21,6 +21,15 @@ class _IncomingBookingPopupState extends State<IncomingBookingPopup> {
     controller.startTimer(widget.bookingId);
   }
 
+  @override
+  void dispose() {
+    // Timer cancel + stale controller hatao (Get.put yahin hua tha)
+    if (Get.isRegistered<BookingTimerController>()) {
+      Get.delete<BookingTimerController>();
+    }
+    super.dispose();
+  }
+
   String _badgeStatus(BookingTimerController controller) {
     if (controller.accepted) return 'accepted';
     if (controller.rejected) return 'rejected';

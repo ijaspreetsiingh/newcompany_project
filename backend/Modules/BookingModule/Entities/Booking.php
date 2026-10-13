@@ -49,6 +49,7 @@ class Booking extends Model
         'serviceman_assign_expires_at' => 'datetime',
         'start_otp_generated_at' => 'datetime',
         'serviceman_reached_at' => 'datetime',
+        'is_re_service' => 'integer',
         'total_referral_discount_amount' => 'float',
     ];
 
@@ -92,7 +93,9 @@ class Booking extends Model
         'assignment_mode',
         'start_otp',
         'start_otp_generated_at',
-        'serviceman_reached_at'
+        'serviceman_reached_at',
+        'is_re_service',
+        're_service_of'
     ];
 
     protected $appends = ['evidence_photos_full_path'];

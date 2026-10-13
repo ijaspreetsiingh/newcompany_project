@@ -120,7 +120,123 @@ class ServiceBookingController extends GetxController {
     }
   }
 
-  Future<void> checkCartSubcategory(String bookingId, String subCategoryId) async {
+  /// Book again popup: "Same serviceman" ya "Choose another".
+  /// Same → previous serviceman pehle chance par assign hoga (backend
+  /// fallback: decline/expire par nearest). Other → normal fresh booking.
+  /// Popup serviceman ke bina seedha normal flow chalata hai.
+  void showBookAgainOptions({
+    required String bookingId,
+    required String subCategoryId,
+    String? servicemanId,
+    String? servicemanName,
+    String? servicemanImage,
+  }) {
+    final bool canSame = servicemanId != null &&
+        servicemanId.isNotEmpty &&
+        servicemanId != 'null';
+
+    if (!canSame) {
+      checkCartSubcategory(bookingId, subCategoryId);
+      return;
+    }
+
+    Get.bottomSheet(
+      Container(
+        width: double.infinity,
+        padding: EdgeInsets.fromLTRB(
+          Dimensions.paddingSizeDefault,
+          Dimensions.paddingSizeDefault,
+          Dimensions.paddingSizeDefault,
+          Dimensions.paddingSizeLarge,
+        ),
+        decoration: BoxDecoration(
+          color: Theme.of(Get.context!).cardColor,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(Dimensions.radiusLarge),
+            topRight: Radius.circular(Dimensions.radiusLarge),
+          ),
+        ),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(
+            'book_again'.tr,
+            style: robotoBold.copyWith(fontSize: Dimensions.fontSizeLarge),
+          ),
+          const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+          Text(
+            'book_again_choose_hint'.tr,
+            style: robotoRegular.copyWith(
+              fontSize: Dimensions.fontSizeSmall,
+              color: Theme.of(Get.context!).hintColor,
+            ),
+          ),
+          const SizedBox(height: Dimensions.paddingSizeDefault),
+          ListTile(
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: Dimensions.paddingSizeSmall,
+            ),
+            leading: ClipOval(
+              child: CustomImage(
+                image: servicemanImage ?? '',
+                width: 40,
+                height: 40,
+              ),
+            ),
+            title: Text(
+              'book_same_serviceman'.tr,
+              style: robotoBold.copyWith(fontSize: Dimensions.fontSizeDefault),
+            ),
+            subtitle: Text(
+              servicemanName ?? '',
+              style: robotoRegular.copyWith(
+                fontSize: Dimensions.fontSizeSmall,
+                color: Theme.of(Get.context!).hintColor,
+              ),
+            ),
+            trailing: Icon(Icons.chevron_right, color: primaryAccent),
+            onTap: () {
+              Get.back();
+              checkCartSubcategory(
+                bookingId,
+                subCategoryId,
+                servicemanId: servicemanId,
+                servicemanName: servicemanName,
+                servicemanImage: servicemanImage,
+              );
+            },
+          ),
+          const Divider(),
+          ListTile(
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: Dimensions.paddingSizeSmall,
+            ),
+            leading: Icon(Icons.person_search_outlined, color: primaryAccent),
+            title: Text(
+              'choose_another_serviceman'.tr,
+              style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault),
+            ),
+            onTap: () {
+              Get.back();
+              checkCartSubcategory(bookingId, subCategoryId);
+            },
+          ),
+        ]),
+      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+    );
+  }
+
+  Future<void> checkCartSubcategory(
+    String bookingId,
+    String subCategoryId, {
+    String? servicemanId,
+    String? servicemanName,
+    String? servicemanImage,
+  }) async {
+    // Naye checkout attempt ki shuruwat — purana preference stale nahi rehna
+    // chahiye (user ne "other" chuna ya naya booking flow hai).
+    Get.find<CheckOutController>().clearPreferredServiceman();
+
     isLoading = true;
     update();
 
@@ -147,16 +263,31 @@ class ServiceBookingController extends GetxController {
           Get.dialog(const CustomLoader(), barrierDismissible: false);
           await cartController.removeAllCartItem();
           Get.back();
-          await _checkAvailabilityAndRebook(bookingId);
+          await _checkAvailabilityAndRebook(
+            bookingId,
+            servicemanId: servicemanId,
+            servicemanName: servicemanName,
+            servicemanImage: servicemanImage,
+          );
         },
       ));
       return;
     }
 
-    await _checkAvailabilityAndRebook(bookingId);
+    await _checkAvailabilityAndRebook(
+      bookingId,
+      servicemanId: servicemanId,
+      servicemanName: servicemanName,
+      servicemanImage: servicemanImage,
+    );
   }
 
-  Future<void> _checkAvailabilityAndRebook(String bookingId) async {
+  Future<void> _checkAvailabilityAndRebook(
+    String bookingId, {
+    String? servicemanId,
+    String? servicemanName,
+    String? servicemanImage,
+  }) async {
     isLoading = true;
     update();
 
@@ -185,7 +316,12 @@ class ServiceBookingController extends GetxController {
         } else if (isNotAvailable || isPriceChanged) {
           _showServiceIssueDialog(bookingId);
         } else {
-          await rebook(bookingId);
+          await rebook(
+            bookingId,
+            servicemanId: servicemanId,
+            servicemanName: servicemanName,
+            servicemanImage: servicemanImage,
+          );
         }
         return;
       }
@@ -197,7 +333,12 @@ class ServiceBookingController extends GetxController {
         ApiChecker.checkApi(response);
       } else {
         // Availability API unavailable - attempt rebook dtrectly so user is not stuck.
-        await rebook(bookingId);
+        await rebook(
+          bookingId,
+          servicemanId: servicemanId,
+          servicemanName: servicemanName,
+          servicemanImage: servicemanImage,
+        );
       }
     } catch (e) {
       if (kDebugMode) {
@@ -205,7 +346,12 @@ class ServiceBookingController extends GetxController {
       }
       isLoading = false;
       update();
-      await rebook(bookingId);
+      await rebook(
+        bookingId,
+        servicemanId: servicemanId,
+        servicemanName: servicemanName,
+        servicemanImage: servicemanImage,
+      );
     }
   }
 
@@ -240,7 +386,13 @@ class ServiceBookingController extends GetxController {
     }
   }
 
-  Future<void> rebook(String bookingId, {bool isBack = false}) async {
+  Future<void> rebook(
+    String bookingId, {
+    bool isBack = false,
+    String? servicemanId,
+    String? servicemanName,
+    String? servicemanImage,
+  }) async {
     if (isBack) {
       Get.back();
     }
@@ -256,7 +408,17 @@ class ServiceBookingController extends GetxController {
         update();
         customSnackBar("successfully_added_to_cart".tr, type: ToasterMessageType.success);
         await Get.find<CartController>().getCartListFromServer();
-        Get.toNamed(RouteHelper.getCheckoutRoute('cart', 'orderDetails', 'null'));
+
+        // Same-serviceman wala fresh booking — checkout par ye naam dikhega
+        // aur place-order par backend pehle isi ko request bhejega.
+        Get.find<CheckOutController>().setPreferredServiceman(
+          id: servicemanId,
+          name: servicemanName,
+          image: servicemanImage,
+        );
+
+        // Naya checkout flow: Address & Schedule screen (CheckoutScreenFinal).
+        Get.toNamed(RouteHelper.getCheckoutFinalRoute());
       } else {
         update();
         ApiChecker.checkApi(response);
@@ -284,7 +446,7 @@ class ServiceBookingController extends GetxController {
     if (status == "completed" || status == "canceled" || status == "cancelled") {
       return [
         PopupMenuModel(title: "booking_details", icon: Icons.remove_red_eye),
-        PopupMenuModel(title: "rebook", icon: Icons.repeat),
+        PopupMenuModel(title: "book_again", icon: Icons.repeat),
         PopupMenuModel(title: "download_invoice", icon: Icons.file_download_outlined),
       ];
     }

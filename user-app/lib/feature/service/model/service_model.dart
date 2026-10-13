@@ -100,6 +100,14 @@ class Service {
   /// Gallery images - backend se (admin panel: Gallery Image block)
   List<String>? gallery;
 
+  /// Cover media - admin panel: Cover media block
+  /// cover_images: multiple images (slider). Empty => fixed cover_image.
+  /// cover_video: video URL for the cover (single video).
+  /// cover_media_type: 0=single image, 1=slider, 2=video (admin toggle)
+  List<String>? coverImages;
+  String? coverVideo;
+  int? coverMediaType;
+
   Service(
       {this.id,
         this.slug,
@@ -128,6 +136,9 @@ class Service {
         this.campaignDiscount,
         this.review,
         this.gallery,
+        this.coverImages,
+        this.coverVideo,
+        this.coverMediaType,
       });
 
   Service.fromJson(Map<String, dynamic> json) {
@@ -217,6 +228,38 @@ class Service {
         }
       }
     }
+
+    /// Cover media parse - admin panel: Cover media block
+    /// keys: cover_images_full_paths (array), cover_video_full_path (string|null)
+    coverImages = <String>[];
+    dynamic coverImagesData = json['cover_images_full_paths'] ?? json['cover_images'];
+    if (coverImagesData is List) {
+      for (var c in coverImagesData) {
+        if (c == null) continue;
+        String path = c.toString();
+        if (path.isEmpty) continue;
+        if (!path.startsWith('http')) {
+          path = '${AppConstants.baseUrl}/$path';
+        }
+        coverImages!.add(path);
+      }
+    }
+
+    dynamic coverVideoData = json['cover_video_full_path'] ?? json['cover_video'];
+    if (coverVideoData != null) {
+      String videoPath = coverVideoData.toString();
+      if (videoPath.isNotEmpty) {
+        if (!videoPath.startsWith('http')) {
+          videoPath = '${AppConstants.baseUrl}/$videoPath';
+        }
+        coverVideo = videoPath;
+      }
+    }
+
+    // Cover media type from admin toggle
+    coverMediaType = json['cover_media_type'] != null
+        ? int.tryParse(json['cover_media_type'].toString()) ?? 0
+        : 0;
   }
 
   Map<String, dynamic> toJson() {
@@ -263,6 +306,14 @@ class Service {
     if (campaignDiscount != null) {
       data['campaign_discount'] = campaignDiscount!.map((v) => v.toJson()).toList();
     }
+    if (gallery != null) {
+      data['gallery'] = gallery;
+    }
+    if (coverImages != null) {
+      data['cover_images'] = coverImages;
+    }
+    data['cover_video'] = coverVideo;
+    data['cover_media_type'] = coverMediaType;
     return data;
   }
 }

@@ -78,6 +78,8 @@ class BookingDetailsWidget extends StatelessWidget {
                       isSubBooking: isSubBooking,
                     ),
 
+                    InkAssignmentTrailSection(bookingDetails: bookingDetails),
+
                     ServiceCompletedPhotoEvidence(bookingDetails: bookingDetails, isSubBooking: isSubBooking,),
 
                     InkBookingActionBar(

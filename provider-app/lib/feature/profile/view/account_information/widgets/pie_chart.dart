@@ -64,7 +64,7 @@ class _TransactionPieChartState extends State<TransactionPieChart> {
                 PieChartData(
                   borderData: FlBorderData(show: false),
                   sectionsSpace: 3,
-                  centerSpaceRadius: 30,
+                  centerSpaceRadius: 20,
                   sections: totalBookingRequest > 0
                       ? <PieChartSectionData>[
                           if (totalAccepted > 0) _section(totalAccepted, _sliceColors[0]),
@@ -77,7 +77,7 @@ class _TransactionPieChartState extends State<TransactionPieChart> {
                             color: InkColors.accent,
                             value: 1,
                             title: '',
-                            radius: 44,
+                            radius: 36,
                             showTitle: false,
                           ),
                         ],
@@ -129,7 +129,7 @@ class _TransactionPieChartState extends State<TransactionPieChart> {
       color: color,
       value: value.toDouble(),
       title: '',
-      radius: 44,
+      radius: 36,
       showTitle: false,
       borderSide:  BorderSide(color: InkColors.card, width: 1.5),
     );

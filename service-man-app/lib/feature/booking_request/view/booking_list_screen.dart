@@ -43,13 +43,15 @@ class _BookingListScreenState extends State<BookingListScreen> {
             }
           }
 
-          return RefreshIndicator(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.6),
-            onRefresh: () async{
-              bookingRequestController.getBookingList(selectedStatus,1);
-            },
-            child: CustomScrollView(
+          return SafeArea(
+            bottom: false,
+            child: RefreshIndicator(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              color: Theme.of(context).textTheme.bodyLarge!.color!.withValues(alpha:0.6),
+              onRefresh: () async{
+                bookingRequestController.getBookingList(selectedStatus,1);
+              },
+              child: CustomScrollView(
               controller:bookingRequestController.scrollController,
               physics: const ClampingScrollPhysics(
                 parent: AlwaysScrollableScrollPhysics()
@@ -93,6 +95,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 112)),
               ],
+            ),
             ),
           );
         },

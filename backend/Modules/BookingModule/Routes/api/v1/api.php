@@ -6,6 +6,7 @@ use Modules\BookingModule\Http\Controllers\Api\V1\Provider\BookingController as 
 use Modules\BookingModule\Http\Controllers\Api\V1\Serviceman\BookingController as ServicemanBookingController;
 use Modules\BookingModule\Http\Controllers\Api\V1\Admin\BookingController as AdminBookingController;
 use Modules\BookingModule\Http\Controllers\Api\V1\BookingRecheckController;
+use Modules\BookingModule\Http\Controllers\Api\V1\UnsatisfiedRequestController;
 
 Route::group(['prefix' => 'client', 'as' => 'customer.', 'namespace' => 'Api\V1\Customer', 'middleware' => ['auth:api']], function () {
     Route::group(['prefix' => 'order', 'as' => 'booking.'], function () {
@@ -23,6 +24,10 @@ Route::group(['prefix' => 'client', 'as' => 'customer.', 'namespace' => 'Api\V1\
         // ----- RECHECK (7 din ka window) -----
         Route::post('recheck/{booking_id}', [BookingRecheckController::class, 'requestRecheck']);
         Route::get('recheck-status/{booking_id}', [BookingRecheckController::class, 'recheckStatus']);
+
+        // ----- UNSATISFIED (free re-service, admin-set window) -----
+        Route::post('unsatisfied/{booking_id}', [UnsatisfiedRequestController::class, 'raise']);
+        Route::get('unsatisfied-status/{booking_id}', [UnsatisfiedRequestController::class, 'status']);
     });
 });
 Route::any('gateway-booking-reply', [BookingController::class, 'digitalPaymentBookingResponse']);
@@ -40,6 +45,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Api\V1\Admi
 Route::group(['prefix' => 'partner', 'as' => 'provider.', 'namespace' => 'Api\V1\Provider', 'middleware' => ['auth:api', 'actch:provider_app']], function () {
     Route::group(['prefix' => 'order', 'as' => 'booking.'], function () {
         Route::post('/', [ProviderBookingController::class, 'index']);
+        // static summary routes MUST stay above get('{id}') catch-all
+        Route::get('recheck-summary', [BookingRecheckController::class, 'providerRecheckSummary']);
+        Route::get('unsatisfied-summary', [UnsatisfiedRequestController::class, 'providerSummary']);
         Route::get('{id}', [ProviderBookingController::class, 'show']);
         Route::get('individual/{id}', [ProviderBookingController::class, 'singleDetails']);
         Route::put('submission-approve/{booking_id}', [ProviderBookingController::class, 'requestAccept']);
@@ -62,9 +70,6 @@ Route::group(['prefix' => 'partner', 'as' => 'provider.', 'namespace' => 'Api\V1
         Route::put('auto-assign-switch', [ProviderBookingController::class, 'toggleAutoAssign']);
         Route::put('auto-assign-delay-window', [ProviderBookingController::class, 'updateAutoAssignWaitTime']);
         Route::get('auto-assign-state/{booking_id}', [ProviderBookingController::class, 'getAutoAssignStatus']);
-
-        // ----- RECHECK DASHBOARD -----
-        Route::get('recheck-summary', [BookingRecheckController::class, 'providerRecheckSummary']);
     });
 });
 

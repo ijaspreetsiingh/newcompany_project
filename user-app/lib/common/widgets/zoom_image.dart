@@ -1,4 +1,5 @@
 import 'package:jdds/common/widgets/custom_pop_widget.dart';
+import 'package:jdds/helper/image_url_helper.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:photo_view/photo_view.dart';
 
@@ -45,7 +46,11 @@ class _ZoomImageState extends State<ZoomImage> {
                 },
       
                 minScale: PhotoViewComputedScale.contained,
-                imageProvider: NetworkImage(kIsWeb ? '${AppConstants.baseUrl}/image-proxy?url=${widget.imagePath}' : widget.imagePath),
+                imageProvider: CachedNetworkImageProvider(
+                  kIsWeb
+                      ? '${AppConstants.baseUrl}/image-proxy?url=${getFullImageUrl(widget.imagePath)}'
+                      : getFullImageUrl(widget.imagePath),
+                ),
               ),
             ),
           ),

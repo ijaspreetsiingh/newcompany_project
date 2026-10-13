@@ -124,9 +124,6 @@ class LocationChangeRadiusDialog extends StatelessWidget {
 
   Widget _buildCard(BuildContext context) {
     final Color primary = NestInk.primary;
-    final double displayRadius = isFinal ? (radius ?? 0) : (currentRadius ?? 0);
-    final bool wholeDisplay =
-        displayRadius.truncateToDouble() == displayRadius;
 
     return ConstrainedBox(
       constraints: BoxConstraints(
@@ -231,7 +228,7 @@ class LocationChangeRadiusDialog extends StatelessWidget {
                         color: NestInk.mutedText,
                       ),
                       children: [
-                        TextSpan(text: 'current_radius'.tr + ': '),
+                        TextSpan(text: '${'current_radius'.tr}: '),
                         TextSpan(
                           text: '${_km(currentRadius ?? 0)} km',
                           style: robotoBold.copyWith(

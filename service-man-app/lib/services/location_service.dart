@@ -64,6 +64,43 @@ class LocationService extends GetxService {
     }
   }
 
+  /// Reached flow ke liye: turant GPS position lo aur backend me upload karo.
+  /// Background stream ka wait mat karo — force fresh location bhejo.
+  /// true = upload success, false = GPS off/permission denied/upload fail.
+  Future<bool> forceUploadCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return false;
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        return false;
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 20),
+        ),
+      );
+      _currentPosition = position;
+
+      Response response = await Get.find<ApiClient>().putData(
+        AppConstants.updateLocationUrl,
+        {
+          "lat": position.latitude.toString(),
+          "lng": position.longitude.toString(),
+        },
+      );
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
   void stopLocationTracking() {
     _positionSubscription?.cancel();
     _positionSubscription = null;

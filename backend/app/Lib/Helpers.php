@@ -2805,6 +2805,25 @@ if (!function_exists('dispatchNearestServicemanRequest')) {
 
             $waitTime = max(30, (int) ($provider->auto_assign_wait_time ?: 60));
             $alreadyTried = getTriedServicemanIds($booking);
+
+            // "Book again with same serviceman": preferred serviceman ko pehle
+            // chance — accept nahi kiya (decline/timeout) to slot tried list me
+            // add ho chuka hai aur neeche normal nearest flow age badhega.
+            $preferredId = $booking->preferred_serviceman_id ?? null;
+            if ($preferredId && !in_array($preferredId, $alreadyTried, true)) {
+                $preferred = Serviceman::with('user:id,fcm_token,current_language_key')
+                    ->where('id', $preferredId)
+                    ->where('provider_id', $booking->provider_id)
+                    ->whereHas('user', function ($query) {
+                        $query->where('is_active', 1);
+                    })
+                    ->first();
+                if ($preferred) {
+                    assignBookingToServiceman($booking, $preferred, $waitTime);
+                    return;
+                }
+            }
+
             $candidates = findNearestServicemen($booking, $provider->id, $alreadyTried);
 
             if ($candidates->isEmpty()) {

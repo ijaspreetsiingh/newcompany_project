@@ -82,6 +82,20 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                         : '';
                 final List<String> galleryImages = [...(service.gallery ?? [])];
 
+                /// Cover media type from admin toggle
+                /// 0: single cover_image, 1: cover_images slider, 2: cover_video
+                final int coverMediaType = service.coverMediaType ?? 0;
+
+                /// Cover media: use cover_media_type to decide what to show
+                final List<String> coverSliderImages =
+                    (coverMediaType == 1 && service.coverImages != null && service.coverImages!.isNotEmpty)
+                        ? service.coverImages!
+                        : <String>[];
+                final String? coverVideo =
+                    (coverMediaType == 2 && (service.coverVideo ?? '').isNotEmpty)
+                        ? service.coverVideo!
+                        : null;
+
                 return Stack(children: [
                   /// Main scrollable content
                   RefreshIndicator(
@@ -98,8 +112,13 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                       child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            /// 1. Hero image - nest. square-ish (1.5:1)
-                            NestDetailHeroImage(coverImage: coverImage),
+                            /// 1. Hero cover - video (if set) else slider (if multiple)
+                            /// else fixed cover image. 2:1 (professional banner, same as admin crop ratio)
+                            NestDetailHeroSection(
+                              coverImage: coverImage,
+                              sliderImages: coverSliderImages,
+                              coverVideo: coverVideo,
+                            ),
 
                             /// 2. nest. info section : category eyebrow, bold name, meta row
                             NestDetailInfo(service: service),
@@ -139,7 +158,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                     child: NestDetailTopBar(),
                   ),
 
-                  /// Bottom CTA - nest. single black "Book now Â· price" button
+                  /// Bottom CTA - nest. single black "Book now · price" button
                   Positioned(
                     bottom: 0,
                     left: 0,
@@ -255,27 +274,180 @@ class NestDetailTopBar extends StatelessWidget {
   }
 }
 
-/// nest. hero image - 1.5:1 aspect (square-ish like reference)
-class NestDetailHeroImage extends StatelessWidget {
+/// nest. hero section - priority: cover video > cover slider > fixed cover image
+/// 2:1 aspect (professional real-world banner, matches admin panel 2:1 crop)
+class NestDetailHeroSection extends StatefulWidget {
   final String coverImage;
-  const NestDetailHeroImage({super.key, required this.coverImage});
+  final List<String> sliderImages;
+  final String? coverVideo;
+  const NestDetailHeroSection({
+    super.key,
+    required this.coverImage,
+    this.sliderImages = const <String>[],
+    this.coverVideo,
+  });
+
+  @override
+  State<NestDetailHeroSection> createState() => _NestDetailHeroSectionState();
+}
+
+class _NestDetailHeroSectionState extends State<NestDetailHeroSection> {
+  VideoPlayerController? _videoPlayerController;
+  ChewieController? _chewieController;
+  bool _videoFailed = false;
+  int _currentSlide = 0;
+
+  bool get _hasVideo => (widget.coverVideo ?? '').isNotEmpty && !_videoFailed;
+
+  @override
+  void initState() {
+    super.initState();
+    if ((widget.coverVideo ?? '').isNotEmpty) {
+      _initializeVideo(widget.coverVideo!);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant NestDetailHeroSection oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final newVideo = widget.coverVideo ?? '';
+    if (newVideo.isNotEmpty && newVideo != (oldWidget.coverVideo ?? '')) {
+      _disposeVideo();
+      _initializeVideo(newVideo);
+    }
+  }
+
+  Future<void> _initializeVideo(String videoUrl) async {
+    final controller = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+    try {
+      await controller.initialize();
+    } catch (_) {
+      controller.dispose();
+      if (mounted) setState(() => _videoFailed = true);
+      return;
+    }
+    if (!mounted) {
+      controller.dispose();
+      return;
+    }
+    _videoPlayerController = controller;
+    _chewieController = ChewieController(
+      videoPlayerController: controller,
+      autoPlay: true,
+      looping: true,
+      autoInitialize: false,
+      showControls: true,
+      aspectRatio: controller.value.aspectRatio,
+    );
+    // Muted autoplay - video cover ke liye sound off (professional pattern)
+    await controller.setVolume(0);
+    setState(() {});
+  }
+
+  void _disposeVideo() {
+    _videoPlayerController?.dispose();
+    _videoPlayerController = null;
+    _chewieController?.dispose();
+    _chewieController = null;
+  }
+
+  @override
+  void dispose() {
+    _disposeVideo();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (coverImage.isEmpty) {
+    final hasSlider = widget.sliderImages.isNotEmpty;
+
+    /// 16:9 professional banner height (placeholder + slider + single image).
+    final double bannerHeight = Get.width / (16 / 9);
+
+    if (widget.coverImage.isEmpty && !hasSlider && !_hasVideo) {
       return Container(
         width: double.infinity,
-        height: 260,
+        height: bannerHeight,
         color: Theme.of(context).primaryColorLight,
         child: Center(
           child: Image.asset(Images.placeholder, width: 150),
         ),
       );
     }
+
+    /// Video cover (autoplay, muted, looping) — full-width: container video ke
+    /// natural ratio par hota hai, isliye koi side bar nahi aata.
+    if (_hasVideo) {
+      final double videoRatio =
+          _videoPlayerController?.value.aspectRatio ?? (16 / 9);
+      return AspectRatio(
+        aspectRatio: videoRatio,
+        child: _videoPlayerController != null && _chewieController != null
+            ? Chewie(controller: _chewieController!)
+            : Container(
+                width: double.infinity,
+                color: Theme.of(context).primaryColorLight,
+                child: Center(
+                  child: Image.asset(Images.placeholder, width: 150),
+                ),
+              ),
+      );
+    }
+
+    /// Multiple cover images => slider carousel (16:9, live page indicator)
+    if (hasSlider) {
+      return Stack(children: [
+        CarouselSlider.builder(
+          options: CarouselOptions(
+            height: bannerHeight,
+            viewportFraction: 1.0,
+            enableInfiniteScroll: true,
+            autoPlay: true,
+            autoPlayInterval: const Duration(seconds: 4),
+            enlargeCenterPage: false,
+            onPageChanged: (index, reason) {
+              if (mounted) setState(() => _currentSlide = index);
+            },
+          ),
+          itemCount: widget.sliderImages.length,
+          itemBuilder: (context, index, _) {
+            return CustomImage(
+              image: widget.sliderImages[index],
+              width: double.infinity,
+              height: double.infinity,
+              fit: BoxFit.cover,
+              placeholder: Images.placeholder,
+            );
+          },
+        ),
+        /// Slider indicator — current page live update
+        Positioned(
+          bottom: 12,
+          right: 12,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '${_currentSlide + 1}/${widget.sliderImages.length}',
+              style: GoogleFonts.dmSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ]);
+    }
+
+    /// Single cover image => fixed 16:9 banner (professional height)
     return AspectRatio(
-      aspectRatio: 1.5,
+      aspectRatio: 16 / 9,
       child: CustomImage(
-        image: coverImage,
+        image: widget.coverImage,
         width: double.infinity,
         height: double.infinity,
         fit: BoxFit.cover,
@@ -331,7 +503,7 @@ class NestDetailInfo extends StatelessWidget {
         ]),
         const SizedBox(height: 8),
 
-        /// Meta row - rating Â· reviews (nest. mono mintmal)
+        /// Meta row - rating · reviews (nest. mono mintmal)
         Row(children: [
           Icon(Icons.star_rounded, size: 14, color: primaryColor, fill: 1.0),
           const SizedBox(width: 4),
@@ -342,7 +514,7 @@ class NestDetailInfo extends StatelessWidget {
               color: primaryColor,
             ),
           ),
-          Text(' Â· ${service.ratingCount ?? 0}',
+          Text(' · ${service.ratingCount ?? 0}',
             style: GoogleFonts.dmSans(
               fontSize: 10,
               fontWeight: FontWeight.w400,
@@ -695,7 +867,7 @@ class _NestDetailReviewsState extends State<NestDetailReviews> {
   }
 }
 
-/// nest. bottom bar - single black "Book now Â· price" CTA (reference footer style) (updated design)
+/// nest. bottom bar - single black "Book now · price" CTA (reference footer style) (updated design)
 class NestDetailBottomBar extends StatelessWidget {
   final Service service;
   final double lowestPrice;

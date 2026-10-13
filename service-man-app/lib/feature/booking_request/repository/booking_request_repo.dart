@@ -21,7 +21,7 @@ class BookingRequestRepo{
     return await apiClient.putData('${AppConstants.rejectBookingUrl}/$bookingId', {'_method': 'put'});
   }
 
-  // ----- RECHECK (customer ne 15 din andar recheck manga hai) -----
+  // ----- RECHECK (customer ne 7 din andar recheck manga hai) -----
   Future<Response> getRecheckList(int offset, {String status = 'all'}) async {
     return await apiClient.getData(
       '${AppConstants.recheckListUrl}?limit=20&offset=$offset&status=$status',

@@ -55,7 +55,6 @@ class  DashboardController extends GetxController implements GetxService{
   void onInit(){
     super.onInit();
     getMonthlyBookingsDataForChart(DateConverter.stringYear(DateTime.now()),DateTime.now().month.toString());
-    getYearlyBookingsDataForChart(DateConverter.stringYear(DateTime.now()));
   }
 
   Future<void> getDashboardData({bool reload = true}) async {

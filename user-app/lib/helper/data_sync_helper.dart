@@ -20,20 +20,21 @@ class DataSyncHelper {
       onResponse(jsonDecode(localResponse.response!.response), DataSourceEnum.local);
     }
 
-    // Step 2: Try to load from the client (remote) source in background and update if successful
-    fetchFromClient().then((clientResponse) {
-      if (clientResponse.isSuccess && clientResponse.response?.statusCode == 200) {
-        onResponse(clientResponse.response?.body, DataSourceEnum.client);
-      } else {
-        if(clientResponse.response?.statusCode != 429 && Get.context != null){
-          ApiChecker.checkApi(Response(
-            body: clientResponse.response?.body,
-            statusCode: clientResponse.response?.statusCode,
-            statusText: clientResponse.response?.statusText,
-          ));
-        }
+    // Step 2: Load from the client (remote) source and update if successful.
+    // Await zaruri hai — warna caller ko stale local cache milti hai aur real
+    // server state (cart/provider) kabhi nahi aata (checkout desync bug).
+    final clientResponse = await fetchFromClient();
+    if (clientResponse.isSuccess && clientResponse.response?.statusCode == 200) {
+      onResponse(clientResponse.response?.body, DataSourceEnum.client);
+    } else {
+      if (clientResponse.response?.statusCode != 429 && Get.context != null) {
+        ApiChecker.checkApi(Response(
+          body: clientResponse.response?.body,
+          statusCode: clientResponse.response?.statusCode,
+          statusText: clientResponse.response?.statusText,
+        ));
       }
-    });
+    }
   }
 }
 

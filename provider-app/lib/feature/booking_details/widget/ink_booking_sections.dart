@@ -499,6 +499,54 @@ class InkServiceItemsCard extends StatelessWidget {
             ),
             if (i < items.length - 1)  Divider(height: 1, color: InkColors.border),
           ],
+
+          // SPEC: serviceman ne on-site extra work add kiya (custom price) —
+          // final bill me clearly dikhao
+          if ((bookingDetails.extraServices ?? []).isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Divider(height: 1, color: InkColors.border),
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'extra_work'.tr,
+                style: robotoBold.copyWith(fontSize: 12, height: 1.3, color: InkColors.mutedForeground),
+              ),
+            ),
+            const SizedBox(height: 4),
+            for (final extra in bookingDetails.extraServices!) ...[
+              Padding(
+                padding: const EdgeInsets.only(top: 6, bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text.rich(
+                        TextSpan(
+                          text: extra.name ?? "",
+                          style: robotoRegular.copyWith(fontSize: 13, height: 1.4, color: InkColors.foreground),
+                          children: [
+                            TextSpan(
+                              text: " ×${extra.quantity ?? 1}${extra.type == 'external' ? ' (${  'external'.tr  })' : ''}",
+                              style: robotoRegular.copyWith(fontSize: 13, height: 1.4, color: InkColors.mutedForeground),
+                            ),
+                          ],
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    InkMoney(
+                      (extra.price ?? 0) * (extra.quantity ?? 1),
+                      style: TextStyle(fontSize: 13, color: InkColors.foreground),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+
           const SizedBox(height: 12),
            Divider(height: 1, color: InkColors.border),
           const SizedBox(height: 12),
@@ -671,6 +719,128 @@ class InkAssignServicemanSection extends StatelessWidget {
         child: InkCard(padding: const EdgeInsets.symmetric(vertical: 6), child: buildRows()),
       );
     });
+  }
+}
+
+/// AUTO-ASSIGN trail: poori cycle dikhata hai — kis serviceman ko request gayi,
+/// kisne accept ki, kisne decline ki, kiska timer expire hua. Sirf tab dikhao
+/// jab cycle chali ho (1 se zyada attempts ya koi reject/expire).
+class InkAssignmentTrailSection extends StatelessWidget {
+  final BookingDetailsContent bookingDetails;
+
+  const InkAssignmentTrailSection({super.key, required this.bookingDetails});
+
+  static const Map<String, (String, Color)> _statusMeta = {
+    'accepted': ('Accepted', Color(0xFF16A34A)),
+    'rejected': ('Declined', Color(0xFFC62828)),
+    'expired': ('Timed out', Color(0xFFEA8A00)),
+    'pending': ('Waiting', Color(0xFF2563EB)),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final List<AssignmentTrailItem> trail = bookingDetails.assignmentTrail ?? [];
+
+    if (trail.isEmpty) return const SizedBox.shrink();
+
+    // Cycle tabhi dikhao jab 1 se zyada attempts ho ya koi reject/expire hua ho
+    final bool showSection = trail.length > 1 ||
+        trail.any((item) => item.isRejected || item.isExpired);
+    if (!showSection) return const SizedBox.shrink();
+
+    // Latest attempt first
+    final List<AssignmentTrailItem> ordered = List.of(trail);
+
+    return InkSection(
+      title: 'Assignment history',
+      margin: const EdgeInsets.only(bottom: 24),
+      child: InkCard(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Column(
+          children: [
+            for (int i = 0; i < ordered.length; i++) ...[
+              if (i > 0) Divider(height: 1, color: InkColors.border, indent: 16, endIndent: 16),
+              _TrailRow(item: ordered[i], isFirst: i == 0),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TrailRow extends StatelessWidget {
+  final AssignmentTrailItem item;
+  final bool isFirst;
+
+  const _TrailRow({required this.item, required this.isFirst});
+
+  String _timeLabel(String? iso) {
+    if (iso == null || iso.isEmpty) return '';
+    try {
+      final DateTime dt = DateTime.parse(iso).toLocal();
+      final String h = dt.hour.toString().padLeft(2, '0');
+      final String m = dt.minute.toString().padLeft(2, '0');
+      return '$h:$m';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final (String label, Color color) =
+        InkAssignmentTrailSection._statusMeta[item.status ?? ''] ?? ('Unknown', InkColors.mutedForeground);
+
+    final String name = (item.name ?? '').trim();
+    final String respondedAt = _timeLabel(item.respondedAt ?? item.requestedAt);
+    final String subtitleParts = [
+      if (isFirst) 'Nearest serviceman' else 'Next in line',
+      if (respondedAt.isNotEmpty) respondedAt,
+      item.phone ?? '',
+    ].where((part) => part.isNotEmpty).join(' · ');
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      child: Row(
+        children: [
+          InkAvatar(name: name.isEmpty ? '?' : name, size: 32),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name.isEmpty ? '—' : name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: robotoSemiBold.copyWith(fontSize: 13, height: 1.3, color: InkColors.foreground),
+                ),
+                Text(
+                  subtitleParts,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: robotoRegular.copyWith(fontSize: 11, height: 1.3, color: InkColors.mutedForeground),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: color.withValues(alpha: 0.35), width: 1),
+            ),
+            child: Text(
+              label,
+              style: robotoSemiBold.copyWith(fontSize: 10.5, height: 1.2, color: color),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

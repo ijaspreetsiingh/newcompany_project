@@ -35,19 +35,19 @@ class RecentActivityGraph extends StatelessWidget {
                   PieChartData(
                     borderData: FlBorderData(show: false),
                     sectionsSpace: 3,
-                    centerSpaceRadius: 28,
+                    centerSpaceRadius: 16,
                     sections: <PieChartSectionData>[
                       PieChartSectionData(
                         color: InkColors.chart1,
                         value: normalPercent.toDouble(),
                         title: '',
-                        radius: 44,
+                        radius: 32,
                       ),
                       PieChartSectionData(
                         color: InkColors.chart4,
                         value: customisedPercent.toDouble(),
                         title: '',
-                        radius: 44,
+                        radius: 32,
                       ),
                     ],
                   ),

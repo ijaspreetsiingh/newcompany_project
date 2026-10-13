@@ -26,6 +26,7 @@ class MenuScreen extends StatelessWidget {
       if (subscriptionRequired)
         MenuModel(icon: Images.businessPlanIcon, title: 'business_plan'.tr, route: RouteHelper.getBusinessPlanScreen()),
       MenuModel(iconData: Icons.replay_rounded, title: 'recheck_dashboard'.tr, route: RouteHelper.getRecheckDashboardRoute()),
+      MenuModel(iconData: Icons.sentiment_dissatisfied_outlined, title: 'unsatisfied_dashboard'.tr, route: RouteHelper.getUnsatisfiedDashboardRoute()),
       MenuModel(icon: Images.helpIcon, title: 'help_&_support'.tr, route: RouteHelper.getHelpAndSupportScreen()),
 
       ...(Get.find<SplashController>()

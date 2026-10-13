@@ -191,12 +191,12 @@ class NotificationHelper {
         Get.find<NotificationController>().getNotifications(1, saveNotificationCount: false);
       }
 
-      // ----- AUTO-ASSIGN: full-screen incoming booking popup -----
+      // ----- AUTO-ASSIGN: provider kabhi accept/decline nahi karega -----
+      // Full-screen decision popup hataya — sirf normal notification dikhao.
+      // Booking automatic nearest serviceman ko jaati hai.
       else if(message.data['type']=='new_booking_request'){
-        final String? bookingId = message.data['booking_id'];
-        if(bookingId != null && bookingId != '' && !Get.currentRoute.contains(RouteHelper.incomingBookingPopup)) {
-          Get.toNamed(RouteHelper.getIncomingBookingPopupRoute(bookingId: bookingId));
-        }
+        NotificationHelper.showNotification(message, false,flutterLocalNotificationsPlugin);
+        Get.find<NotificationController>().getNotifications(1, saveNotificationCount: false);
       }
       else if(message.data['type'] == 'logout'){
         NotificationHelper.showNotification(message, false,flutterLocalNotificationsPlugin);

@@ -217,7 +217,7 @@ class _PriceButtonWidget extends StatelessWidget {
           ]),
         ])),
       Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 10), child: NestButton(
-          label: '${'checkout'.tr} Â· ${PriceConverter.convertPrice(cartController.totalPrice)}',
+          label: '${'checkout'.tr} · ${PriceConverter.convertPrice(cartController.totalPrice)}',
           onTap: cartController.checkProviderUnavailability() ? (){
             customSnackBar("your_selected_provider_is_unavailable_right_now".tr);
           }: (Get.find<SplashController>().configModel.content?.minBookingAmount ?? 0) >  cartController.totalPrice ? (){

@@ -34,6 +34,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen>
   TabController? tabController;
   bool isSubBooking = false;
 
+  // Booking details auto-refresh — extra service bill / status / OTP live
+  // update hota rahe (customer ko pull-to-refresh ki zaroorat na rahe).
+  Timer? _detailsPollTimer;
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +46,49 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen>
       vsync: this,
     );
     _loadData();
+    _startDetailsPolling();
+  }
+
+  void _startDetailsPolling() {
+    _detailsPollTimer?.cancel();
+    _detailsPollTimer = Timer.periodic(
+      const Duration(seconds: 8),
+      (_) => _pollBookingDetails(),
+    );
+  }
+
+  void _pollBookingDetails() {
+    if (!mounted) return;
+    // Phone-based guest track me booking model nahi milta — skip.
+    if (widget.fromPage == "track-booking") return;
+
+    final controller = Get.find<BookingDetailsController>();
+    final booking = isSubBooking
+        ? controller.subBookingDetailsContent
+        : controller.bookingDetailsContent;
+    if (booking?.id == null) return;
+
+    final String status = booking?.bookingStatus ?? '';
+    if (status == 'completed' || status == 'canceled' || status == 'cancelled') {
+      _detailsPollTimer?.cancel();
+      return;
+    }
+
+    if (isSubBooking) {
+      controller.getSubBookingDetails(
+        bookingId: booking!.id!,
+        reload: false,
+      );
+    } else {
+      controller.getBookingDetails(bookingId: booking!.id!, reload: false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _detailsPollTimer?.cancel();
+    tabController?.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -529,21 +576,36 @@ class BookingTabBar extends StatelessWidget {
                                                 bookingDetailsContent
                                                         .bookingStatus ==
                                                     "pending")
-                                        ? GetBuilder<ServiceBookingController>(
-                                            builder: (serviceBookingController) {
-                                              return InkWell(
-                                                onTap: () {
-                                                  if (bookingDetailsContent
-                                                          .bookingStatus ==
-                                                      "completed") {
-                                                    serviceBookingController
-                                                        .checkCartSubcategory(
-                                                          bookingDetailsContent
-                                                              .id!,
-                                                          bookingDetailsContent
-                                                              .subCategoryId!,
-                                                        );
-                                                  } else {
+                                          ? GetBuilder<ServiceBookingController>(
+                                              builder: (serviceBookingController) {
+                                                return InkWell(
+                                                  onTap: () {
+                                                    if (bookingDetailsContent
+                                                            .bookingStatus ==
+                                                        "completed") {
+                                                      serviceBookingController
+                                                          .showBookAgainOptions(
+                                                            bookingId:
+                                                                bookingDetailsContent
+                                                                    .id!,
+                                                            subCategoryId:
+                                                                bookingDetailsContent
+                                                                    .subCategoryId!,
+                                                            servicemanId:
+                                                                bookingDetailsContent
+                                                                    .serviceman
+                                                                    ?.id,
+                                                            servicemanName:
+                                                                '${bookingDetailsContent.serviceman?.user?.firstName ?? ''} ${bookingDetailsContent.serviceman?.user?.lastName ?? ''}'
+                                                                    .trim(),
+                                                            servicemanImage:
+                                                                bookingDetailsContent
+                                                                        .serviceman
+                                                                        ?.user
+                                                                        ?.profileImageFullPath ??
+                                                                    '',
+                                                          );
+                                                    } else {
                                                     Get.dialog(
                                                       ConfirmationDialog(
                                                         icon: Images.warning,
@@ -654,7 +716,7 @@ class BookingTabBar extends StatelessWidget {
                                                           bookingDetailsContent
                                                                       .bookingStatus ==
                                                                   "completed"
-                                                              ? "rebook".tr
+                                                              ? "book_again".tr
                                                               : "cancel_booking"
                                                                     .tr,
                                                           style: robotoMedium.copyWith(

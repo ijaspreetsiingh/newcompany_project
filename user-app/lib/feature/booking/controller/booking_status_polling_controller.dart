@@ -46,10 +46,10 @@ class BookingStatusPollingController extends GetxController implements GetxServi
           final content = BookingDetailsContent.fromJson(response.body['content']);
           _bookingDetails = content;
 
-          // provider assign ho gaya aur accepted hai
-          if (content.providerId != null &&
-              content.providerId!.isNotEmpty &&
-              (content.bookingStatus == 'accepted' || content.bookingStatus == 'ongoing')) {
+          // SPEC: provider assign hote hi "provider found + partners searching"
+          // dikhao — accepted/ongoing ka wait mat karo. Serviceman accept
+          // karne ke baad booking accepted hogi.
+          if (content.providerId != null && content.providerId!.isNotEmpty) {
             _providerFound = true;
             stopPolling();
 
