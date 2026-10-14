@@ -16,6 +16,7 @@ use App\Http\Middleware\{ActivationCheckMiddleware,
     LocalizationMiddleware,
     MaintenanceMode,
     RedirectIfAuthenticated,
+    SanitizeBearerHeader,
     Subscription,
     SubscriptionModalMiddleware,
     VerifyCsrfToken,
@@ -42,6 +43,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->use([
 //            TrustHosts::class,
+            SanitizeBearerHeader::class,
             TrustProxies::class,
             HandleCors::class,
             PreventRequestsDuringMaintenance::class,

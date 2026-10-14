@@ -68,7 +68,12 @@ return [
             'queue' => env('REDIS_QUEUE', 'default'),
             'retry_after' => 90,
             'block_for' => null,
-            'after_commit' => false,
+            // AFTER_COMMIT: booking observers DB::transaction ke andar dispatch
+            // karte hain. false hone par worker transaction commit hone se pehle
+            // Booking::find() karta hai (separate connection -> uncommitted row
+            // invisible) -> null -> notification silent drop. Isse serviceman ko
+            // placement par push hi nahi milta tha (countdown popup nahi khulta).
+            'after_commit' => true,
         ],
 
     ],

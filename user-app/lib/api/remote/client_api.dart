@@ -45,7 +45,10 @@ class ApiClient extends GetxService {
       'Accept': 'application/json',
       AppConstants.zoneId: zoneIDs ?? '',
       AppConstants.localizationKey: languageCode ?? AppConstants.languages[0].languageCode!,
-      'Authorization': 'Bearer $token',
+      // guest me token null hota hai — "Bearer null" header backend ko 500
+      // karwa deta tha (guard garbage token parse nahi kar paata). Sirf real
+      // token par hi Authorization bhejo.
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
       AppConstants.guestId : guestID ?? "",
     };
   }

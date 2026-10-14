@@ -268,15 +268,28 @@ trait BookingTrait
                 $bookingNotificationStatus = business_config('booking', 'notification_settings')->live_values;
                 if ($booking->payment_method == 'cash_after_service') {
                     if ($maximumBookingAmount > 0 && $booking->total_booking_amount < $maximumBookingAmount) {
-                        if (isset($booking->provider_id) && $booking->booking_status != 'pending') {
-                            $provider = Provider::with('owner')->whereId($booking->provider_id)->first();
-                            $fcmToken = $provider?->owner->fcm_token ?? null;
-                            $languageKey = $provider?->owner?->current_language_key;
-                            if (!is_null($fcmToken) && isset($bookingNotificationStatus) && $bookingNotificationStatus['push_notification_booking']) {
-                                $notification = isNotificationActive($provider?->id, 'booking', 'notification', 'provider');
-                                $title = get_push_notification_message('booking_accepted', 'provider_notification', $languageKey);
-                                if ($title && sendDeviceNotificationPermission($booking?->provider_id) && $notification) {
+                        // SPAM-FIX: pehle condition tha
+                        // `isset(provider_id) && status != 'pending'` — placement par
+                        // status hamesha 'pending' hota hai, isliye ye branch kabhi
+                        // chalti nahi thi aur provider fixed hone ke BAAD bhi poore
+                        // zone ko "New Service Request Arrived" blast ho jaata tha
+                        // (other zone providers ko bhi faltu push + fixed provider ko
+                        // observer 'serviceman_assign' ke saath double).
+                        // Ab: provider fixed hai to usko sirf tab notify karo jab
+                        // serviceman abhi assigned na ho (warna observer already
+                        // 'serviceman_assign' bhej chuka hai). Provider null hai to
+                        // hi zone-loop chalao (services dhoondhne ke liye).
+                        if (isset($booking->provider_id)) {
+                            if (empty($booking->serviceman_id)) {
+                                $provider = Provider::with('owner')->whereId($booking->provider_id)->first();
+                                $fcmToken = $provider?->owner->fcm_token ?? null;
+                                $languageKey = $provider?->owner?->current_language_key;
+                                if (!is_null($fcmToken) && isset($bookingNotificationStatus) && $bookingNotificationStatus['push_notification_booking']) {
+                                    $notification = isNotificationActive($provider?->id, 'booking', 'notification', 'provider');
+                                    $title = get_push_notification_message('booking_accepted', 'provider_notification', $languageKey);
+                                    if ($title && sendDeviceNotificationPermission($booking?->provider_id) && $notification) {
                                         device_notification($fcmToken, $title, null, null, $booking->id, 'booking');
+                                    }
                                 }
                             }
                         } else {

@@ -535,13 +535,31 @@ class Booking extends Model
                     $model->timestamps = false;
                     $model->saveQuietly();
                 }
-                if ($bookingScheduleTimeChangeProvider) {
+                // SPAM-FIX ("bar bar" push): provider ko sirf PEHLI assignment par
+                // notify karo (customer ke serviceman_assign_customer_notified ki
+                // tarah, persisted flag). Rotation me pehla serviceman accept na
+                // kare aur auto-assign agla dhoondhe, tab provider ko har baar
+                // "serviceman_assign" dubara nahi chahiye — system khud handle
+                // kar raha hai. Serviceman_id -> null (expiry/clear) par bhi push
+                // nahi jaana chahiye.
+                // NOTE: clear + assign ALAG-alag save hote hain, isliye
+                // getOriginal() assign-save me null hota hai (rotation bhi "first"
+                // lagta) — isi liye persisted flag zaroori hai.
+                // Serviceman ko har naya assignment push chahiye (unko popup
+                // dikhana hai), isliye wo har baar chalega.
+                if ($bookingScheduleTimeChangeProvider
+                    && empty($originalServicemanId)
+                    && !empty($model->serviceman_id)
+                    && !$model->serviceman_assign_provider_notified) {
                     $notifications[] = [
                         'key' => 'serviceman_assign',
                         'settings_type' => 'provider_notification'
                     ];
+                    $model->serviceman_assign_provider_notified = 1;
+                    $model->timestamps = false;
+                    $model->saveQuietly();
                 }
-                if ($bookingScheduleTimeChangeServiceman) {
+                if ($bookingScheduleTimeChangeServiceman && !empty($model->serviceman_id)) {
                     $notifications[] = [
                         'key' => 'serviceman_assign',
                         'settings_type' => 'serviceman_notification'

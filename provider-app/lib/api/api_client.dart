@@ -35,7 +35,8 @@ class ApiClient extends GetxService {
     _mainHeaders = {
       'Content-Type': 'application/json; charset=UTF-8',
       'Accept': 'application/json',
-      'Authorization': 'Bearer $token',
+      // null token par "Bearer null" mat bhejo — backend 500 karta tha
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
       AppConstants.localizationKey: languageCode ?? AppConstants.languages[0].languageCode!,
 
     };
