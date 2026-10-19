@@ -87,7 +87,7 @@ class ServiceController extends Controller
         if ($validator->fails()) {
             return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
         }
-        $reviews = $this->review->with(['booking.detail','provider', 'customer','reviewReply','service'])
+        $reviews = $this->review->with(['booking.detail','provider', 'customer','reviewReply','service','serviceman.user'])
             ->where('service_id', $service_id)
             ->where('provider_id', auth()->user()->provider->id)
             ->latest()

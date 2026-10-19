@@ -252,7 +252,7 @@
                         Join thousands of service providers who are earning more by listing their services on our platform. Get access to thousands of customers in your area.
                     </p>
                     <div class="d-flex flex-wrap gap-3">
-                        <a href="{{ route('provider.auth.sign-up') }}" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; padding: 16px 32px; border-radius: 12px; font-weight: 700; font-size: 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 8px 25px rgba(16,185,129,0.4);">
+                        <a href="{{ route('page.become-a-provider') }}" style="background: linear-gradient(135deg, #10b981, #059669); color: #fff; padding: 16px 32px; border-radius: 12px; font-weight: 700; font-size: 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 8px 25px rgba(16,185,129,0.4);">
                             Register Now <i class="las la-arrow-right"></i>
                         </a>
                         <a href="tel:{{ bs_data($settings, 'business_phone', 1) }}" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 16px 32px; border-radius: 12px; font-weight: 700; font-size: 16px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">

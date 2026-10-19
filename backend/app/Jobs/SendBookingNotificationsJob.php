@@ -79,6 +79,29 @@ class SendBookingNotificationsJob implements ShouldQueue
         }
 
         if ($settingsType == 'serviceman_notification') {
+            // Assignment notifications can sit in a queue while the booking
+            // rotates or gets accepted. Re-check its live state at send time
+            // so a delayed job cannot send a stale countdown request.
+            if ($key === 'serviceman_assign') {
+                if ($booking->booking_status !== 'pending' || empty($booking->serviceman_id)) {
+                    return;
+                }
+
+                $slot = \Modules\BookingModule\Entities\BookingServiceman::where('booking_id', $booking->id)
+                    ->where('serviceman_id', $booking->serviceman_id)
+                    ->first();
+                if ($slot) {
+                    if ($slot->status !== \Modules\BookingModule\Entities\BookingServiceman::STATUS_PENDING
+                        || !$slot->expires_at
+                        || $slot->expires_at->isPast()) {
+                        return;
+                    }
+                } elseif ($booking->serviceman_assign_expires_at
+                    && $booking->serviceman_assign_expires_at->isPast()) {
+                    return;
+                }
+            }
+
             $serviceman = $booking->serviceman?->user;
             $title = get_push_notification_message($key, $settingsType, $serviceman?->current_language_key);
             if ($serviceman?->fcm_token && $title) {

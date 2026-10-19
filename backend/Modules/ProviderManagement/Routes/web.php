@@ -9,6 +9,7 @@ use Modules\ProviderManagement\Http\Controllers\Web\Provider\Report\Business\Exp
 use Modules\ProviderManagement\Http\Controllers\Web\Provider\Report\TransactionReportController;
 use Modules\ProviderManagement\Http\Controllers\Web\Admin\CollectCashController;
 use Modules\ProviderManagement\Http\Controllers\Web\Admin\ProviderController;
+use Modules\ProviderManagement\Http\Controllers\Web\Admin\ProviderRegistrationRequestController;
 use Modules\ProviderManagement\Http\Controllers\Web\Admin\SubscriptionController;
 use Modules\ProviderManagement\Http\Controllers\Web\Provider\ProviderController as ProviderProviderController;
 use Modules\ProviderManagement\Http\Controllers\Web\Provider\WithdrawController;
@@ -58,6 +59,16 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Web\Admin',
 
         Route::group(['prefix' => 'sub-category', 'as' => 'sub_category.'], function () {
             Route::get('update-subscription/{id}', [ProviderController::class, 'updateSubscription'])->name('update_subscription');
+        });
+
+        // Landing page se aayi provider registration requests (approve => ID + active /
+        // cancel => ID + inactive / accept => old provider activate)
+        Route::group(['prefix' => 'registration-requests', 'as' => 'registration_requests.'], function () {
+            Route::any('/', [ProviderRegistrationRequestController::class, 'index'])->name('index');
+            Route::post('approve/{id}', [ProviderRegistrationRequestController::class, 'approve'])->name('approve');
+            Route::post('approve-inactive/{id}', [ProviderRegistrationRequestController::class, 'approveInactive'])->name('approve_inactive');
+            Route::post('accept-existing/{id}', [ProviderRegistrationRequestController::class, 'acceptExisting'])->name('accept_existing');
+            Route::post('decline/{id}', [ProviderRegistrationRequestController::class, 'decline'])->name('decline');
         });
 
         Route::any('onboarding-request', [ProviderController::class, 'onboardingRequest'])->name('onboarding_request');

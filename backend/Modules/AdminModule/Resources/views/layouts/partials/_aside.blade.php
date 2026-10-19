@@ -57,6 +57,9 @@ $pending_providers = Cache::remember('sidebar_pending_providers', 60, function (
 $denied_providers = Cache::remember('sidebar_denied_providers', 60, function () {
     return \Modules\ProviderManagement\Entities\Provider::ofApproval(0)->count();
 });
+$pending_registration_requests = Cache::remember('sidebar_pending_registration_requests', 60, function () {
+    return \Modules\ProviderManagement\Entities\ProviderRegistrationRequest::ofStatus('pending')->count();
+});
 $logo = getBusinessSettingsImageFullPath(key: 'business_logo', settingType: 'business_information', path: 'business/', defaultPath: 'public/assets/placeholder.png');
 ?>
 
@@ -292,9 +295,9 @@ $logo = getBusinessSettingsImageFullPath(key: 'business_logo', settingType: 'bus
             @endcanany
 
             @canany(['provider_view', 'provider_add'])
-                <li class="has-sub-item  {{(request()->is('admin/provider/list') || request()->is('admin/provider/create') || request()->is('admin/provider/details*') || request()->is('admin/provider/edit*') || request()->is('admin/provider/collect-cash*'))?'sub-menu-opened':''}}">
+                <li class="has-sub-item  {{(request()->is('admin/provider/list') || request()->is('admin/provider/create') || request()->is('admin/provider/details*') || request()->is('admin/provider/edit*') || request()->is('admin/provider/collect-cash*') || request()->is('admin/provider/registration-requests*'))?'sub-menu-opened':''}}">
                     <a href="#"
-                       class="{{(request()->is('admin/provider/list') || request()->is('admin/provider/create') || request()->is('admin/provider/details*') || request()->is('admin/provider/edit*') || request()->is('admin/provider/collect-cash*'))?'active-menu':''}}">
+                       class="{{(request()->is('admin/provider/list') || request()->is('admin/provider/create') || request()->is('admin/provider/details*') || request()->is('admin/provider/edit*') || request()->is('admin/provider/collect-cash*') || request()->is('admin/provider/registration-requests*'))?'active-menu':''}}">
                         <span class="material-icons" title="Providers">engineering</span>
                         <span class="link-title">{{translate('providers')}}</span>
                     </a>
@@ -303,6 +306,16 @@ $logo = getBusinessSettingsImageFullPath(key: 'business_logo', settingType: 'bus
                             <li>
                                 <a href="{{route('admin.provider.list', ['status'=>'all'])}}"
                                    class="{{(request()->is('admin/provider/list'))?'active-menu':''}}">{{translate('Provider_List')}}</a>
+                            </li>
+                            <li>
+                                <a href="{{route('admin.provider.registration_requests.index')}}"
+                                   class="{{request()->is('admin/provider/registration-requests*')?'active-menu':''}}">
+                                    <span class="link-title">{{translate('Registration_Requests')}}
+                                        @if($pending_registration_requests > 0)
+                                            <span class="count">{{$pending_registration_requests}}</span>
+                                        @endif
+                                    </span>
+                                </a>
                             </li>
                         @endcan
                         @can('provider_add')

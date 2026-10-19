@@ -9,6 +9,8 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Modules\BookingModule\Entities\Booking;
+use Modules\CategoryManagement\Entities\Category;
+use Modules\ServicemanModule\Entities\ServicemanCategory;
 use Modules\UserManagement\Entities\Serviceman;
 use Modules\UserManagement\Entities\User;
 
@@ -44,7 +46,7 @@ class ServicemanController extends Controller
             return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
         }
 
-        $serviceman = $this->employee->with(['serviceman'])
+        $serviceman = $this->employee->with(['serviceman.servicemanCategories.subCategory', 'serviceman.servicemanCategories.mainCategory'])
             ->when($request->has('string'), function ($query) use ($request) {
                 $query->where(function ($query) use ($request) {
                     $keys = explode(' ', base64_decode($request['string']));
@@ -92,6 +94,11 @@ class ServicemanController extends Controller
             'identity_number' => 'required',
             'identity_images' => 'required|array',
             'identity_images.*' => 'image|max:'. uploadMaxFileSizeInKB('image') .'|mimes:' . implode(',', array_column(IMAGEEXTENSION, 'key')),
+            // Provider serviceman ko sub-category assign karta hai (optional)
+            'sub_category_ids' => 'nullable|array',
+            // Validate against actual category records. Some existing category
+            // IDs are non-UUID strings, so a UUID-format check rejects valid IDs.
+            'sub_category_ids.*' => 'exists:categories,id',
         ]);
 
         if ($validator->fails()) {
@@ -111,7 +118,9 @@ class ServicemanController extends Controller
             $identityImages[] = ['image'=>$imageName, 'storage'=> getDisk()];
         }
 
-        DB::transaction(function () use ($request, $identityImages) {
+        $subCategoryIds = $request->input('sub_category_ids', []);
+
+        DB::transaction(function () use ($request, $identityImages, $subCategoryIds) {
             $employee = $this->employee;
             $employee->first_name = $request->first_name;
             $employee->last_name = $request->last_name;
@@ -130,6 +139,8 @@ class ServicemanController extends Controller
             $serviceman->provider_id = $request->user()->provider->id;
             $serviceman->user_id = $employee->id;
             $serviceman->save();
+
+            $this->syncServicemanCategories($serviceman->id, $subCategoryIds);
         });
 
         return response()->json(response_formatter(DEFAULT_STORE_200), 200);
@@ -140,7 +151,7 @@ class ServicemanController extends Controller
      * @param string $id
      * @return JsonResponse
      */
-    public function show(string $id): JsonResponse
+    public function show(Request $request, string $id): JsonResponse
     {
         $bookings = $this->booking->where('serviceman_id', $id)
             ->select('booking_status', DB::raw('count(*) as total_booking'))
@@ -157,7 +168,13 @@ class ServicemanController extends Controller
                 $bookingCount['canceled'] = $booking->total_booking ?? 0;
         }
 
-        $serviceman = $this->serviceman::with(['user'])->find($id);
+        $serviceman = $this->serviceman::with([
+            'user',
+            'servicemanCategories.subCategory',
+            'servicemanCategories.mainCategory',
+        ])->where('id', $id)
+            ->where('provider_id', $request->user()->provider->id)
+            ->first();
 
         if (!isset($serviceman)) {
             return response()->json(response_formatter(DEFAULT_204), 204);
@@ -173,9 +190,12 @@ class ServicemanController extends Controller
      * @param string $id
      * @return JsonResponse
      */
-    public function edit(string $id): JsonResponse
+    public function edit(Request $request, string $id): JsonResponse
     {
-        $serviceman = $this->serviceman::with(['users'])->where('id', $id)->first();
+        $serviceman = $this->serviceman::with(['users'])
+            ->where('id', $id)
+            ->where('provider_id', $request->user()->provider->id)
+            ->first();
 
         if (!isset($serviceman)) {
             return response()->json(response_formatter(DEFAULT_204), 204);
@@ -196,8 +216,9 @@ class ServicemanController extends Controller
             return $check;
         }
 
-        $employee = $this->employee::whereHas('serviceman', function ($query) use ($id) {
-            $query->where(['id' => $id]);
+        $employee = $this->employee::whereHas('serviceman', function ($query) use ($id, $request) {
+            $query->where('id', $id)
+                ->where('provider_id', $request->user()->provider->id);
         })->first();
 
         if (!isset($employee)) {
@@ -215,6 +236,9 @@ class ServicemanController extends Controller
             'identity_number' => 'required',
             'identity_images' => 'array',
             'identity_images.*' => 'image|max:'. uploadMaxFileSizeInKB('image') .'|mimes:' . implode(',', array_column(IMAGEEXTENSION, 'key')),
+            // Provider serviceman ki sub-categories update karta hai (optional)
+            'sub_category_ids' => 'nullable|array',
+            'sub_category_ids.*' => 'exists:categories,id',
         ]);
 
         if ($validator->fails()) {
@@ -254,6 +278,11 @@ class ServicemanController extends Controller
             }
             $employee->user_type = 'provider-serviceman';
             $employee->save();
+
+            // Provider ne sub-categories bheji hain to sync karo
+            if ($request->has('sub_category_ids')) {
+                $this->syncServicemanCategories($employee->serviceman->id, $request->input('sub_category_ids', []));
+            }
         });
 
         return response()->json(response_formatter(DEFAULT_UPDATE_200), 200);
@@ -328,5 +357,43 @@ class ServicemanController extends Controller
         }
 
         return response()->json(response_formatter(DEFAULT_200), 200);
+    }
+
+    /**
+     * Serviceman ki category assignments clean replace karo.
+     * sub_category_id se parent category_id auto-resolve hoti hai.
+     * Agar koi category_ids nahi bheje to saari entries hata do
+     * (means: koi restriction nahi — sabhi bookings eligible).
+     */
+    private function syncServicemanCategories(string $servicemanId, array $subCategoryIds): void
+    {
+        ServicemanCategory::where('serviceman_id', $servicemanId)->delete();
+
+        if (empty($subCategoryIds)) {
+            return;
+        }
+
+        $categories = Category::whereIn('id', $subCategoryIds)
+            ->select('id', 'parent_id')
+            ->get()
+            ->keyBy('id');
+
+        $rows = [];
+        $now  = now();
+        foreach ($subCategoryIds as $subCatId) {
+            $cat = $categories->get($subCatId);
+            if (!$cat) continue;
+            $rows[] = [
+                'serviceman_id'   => $servicemanId,
+                'category_id'     => $cat->parent_id ?? $cat->id,
+                'sub_category_id' => $subCatId,
+                'created_at'      => $now,
+                'updated_at'      => $now,
+            ];
+        }
+
+        if (!empty($rows)) {
+            ServicemanCategory::insert($rows);
+        }
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BecomeAProviderController;
 use App\Http\Controllers\LandingController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InstallController;
@@ -22,6 +23,10 @@ Route::get('page/contact-us', [LandingController::class, 'contactUs'])->name('pa
 Route::get('business-page/{slug}', [LandingController::class, 'dynamicPage'])->name('business.page.dynamic');
 
 Route::get('maintenance-mode', [LandingController::class, 'maintenanceMode'])->name('maintenance-mode');
+
+// Landing page: "Become a Provider" - request form (admin approval ke baad ID banegi)
+Route::get('page/become-a-provider', [BecomeAProviderController::class, 'index'])->name('page.become-a-provider');
+Route::post('page/become-a-provider', [BecomeAProviderController::class, 'submit'])->name('page.become-a-provider.submit');
 Route::post('subscribe-newsletter',[LandingController::class, 'subscribeNewsletter'])->name('subscribe-newsletter');
 
 Route::fallback(function () {

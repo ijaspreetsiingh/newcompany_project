@@ -214,6 +214,143 @@
                 </div>
             </div>
 
+            {{-- DEBUG: Test Reviews Section --}}
+            @php
+                $totalReviewCount = 0;
+                foreach($serviceReviews as $reviews) {
+                    $totalReviewCount += count($reviews);
+                }
+                $testStatsCount = count($serviceRatingStats ?? []);
+            @endphp
+            
+            <!-- DEBUG OUTPUT -->
+            <div class="card mb-20" style="background-color: #fff3cd; border: 2px solid #ffc107;">
+                <div class="card-body p-20">
+                    <h5 style="color: #856404;">🔍 DEBUG INFO</h5>
+                    <p style="color: #856404; margin: 0;"><strong>serviceReviews count:</strong> {{ count($serviceReviews ?? []) }}</p>
+                    <p style="color: #856404; margin: 0;"><strong>serviceRatingStats count:</strong> {{ count($serviceRatingStats ?? []) }}</p>
+                    <p style="color: #856404; margin: 0;"><strong>totalReviewCount:</strong> {{ $totalReviewCount }}</p>
+                    <p style="color: #856404; margin: 0;"><strong>Provider ID:</strong> {{ $provider->id }}</p>
+                </div>
+            </div>
+            <!-- END DEBUG -->
+            
+            {{-- Service Reviews by Rating --}}
+            <div class="card mb-20" id="service-reviews-section">
+                <div class="card-body p-20">
+                    <h5 class="mb-3">{{ translate('Service Reviews & Ratings') }} <small class="text-muted fs-12">({{ $testStatsCount }} services, {{ $totalReviewCount }} total reviews)</small></h5>
+                    
+                    @if($serviceRatingStats && count($serviceRatingStats) > 0)
+                        <div class="alert alert-info mb-3">
+                            <strong>✓ Found {{ $testStatsCount }} services with reviews ({{ $totalReviewCount }} total reviews)</strong>
+                        </div>
+                        <div class="row g-3 mb-20">
+                            @foreach($serviceRatingStats as $serviceId => $stats)
+                                <div class="col-sm-6 col-lg-4 col-xl-3">
+                                    <div class="p-3 rounded border h-100 border-primary border-opacity-25">
+                                        @if($stats['service_image'])
+                                            <div class="mb-2 text-center">
+                                                <img src="{{ $stats['service_image'] }}" alt="{{ $stats['service_name'] }}" class="img-fluid rounded" width="80">
+                                            </div>
+                                        @endif
+                                        <h6 class="mb-2 text-dark text-truncate">{{ $stats['service_name'] }}</h6>
+                                        
+                                        <div class="mb-2 text-center">
+                                            <div class="fs-24 fw-bold text-warning">{{ $stats['avg_rating'] }}</div>
+                                            <div class="rating fs-12">
+                                                @for($i = 1; $i <= 5; $i++)
+                                                    <span class="{{ $stats['avg_rating'] >= $i ? 'material-icons text-warning' : 'material-symbols-outlined' }}">{{ $stats['avg_rating'] >= $i ? 'star' : 'grade' }}</span>
+                                                @endfor
+                                            </div>
+                                            <small class="text-muted d-block mt-1">{{ $stats['total_reviews'] }} {{ translate('reviews') }}</small>
+                                        </div>
+
+                                        <div class="rating-breakdown mt-3">
+                                            @foreach([5, 4, 3, 2, 1] as $rating)
+                                                @php
+                                                    $count = $stats['rating_distribution'][$rating] ?? 0;
+                                                    $percentage = $stats['total_reviews'] > 0 ? ($count / $stats['total_reviews']) * 100 : 0;
+                                                @endphp
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <small class="text-nowrap fs-11">{{ $rating }} ⭐</small>
+                                                    <div class="progress flex-grow-1" style="height: 6px;">
+                                                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ $percentage }}%" aria-valuenow="{{ $percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    </div>
+                                                    <small class="text-muted text-nowrap fs-11">{{ $count }}</small>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        {{-- Detailed Reviews Table --}}
+                        <div class="mt-4">
+                            <h6 class="mb-3">{{ translate('Recent Reviews Details') }}</h6>
+                            <div class="table-responsive">
+                                <table class="table align-middle table-sm">
+                                    <thead class="text-nowrap bg-light">
+                                        <tr>
+                                            <th>{{ translate('Service') }}</th>
+                                            <th>{{ translate('Customer') }}</th>
+                                            <th>{{ translate('Serviceman') }}</th>
+                                            <th>{{ translate('Rating') }}</th>
+                                            <th>{{ translate('Comment') }}</th>
+                                            <th>{{ translate('Date') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php $reviewCount = 0; @endphp
+                                        @foreach($serviceReviews as $serviceId => $reviews)
+                                            @foreach($reviews as $review)
+                                                @if($reviewCount < 20)
+                                                    <tr>
+                                                        <td>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                @if($review->service?->cover_image_full_path)
+                                                                    <img src="{{ $review->service->cover_image_full_path }}" alt="" class="rounded" width="30" height="30">
+                                                                @endif
+                                                                <span class="text-truncate fs-12">{{ $review->service?->name ?? '-' }}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td><small>{{ trim(($review->customer?->first_name ?? '') . ' ' . ($review->customer?->last_name ?? '')) ?: '-' }}</small></td>
+                                                        <td><small>{{ trim(($review->serviceman?->user?->first_name ?? '') . ' ' . ($review->serviceman?->user?->last_name ?? '')) ?: '-' }}</small></td>
+                                                        <td>
+                                                            <div class="d-flex align-items-center gap-1">
+                                                                <span class="material-icons text-warning fs-14">star</span>
+                                                                <strong>{{ $review->review_rating }}/5</strong>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <small class="d-block text-truncate" data-bs-toggle="tooltip" data-bs-title="{{ $review->review_comment ?? translate('No comment') }}">
+                                                                {{ Str::limit($review->review_comment ?? translate('No comment'), 60) }}
+                                                            </small>
+                                                        </td>
+                                                        <td><small class="text-muted">{{ $review->created_at?->format('d M Y H:i') }}</small></td>
+                                                    </tr>
+                                                    @php $reviewCount++; @endphp
+                                                @endif
+                                            @endforeach
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                            @if($reviewCount >= 20)
+                                <div class="alert alert-info mt-2 mb-0">
+                                    <small>{{ translate('Showing first 20 reviews. Total:') }} {{ $serviceReviews->sum('count') }}</small>
+                                </div>
+                            @endif
+                        </div>
+                    @else
+                        <div class="text-center py-5 text-muted">
+                            <span class="material-icons fs-48 mb-2 d-block opacity-50">rate_review</span>
+                            <p>{{ translate('No reviews available yet') }}</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             {{-- Recent bookings --}}
             <div class="card mb-20">
                 <div class="card-body p-20">
@@ -358,6 +495,9 @@
         #chatViewModalBody .chat-bubble.incoming { background: #f1f3f7; }
         #chatViewModalBody .chat-bubble.outgoing { background: #e7f1ff; margin-left: auto; }
         #chatViewModalBody .chat-meta { font-size: 10px; color: #888; margin-top: 2px; }
+        .rating-breakdown { padding: 10px 0; }
+        .material-icons.fs-48 { font-size: 48px; }
+        .progress { background-color: #f0f0f0; }
     </style>
     <script>
         (function () {

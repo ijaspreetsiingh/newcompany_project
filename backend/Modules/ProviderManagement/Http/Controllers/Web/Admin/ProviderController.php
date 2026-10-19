@@ -208,12 +208,16 @@ class ProviderController extends Controller
         $provider = $categoryRequest->provider;
         $requestedSubIds = array_values(array_filter((array) ($categoryRequest->requested_sub_category_ids ?? [])));
 
-        // exclusivity: same zone me kisi aur provider ke paas requested sub nahi hona chahiye
+        // exclusivity: same zone me kisi aur ACTIVE provider ke paas requested sub nahi hona chahiye
+        // (biz rule: ek zone+category me 2 provider ho sakte hain, par ACTIVE sirf ek — inactive duplicates allowed)
         if (!empty($requestedSubIds)) {
             $taken = $this->subscribedService
                 ->whereIn('sub_category_id', $requestedSubIds)
                 ->where('zone_id', $provider->zone_id)
                 ->where('provider_id', '!=', $provider->id)
+                ->whereHas('provider', function ($query) {
+                    $query->where('is_active', 1);
+                })
                 ->with('provider:id,company_name,contact_person_name', 'sub_category:id,name')
                 ->first();
 
@@ -396,9 +400,47 @@ class ProviderController extends Controller
             ->select('bookings.id', 'bookings.booking_status', 'bookings.total_booking_amount', 'bookings.created_at', 'bookings.auto_assigned', 'users.first_name', 'users.last_name')
             ->orderByDesc('bookings.created_at')->limit(15)->get();
 
+        // Fetch reviews grouped by service with ratings
+        $serviceReviews = $this->review
+            ->where('provider_id', $id)
+            ->whereNotNull('review_rating')
+            ->with(['service', 'customer:id,first_name,last_name', 'serviceman.user:id,first_name,last_name', 'booking:id,readable_id'])
+            ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('created_at', '<=', $to))
+            ->where('is_active', 1)
+            ->latest()
+            ->get()
+            ->groupBy('service_id');
+
+        // Log for debugging
+        \Log::info('Provider Dashboard Reviews', [
+            'provider_id' => $id,
+            'service_reviews_count' => $serviceReviews->count(),
+            'total_review_items' => $serviceReviews->sum(fn($items) => count($items))
+        ]);
+
+        // Calculate rating distribution for each service
+        $serviceRatingStats = [];
+        foreach ($serviceReviews as $serviceId => $reviews) {
+            $totalReviews = $reviews->count();
+            $avgRating = $reviews->avg('review_rating');
+            $ratingDistribution = collect([1, 2, 3, 4, 5])->mapWithKeys(fn ($rating) => [
+                $rating => $reviews->where('review_rating', $rating)->count()
+            ])->all();
+
+            $serviceRatingStats[$serviceId] = [
+                'total_reviews' => $totalReviews,
+                'avg_rating' => round($avgRating, 1),
+                'rating_distribution' => $ratingDistribution,
+                'service_name' => $reviews->first()?->service?->name ?? 'N/A',
+                'service_image' => $reviews->first()?->service?->cover_image_full_path ?? null,
+            ];
+        }
+
         return view('providermanagement::admin.provider.dashboard', compact(
             'provider', 'from', 'to', 'periodStatuses', 'allStatuses', 'periodEarning', 'totalEarning',
-            'servicemen', 'servicemanStats', 'categories', 'channels', 'calls', 'recentBookings'
+            'servicemen', 'servicemanStats', 'categories', 'channels', 'calls', 'recentBookings',
+            'serviceReviews', 'serviceRatingStats'
         ));
     }
 
@@ -516,16 +558,29 @@ class ProviderController extends Controller
         }
         $candidateSubIds = array_values(array_unique(array_merge($candidateSubIds, $specificSubs)));
 
+        // Product rule: a provider may hold ANY number of main categories,
+        // and may also hold hand-picked sub-categories from other mains.
+        // Uniqueness is enforced per SUB-CATEGORY in a zone, not per main.
         if (empty($candidateSubIds)) {
             return null;
         }
 
-        // Kisi aur provider ne inme se koi sub already le rakha hai (same zone)
+        // Ownership is per sub-category. Two providers in the same zone may
+        // therefore split one main category between them (A takes subs 1-2,
+        // B takes subs 3-4) — that is how real service marketplaces work.
+        // A provider holding a COMPLETE main already owns every child sub,
+        // so it is covered by this check alone (no main-wide lock needed).
+        // IMPORTANT (biz rule): sirf ACTIVE provider ko exclusivity check me count
+        // karo — inactive duplicate providers (e.g. cancel flow se banaye hue)
+        // block nahi karte, kyunki reality me sirf active wala present hota hai.
         $takenSub = $this->subscribedService
             ->whereIn('sub_category_id', $candidateSubIds)
             ->where('zone_id', $zoneId)
             ->when($excludeProviderId, function ($query) use ($excludeProviderId) {
                 $query->where('provider_id', '!=', $excludeProviderId);
+            })
+            ->whereHas('provider', function ($query) {
+                $query->where('is_active', 1);
             })
             ->with('provider:id,company_name,contact_person_name', 'sub_category:id,name')
             ->first();
@@ -913,8 +968,18 @@ class ProviderController extends Controller
                 ->latest()
                 ->paginate(pagination_limit())->appends($queryParam);
 
-            return view('providermanagement::admin.provider.detail.serviceman-list', compact('servicemen', 'webPage'));
+            // Serviceman-wise review/rating tracking (kitne reviews, avg rating)
+            $servicemanRatingStats = DB::table('reviews')
+                ->whereNotNull('serviceman_id')
+                ->whereIn('serviceman_id', $servicemen->pluck('id'))
+                ->selectRaw('serviceman_id, count(*) as total_ratings, ' .
+                    'sum(case when review_comment is not null then 1 else 0 end) as total_reviews, ' .
+                    'avg(review_rating) as avg_rating')
+                ->groupBy('serviceman_id')
+                ->get()
+                ->keyBy('serviceman_id');
 
+            return view('providermanagement::admin.provider.detail.serviceman-list', compact('servicemen', 'webPage', 'servicemanRatingStats'));
         } //settings
         elseif ($request->web_page == 'settings') {
             $provider = $this->provider->find($id);
@@ -933,7 +998,7 @@ class ProviderController extends Controller
 
             $provider = $this->provider->with(['reviews'])->where('user_id', $request->user()->id)->first();
 
-            $reviews = $this->booking->with(['reviews.service'])
+            $reviews = $this->booking->with(['reviews.service', 'reviews.serviceman.user', 'reviews.customer'])
                 ->when($request->has('search'), function ($query) use ($request) {
                     $keys = explode(' ', $request['search']);
                     $query->whereHas('reviews', function ($query) use ($keys) {

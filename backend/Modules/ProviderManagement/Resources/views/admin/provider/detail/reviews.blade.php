@@ -216,6 +216,11 @@
                                                         <span>{{$getReviewInfo->customer->first_name . ' ' .$getReviewInfo->customer->last_name}}</span>
                                                         <br>
                                                         <span>{{ translate('Booking ID #') . $review->readable_id ?? 'N/A' }}</span>
+                                                        @php($groupServicemanNames = $review->reviews->pluck('serviceman.user')->filter()->map(fn($servicemanUser) => trim(($servicemanUser->first_name ?? '').' '.($servicemanUser->last_name ?? '')))->filter()->unique()->implode(', '))
+                                                        @if($groupServicemanNames !== '')
+                                                            <br>
+                                                            <span class="opacity-75">{{translate('Serviceman')}}: {{$groupServicemanNames}}</span>
+                                                        @endif
                                                     @else
                                                         <span
                                                             class="opacity-50">{{translate('Customer_not_available')}}</span>
@@ -251,6 +256,10 @@
                                                                              src="{{$providerReview->service->cover_image_full_path}}"
                                                                              alt="" width="25%" height="25%">
                                                                         <span>{{ Str::limit($providerReview->service->name, 15) }}</span>
+                                                                    @endif
+                                                                    @if(isset($providerReview->serviceman->user))
+                                                                        <br>
+                                                                        <span class="opacity-75" style="font-size:12px;">{{translate('Serviceman')}}: {{ Str::limit(trim($providerReview->serviceman->user->first_name.' '.$providerReview->serviceman->user->last_name), 20) }}</span>
                                                                     @endif
                                                                 </td>
                                                                 <td>{{$providerReview->created_at}}</td>
@@ -313,6 +322,11 @@
                                                         <span>{{$review->customer->first_name . ' ' .$review->customer->last_name}}</span>
                                                         <br>
                                                         <span>{{ translate('Booking ID #') . $review->readable_id ?? 'N/A' }}</span>
+                                                        @php($singleServicemanName = trim(($getReview->serviceman?->user?->first_name ?? '').' '.($getReview->serviceman?->user?->last_name ?? '')))
+                                                        @if($singleServicemanName !== '')
+                                                            <br>
+                                                            <span class="opacity-75">{{translate('Serviceman')}}: {{$singleServicemanName}}</span>
+                                                        @endif
                                                     @else
                                                         <span
                                                             class="opacity-50">{{translate('Customer_not_available')}}</span>

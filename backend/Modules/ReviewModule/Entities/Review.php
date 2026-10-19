@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\BookingModule\Entities\Booking;
 use Modules\ProviderManagement\Entities\Provider;
 use Modules\ServiceManagement\Entities\Service;
+use Modules\UserManagement\Entities\Serviceman;
 use Modules\UserManagement\Entities\User;
 
 class Review extends Model
@@ -41,6 +42,11 @@ class Review extends Model
     public function customer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class,'customer_id');
+    }
+
+    public function serviceman(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Serviceman::class, 'serviceman_id');
     }
 
     public function reviewReply(): \Illuminate\Database\Eloquent\Relations\HasOne

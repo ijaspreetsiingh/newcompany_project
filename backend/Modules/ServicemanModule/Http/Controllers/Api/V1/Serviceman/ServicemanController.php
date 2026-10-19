@@ -78,6 +78,7 @@ class ServicemanController extends Controller
 
                 return [
                     'total_bookings' => $combined->sum('total') ?? 0,
+                    'pending_bookings' => $combined->where('booking_status', 'pending')->sum('total') ?? 0,
                     'ongoing_bookings' => $combined->where('booking_status', 'ongoing')->sum('total') ?? 0,
                     'completed_bookings' => $combined->where('booking_status', 'completed')->sum('total') ?? 0,
                     'canceled_bookings' => $combined->where('booking_status', 'canceled')->sum('total') ?? 0,
@@ -91,18 +92,37 @@ class ServicemanController extends Controller
 
 
         if (in_array('booking_stats', $request['sections'])) {
-            $allBookings = $this->booking->where(['serviceman_id' => $request->user()->serviceman->id])
-                ->when($request->has('stats_type') && $request['stats_type'] == 'full_year', function ($query) use ($request) {
-                    return $query->whereYear('created_at', '=', $request['year'])->select(
-                        DB::raw('count(*) as total'),
-                        DB::raw('YEAR(created_at) year, MONTH(created_at) month')
-                    )->groupby('year', 'month');
-                })->when($request->has('stats_type') && $request['stats_type'] == 'full_month', function ($query) use ($request) {
-                    return $query->whereYear('created_at', '=', $request['year'])->whereMonth('created_at', '=', $request['month'])->select(
-                        DB::raw('count(*) as total'),
-                        DB::raw('YEAR(created_at) year, MONTH(created_at) month, DAY(created_at) day')
-                    )->groupby('year', 'month', 'day');
-                })->get()->toArray();
+            $servicemanId = $request->user()->serviceman->id;
+            $period = $request->input('stats_type');
+
+            if (in_array($period, ['full_year', 'full_month'], true)) {
+                $groupColumns = $period === 'full_year' ? 'year, month' : 'year, month, day';
+                $regular = DB::table('booking_details_amounts as amounts')
+                    ->join('bookings as booking', 'amounts.booking_id', '=', 'booking.id')
+                    ->whereNull('amounts.booking_repeat_id')
+                    ->where('booking.serviceman_id', $servicemanId)
+                    ->where('booking.booking_status', 'completed')
+                    ->whereYear('booking.created_at', $request['year'])
+                    ->when($period === 'full_month', fn ($query) => $query->whereMonth('booking.created_at', $request['month']))
+                    ->selectRaw('SUM(amounts.serviceman_earning) as total, YEAR(booking.created_at) as year, MONTH(booking.created_at) as month' . ($period === 'full_month' ? ', DAY(booking.created_at) as day' : ''))
+                    ->groupByRaw($groupColumns);
+
+                $repeat = DB::table('booking_details_amounts as amounts')
+                    ->join('booking_repeats as booking_repeat', 'amounts.booking_repeat_id', '=', 'booking_repeat.id')
+                    ->where('booking_repeat.serviceman_id', $servicemanId)
+                    ->where('booking_repeat.booking_status', 'completed')
+                    ->whereYear('booking_repeat.created_at', $request['year'])
+                    ->when($period === 'full_month', fn ($query) => $query->whereMonth('booking_repeat.created_at', $request['month']))
+                    ->selectRaw('SUM(amounts.serviceman_earning) as total, YEAR(booking_repeat.created_at) as year, MONTH(booking_repeat.created_at) as month' . ($period === 'full_month' ? ', DAY(booking_repeat.created_at) as day' : ''))
+                    ->groupByRaw($groupColumns);
+
+                $allBookings = DB::query()->fromSub($regular->unionAll($repeat), 'earning_rows')
+                    ->selectRaw('SUM(total) as total, year, month' . ($period === 'full_month' ? ', day' : ''))
+                    ->groupByRaw($groupColumns)
+                    ->get()->toArray();
+            } else {
+                $allBookings = [];
+            }
 
             $data[] = ['booking_stats' => $allBookings];
         }
@@ -155,22 +175,36 @@ class ServicemanController extends Controller
         $lastYearStart = $startOfYear->copy()->subYear();
         $lastYearEnd   = $endOfYear->copy()->subYear();
 
-        // Helper closure to sum earnings across both booking tables
+        // Sum actual serviceman share from completed bookings (including repeats).
         $sumEarnings = function ($start, $end) use ($servicemanId) {
-            $bookingEarnings = DB::table('bookings')
-                ->where('serviceman_id', $servicemanId)
-                ->where('booking_status', 'completed')
-                ->whereBetween('created_at', [$start, $end])
-                ->count();
+            $bookingEarnings = DB::table('booking_details_amounts as amounts')
+                ->join('bookings as booking', 'amounts.booking_id', '=', 'booking.id')
+                ->whereNull('amounts.booking_repeat_id')
+                ->where('booking.serviceman_id', $servicemanId)
+                ->where('booking.booking_status', 'completed')
+                ->whereBetween('booking.created_at', [$start, $end])
+                ->sum('amounts.serviceman_earning');
 
-            $repeatEarnings = DB::table('booking_repeats')
-                ->where('serviceman_id', $servicemanId)
-                ->where('booking_status', 'completed')
-                ->whereBetween('created_at', [$start, $end])
-                ->count();
+            $repeatEarnings = DB::table('booking_details_amounts as amounts')
+                ->join('booking_repeats as booking_repeat', 'amounts.booking_repeat_id', '=', 'booking_repeat.id')
+                ->where('booking_repeat.serviceman_id', $servicemanId)
+                ->where('booking_repeat.booking_status', 'completed')
+                ->whereBetween('booking_repeat.created_at', [$start, $end])
+                ->sum('amounts.serviceman_earning');
 
-            return $bookingEarnings + $repeatEarnings;
+            return (float) $bookingEarnings + (float) $repeatEarnings;
         };
+
+        $allTimeEarning = $sumEarnings(Carbon::create(2000, 1, 1), $now->copy()->endOfDay());
+
+        $paidCompletedBookings = DB::table('bookings')->where('serviceman_id', $servicemanId)
+            ->where('booking_status', 'completed')->where('is_paid', 1)->count();
+        $unpaidCompletedBookings = DB::table('bookings')->where('serviceman_id', $servicemanId)
+            ->where('booking_status', 'completed')->where('is_paid', 0)->count();
+        $paidCompletedRepeats = DB::table('booking_repeats')->where('serviceman_id', $servicemanId)
+            ->where('booking_status', 'completed')->where('is_paid', 1)->count();
+        $unpaidCompletedRepeats = DB::table('booking_repeats')->where('serviceman_id', $servicemanId)
+            ->where('booking_status', 'completed')->where('is_paid', 0)->count();
 
         // Current periods
         $thisWeek  = $sumEarnings($startOfWeek, $endOfWeek);
@@ -190,16 +224,21 @@ class ServicemanController extends Controller
         // Response data
         $data = [
             'this_week' => [
-                'total_bookings' => round($thisWeek, 2),
+                'total_earning' => round($thisWeek, 2),
                 'change' => round($weekChange, 2),
             ],
             'this_month' => [
-                'total_bookings' => round($thisMonth, 2),
+                'total_earning' => round($thisMonth, 2),
                 'change' => round($monthChange, 2),
             ],
             'this_year' => [
-                'total_bookings' => round($thisYear, 2),
+                'total_earning' => round($thisYear, 2),
                 'change' => round($yearChange, 2),
+            ],
+            'payment_summary' => [
+                'total_earning' => round($allTimeEarning, 2),
+                'paid_completed_bookings' => $paidCompletedBookings + $paidCompletedRepeats,
+                'unpaid_completed_bookings' => $unpaidCompletedBookings + $unpaidCompletedRepeats,
             ],
         ];
 
@@ -225,7 +264,26 @@ class ServicemanController extends Controller
 
     public function profileInfo(Request $request): JsonResponse
     {
-        return response()->json(response_formatter(DEFAULT_UPDATE_200, $request->user()), 200);
+        $user = $request->user();
+
+        // Serviceman ki assigned categories bhi return karo taaki app
+        // category-based UI (chips, profile display) sahi se dikha sake.
+        $serviceman = $this->serviceman
+            ->where('user_id', $user->id)
+            ->with(['servicemanCategories.subCategory:id,name', 'servicemanCategories.mainCategory:id,name'])
+            ->first();
+
+        $userData = $user->toArray();
+        $userData['assigned_categories'] = $serviceman
+            ? $serviceman->servicemanCategories->map(fn($c) => [
+                'sub_category_id'   => $c->sub_category_id,
+                'category_id'       => $c->category_id,
+                'sub_category_name' => $c->subCategory?->name,
+                'category_name'     => $c->mainCategory?->name,
+            ])->values()->toArray()
+            : [];
+
+        return response()->json(response_formatter(DEFAULT_UPDATE_200, $userData), 200);
     }
 
     /**
@@ -235,12 +293,24 @@ class ServicemanController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $serviceman = $this->serviceman->where(['user_id' => auth('api')->user()->id])->with(['user', 'provider:id,zone_id'])
+        $serviceman = $this->serviceman->where(['user_id' => auth('api')->user()->id])
+            ->with(['user', 'provider:id,zone_id', 'servicemanCategories.subCategory:id,name', 'servicemanCategories.mainCategory:id,name'])
             ->withCount(['bookings', 'bookings as completed_bookings_count' => function ($query) {
                 $query->where('booking_status', 'completed');
             }])->first();
 
         if ($request->user()->user_type == PROVIDER_USER_TYPES[2]) {
+            // App user object se assigned_categories padhta hai (chips display)
+            if ($serviceman && $serviceman->user) {
+                $serviceman->user->assigned_categories = $serviceman->servicemanCategories
+                    ->map(fn($c) => [
+                        'sub_category_id'   => $c->sub_category_id,
+                        'category_id'       => $c->category_id,
+                        'sub_category_name' => $c->subCategory?->name,
+                        'category_name'     => $c->mainCategory?->name,
+                    ])->values()->toArray();
+            }
+
             return response()->json(response_formatter(DEFAULT_200, $serviceman), 200);
         }
 

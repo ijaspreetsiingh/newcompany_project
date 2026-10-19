@@ -1216,6 +1216,241 @@
                                         </div>
                                     </div>
 
+                                    {{-- ===== INVOICE TEMPLATE ===== --}}
+                                    <div class="row mb-3 mt-3">
+                                        <div class="col-12">
+                                            <div class="card2 p-20">
+                                                <h5 class="mb-2 fz-14 fw-medium">{{ translate('Invoice Template') }}</h5>
+                                                <p class="fz-12 mb-20 text-muted">
+                                                    {{ translate('Choose the invoice design that will appear in Customer, Provider & Serviceman apps.') }}
+                                                </p>
+
+                                                @php($currentTemplate = $dataValues->where('key_name', 'invoice_template')->first()?->live_values ?? 'template_1')
+
+                                                {{-- Hidden input that gets updated by JS --}}
+                                                <input type="hidden" name="invoice_template" id="invoice_template_input" value="{{ $currentTemplate }}">
+
+                                                {{-- Template Cards --}}
+                                                <div class="row g-3" id="invoice-template-cards">
+
+                                                    {{-- Template 1: Classic Blue --}}
+                                                    <div class="col-md-4">
+                                                        <div class="invoice-template-card {{ $currentTemplate == 'template_1' ? 'selected' : '' }}"
+                                                             data-value="template_1"
+                                                             onclick="selectInvoiceTemplate(this)"
+                                                             style="cursor:pointer; border: 2px solid {{ $currentTemplate == 'template_1' ? '#4153b3' : '#dee2e6' }}; border-radius:12px; overflow:hidden; transition: all .2s;">
+                                                            {{-- Mini preview --}}
+                                                            <div style="background:#fff; padding:12px; font-family:monospace; font-size:11px;">
+                                                                <div style="background:#4153b3; color:#fff; padding:6px 10px; border-radius:6px 6px 0 0; display:flex; justify-content:space-between; align-items:center;">
+                                                                    <span style="font-weight:bold;">INVOICE</span>
+                                                                    <span style="font-size:9px;">{{ translate('Classic Blue') }}</span>
+                                                                </div>
+                                                                <div style="background:#f2f2f2; padding:8px 10px;">
+                                                                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                                                                        <div>
+                                                                            <div style="font-weight:bold; font-size:10px;">{{ translate('Invoice # 00123') }}</div>
+                                                                            <div style="color:#555; font-size:9px;">{{ translate('Customer Name') }}</div>
+                                                                            <div style="color:#555; font-size:9px;">{{ translate('Address...') }}</div>
+                                                                        </div>
+                                                                        <div style="text-align:right;">
+                                                                            <div style="font-size:9px;">{{ translate('Provider Details') }}</div>
+                                                                            <div style="font-size:9px;">{{ translate('Serviceman Details') }}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <table style="width:100%; border-collapse:collapse; font-size:9px; margin-top:6px;">
+                                                                        <thead>
+                                                                            <tr style="background:#4153b3; color:#fff;">
+                                                                                <th style="padding:3px 5px;">{{ translate('Description') }}</th>
+                                                                                <th style="padding:3px 5px;">{{ translate('Price') }}</th>
+                                                                                <th style="padding:3px 5px;">{{ translate('Total') }}</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            <tr style="background:#f9f9f9;">
+                                                                                <td style="padding:3px 5px;">{{ translate('Service A') }}</td>
+                                                                                <td style="padding:3px 5px;">$50</td>
+                                                                                <td style="padding:3px 5px;">$50</td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                    <div style="text-align:right; margin-top:6px; font-size:9px; font-weight:bold;">{{ translate('Grand Total: $50') }}</div>
+                                                                </div>
+                                                                <div style="background:#f2f2f2; text-align:center; padding:5px; font-size:8px; color:#888; border-top:1px solid #ddd;">
+                                                                    {{ translate('Thank you for your business') }}
+                                                                </div>
+                                                            </div>
+                                                            {{-- Label --}}
+                                                            <div style="padding:10px; text-align:center; background:{{ $currentTemplate == 'template_1' ? '#4153b3' : '#f8f9fa' }}; color:{{ $currentTemplate == 'template_1' ? '#fff' : '#333' }}; transition: all .2s;" class="template-label-1">
+                                                                <strong style="font-size:12px;">{{ translate('Template 1') }}</strong><br>
+                                                                <small>{{ translate('Classic Blue') }}</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Template 2: Modern Dark / Teal --}}
+                                                    <div class="col-md-4">
+                                                        <div class="invoice-template-card {{ $currentTemplate == 'template_2' ? 'selected' : '' }}"
+                                                             data-value="template_2"
+                                                             onclick="selectInvoiceTemplate(this)"
+                                                             style="cursor:pointer; border: 2px solid {{ $currentTemplate == 'template_2' ? '#00d4aa' : '#dee2e6' }}; border-radius:12px; overflow:hidden; transition: all .2s;">
+                                                            {{-- Mini preview --}}
+                                                            <div style="background:#fff; padding:12px; font-family:monospace; font-size:11px;">
+                                                                <div style="background:#1a1a2e; padding:8px 10px; border-radius:6px 6px 0 0; display:flex; justify-content:space-between; align-items:center;">
+                                                                    <span style="color:#00d4aa; font-weight:bold; font-size:13px;">INVOICE</span>
+                                                                    <span style="color:#00d4aa; font-size:9px;">{{ translate('Modern Dark') }}</span>
+                                                                </div>
+                                                                <div style="background:#f0faf8; padding:8px 10px;">
+                                                                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                                                                        <div>
+                                                                            <div style="font-weight:bold; font-size:10px; color:#1a1a2e;">{{ translate('Invoice # 00123') }}</div>
+                                                                            <div style="color:#555; font-size:9px;">{{ translate('Customer Name') }}</div>
+                                                                            <div style="color:#555; font-size:9px;">{{ translate('Address...') }}</div>
+                                                                            <span style="background:#00d4aa; color:#fff; padding:1px 6px; border-radius:3px; font-size:8px; margin-top:3px; display:inline-block;">{{ translate('Paid') }}</span>
+                                                                        </div>
+                                                                        <div style="text-align:right;">
+                                                                            <div style="font-size:9px; color:#1a1a2e;">{{ translate('Provider Details') }}</div>
+                                                                            <div style="font-size:9px; color:#1a1a2e;">{{ translate('Serviceman Details') }}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <table style="width:100%; border-collapse:collapse; font-size:9px; margin-top:6px;">
+                                                                        <thead>
+                                                                            <tr style="background:#1a1a2e; color:#00d4aa;">
+                                                                                <th style="padding:3px 5px;">{{ translate('Description') }}</th>
+                                                                                <th style="padding:3px 5px;">{{ translate('Price') }}</th>
+                                                                                <th style="padding:3px 5px;">{{ translate('Total') }}</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            <tr style="background:#e8faf6;">
+                                                                                <td style="padding:3px 5px;">{{ translate('Service A') }}</td>
+                                                                                <td style="padding:3px 5px;">$50</td>
+                                                                                <td style="padding:3px 5px;">$50</td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                    <div style="text-align:right; margin-top:6px; font-size:9px; font-weight:bold; color:#1a1a2e;">{{ translate('Grand Total: $50') }}</div>
+                                                                </div>
+                                                                <div style="background:#1a1a2e; text-align:center; padding:5px; font-size:8px; color:#00d4aa; border-top:1px solid #0d0d1e;">
+                                                                    {{ translate('Thank you for your business') }}
+                                                                </div>
+                                                            </div>
+                                                            {{-- Label --}}
+                                                            <div style="padding:10px; text-align:center; background:{{ $currentTemplate == 'template_2' ? '#1a1a2e' : '#f8f9fa' }}; color:{{ $currentTemplate == 'template_2' ? '#00d4aa' : '#333' }}; transition: all .2s;" class="template-label-2">
+                                                                <strong style="font-size:12px;">{{ translate('Template 2') }}</strong><br>
+                                                                <small>{{ translate('Modern Dark / Teal') }}</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Template 3: Clean Minimal / Green --}}
+                                                    <div class="col-md-4">
+                                                        <div class="invoice-template-card {{ $currentTemplate == 'template_3' ? 'selected' : '' }}"
+                                                             data-value="template_3"
+                                                             onclick="selectInvoiceTemplate(this)"
+                                                             style="cursor:pointer; border: 2px solid {{ $currentTemplate == 'template_3' ? '#2e7d32' : '#dee2e6' }}; border-radius:12px; overflow:hidden; transition: all .2s;">
+                                                            {{-- Mini preview --}}
+                                                            <div style="background:#fff; padding:12px; font-family:monospace; font-size:11px;">
+                                                                <div style="padding:8px 0; border-bottom:3px solid #2e7d32;">
+                                                                    <span style="color:#1b5e20; font-weight:bold; font-size:13px;">INVOICE</span>
+                                                                    <span style="color:#2e7d32; font-size:9px; float:right;">{{ translate('Minimal Green') }}</span>
+                                                                </div>
+                                                                <div style="background:#f1f8f2; padding:8px 10px; margin-top:4px; border:1px solid #c8e6c9; border-radius:6px;">
+                                                                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                                                                        <div>
+                                                                            <div style="font-weight:bold; font-size:10px; color:#1b5e20;">{{ translate('Invoice # 00123') }}</div>
+                                                                            <div style="color:#555; font-size:9px;">{{ translate('Customer Name') }}</div>
+                                                                            <div style="color:#555; font-size:9px;">{{ translate('Address...') }}</div>
+                                                                        </div>
+                                                                        <div style="text-align:right;">
+                                                                            <span style="color:#2e7d32; font-weight:bold; font-size:9px;">{{ translate('Paid') }}</span><br>
+                                                                            <div style="font-size:9px; color:#333;">{{ translate('Provider') }}</div>
+                                                                            <div style="font-size:9px; color:#333;">{{ translate('Serviceman') }}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <table style="width:100%; border-collapse:collapse; font-size:9px; margin-top:6px;">
+                                                                        <thead>
+                                                                            <tr style="background:#2e7d32; color:#fff;">
+                                                                                <th style="padding:3px 5px;">{{ translate('Description') }}</th>
+                                                                                <th style="padding:3px 5px;">{{ translate('Price') }}</th>
+                                                                                <th style="padding:3px 5px;">{{ translate('Total') }}</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            <tr style="background:#fff;">
+                                                                                <td style="padding:3px 5px;">{{ translate('Service A') }}</td>
+                                                                                <td style="padding:3px 5px;">$50</td>
+                                                                                <td style="padding:3px 5px;">$50</td>
+                                                                            </tr>
+                                                                            <tr style="background:#f1f8f2;">
+                                                                                <td style="padding:3px 5px;">{{ translate('Service B') }}</td>
+                                                                                <td style="padding:3px 5px;">$30</td>
+                                                                                <td style="padding:3px 5px;">$30</td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                    <div style="text-align:right; margin-top:6px; font-size:9px; font-weight:bold; color:#1b5e20;">{{ translate('Grand Total: $80') }}</div>
+                                                                </div>
+                                                                <div style="border-top:2px solid #2e7d32; text-align:center; padding:5px; font-size:8px; color:#2e7d32; margin-top:4px;">
+                                                                    {{ translate('Thank you for your business') }}
+                                                                </div>
+                                                            </div>
+                                                            {{-- Label --}}
+                                                            <div style="padding:10px; text-align:center; background:{{ $currentTemplate == 'template_3' ? '#2e7d32' : '#f8f9fa' }}; color:{{ $currentTemplate == 'template_3' ? '#fff' : '#333' }}; transition: all .2s;" class="template-label-3">
+                                                                <strong style="font-size:12px;">{{ translate('Template 3') }}</strong><br>
+                                                                <small>{{ translate('Clean Minimal / Green') }}</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div>{{-- end row --}}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- JS for template card selection --}}
+                                    <script>
+                                        const templateColors = {
+                                            template_1: '#4153b3',
+                                            template_2: '#00d4aa',
+                                            template_3: '#2e7d32',
+                                        };
+                                        const templateBg = {
+                                            template_1: '#4153b3',
+                                            template_2: '#1a1a2e',
+                                            template_3: '#2e7d32',
+                                        };
+                                        const templateFg = {
+                                            template_1: '#fff',
+                                            template_2: '#00d4aa',
+                                            template_3: '#fff',
+                                        };
+
+                                        function selectInvoiceTemplate(el) {
+                                            const val = el.getAttribute('data-value');
+                                            document.getElementById('invoice_template_input').value = val;
+
+                                            // Reset all cards
+                                            document.querySelectorAll('.invoice-template-card').forEach(function(card) {
+                                                const cv = card.getAttribute('data-value');
+                                                card.style.border = '2px solid #dee2e6';
+                                                const lbl = card.querySelector('[class^="template-label"]');
+                                                if (lbl) {
+                                                    lbl.style.background = '#f8f9fa';
+                                                    lbl.style.color = '#333';
+                                                }
+                                            });
+
+                                            // Highlight selected
+                                            el.style.border = '2px solid ' + templateColors[val];
+                                            const selectedLabel = el.querySelector('[class^="template-label"]');
+                                            if (selectedLabel) {
+                                                selectedLabel.style.background = templateBg[val];
+                                                selectedLabel.style.color = templateFg[val];
+                                            }
+                                        }
+                                    </script>
+                                    {{-- ===== END INVOICE TEMPLATE ===== --}}
+
                                     @can('business_update')
                                         <div class="d-flex justify-content-end trans3 mt-4">
                                             <div class="d-flex justify-content-sm-end justify-content-center gap-2 gap-sm-3 flex-grow-1 flex-grow-sm-0 bg-white action-btn-wrapper trans3">
@@ -3511,14 +3746,8 @@
                 });
             }
 
-            if ($webPage === 'business_setup'){
-                if (modal.close) {
-                    if ($config) {
-                        $('#maintenance-mode-input').prop('checked', true);
-                    } else {
-                        $('#maintenance-mode-input').prop('checked', false);
-                    }
-                }
+            if ('{{ $webPage }}' === 'business_setup'){
+                updateCheckboxState();
             }
 
         });

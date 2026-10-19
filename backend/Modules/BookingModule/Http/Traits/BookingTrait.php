@@ -952,7 +952,7 @@ trait BookingTrait
         if (!$request->has('booking_id', 'service_id', 'variant_key', 'zone_id')) return;
 
         DB::transaction(function () use ($request) {
-            $bookingDetails = BookingDetail::whereHas('booking', fn($query) => $query->where('id', $request['booking_id']))->where('variant_key', $request['variant_key'])->first();
+            $bookingDetails = BookingDetail::whereHas('booking', fn($query) => $query->where('id', $request['booking_id']))->where('service_id', $request['service_id'])->where('variant_key', $request['variant_key'])->first();
             $service = Service::with('variations')->find($request['service_id']);
             $variation = $service->variations->where('variant_key', $request['variant_key'])->where('zone_id', $request['zone_id'])->first();
             $booking = Booking::with(['detail', 'details_amounts'])->find($request['booking_id']);
@@ -1013,6 +1013,12 @@ trait BookingTrait
             $bookingDetails->save();
 
             $bookingDetailsAmount = BookingDetailsAmount::where('booking_id', $request['booking_id'])->where('booking_details_id', $bookingDetails->id)->first();
+            if (!$bookingDetailsAmount) {
+                $bookingDetailsAmount = new BookingDetailsAmount();
+                $bookingDetailsAmount->booking_id = $request['booking_id'];
+                $bookingDetailsAmount->booking_details_id = $bookingDetails->id;
+                $bookingDetailsAmount->service_unit_cost = $bookingDetails->service_cost;
+            }
             $bookingDetailsAmount->service_quantity = $newQuantity;
             $bookingDetailsAmount->service_tax = $tax;
             $bookingDetailsAmount->coupon_discount_by_admin = 0;
@@ -1084,7 +1090,7 @@ trait BookingTrait
     {
         if (!$request->has('booking_repeat_id', 'service_id', 'variant_key', 'zone_id')) return;
         DB::transaction(function () use ($request) {
-            $bookingDetails = BookingRepeatDetails::whereHas('repeat', fn($query) => $query->where('id', $request['booking_repeat_id']))->where('variant_key', $request['variant_key'])->first();
+            $bookingDetails = BookingRepeatDetails::whereHas('repeat', fn($query) => $query->where('id', $request['booking_repeat_id']))->where('service_id', $request['service_id'])->where('variant_key', $request['variant_key'])->first();
             $service = Service::with('variations')->find($request['service_id']);
             $variation = $service->variations->where('variant_key', $request['variant_key'])->where('zone_id', $request['zone_id'])->first();
             $booking = BookingRepeat::with(['detail', 'details_amounts'])->find($request['booking_repeat_id']);
@@ -1145,6 +1151,14 @@ trait BookingTrait
             $bookingDetails->save();
 
             $bookingDetailsAmount = BookingDetailsAmount::where('booking_repeat_id', $booking->id)->where('booking_repeat_details_id', $bookingDetails->id)->first();
+            if (!$bookingDetailsAmount) {
+                $bookingDetailsAmount = new BookingDetailsAmount();
+                $bookingDetailsAmount->booking_id = $booking->booking_id;
+                $bookingDetailsAmount->booking_details_id = 0;
+                $bookingDetailsAmount->booking_repeat_id = $booking->id;
+                $bookingDetailsAmount->booking_repeat_details_id = $bookingDetails->id;
+                $bookingDetailsAmount->service_unit_cost = $bookingDetails->service_cost;
+            }
             $bookingDetailsAmount->service_quantity = $newQuantity;
             $bookingDetailsAmount->service_tax = $tax;
             $bookingDetailsAmount->coupon_discount_by_admin = 0;
@@ -1218,7 +1232,7 @@ trait BookingTrait
         if (!$request->has('booking_id', 'service_id', 'variant_key', 'zone_id')) return;
 
         DB::transaction(function () use ($request) {
-            $bookingDetails = BookingDetail::whereHas('booking', fn($query) => $query->where('id', $request['booking_id']))->where('variant_key', $request['variant_key'])->first();
+            $bookingDetails = BookingDetail::whereHas('booking', fn($query) => $query->where('id', $request['booking_id']))->where('service_id', $request['service_id'])->where('variant_key', $request['variant_key'])->first();
             $service = Service::with('variations')->find($request['service_id']);
             $variation = $service->variations->where('variant_key', $request['variant_key'])->where('zone_id', $request['zone_id'])->first();
             $quantity = $bookingDetails['quantity'];
@@ -1327,7 +1341,7 @@ trait BookingTrait
         if (!$request->has('booking_id', 'service_id', 'variant_key', 'zone_id')) return;
 
         DB::transaction(function () use ($request) {
-            $bookingDetails = BookingDetail::whereHas('booking', fn($query) => $query->where('id', $request['booking_id']))->where('variant_key', $request['variant_key'])->first();
+            $bookingDetails = BookingDetail::whereHas('booking', fn($query) => $query->where('id', $request['booking_id']))->where('service_id', $request['service_id'])->where('variant_key', $request['variant_key'])->first();
             $service = Service::with('variations')->find($request['service_id']);
             $variation = $service->variations->where('variant_key', $request['variant_key'])->where('zone_id', $request['zone_id'])->first();
             $booking = Booking::with(['detail', 'details_amounts'])->find($request['booking_id']);
@@ -1393,6 +1407,12 @@ trait BookingTrait
             $bookingDetails->save();
 
             $bookingDetailsAmount = BookingDetailsAmount::where('booking_id', $request['booking_id'])->where('booking_details_id', $bookingDetails->id)->first();
+            if (!$bookingDetailsAmount) {
+                $bookingDetailsAmount = new BookingDetailsAmount();
+                $bookingDetailsAmount->booking_id = $request['booking_id'];
+                $bookingDetailsAmount->booking_details_id = $bookingDetails->id;
+                $bookingDetailsAmount->service_unit_cost = $bookingDetails->service_cost;
+            }
             $bookingDetailsAmount->service_quantity = $newQuantity;
             $bookingDetailsAmount->service_tax = $tax;
             $bookingDetailsAmount->coupon_discount_by_admin = 0;
@@ -1469,7 +1489,7 @@ trait BookingTrait
         if (!$request->has('booking_repeat_id', 'service_id', 'variant_key', 'zone_id')) return;
 
         DB::transaction(function () use ($request) {
-            $bookingDetails = BookingRepeatDetails::whereHas('repeat', fn($query) => $query->where('id', $request['booking_repeat_id']))->where('variant_key', $request['variant_key'])->first();
+            $bookingDetails = BookingRepeatDetails::whereHas('repeat', fn($query) => $query->where('id', $request['booking_repeat_id']))->where('service_id', $request['service_id'])->where('variant_key', $request['variant_key'])->first();
             $service = Service::with('variations')->find($request['service_id']);
             $variation = $service->variations->where('variant_key', $request['variant_key'])->where('zone_id', $request['zone_id'])->first();
             $booking = BookingRepeat::with(['detail', 'details_amounts'])->find($request['booking_repeat_id']);
@@ -1535,6 +1555,14 @@ trait BookingTrait
             $bookingDetails->save();
 
             $bookingDetailsAmount = BookingDetailsAmount::where('booking_repeat_id', $booking->id)->where('booking_repeat_details_id', $bookingDetails->id)->first();
+            if (!$bookingDetailsAmount) {
+                $bookingDetailsAmount = new BookingDetailsAmount();
+                $bookingDetailsAmount->booking_id = $booking->booking_id;
+                $bookingDetailsAmount->booking_details_id = 0;
+                $bookingDetailsAmount->booking_repeat_id = $booking->id;
+                $bookingDetailsAmount->booking_repeat_details_id = $bookingDetails->id;
+                $bookingDetailsAmount->service_unit_cost = $bookingDetails->service_cost;
+            }
             $bookingDetailsAmount->service_quantity = $newQuantity;
             $bookingDetailsAmount->service_tax = $tax;
             $bookingDetailsAmount->coupon_discount_by_admin = 0;

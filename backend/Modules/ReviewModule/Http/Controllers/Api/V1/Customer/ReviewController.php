@@ -33,7 +33,7 @@ class ReviewController extends Controller
     public function index(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'booking_id' => 'required|uuid',
+            'booking_id' => 'required|string|max:100',
         ]);
 
         if ($validator->fails()) {
@@ -52,7 +52,7 @@ class ReviewController extends Controller
                     ->whereHas('booking', function ($query) use ($booking_id) {
                         $query->where('id', $booking_id);
                     })
-                    ->with('reviewReply');
+                    ->with(['reviewReply', 'serviceman.user', 'provider', 'customer']);
             }])
             ->withoutGlobalScope('zone_wise_data')
             ->orderBy('created_at', 'desc')
@@ -70,8 +70,9 @@ class ReviewController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'booking_id' => 'required|uuid',
-            'service_id' => 'required|uuid',
+            'booking_id' => 'required|string|max:100',
+            'service_id' => 'required|string|max:100',
+            'serviceman_id' => 'nullable|string|max:100',
             'review_rating' => 'required|numeric|min:1|max:5',
             'review_comment' => 'nullable',
             'review_images' => 'image|max:'. uploadMaxFileSizeInKB('image') .'|mimes:' . implode(',', array_column(IMAGEEXTENSION, 'key')),
@@ -108,6 +109,23 @@ class ReviewController extends Controller
         $review->review_rating = $request->review_rating;
         $review->review_comment = $request->review_comment;
         $review->provider_id = $booking->provider_id;
+
+        // Kis serviceman ne ye service ki hai: request me aaya ya booking ka assigned serviceman
+        $servicemanId = $request->serviceman_id ?? null;
+        if ($servicemanId) {
+            $isValidServiceman = DB::table('servicemen')
+                ->where('id', $servicemanId)
+                ->where('provider_id', $booking->provider_id)
+                ->exists();
+            if (!$isValidServiceman) {
+                $servicemanId = null;
+            }
+        }
+        if (!$servicemanId) {
+            $servicemanId = $booking->serviceman_id ?? null;
+        }
+        $review->serviceman_id = $servicemanId;
+
         $review->review_images = $images;
         $review->booking_date = $booking->created_at;
 

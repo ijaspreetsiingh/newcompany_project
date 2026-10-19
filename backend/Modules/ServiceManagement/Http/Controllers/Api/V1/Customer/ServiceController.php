@@ -817,7 +817,7 @@ class ServiceController extends Controller
             return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
         }
 
-        $reviews = $this->review->with(['provider', 'customer','reviewReply'])->where('service_id', $serviceId)->ofStatus(1)->latest()
+        $reviews = $this->review->with(['provider', 'customer','reviewReply','serviceman.user'])->where('service_id', $serviceId)->ofStatus(1)->latest()
             ->paginate($request['limit'], ['*'], 'offset', $request['offset'])->withPath('');
 
         $ratingGroupCount = DB::table('reviews')->where('service_id', $serviceId)

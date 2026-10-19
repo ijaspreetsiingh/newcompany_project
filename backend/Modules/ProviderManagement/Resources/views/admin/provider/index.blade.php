@@ -48,6 +48,24 @@
                 </div>
             </div>
 
+            @php
+                $pendingRegistrationRequestsCount = \Modules\ProviderManagement\Entities\ProviderRegistrationRequest::where('status', 'pending')->count();
+            @endphp
+            @if($pendingRegistrationRequestsCount > 0)
+                <div class="alert alert-info d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4" role="alert">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="material-icons">person_add</span>
+                        <span class="fw-medium">
+                            {{$pendingRegistrationRequestsCount}}
+                            {{translate('new provider registration request(s) are waiting for your review')}}
+                        </span>
+                    </div>
+                    <a href="{{route('admin.provider.registration_requests.index')}}" class="btn btn--primary btn-sm">
+                        {{translate('Review Requests')}}
+                    </a>
+                </div>
+            @endif
+
             @if($pendingCategoryRequests->isNotEmpty())
                 <div class="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4" role="alert">
                     <div class="d-flex align-items-center gap-2">

@@ -685,13 +685,14 @@ class BookingController extends Controller
             'provider', 'zone', 'serviceman.user', 'booking_partial_payments', 'booking_offline_payments',
             'servicemenAssignments.serviceman.user',
             'repeat.detail.service', 'repeat.repeatHistories', 'extraServices'
-        ])->where(function ($query) use ($provider_id, $request) {
+        ])->where(function ($query) use ($provider_id) {
             return $query->where(function ($query) use ($provider_id) {
                 $query->where('provider_id', $provider_id)
+                    ->orWhere('assigned_provider_id', $provider_id)
                     ->orWhereHas('repeat', function ($subQuery) use ($provider_id) {
                         $subQuery->where('provider_id', $provider_id);
                     });
-            })->orWhereNull('provider_id');
+            });
         })->where(['id' => $id])->first();
 
         if (isset($booking)) {
@@ -803,7 +804,12 @@ class BookingController extends Controller
         $booking = $this->bookingRepeat->with([
             'detail.service', 'scheduleHistories.user', 'statusHistories.user', 'booking.customer', 'booking.provider', 'serviceman.user'
         ])->where(function ($query) use ($request) {
-            return $query->where('provider_id', $request->user()->provider->id)->orWhereNull('provider_id');
+            $providerId = $request->user()->provider->id;
+            return $query->where('provider_id', $providerId)
+                ->orWhereHas('booking', function ($bookingQuery) use ($providerId) {
+                    $bookingQuery->where('provider_id', $providerId)
+                        ->orWhere('assigned_provider_id', $providerId);
+                });
         })->where(['id' => $id])->first();
 
         if (isset($booking)) {
@@ -1384,7 +1390,7 @@ class BookingController extends Controller
             'remaining_seconds' => $booking->auto_assign_expires_at
                 ? max(0, now()->diffInSeconds($booking->auto_assign_expires_at, false))
                 : 0,
-            'wait_time' => (int) ($provider->auto_assign_wait_time ?: 60),
+            'wait_time' => (int) ($provider->auto_assign_wait_time ?: 120),
             'max_team_size' => 5,
             'servicemen' => $servicemen,
         ]), 200);
@@ -1429,7 +1435,7 @@ class BookingController extends Controller
             return response()->json(response_formatter(DEFAULT_400, null, 'Serviceman not found in your company'), 400);
         }
 
-        $waitTime = max(30, (int) ($provider->auto_assign_wait_time ?: 60));
+        $waitTime = max(30, (int) ($provider->auto_assign_wait_time ?: 120));
 
         DB::transaction(function () use ($booking, $validServicemen, $waitTime) {
             // purane pending slots hatao (re-assign case)

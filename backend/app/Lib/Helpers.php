@@ -2732,7 +2732,7 @@ if (!function_exists('startProviderDecisionWindow')) {
      */
     function startProviderDecisionWindow($booking, $provider): void
     {
-        $waitTime = max(30, (int) ($provider->auto_assign_wait_time ?: 60));
+        $waitTime = max(30, (int) ($provider->auto_assign_wait_time ?: 120));
 
         $booking->assignment_mode = 'provider_manual';
         $booking->auto_assigned = 1;
@@ -2796,6 +2796,22 @@ if (!function_exists('dispatchNearestServicemanRequest')) {
                 return;
             }
 
+            // A full provider-wide fallback cycle has ended. Stop here and
+            // ask the provider to assign manually instead of rebroadcasting
+            // the same booking forever. Provider-selected assignments also
+            // return to the provider if nobody accepts them.
+            if (in_array($booking->assignment_mode, ['zone_pending', 'provider_manual', 'manual_required'], true)) {
+                if ($booking->assignment_mode !== 'manual_required') {
+                    $booking->assignment_mode = 'manual_required';
+                    $booking->saveQuietly();
+                }
+                notifyProviderToAssignManually(
+                    Provider::with('owner:id,fcm_token,current_language_key')->find($booking->provider_id),
+                    $booking
+                );
+                return;
+            }
+
             $provider = Provider::with('owner:id,fcm_token,current_language_key')
                 ->where('id', $booking->provider_id)
                 ->first();
@@ -2803,39 +2819,35 @@ if (!function_exists('dispatchNearestServicemanRequest')) {
                 return;
             }
 
-            $waitTime = max(30, (int) ($provider->auto_assign_wait_time ?: 60));
+            $waitTime = max(30, (int) ($provider->auto_assign_wait_time ?: 120));
             $alreadyTried = getTriedServicemanIds($booking);
-
-            // CIRCUIT BREAKER: har expiry par exclude-list clear karke same
-            // nearest serviceman ko dubara FCM popup jaata tha — booking pending
-            // rehti toh dinon tak 30s-interval par notification spam chalta rehta
-            // (stale "New Booking Assignment/Expired" popups isi se the). Ab ek
-            // full pass ke baad rotation band: booking pending rehti hai aur
-            // provider ko EK baar (6h throttle) manual-assign push jaata hai.
-            $totalServicemen = Serviceman::where('provider_id', $provider->id)
-                ->whereHas('user', function ($query) {
-                    $query->where('is_active', 1);
-                })->count();
-            $maxAttempts = max(3, $totalServicemen);
-            if (count($alreadyTried) >= $maxAttempts) {
-                $notifiedKey = 'auto_assign_manual_notified:' . $booking->id;
-                if (!\Illuminate\Support\Facades\Cache::get($notifiedKey)) {
-                    notifyProviderToAssignManually($provider, $booking);
-                    \Illuminate\Support\Facades\Cache::put($notifiedKey, 1, now()->addHours(6));
-                }
-                return;
-            }
 
             // "Book again with same serviceman": preferred serviceman ko pehle
             // chance — accept nahi kiya (decline/timeout) to slot tried list me
             // add ho chuka hai aur neeche normal nearest flow age badhega.
             $preferredId = $booking->preferred_serviceman_id ?? null;
             if ($preferredId && !in_array($preferredId, $alreadyTried, true)) {
+                $bookingSubCategoryId = $booking->sub_category_id
+                    ?? $booking->detail?->first()?->service?->sub_category_id
+                    ?? null;
+
                 $preferred = Serviceman::with('user:id,fcm_token,current_language_key')
                     ->where('id', $preferredId)
                     ->where('provider_id', $booking->provider_id)
                     ->whereHas('user', function ($query) {
                         $query->where('is_active', 1);
+                    })
+                    // Category filter (same as findNearestServicemen):
+                    // preferred serviceman ki category assignment check karo
+                    ->where(function ($q) use ($bookingSubCategoryId) {
+                        $q->whereDoesntHave('servicemanCategories')
+                          ->orWhere(function ($q2) use ($bookingSubCategoryId) {
+                              if ($bookingSubCategoryId) {
+                                  $q2->whereHas('servicemanCategories', function ($q3) use ($bookingSubCategoryId) {
+                                      $q3->where('sub_category_id', $bookingSubCategoryId);
+                                  });
+                              }
+                          });
                     })
                     ->first();
                 if ($preferred) {
@@ -2847,19 +2859,69 @@ if (!function_exists('dispatchNearestServicemanRequest')) {
             $candidates = findNearestServicemen($booking, $provider->id, $alreadyTried);
 
             if ($candidates->isEmpty()) {
-                // sabne try kar liya — circuit breaker (upar) rotation rok chuka
-                // hoga; safety: koi candidate na ho toh manual push (throttled)
-                $notifiedKey = 'auto_assign_manual_notified:' . $booking->id;
-                if (!\Illuminate\Support\Facades\Cache::get($notifiedKey)) {
+                // Nearest-to-farthest ek poora pass kisi ne accept nahi kiya:
+                // ab provider ke sab eligible servicemen ko ek saath request do.
+                $broadcastCandidates = findNearestServicemen($booking, $provider->id, []);
+                if ($broadcastCandidates->isEmpty()) {
+                    $booking->assignment_mode = 'manual_required';
+                    $booking->saveQuietly();
                     notifyProviderToAssignManually($provider, $booking);
-                    \Illuminate\Support\Facades\Cache::put($notifiedKey, 1, now()->addHours(6));
+                    return;
                 }
+
+                assignBookingToServicemen($booking, $broadcastCandidates, $waitTime);
                 return;
             }
 
             assignBookingToServiceman($booking, $candidates->first(), $waitTime);
         } catch (\Throwable $e) {
             Log::error('dispatchNearestServicemanRequest failed: ' . $e->getMessage());
+        }
+    }
+}
+
+if (!function_exists('assignBookingToServicemen')) {
+    /** Full sequential pass ke baad sab eligible servicemen ko ek saath dikhayein. */
+    function assignBookingToServicemen($booking, $servicemen, int $waitTime): void
+    {
+        $servicemen = collect($servicemen)->values();
+        if ($servicemen->isEmpty()) {
+            return;
+        }
+
+        $expiresAt = now()->addSeconds($waitTime);
+        foreach ($servicemen as $serviceman) {
+            BookingServiceman::updateOrCreate(
+                ['booking_id' => $booking->id, 'serviceman_id' => $serviceman->id],
+                ['status' => BookingServiceman::STATUS_PENDING, 'expires_at' => $expiresAt]
+            );
+        }
+
+        // Closest serviceman remains the lead; acceptBooking's booking row lock
+        // ensures only one of these pending servicemen can accept successfully.
+        $booking->serviceman_id = $servicemen->first()->id;
+        $booking->serviceman_assign_expires_at = $expiresAt;
+        $booking->assignment_mode = 'zone_pending';
+        $booking->save();
+
+        // Booking observer notifies the lead. Notify the remaining eligible
+        // servicemen directly so the booking appears in each app.
+        foreach ($servicemen->slice(1) as $serviceman) {
+            try {
+                $token = $serviceman->user?->fcm_token;
+                if ($token) {
+                    device_notification(
+                        $token,
+                        'New Service Assignment',
+                        'A booking is available. Accept before the timer ends.',
+                        null,
+                        $booking->id,
+                        'new_booking_request'
+                    );
+                }
+            } catch (\Throwable $e) {
+                Log::error('assignBookingToServicemen notification failed: ' . $e->getMessage());
+            }
         }
     }
 }
@@ -3124,12 +3186,30 @@ if (!function_exists('findNearestServicemen')) {
     {
         [$bookingLat, $bookingLng] = getBookingCoordinates($booking);
 
-        $baseQuery = function () use ($providerId, $excludeServicemanIds) {
+        // Booking ka sub_category_id nikalo — isi se serviceman filter hoga
+        $bookingSubCategoryId = $booking->sub_category_id
+            ?? $booking->detail?->first()?->service?->sub_category_id
+            ?? null;
+
+        $baseQuery = function () use ($providerId, $excludeServicemanIds, $bookingSubCategoryId) {
             return Serviceman::where('provider_id', $providerId)
                 ->where('is_on_duty', 1)
                 ->whereNotIn('id', $excludeServicemanIds)
                 ->whereHas('user', function ($query) {
                     $query->where('is_active', 1);
+                })
+                // Category filter:
+                // - Agar serviceman ki koi category assigned nahi (empty) → wo sabhi bookings ke liye eligible hai (backward compat)
+                // - Agar assigned hai → sirf tab eligible jab booking ka sub_category match kare
+                ->where(function ($q) use ($bookingSubCategoryId) {
+                    $q->whereDoesntHave('servicemanCategories')
+                      ->orWhere(function ($q2) use ($bookingSubCategoryId) {
+                          if ($bookingSubCategoryId) {
+                              $q2->whereHas('servicemanCategories', function ($q3) use ($bookingSubCategoryId) {
+                                  $q3->where('sub_category_id', $bookingSubCategoryId);
+                              });
+                          }
+                      });
                 })
                 ->with('user:id,fcm_token,current_language_key,first_name,last_name,profile_image,current_lat,current_lng,last_location_updated_at');
         };
@@ -3194,21 +3274,24 @@ if (!function_exists('assignBookingToServiceman')) {
     function assignBookingToServiceman($booking, $serviceman, int $waitTime = 30): void
     {
         $expiresAt = now()->addSeconds($waitTime);
+        $previousServicemanId = $booking->serviceman_id;
 
         BookingServiceman::updateOrCreate(
             ['booking_id' => $booking->id, 'serviceman_id' => $serviceman->id],
             ['status' => BookingServiceman::STATUS_PENDING, 'expires_at' => $expiresAt]
         );
 
-        $previousServicemanId = $booking->serviceman_id;
-        $booking->serviceman_id = $booking->serviceman_id ?: $serviceman->id;
+        // Har rotation me current request wale serviceman ko record karo,
+        // taa ki expiry/reject check aur model observer notification sahi chale.
+        $booking->serviceman_id = $serviceman->id;
         $booking->serviceman_assign_expires_at = $expiresAt;
+        $booking->assignment_mode = 'auto';
         $booking->save();
 
         // Agar serviceman_id change hua to model observer (serviceman_assign job)
         // naye serviceman ko push bhej dega — direct push tabhi bhejo jab id same
         // rahi (job fire hi nahi hoga), warna serviceman ko 2 notification milte the.
-        if ($previousServicemanId === $booking->serviceman_id) {
+        if ((string) $previousServicemanId === (string) $booking->serviceman_id) {
             try {
                 $fcmToken = $serviceman?->user?->fcm_token ?? null;
                 if (!is_null($fcmToken)) {
@@ -3238,23 +3321,44 @@ if (!function_exists('processExpiredServicemanAssign')) {
             ->get();
 
         foreach ($expiredSlots as $slot) {
-            DB::transaction(function () use ($slot) {
-                $slot->status = BookingServiceman::STATUS_EXPIRED;
-                $slot->save();
-
-                $booking = Booking::find($slot->booking_id);
-                if (!$booking || $booking->booking_status !== 'pending') {
-                    return; // koi accept kar chuka — loop ki zaroorat nahi
+            $shouldDispatch = DB::transaction(function () use ($slot) {
+                $currentSlot = BookingServiceman::where('booking_id', $slot->booking_id)
+                    ->where('serviceman_id', $slot->serviceman_id)
+                    ->lockForUpdate()
+                    ->first();
+                // Scheduler batch me captured slot broadcast ke baad renew hua
+                // ho sakta hai; renewed request ko galti se expire mat karo.
+                if (!$currentSlot
+                    || $currentSlot->status !== BookingServiceman::STATUS_PENDING
+                    || !$currentSlot->expires_at
+                    || $currentSlot->expires_at->isFuture()) {
+                    return false;
                 }
 
-                if ($booking->serviceman_id === $slot->serviceman_id) {
-                    $booking->serviceman_id = null;
-                    $booking->serviceman_assign_expires_at = null;
-                    $booking->save();
+                $currentSlot->status = BookingServiceman::STATUS_EXPIRED;
+                $currentSlot->save();
 
+                $booking = Booking::where('id', $slot->booking_id)->lockForUpdate()->first();
+                if (!$booking || $booking->booking_status !== 'pending') {
+                    return false; // koi accept kar chuka — loop ki zaroorat nahi
+                }
+
+                if ($booking->serviceman_id !== $slot->serviceman_id) {
+                    return false;
+                }
+
+                $booking->serviceman_id = null;
+                $booking->serviceman_assign_expires_at = null;
+                $booking->save();
+                return true;
+            });
+
+            if ($shouldDispatch) {
+                $booking = Booking::find($slot->booking_id);
+                if ($booking) {
                     dispatchNearestServicemanRequest($booking);
                 }
-            });
+            }
         }
     }
 }

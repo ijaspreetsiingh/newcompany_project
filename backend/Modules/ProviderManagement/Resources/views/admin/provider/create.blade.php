@@ -890,7 +890,13 @@
                             function applyCascade() {
                                 var pid = parentSel.value;
                                 toArray(subList.querySelectorAll('.option-item')).forEach(function (item) {
-                                    item.style.display = (item.getAttribute('data-parent') === pid) ? '' : 'none';
+                                    var input = item.querySelector('input.opt-input');
+                                    // Dusre main category ke SUB-CATEGORY bhi dikhao agar
+                                    // wo already ticked hain (warna wo gayab ho jaate the,
+                                    // jabki chips me dikhte the — confusing tha).
+                                    var fromOtherParent = input && input.checked;
+                                    var show = (item.getAttribute('data-parent') === pid) || fromOtherParent;
+                                    item.style.display = show ? '' : 'none';
                                 });
                             }
 
@@ -972,7 +978,7 @@
                                 if (!t) return;
                                 if (t.id === 'complete_mode' || t.id === 'specific_mode') sync();
                                 else if (t.id === 'sub_parent_id') { applyCascade(); renderChips(); }
-                                else if (t.className === 'opt-input') renderChips();
+                                else if (t.className === 'opt-input') { applyCascade(); renderChips(); }
                             }, true);
 
                             document.addEventListener('submit', function (e) {

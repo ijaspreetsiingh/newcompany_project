@@ -36,6 +36,26 @@ class Serviceman extends Model
         return $this->belongsTo(Provider::class);
     }
 
+    /**
+     * Serviceman ki assigned sub-categories (provider ne set ki hain).
+     * Table: serviceman_categories (serviceman_id, category_id, sub_category_id)
+     */
+    public function servicemanCategories(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\Modules\ServicemanModule\Entities\ServicemanCategory::class, 'serviceman_id');
+    }
+
+    /**
+     * Convenience: flat list of assigned sub_category_ids
+     */
+    public function getAssignedSubCategoryIdsAttribute(): array
+    {
+        return $this->servicemanCategories
+            ->whereNotNull('sub_category_id')
+            ->pluck('sub_category_id')
+            ->toArray();
+    }
+
     public function scopeOfStatus($query, $status)
     {
         $query->where('is_active', '=', $status);

@@ -7,6 +7,7 @@ use Modules\BookingModule\Http\Controllers\Api\V1\Serviceman\BookingController a
 use Modules\BookingModule\Http\Controllers\Api\V1\Admin\BookingController as AdminBookingController;
 use Modules\BookingModule\Http\Controllers\Api\V1\BookingRecheckController;
 use Modules\BookingModule\Http\Controllers\Api\V1\UnsatisfiedRequestController;
+use Modules\BookingModule\Http\Controllers\Api\V1\Customer\ServicemanSelectionController;
 
 Route::group(['prefix' => 'client', 'as' => 'customer.', 'namespace' => 'Api\V1\Customer', 'middleware' => ['auth:api']], function () {
     Route::group(['prefix' => 'order', 'as' => 'booking.'], function () {
@@ -86,11 +87,17 @@ Route::group(['prefix' => 'technician', 'as' => 'serviceman.', 'namespace' => 'A
         Route::get('task/dossier', [ServicemanBookingController::class, 'getServiceInfo']);
         Route::put('task/revise/modify-order', [ServicemanBookingController::class, 'updateBooking']);
         Route::put('recurring/task/revise/modify-order', [ServicemanBookingController::class, 'updateBookingRepeat']);
+        Route::put('service-quantity/increase/{booking_id}', [ServicemanBookingController::class, 'increaseServiceQuantity']);
+        Route::put('service-quantity/decrease/{booking_id}', [ServicemanBookingController::class, 'decreaseServiceQuantity']);
         Route::put('task/revise/task-detach', [ServicemanBookingController::class, 'removeService']);
 
         // ----- SERVICEMAN ACCEPT / REJECT -----
         Route::put('approve/{booking_id}', [ServicemanBookingController::class, 'acceptBooking']);
         Route::put('decline/{booking_id}', [ServicemanBookingController::class, 'rejectBooking']);
+
+        // ----- ASSIGNMENT TRACKER -----
+        Route::get('zone-pending', [ServicemanBookingController::class, 'zonePendingBookings']);
+        Route::get('assignment-tracker/{booking_id}', [ServicemanBookingController::class, 'assignmentTracker']);
 
         // ----- REACHED (300m) + START OTP -----
         Route::put('reached/{booking_id}', [ServicemanBookingController::class, 'reachedBooking']);
@@ -104,4 +111,12 @@ Route::group(['prefix' => 'technician', 'as' => 'serviceman.', 'namespace' => 'A
         Route::get('recheck-list', [BookingRecheckController::class, 'servicemanRecheckList']);
         Route::put('recheck/{recheck_id}', [BookingRecheckController::class, 'servicemanRecheckUpdate']);
     });
+});
+
+
+// ----- SERVICEMAN SELECTION (Manual) -----
+Route::group(['prefix' => 'client', 'as' => 'customer.serviceman.', 'namespace' => 'Api\V1\Customer', 'middleware' => ['auth:api']], function () {
+    // Browsing eligible staff is read-only and must work during guest checkout.
+    Route::post('get-available-servicemen', [ServicemanSelectionController::class, 'getAvailableServicemen'])->withoutMiddleware('auth:api');
+    Route::post('assign-serviceman-manual', [ServicemanSelectionController::class, 'assignServicemanManual']);
 });
