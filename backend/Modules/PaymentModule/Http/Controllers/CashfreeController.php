@@ -184,6 +184,14 @@ class CashfreeController extends Controller
      */
     public function webhook(Request $request): JsonResponse
     {
+        // Browser me open karne pe clean message (health-check) — login redirect nahi
+        if ($request->isMethod('GET')) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Cashfree webhook endpoint active. Gateway POST payment events here.',
+            ], 200);
+        }
+
         $rawBody = $request->getContent();
         $signature = (string) $request->header('x-webhook-signature', '');
         $timestamp = (string) $request->header('x-webhook-timestamp', '');
