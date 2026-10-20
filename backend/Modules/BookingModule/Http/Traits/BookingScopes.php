@@ -112,7 +112,19 @@ trait BookingScopes
     public function scopeProviderPendingBookings($query, Provider $provider, $maxBookingAmount)
     {
         $providerId = $provider->id;
-        $packageSubscriber = PackageSubscriber::where('provider_id', $providerId)->first();
+
+        // PERF: ye scope provider list + counts me 2-3 baar call hota hai.
+        // Har call me 2 DB queries (package subscriber + subscribed services).
+        // Remote MySQL par query ~1.3s → per-request static cache se duplicate
+        // queries hat gaye (data stale nahi hota, sirf ek hi baar padha jata hai).
+        static $packageCache = [];
+        static $subscribedCache = [];
+
+        if (!array_key_exists($providerId, $packageCache)) {
+            $packageCache[$providerId] = PackageSubscriber::where('provider_id', $providerId)->first();
+        }
+        $packageSubscriber = $packageCache[$providerId];
+
         $endDate = optional($packageSubscriber)->package_end_date;
         $canceled = optional($packageSubscriber)->is_canceled;
         $packageEndDate = $endDate ? Carbon::parse($endDate)->endOfDay() : null;
@@ -124,7 +136,11 @@ trait BookingScopes
             if ($isPackageEnded > 0 && $scheduleBookingEligibility && !$canceled) {
                 if ($provider->service_availability && (!$provider->is_suspended || !business_config('suspend_on_exceed_cash_limit_provider', 'provider_config')->live_values)) {
                     $zone_id = $provider->zone_id;
-                    $subscribedSubCategories = SubscribedService::where(['provider_id' => $provider->id])->where(['is_subscribed' => 1])->pluck('sub_category_id')->toArray();
+
+                    if (!array_key_exists($providerId, $subscribedCache)) {
+                        $subscribedCache[$providerId] = SubscribedService::where(['provider_id' => $provider->id])->where(['is_subscribed' => 1])->pluck('sub_category_id')->toArray();
+                    }
+                    $subscribedSubCategories = $subscribedCache[$providerId];
 
                     return $query
                         ->ofBookingStatus('pending')
@@ -158,7 +174,11 @@ trait BookingScopes
         } else {
             if ($provider->service_availability && (!$provider->is_suspended || !business_config('suspend_on_exceed_cash_limit_provider', 'provider_config')->live_values)) {
                 $zone_id = $provider->zone_id;
-                $subscribedSubCategories = SubscribedService::where(['provider_id' => $provider->id])->where(['is_subscribed' => 1])->pluck('sub_category_id')->toArray();
+
+                if (!array_key_exists($providerId, $subscribedCache)) {
+                    $subscribedCache[$providerId] = SubscribedService::where(['provider_id' => $provider->id])->where(['is_subscribed' => 1])->pluck('sub_category_id')->toArray();
+                }
+                $subscribedSubCategories = $subscribedCache[$providerId];
 
                 return $query
                     ->ofBookingStatus('pending')

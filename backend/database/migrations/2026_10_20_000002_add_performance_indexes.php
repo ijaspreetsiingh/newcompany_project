@@ -82,6 +82,15 @@ class AddPerformanceIndexes extends Migration
                 'idx_provider_timers_booking' => ['booking_id'],
                 'idx_provider_timers_status' => ['status'],
             ],
+            'business_settings' => [
+                'idx_business_settings_key_type' => ['key_name', 'settings_type'],
+            ],
+            'data_settings' => [
+                'idx_data_settings_type_key' => ['type', 'key'],
+            ],
+            'login_setups' => [
+                'idx_login_setups_key' => ['key'],
+            ],
         ];
     }
 
