@@ -21,7 +21,7 @@ services:
       redis:
         condition: service_started
     env_file:
-      - .env
+      - backend/.env
     environment:
       # Docker network ke andar service name hi hostname hai
       DB_HOST: mysql

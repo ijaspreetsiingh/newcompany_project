@@ -43,7 +43,7 @@ sudo mkdir -p /opt/yovo && cd /opt/yovo
 ```bash
 git clone https://github.com/ijaspreetsiingh/newcompany_project.git
 cd newcompany_project
-cp .env.example .env    # ya local .env copy karo (settings ke liye)
+cp backend/.env.example backend/.env    # settings ke liye (ya local .env copy karo)
 
 # Build (ARM pe PHP extensions compile hote hain → 8-15 min)
 docker build -f Dockerfile.railway -t yovo-app:latest .
