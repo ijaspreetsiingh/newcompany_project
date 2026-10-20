@@ -1,0 +1,97 @@
+# ---------------------------------------------------------------------------
+# ORACLE CLOUD (Always Free) — production compose
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Sab ek hi box par: app (nginx+php-fpm+queue worker) + MySQL + Redis
+# → DB localhost par = ~0ms query latency (Aiven par ~1.3s tha)
+# ---------------------------------------------------------------------------
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.railway
+    image: yovo-app:latest
+    container_name: yovo-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      # Docker network ke andar service name hi hostname hai
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      # SSL CA (Aiven) hatana zaroori — local MySQL par nahi chahiye
+      MYSQL_ATTR_SSL_CA: ""
+    ports:
+      - "80:80"
+    volumes:
+      - storage_app:/var/www/html/storage/app
+      - storage_log:/var/www/html/storage/logs
+      - storage_framework:/var/www/html/storage/framework
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 9001) ? 0 : 1);"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+
+  mysql:
+    image: mysql:8.0
+    container_name: yovo-mysql
+    restart: unless-stopped
+    command:
+      - --max_connections=400
+      - --innodb_buffer_pool_size=768M
+      - --innodb_flush_log_at_trx_commit=2
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-name-resolve
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-yovo}
+      MYSQL_USER: ${DB_USERNAME:-yovo}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-yovo_secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-yovo_root_secret}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${DB_ROOT_PASSWORD:-yovo_root_secret}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  redis:
+    image: redis:7-alpine
+    container_name: yovo-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --maxmemory 512mb
+      --maxmemory-policy volatile-lru
+      --save ""
+      --appendonly no
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  mysql_data:
+  redis_data:
+  storage_app:
+  storage_log:
+  storage_framework:
