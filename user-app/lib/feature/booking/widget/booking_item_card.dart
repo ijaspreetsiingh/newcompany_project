@@ -98,10 +98,11 @@ class BookingItemCard extends StatelessWidget {
                           else if(option.title == "download_invoice"){
                             String uri = "";
                             String languageCode = Get.find<LocalizationController>().locale.languageCode;
+                            final String invoiceToken = Uri.encodeQueryComponent(AuthRepo.tokenCache ?? '');
                             if(bookingModel.isRepeatBooking == 1){
-                              uri = "${AppConstants.baseUrl}${AppConstants.repeatBookingInvoiceUrl}${bookingModel.id}/$languageCode";
+                              uri = "${AppConstants.baseUrl}${AppConstants.repeatBookingInvoiceUrl}${bookingModel.id}/$languageCode?token=$invoiceToken";
                             }else{
-                              uri = "${AppConstants.baseUrl}${AppConstants.regularBookingInvoiceUrl}${bookingModel.id}/$languageCode";
+                              uri = "${AppConstants.baseUrl}${AppConstants.regularBookingInvoiceUrl}${bookingModel.id}/$languageCode?token=$invoiceToken";
                             }
                             if (kDebugMode) {
                               print("Uri : $uri");

@@ -1179,8 +1179,10 @@ class InkBookingActionBar extends StatelessWidget {
     showCustomDialog(child: const CustomLoader());
     try {
       final String languageCode = Get.find<LocalizationController>().locale.languageCode;
+      // Invoice ab token-protected hai: sirf is booking ka owner kholega.
+      final String invoiceToken = Uri.encodeQueryComponent(AuthRepo.tokenCache ?? '');
       final String uri =
-          "${AppConstants.baseUrl}${isSubBooking ? AppConstants.singleRepeatBookingInvoiceUrl : AppConstants.regularBookingInvoiceUrl}${bookingDetails.id}/$languageCode";
+          "${AppConstants.baseUrl}${isSubBooking ? AppConstants.singleRepeatBookingInvoiceUrl : AppConstants.regularBookingInvoiceUrl}${bookingDetails.id}/$languageCode?token=$invoiceToken";
       final bool opened = await launchUrl(Uri.parse(uri), mode: LaunchMode.externalApplication);
       if (!opened) {
         showCustomSnackBar('something_went_wrong'.tr, type: ToasterMessageType.error);

@@ -22,7 +22,7 @@ class LocationController extends GetxController  implements GetxService{
   final bool _isLoading = false;
   bool _buttonDisabled = true;
 
-  GoogleMapController? _mapController;
+  MapController? _mapController;
   List<PredictionModel> _predictionList = [];
 
   bool get buttonDisabled => _buttonDisabled;
@@ -33,16 +33,13 @@ class LocationController extends GetxController  implements GetxService{
   Position get pickPosition => _pickPosition;
   ServiceAddress get address => _address;
   ServiceAddress get pickAddress => _pickAddress;
-  GoogleMapController? get mapController => _mapController;
+  MapController? get mapController => _mapController;
 
   List<String> addressLabel= ['address_home', 'office', 'others'];
   String _selectedAddressLabel = "address_home";
   String get selectedAddressLabel => _selectedAddressLabel;
 
   var countryDialCode = "+880";
-
-  Set<Marker> markers = HashSet<Marker>();
-  Map<PolylineId, Polyline> polyLines = {};
 
   @override
   void onInit() {
@@ -51,7 +48,7 @@ class LocationController extends GetxController  implements GetxService{
   }
 
 
-  Future<void> getCurrentLocation(bool fromAddress, {GoogleMapController? mapController, LatLng? defaultLatLng, bool notify = true}) async {
+  Future<void> getCurrentLocation(bool fromAddress, {MapController? mapController, LatLng? defaultLatLng, bool notify = true}) async {
     _loading = true;
     if(notify) {
       update();
@@ -86,9 +83,10 @@ class LocationController extends GetxController  implements GetxService{
       _pickPosition = myPosition;
     }
     if (mapController != null) {
-      mapController.animateCamera(CameraUpdate.newCameraPosition(
-        CameraPosition(target: LatLng(myPosition.latitude, myPosition.longitude), zoom: 16),
-      ));
+      mapController.move(
+        LatLng(myPosition.latitude, myPosition.longitude),
+        16,
+      );
     }
     ServiceAddress address = await getAddressFromGeocode(LatLng(myPosition.latitude, myPosition.longitude));
     fromAddress ? _address = address : _pickAddress = address;
@@ -100,16 +98,16 @@ class LocationController extends GetxController  implements GetxService{
 
 
 
-  void updatePosition(CameraPosition position) async {
+  void updatePosition(LatLng position) async {
     _loading = true;
       update();
       try {
         _pickPosition = Position(
-            latitude: position.target.latitude, longitude: position.target.longitude, timestamp: DateTime.now(),
+            latitude: position.latitude, longitude: position.longitude, timestamp: DateTime.now(),
             heading: 1, accuracy: 1, altitude: 1, speedAccuracy: 1, speed: 1,
             altitudeAccuracy: 0, headingAccuracy: 0
           );
-        ServiceAddress address = await getAddressFromGeocode(LatLng(position.target.latitude, position.target.longitude));
+        ServiceAddress address = await getAddressFromGeocode(LatLng(position.latitude, position.longitude));
         _pickAddress = address;
         Get.find<SignUpController>().setAddressControllerText(address.address ?? "");
       } catch (e) {
@@ -123,7 +121,7 @@ class LocationController extends GetxController  implements GetxService{
   }
 
 
-  Future<ServiceAddress> setLocation(String placeID, String address, GoogleMapController? mapController) async {
+  Future<ServiceAddress> setLocation(String placeID, String address, MapController? mapController) async {
     _loading = true;
     update();
 
@@ -171,7 +169,7 @@ class LocationController extends GetxController  implements GetxService{
     _pickAddress = addressModel;
 
     if(mapController != null){
-      mapController.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: latLng, zoom: 17)));
+      mapController.move(latLng, 17);
     }
     _loading = false;
     update();
@@ -181,7 +179,7 @@ class LocationController extends GetxController  implements GetxService{
 
 
 
-  Future<void> setMapController(GoogleMapController mapController) async {
+  Future<void> setMapController(MapController mapController) async {
     _mapController = mapController;
     update();
   }

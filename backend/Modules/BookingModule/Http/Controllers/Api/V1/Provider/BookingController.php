@@ -26,6 +26,7 @@ use Modules\BookingModule\Entities\BookingScheduleHistory;
 use Modules\BookingModule\Entities\BookingServiceman;
 use Modules\BookingModule\Entities\BookingStatusHistory;
 use Modules\BookingModule\Http\Traits\BookingTrait;
+use Modules\CategoryManagement\Entities\Category;
 use Modules\CartModule\Entities\Cart;
 use Modules\ProviderManagement\Entities\ProviderBookingTimer;
 use Modules\ProviderManagement\Entities\SubscribedService;
@@ -1360,25 +1361,66 @@ class BookingController extends Controller
             ->where('provider_id', $provider->id)
             ->first();
 
-        if (!isset($booking)) {
+        // 'provider_manual' = AI request provider ke paas hai (assign karna baaki)
+        // 'manual_required'  = provider ne staff diya jo decline kar gaya ->
+        //                       provider ko dobara staff choose karna hai
+        if (!isset($booking) || $booking->booking_status !== 'pending'
+            || !in_array($booking->assignment_mode, ['provider_manual', 'manual_required'], true)) {
             return response()->json(response_formatter(DEFAULT_204), 200);
+        }
+
+        if ((string) $booking->zone_id !== (string) $provider->zone_id) {
+            return response()->json(response_formatter(DEFAULT_400, null, 'Booking zone does not match provider zone'), 400);
         }
 
         $slots = BookingServiceman::where('booking_id', $booking->id)
             ->pluck('status', 'serviceman_id');
 
-        // provider ko sab apne servicemen dikhne chahiye (auto-loop me tried honge,
-        // manual assign me phir bhi provider ki marzi) — status flag ke saath
-        $servicemen = findNearestServicemen($booking, $provider->id, [])
+        $subCategoryId = $booking->sub_category_id
+            ?? $booking->detail?->first()?->service?->sub_category_id;
+        [$bookingLat, $bookingLng] = getBookingCoordinates($booking);
+        $freshCutoff = now()->subMinutes(5);
+        $servicemen = \Modules\UserManagement\Entities\Serviceman::query()
+            ->where('provider_id', $provider->id)
+            ->where('is_on_duty', 1)
+            ->whereHas('user', fn($query) => $query->where('is_active', 1))
+            ->with([
+                'user:id,fcm_token,first_name,last_name,profile_image,current_lat,current_lng,last_location_updated_at',
+                'servicemanCategories.subCategory:id,name',
+            ])
+            ->get()
+            ->map(function ($serviceman) use ($subCategoryId, $bookingLat, $bookingLng, $freshCutoff, $slots) {
+                $serviceman->is_category_match = $serviceman->servicemanCategories
+                    ->contains(fn($category) => (string) $category->sub_category_id === (string) $subCategoryId);
+                $user = $serviceman->user;
+                $freshLocation = $user?->last_location_updated_at
+                    && Carbon::parse($user->last_location_updated_at)->gt($freshCutoff);
+                $serviceman->distance_km = ($freshLocation && $bookingLat !== null && $bookingLng !== null
+                    && $user?->current_lat !== null && $user?->current_lng !== null)
+                    ? calculateDistance($bookingLat, $bookingLng, (float) $user->current_lat, (float) $user->current_lng)
+                    : null;
+                $serviceman->slot_status = $slots[$serviceman->id] ?? null;
+                return $serviceman;
+            })
+            ->sort(function ($a, $b) {
+                if ($a->is_category_match !== $b->is_category_match) {
+                    return $a->is_category_match ? -1 : 1;
+                }
+                if ($a->distance_km === null || $b->distance_km === null) {
+                    return $a->distance_km === $b->distance_km ? 0 : ($a->distance_km === null ? 1 : -1);
+                }
+                return $a->distance_km <=> $b->distance_km;
+            })
             ->map(function ($serviceman) use ($slots) {
                 return [
                     'id' => $serviceman->id,
                     'name' => trim(($serviceman->user?->first_name ?? '') . ' ' . ($serviceman->user?->last_name ?? '')),
                     'image' => $serviceman->user?->profile_image_full_path
                         ?? ($serviceman->user?->profile_image ? asset('public/assets/provider-module/img/user2x.png') : null),
-                    'fcm_token' => $serviceman->user?->fcm_token ? '1' : '0',
+                    'is_category_match' => (bool) $serviceman->is_category_match,
+                    'assigned_categories' => $serviceman->servicemanCategories->pluck('subCategory.name')->filter()->values(),
                     'distance_km' => $serviceman->distance_km !== null ? round($serviceman->distance_km, 2) : null,
-                    'slot_status' => $slots[$serviceman->id] ?? null,
+                    'slot_status' => $serviceman->slot_status,
                 ];
             })
             ->values();
@@ -1391,19 +1433,18 @@ class BookingController extends Controller
                 ? max(0, now()->diffInSeconds($booking->auto_assign_expires_at, false))
                 : 0,
             'wait_time' => (int) ($provider->auto_assign_wait_time ?: 120),
-            'max_team_size' => 5,
+            'max_team_size' => 1,
             'servicemen' => $servicemen,
         ]), 200);
     }
 
     /**
-     * Provider ka decision: 1 ya zyada (team, max 5) servicemen assign karo.
-     * Booking tab tak PENDING rehti hai jab tak servicemen accept na karein.
+     * Provider selects one category-eligible serviceman for this booking.
      */
     public function assignServicemen(Request $request, string $bookingId): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'serviceman_ids' => 'required|array|min:1|max:5',
+            'serviceman_ids' => 'required|array|size:1',
             'serviceman_ids.*' => 'string|max:36',
         ]);
 
@@ -1421,47 +1462,91 @@ class BookingController extends Controller
             return response()->json(response_formatter(DEFAULT_204), 200);
         }
 
-        if ($booking->booking_status !== 'pending') {
+        if ($booking->booking_status !== 'pending'
+            || !in_array($booking->assignment_mode, ['provider_manual', 'manual_required'], true)) {
             return response()->json(response_formatter(DEFAULT_400, null, [['error_code' => 'booking', 'message' => 'Booking is not pending']]), 400);
         }
 
+        if ((string) $booking->zone_id !== (string) $provider->zone_id
+            || !subcategory_has_serviceable_provider(
+                $booking->sub_category_id,
+                $booking->category_id,
+                $booking->zone_id,
+                $provider->id
+            )) {
+            return response()->json(response_formatter(DEFAULT_400, null, 'Booking category is not assigned to this provider in this zone'), 400);
+        }
+
         $servicemanIds = array_values(array_unique($request->input('serviceman_ids')));
+        $eligibleIds = findNearestServicemen($booking, $provider->id, [])
+            ->pluck('id')
+            ->map(fn($id) => (string) $id)
+            ->all();
         $validServicemen = \Modules\UserManagement\Entities\Serviceman::whereIn('id', $servicemanIds)
             ->where('provider_id', $provider->id)
             ->pluck('id')
             ->toArray();
 
-        if (count($validServicemen) !== count($servicemanIds)) {
-            return response()->json(response_formatter(DEFAULT_400, null, 'Serviceman not found in your company'), 400);
+        if (count($validServicemen) !== 1 || !in_array((string) $validServicemen[0], $eligibleIds, true)) {
+            return response()->json(response_formatter(DEFAULT_400, null, 'Select one active, on-duty serviceman assigned to this category'), 400);
+        }
+
+        // Category match zaroori: staff jiski booking ki category assign nahi hai
+        // use manually assign nahi kar sakte (UI bhi yehi block karta hai).
+        $bookingSubCategoryId = $booking->sub_category_id
+            ?? $booking->detail?->first()?->service?->sub_category_id
+            ?? null;
+        $selectedServiceman = \Modules\UserManagement\Entities\Serviceman::with('servicemanCategories')
+            ->where('id', $validServicemen[0])
+            ->first();
+        $hasCategory = $selectedServiceman?->servicemanCategories->isNotEmpty() ?? false;
+        $categoryMatched = $selectedServiceman?->servicemanCategories
+            ->contains(fn($category) => (string) $category->sub_category_id === (string) $bookingSubCategoryId) ?? false;
+
+        if ($hasCategory && !$categoryMatched) {
+            return response()->json(response_formatter(DEFAULT_400, null, 'Selected serviceman is not assigned to this booking category'), 400);
         }
 
         $waitTime = max(30, (int) ($provider->auto_assign_wait_time ?: 120));
 
-        DB::transaction(function () use ($booking, $validServicemen, $waitTime) {
+        $assigned = DB::transaction(function () use ($booking, $validServicemen, $waitTime, $provider) {
+            $lockedBooking = $this->booking->where('id', $booking->id)->lockForUpdate()->first();
+            if (!$lockedBooking || $lockedBooking->booking_status !== 'pending'
+                || !in_array($lockedBooking->assignment_mode, ['provider_manual', 'manual_required'], true)
+                || (string) $lockedBooking->provider_id !== (string) $provider->id) {
+                return false;
+            }
+
             // purane pending slots hatao (re-assign case)
-            BookingServiceman::where('booking_id', $booking->id)
+            BookingServiceman::where('booking_id', $lockedBooking->id)
                 ->where('status', BookingServiceman::STATUS_PENDING)
                 ->delete();
 
             foreach ($validServicemen as $servicemanId) {
                 BookingServiceman::updateOrCreate(
-                    ['booking_id' => $booking->id, 'serviceman_id' => $servicemanId],
+                    ['booking_id' => $lockedBooking->id, 'serviceman_id' => $servicemanId],
                     ['status' => BookingServiceman::STATUS_PENDING, 'expires_at' => now()->addSeconds($waitTime)]
                 );
             }
 
             // provider decision window band
-            $booking->serviceman_id = $validServicemen[0];
-            $booking->serviceman_assign_expires_at = now()->addSeconds($waitTime);
-            $booking->auto_assign_expires_at = null;
-            $booking->assignment_mode = 'provider_manual';
-            $booking->save();
+            $lockedBooking->serviceman_id = $validServicemen[0];
+            $lockedBooking->serviceman_assign_expires_at = now()->addSeconds($waitTime);
+            $lockedBooking->auto_assign_expires_at = null;
+            $lockedBooking->assignment_mode = 'provider_manual';
+            $lockedBooking->save();
 
             ProviderBookingTimer::where('booking_id', $booking->id)
-                ->where('provider_id', $booking->provider_id)
+                ->where('provider_id', $provider->id)
                 ->where('status', 'pending')
                 ->update(['status' => 'accepted']);
+
+            return true;
         });
+
+        if (!$assigned) {
+            return response()->json(response_formatter(DEFAULT_400, null, 'Booking is no longer available for provider assignment'), 400);
+        }
 
         // har assigned serviceman ko push
         try {
@@ -1471,7 +1556,7 @@ class BookingController extends Controller
             foreach ($servicemen as $serviceman) {
                 $fcmToken = $serviceman?->user?->fcm_token ?? null;
                 if (!is_null($fcmToken)) {
-                    device_notification($fcmToken, 'New Service Assignment', 'auto_assign', null, $booking->id, 'new_booking_request');
+                    device_notification($fcmToken, 'Assigned by provider', 'Your provider assigned you a booking. Open the app to review it.', null, $booking->id, 'new_booking_request');
                 }
             }
         } catch (\Throwable $e) {

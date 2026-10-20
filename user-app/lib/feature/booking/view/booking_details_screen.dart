@@ -267,7 +267,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen>
                                                 .locale
                                                 .languageCode;
                                         String uri =
-                                            "${AppConstants.baseUrl}${isSubBooking ? AppConstants.singleRepeatBookingInvoiceUrl : AppConstants.regularBookingInvoiceUrl}${bookingDetailsContent.id}/$languageCode";
+                                            "${AppConstants.baseUrl}${isSubBooking ? AppConstants.singleRepeatBookingInvoiceUrl : AppConstants.regularBookingInvoiceUrl}${bookingDetailsContent.id}/$languageCode?token=${Uri.encodeQueryComponent(AuthRepo.tokenCache ?? '')}";
                                         if (kDebugMode) {
                                           print("Uri : $uri");
                                         }
@@ -344,7 +344,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen>
                                     .locale
                                     .languageCode;
                             String uri =
-                                "${AppConstants.baseUrl}${isSubBooking ? AppConstants.singleRepeatBookingInvoiceUrl : AppConstants.regularBookingInvoiceUrl}${bookingDetailsContent.id}/$languageCode";
+                                "${AppConstants.baseUrl}${isSubBooking ? AppConstants.singleRepeatBookingInvoiceUrl : AppConstants.regularBookingInvoiceUrl}${bookingDetailsContent.id}/$languageCode?token=${Uri.encodeQueryComponent(AuthRepo.tokenCache ?? '')}";
                             if (kDebugMode) {
                               print("Uri : $uri");
                             }
@@ -502,7 +502,7 @@ class BookingTabBar extends StatelessWidget {
                                                   .locale
                                                   .languageCode;
                                           String uri =
-                                              "${AppConstants.baseUrl}${isSubBooking ? AppConstants.singleRepeatBookingInvoiceUrl : AppConstants.regularBookingInvoiceUrl}${bookingDetailsContent.id}/$languageCode";
+                                              "${AppConstants.baseUrl}${isSubBooking ? AppConstants.singleRepeatBookingInvoiceUrl : AppConstants.regularBookingInvoiceUrl}${bookingDetailsContent.id}/$languageCode?token=${Uri.encodeQueryComponent(AuthRepo.tokenCache ?? '')}";
                                           if (kDebugMode) {
                                             print("Uri : $uri");
                                           }

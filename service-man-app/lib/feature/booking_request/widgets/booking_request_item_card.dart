@@ -26,29 +26,56 @@ class BookingRequestItem extends StatelessWidget {
         ? 'provider_location'.tr
         : 'customer_location'.tr;
 
+    // Provider ne manually staff choose kiya hai (auto-assign nahi hua)
+    final bool assignedByProvider =
+        bookingRequestModel?.assignmentMode == 'provider_manual';
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-      child: BookingCard(
-        status: repeatBooking?.bookingStatus ??
-            bookingRequestModel?.bookingStatus ??
-            '',
-        id: '#${repeatBooking?.readableId ?? bookingRequestModel?.readableId ?? ''}',
-        title: bookingRequestModel?.subCategory?.name ?? '',
-        schedule: bookingDateText,
-        location: location,
-        amount: PriceConverter.convertPrice(
-          repeatBooking?.totalBookingAmount ??
-              bookingRequestModel?.totalBookingAmount ??
-              0,
-        ),
-        onTap: () => Get.toNamed(
-          RouteHelper.getBookingDetailsRoute(
-            bookingId: repeatBooking?.id ?? bookingRequestModel!.id!,
-            isSubBooking: repeatBooking != null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (assignedByProvider)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6, left: 4),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'assigned_by_provider'.tr,
+                  style: robotoMedium.copyWith(
+                    fontSize: 11,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+              ),
+            ),
+          BookingCard(
+            status: repeatBooking?.bookingStatus ??
+                bookingRequestModel?.bookingStatus ??
+                '',
+            id: '#${repeatBooking?.readableId ?? bookingRequestModel?.readableId ?? ''}',
+            title: bookingRequestModel?.subCategory?.name ?? '',
+            schedule: bookingDateText,
+            location: location,
+            amount: PriceConverter.convertPrice(
+              repeatBooking?.totalBookingAmount ??
+                  bookingRequestModel?.totalBookingAmount ??
+                  0,
+            ),
+            onTap: () => Get.toNamed(
+              RouteHelper.getBookingDetailsRoute(
+                bookingId: repeatBooking?.id ?? bookingRequestModel!.id!,
+                isSubBooking: repeatBooking != null,
+              ),
+            ),
+            onDecline: onDecline,
+            onAccept: onAccept,
           ),
-        ),
-        onDecline: onDecline,
-        onAccept: onAccept,
+        ],
       ),
     );
   }

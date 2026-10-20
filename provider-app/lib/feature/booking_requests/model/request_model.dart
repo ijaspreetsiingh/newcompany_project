@@ -6,6 +6,7 @@ class BookingRequestModel {
   String? readableId;
   String? zoneId;
   String? bookingStatus;
+  String? assignmentMode;
   String? serviceSchedule;
   int? isPaid;
   String? paymentMethod;
@@ -52,6 +53,7 @@ class BookingRequestModel {
     readableId = json['readable_id'].toString();
     zoneId = json['zone_id'];
     bookingStatus = json['booking_status'];
+    assignmentMode = json['assignment_mode']?.toString();
     isPaid = json['is_paid'];
     paymentMethod = json['payment_method'];
     totalBookingAmount = double.tryParse(json['total_booking_amount'].toString());
@@ -83,6 +85,7 @@ class BookingRequestModel {
     data['readable_id'] = readableId;
     data['zone_id'] = zoneId;
     data['booking_status'] = bookingStatus;
+    data['assignment_mode'] = assignmentMode;
     data['is_paid'] = isPaid;
     data['payment_method'] = paymentMethod;
     data['total_booking_amount'] = totalBookingAmount;

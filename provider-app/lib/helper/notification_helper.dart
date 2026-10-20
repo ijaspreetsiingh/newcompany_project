@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:jassdbx_provider/common/widgets/demo_reset_dialog_widget.dart';
 import 'package:jassdbx_provider/feature/conversation/view/incoming_call_screen.dart';
+import 'package:jassdbx_provider/feature/booking/widget/service_assignment_countdown_dialog.dart';
 import 'package:jassdbx_provider/util/core_export.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -191,10 +192,17 @@ class NotificationHelper {
         Get.find<NotificationController>().getNotifications(1, saveNotificationCount: false);
       }
 
-      // ----- AUTO-ASSIGN: provider kabhi accept/decline nahi karega -----
-      // Full-screen decision popup hataya — sirf normal notification dikhao.
-      // Booking automatic nearest serviceman ko jaati hai.
+      // ----- AUTO-ASSIGN: Show system-level popup + countdown -----
       else if(message.data['type']=='new_booking_request'){
+        // Show countdown popup like incoming call
+        Get.dialog(
+          ServiceAssignmentCountdownDialog(
+            bookingData: message.data,
+            countdownSeconds: 60,
+          ),
+          barrierDismissible: false,
+        );
+        // Also show notification in tray
         NotificationHelper.showNotification(message, false,flutterLocalNotificationsPlugin);
         Get.find<NotificationController>().getNotifications(1, saveNotificationCount: false);
       }

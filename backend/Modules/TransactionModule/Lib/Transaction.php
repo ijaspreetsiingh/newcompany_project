@@ -217,6 +217,201 @@ if (!function_exists('placeBookingTransactionForPartialDigital')) {
     }
 }
 
+if (!function_exists('placeBookingTransactionForDigitalAmount')) {
+    /**
+     * Sirf digital (gateway) amount admin ke pending balance me credit karo.
+     * Wallet alag se debit hota hai — isme wallet touch nahi hota.
+     */
+    function placeBookingTransactionForDigitalAmount($booking, float $amount): void
+    {
+        $amount = round($amount, 3);
+        if ($amount <= 0) {
+            return;
+        }
+
+        $admin_user_id = User::where('user_type', ADMIN_USER_TYPES[0])->first()->id;
+
+        DB::transaction(function () use ($booking, $admin_user_id, $amount) {
+            $account = Account::where('user_id', $admin_user_id)->lockForUpdate()->first();
+            $account->balance_pending += $amount;
+            $account->save();
+
+            Transaction::create([
+                'ref_trx_id' => null,
+                'booking_id' => $booking['id'],
+                'trx_type' => TRX_TYPE['booking_amount'],
+                'debit' => 0,
+                'credit' => $amount,
+                'balance' => $account->balance_pending,
+                'from_user_id' => $booking['customer_id'],
+                'to_user_id' => $admin_user_id,
+                'from_user_account' => null,
+                'to_user_account' => ACCOUNT_STATES[0]['value'],
+                'is_guest' => $booking->is_guest
+            ]);
+        });
+    }
+}
+
+if (!function_exists('placeBookingTransactionForPartialWalletOnly')) {
+    /**
+     * OFFLINE payment (partial) — sirf WALLET portion abhi real paisa hai.
+     * Admin (+balance_pending) [wallet amount]
+     * Customer (-wallet_balance) [wallet amount]
+     * Offline DUE ka paisa abhi aaya nahi hai — wo admin approval par credit hoga
+     * (placeBookingTransactionForOfflinePaymentApproval).
+     */
+    function placeBookingTransactionForPartialWalletOnly($booking): void
+    {
+        $admin_user_id = User::where('user_type', ADMIN_USER_TYPES[0])->first()->id;
+
+        DB::transaction(function () use ($booking, $admin_user_id) {
+            // SECURITY: row-lock karke wallet balance padho (double-spend race band)
+            $user = User::where('id', $booking['customer_id'])->lockForUpdate()->first();
+            if (!$user || round((float) $user->wallet_balance, 3) + 0.0005 <= 0) {
+                throw new \RuntimeException('Insufficient wallet balance for partial payment');
+            }
+            $paid_amount = min(round((float) $user->wallet_balance, 3), (float) $booking['total_booking_amount']);
+
+            //Admin transaction (sirf wallet amount)
+            $account = Account::where('user_id', $admin_user_id)->lockForUpdate()->first();
+            $account->balance_pending += $paid_amount;
+            $account->save();
+
+            Transaction::create([
+                'ref_trx_id' => null,
+                'booking_id' => $booking['id'],
+                'trx_type' => TRX_TYPE['booking_amount'],
+                'debit' => 0,
+                'credit' => $paid_amount,
+                'balance' => $account->balance_pending,
+                'from_user_id' => $booking['customer_id'],
+                'to_user_id' => $admin_user_id,
+                'from_user_account' => null,
+                'to_user_account' => ACCOUNT_STATES[0]['value'],
+                'is_guest' => $booking->is_guest
+            ]);
+
+            //customer transaction (wallet) — lock ke andar hi debit
+            $user->wallet_balance = $user->wallet_balance - $paid_amount;
+            $user->save();
+
+            Transaction::create([
+                'ref_trx_id' => null,
+                'booking_id' => $booking['id'],
+                'trx_type' => WALLET_TRX_TYPE['wallet_payment'],
+                'debit' => $paid_amount,
+                'credit' => 0,
+                'balance' => $user->wallet_balance,
+                'from_user_id' => $booking['customer_id'],
+                'to_user_id' => $booking['customer_id'],
+                'from_user_account' => null,
+                'to_user_account' => 'user_wallet'
+            ]);
+        });
+    }
+}
+
+if (!function_exists('placeBookingTransactionForOfflinePaymentApproval')) {
+    /**
+     * OFFLINE payment APPROVED — admin ko sirf wo amount credit karo jo abhi
+     * DUE bacha hai (total - already paid wallet portion).
+     * Pehle se approved booking par dobara call hua to kuch nahi hoga
+     * (idempotent — double credit nahi hoga).
+     */
+    function placeBookingTransactionForOfflinePaymentApproval($booking): void
+    {
+        $admin_user_id = User::where('user_type', ADMIN_USER_TYPES[0])->first()->id;
+
+        $walletPaid = (float) \Modules\BookingModule\Entities\BookingPartialPayment::where('booking_id', $booking->id)
+            ->where('paid_with', 'wallet')
+            ->sum('paid_amount');
+
+        $due = round((float) $booking['total_booking_amount'] - $walletPaid, 3);
+        if ($due <= 0) {
+            return;
+        }
+
+        DB::transaction(function () use ($booking, $admin_user_id, $due) {
+            $account = Account::where('user_id', $admin_user_id)->lockForUpdate()->first();
+            $account->balance_pending += $due;
+            $account->save();
+
+            Transaction::create([
+                'ref_trx_id' => null,
+                'booking_id' => $booking['id'],
+                'trx_type' => TRX_TYPE['booking_amount'],
+                'debit' => 0,
+                'credit' => $due,
+                'balance' => $account->balance_pending,
+                'from_user_id' => $booking['customer_id'],
+                'to_user_id' => $admin_user_id,
+                'from_user_account' => null,
+                'to_user_account' => ACCOUNT_STATES[0]['value'],
+                'is_guest' => $booking->is_guest
+            ]);
+        });
+    }
+}
+
+if (!function_exists('placeBookingTransactionForWalletAmount')) {
+    /**
+     * Wallet se SPECIFIC amount debit (partial → remaining due).
+     * Admin (+balance_pending) [amount]
+     * Customer (-wallet_balance) [amount]
+     */
+    function placeBookingTransactionForWalletAmount($booking, float $amount): void
+    {
+        $amount = round($amount, 3);
+        if ($amount <= 0) {
+            return;
+        }
+
+        $admin_user_id = User::where('user_type', ADMIN_USER_TYPES[0])->first()->id;
+
+        DB::transaction(function () use ($booking, $admin_user_id, $amount) {
+            $user = User::where('id', $booking['customer_id'])->lockForUpdate()->first();
+            if (!$user || round((float) $user->wallet_balance, 3) + 0.0005 < $amount) {
+                throw new \RuntimeException('Insufficient wallet balance for this booking');
+            }
+
+            $account = Account::where('user_id', $admin_user_id)->lockForUpdate()->first();
+            $account->balance_pending += $amount;
+            $account->save();
+
+            Transaction::create([
+                'ref_trx_id' => null,
+                'booking_id' => $booking['id'],
+                'trx_type' => TRX_TYPE['booking_amount'],
+                'debit' => 0,
+                'credit' => $amount,
+                'balance' => $account->balance_pending,
+                'from_user_id' => $booking['customer_id'],
+                'to_user_id' => $admin_user_id,
+                'from_user_account' => null,
+                'to_user_account' => ACCOUNT_STATES[0]['value'],
+                'is_guest' => $booking->is_guest
+            ]);
+
+            $user->wallet_balance = round((float) $user->wallet_balance - $amount, 3);
+            $user->save();
+
+            Transaction::create([
+                'ref_trx_id' => null,
+                'booking_id' => $booking['id'],
+                'trx_type' => WALLET_TRX_TYPE['wallet_payment'],
+                'debit' => $amount,
+                'credit' => 0,
+                'balance' => $user->wallet_balance,
+                'from_user_id' => $booking['customer_id'],
+                'to_user_id' => $booking['customer_id'],
+                'from_user_account' => null,
+                'to_user_account' => 'user_wallet'
+            ]);
+        });
+    }
+}
+
 if (!function_exists('placeBookingTransactionForWalletPayment')) {
     function placeBookingTransactionForWalletPayment($booking): void
     {

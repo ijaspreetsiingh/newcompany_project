@@ -2389,6 +2389,7 @@
                                                                         </div>
 
                                                                         @php($skip=['gateway','mode','status'])
+                                                                        @php($optionalPaymentFields = ['webhook_secret'])
                                                                         @foreach($dataValues->where('key_name',$gateway->key_name)->first()->live_values as $key=>$value)
                                                                             @if(!in_array($key,$skip))
                                                                                 <div
@@ -2399,7 +2400,7 @@
                                                                                            placeholder="{{translate($key)}} *"
                                                                                            value="{{env('APP_ENV')=='demo'?'':$value}}" {{$isPublished}}>
                                                                                     <label>{{translate($key)}}
-                                                                                        *</label>
+                                                                                        @if(!in_array($key, $optionalPaymentFields))*@endif</label>
                                                                                 </div>
                                                                             @endif
                                                                         @endforeach

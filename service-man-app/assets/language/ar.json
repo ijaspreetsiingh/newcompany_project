@@ -374,6 +374,8 @@
   "account_blocked_notice": "إشعار حظر الحساب",
   "provider_location": "موقع المزود",
   "customer_location": "موقع العميل",
+  "assigned_by_provider": "Assigned by Provider",
+  "auto_assigned_booking": "Auto Assigned",
   "service_location": "موقع الخدمة",
   "you_need_to_go_to_the": "عليك الذهاب إلى",
   "to_provide_the_service": "لتقديم الخدمة",

@@ -14,6 +14,8 @@ class ServiceSubCategoryModel {
   int? isSubscribed;
   List<ServiceModel>? services;
   int? servicesCount;
+  /// Parent (main) category name — populated from API response sub_category.parent.name
+  String? parentName;
 
   ServiceSubCategoryModel({
     String? id,
@@ -83,6 +85,10 @@ class ServiceSubCategoryModel {
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
     isSubscribed = json['is_subscribed'];
+    // Parent category name — comes as sub_category.parent.name or sub_category.category.name
+    parentName = json['parent']?['name']
+        ?? json['category']?['name']
+        ?? json['parent_category']?['name'];
     if (json['services'] != null) {
       services = <ServiceModel>[];
       json['services'].forEach((v) {

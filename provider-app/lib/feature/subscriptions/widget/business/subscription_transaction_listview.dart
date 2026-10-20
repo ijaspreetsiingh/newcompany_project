@@ -107,7 +107,7 @@ class TransactionHistoryRow extends StatelessWidget {
                   onTap: () async {
                     showCustomDialog(child: const CustomLoader());
                     String languageCode = Get.find<LocalizationController>().locale.languageCode;
-                    String uri = "${AppConstants.baseUrl}${AppConstants.subscriptionTransactionInvoice}${transaction.id}/$languageCode";
+                    String uri = "${AppConstants.baseUrl}${AppConstants.subscriptionTransactionInvoice}${transaction.id}/$languageCode?token=${Uri.encodeQueryComponent(AuthRepo.tokenCache ?? '')}";
                     if (kDebugMode) {
                       print("Uri : $uri");
                     }

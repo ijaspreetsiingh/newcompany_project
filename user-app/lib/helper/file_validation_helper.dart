@@ -10,9 +10,7 @@ import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:get/get_utils/src/extensions/internacionalization.dart';
 import 'package:image_picker/image_picker.dart';
 
-
 class FileValidationHelper {
-
   /// Validates and picks an image with automatic config retrieval and error display
   /// Returns the picked XFile if valid, null otherwise
   static Future<XFile?> validateAndPickImage({
@@ -21,7 +19,6 @@ class FileValidationHelper {
     double? maxWidth,
   }) async {
     try {
-
       // Step 1: Pick the image
       final picker = ImagePicker();
       final pickedImage = await picker.pickImage(
@@ -32,11 +29,9 @@ class FileValidationHelper {
       );
 
       if (pickedImage == null) return null;
-      
+
       // Step 2: Validate file extension
-      final extensionError = validateFileExtension(
-        file: pickedImage,
-      );
+      final extensionError = validateFileExtension(file: pickedImage);
 
       if (extensionError != null) {
         customSnackBar(extensionError, type: ToasterMessageType.error);
@@ -45,7 +40,8 @@ class FileValidationHelper {
 
       // Step 3: Get config and validate size
       final configModel = Get.find<SplashController>().configModel;
-      final maxSize = configModel.content?.maxImageUploadSize ?? 20971520; // Default 20 MB
+      final maxSize =
+          configModel.content?.maxImageUploadSize ?? 20971520; // Default 20 MB
 
       final validationError = await validateFileSizeAsync(
         file: pickedImage,
@@ -60,7 +56,6 @@ class FileValidationHelper {
 
       // Step 5: Return valid file
       return pickedImage;
-      
     } catch (error) {
       debugPrint('Image picking error: $error');
       return null;
@@ -91,7 +86,8 @@ class FileValidationHelper {
 
       // Step 3: Get config and validate sizes
       final configModel = Get.find<SplashController>().configModel;
-      final maxSize = configModel.content?.maxImageUploadSize ?? 20971520; // Default 20 MB
+      final maxSize =
+          configModel.content?.maxImageUploadSize ?? 20971520; // Default 20 MB
 
       final validationError = await validateMultipleFilesSize(
         files: pickedImages,
@@ -106,7 +102,6 @@ class FileValidationHelper {
 
       // Step 5: Return valid files
       return pickedImages;
-      
     } catch (error) {
       debugPrint('Multiple images picking error: $error');
       return [];
@@ -115,9 +110,7 @@ class FileValidationHelper {
 
   /// Validates file extension using MIME type with fallback to file extension
   /// Returns null if valid, otherwise returns error message
-  static String? validateFileExtension({
-    required XFile file,
-  }) {
+  static String? validateFileExtension({required XFile file}) {
     try {
       // Try 1: Validate using MIME type (iOS/Web usually provides this)
       if (_isValidMimeType(file.mimeType)) {
@@ -132,7 +125,6 @@ class FileValidationHelper {
 
       // Return error if validation failed
       return _buildInvalidFileTypeError();
-      
     } catch (e) {
       return _buildValidationFailedError(e);
     }
@@ -143,7 +135,7 @@ class FileValidationHelper {
     if (mimeType == null || mimeType.isEmpty) {
       return false;
     }
-    
+
     final normalizedMimeType = mimeType.toLowerCase();
     return AppConstants.allowedImageExtensions.any(
       (extension) => normalizedMimeType.contains(extension),
@@ -156,12 +148,12 @@ class FileValidationHelper {
     if (file.name.isNotEmpty && file.name.contains('.')) {
       return file.name.toLowerCase().split('.').last;
     }
-    
+
     // Fallback to file path
     if (file.path.contains('.')) {
       return file.path.toLowerCase().split('.').last;
     }
-    
+
     return null;
   }
 
@@ -170,7 +162,7 @@ class FileValidationHelper {
     if (extension == null || extension.isEmpty) {
       return false;
     }
-    
+
     return AppConstants.allowedImageExtensions.contains(extension);
   }
 
@@ -179,7 +171,7 @@ class FileValidationHelper {
     final invalidFileType = 'invalid_file_type'.tr;
     final allowedFormats = 'allowed_formats'.tr;
     final extensions = AppConstants.allowedImageExtensions.join(', ');
-    
+
     return '$invalidFileType. $allowedFormats: $extensions';
   }
 
@@ -191,19 +183,15 @@ class FileValidationHelper {
 
   /// Validates multiple files extensions
   /// Returns null if all valid, otherwise returns error message for first invalid file
-  static String? validateMultipleFileExtensions({
-    required List<XFile> files,
-  }) {
+  static String? validateMultipleFileExtensions({required List<XFile> files}) {
     for (int i = 0; i < files.length; i++) {
-      final error = validateFileExtension(
-        file: files[i],
-      );
-      
+      final error = validateFileExtension(file: files[i]);
+
       if (error != null) {
         return '${'file'.tr} ${i + 1}: $error';
       }
     }
-    
+
     return null;
   }
 
@@ -218,15 +206,13 @@ class FileValidationHelper {
 
       if (fileSize > maxSizeInBytes) {
         return '${'file_size'.tr} (${formatFileSize(fileSize)}) ${'exceeds_maximum_allowed_size'.tr} (${formatFileSize(maxSizeInBytes)})';
-
       }
-      
+
       return null;
     } catch (e) {
       return '${'failed_to_validate_file_size'.tr}: $e';
     }
   }
-
 
   /// Validates multiple files size
   /// Returns null if all valid, otherwise returns error message for first invalid file
@@ -244,7 +230,7 @@ class FileValidationHelper {
         return '${'file'.tr} ${i + 1}: $error';
       }
     }
-    
+
     return null;
   }
 
@@ -255,7 +241,7 @@ class FileValidationHelper {
     required int maxTotalSizeInBytes,
   }) async {
     int totalSize = 0;
-    
+
     for (final file in files) {
       totalSize += await file.length();
     }
@@ -263,7 +249,7 @@ class FileValidationHelper {
     if (totalSize > maxTotalSizeInBytes) {
       return '${'file_size'.tr} (${formatFileSize(totalSize)}) ${'exceeds_maximum_allowed_size'.tr} (${formatFileSize(maxTotalSizeInBytes)})';
     }
-    
+
     return null;
   }
 
@@ -316,7 +302,8 @@ class FileValidationHelper {
 
       // Step 3: Get config and validate sizes
       final configModel = Get.find<SplashController>().configModel;
-      final maxSize = configModel.content?.maxImageUploadSize ?? 20971520; // Default 20 MB
+      final maxSize =
+          configModel.content?.maxImageUploadSize ?? 20971520; // Default 20 MB
 
       final validationError = validateMultiplePlatformFilesSize(
         files: result.files,
@@ -331,7 +318,6 @@ class FileValidationHelper {
 
       // Step 5: Return valid files
       return result.files;
-      
     } catch (error) {
       debugPrint('Document picking error: $error');
       return [];
@@ -340,20 +326,17 @@ class FileValidationHelper {
 
   /// Validates document file extension
   /// Returns null if valid, otherwise returns error message
-  static String? validateDocumentFileExtension({
-    required PlatformFile file,
-  }) {
+  static String? validateDocumentFileExtension({required PlatformFile file}) {
     try {
       // Extract file extension from name or path
       final fileExtension = _extractPlatformFileExtension(file);
-      
+
       if (_isValidDocumentExtension(fileExtension)) {
         return null;
       }
 
       // Return error if validation failed
       return _buildInvalidDocumentTypeError();
-      
     } catch (e) {
       return _buildValidationFailedError(e);
     }
@@ -365,12 +348,12 @@ class FileValidationHelper {
     if (file.name.isNotEmpty && file.name.contains('.')) {
       return file.name.toLowerCase().split('.').last;
     }
-    
+
     // Fallback to file path if available
     if (file.path != null && file.path!.contains('.')) {
       return file.path!.toLowerCase().split('.').last;
     }
-    
+
     return null;
   }
 
@@ -379,7 +362,7 @@ class FileValidationHelper {
     if (extension == null || extension.isEmpty) {
       return false;
     }
-    
+
     return AppConstants.allowedFileExtensions.contains(extension);
   }
 
@@ -388,7 +371,7 @@ class FileValidationHelper {
     final invalidFileType = 'invalid_file_type'.tr;
     final allowedFormats = 'allowed_formats'.tr;
     final extensions = AppConstants.allowedFileExtensions.join(', ');
-    
+
     return '$invalidFileType. $allowedFormats: $extensions';
   }
 
@@ -398,15 +381,13 @@ class FileValidationHelper {
     required List<PlatformFile> files,
   }) {
     for (int i = 0; i < files.length; i++) {
-      final error = validateDocumentFileExtension(
-        file: files[i],
-      );
-      
+      final error = validateDocumentFileExtension(file: files[i]);
+
       if (error != null) {
         return '${'file'.tr} ${i + 1}: $error';
       }
     }
-    
+
     return null;
   }
 
@@ -422,7 +403,7 @@ class FileValidationHelper {
       if (fileSize > maxSizeInBytes) {
         return '${'file_size'.tr} (${formatFileSize(fileSize)}) ${'exceeds_maximum_allowed_size'.tr} (${formatFileSize(maxSizeInBytes)})';
       }
-      
+
       return null;
     } catch (e) {
       return '${'failed_to_validate_file_size'.tr}: $e';
@@ -445,11 +426,7 @@ class FileValidationHelper {
         return '${'file'.tr} ${i + 1}: $error';
       }
     }
-    
+
     return null;
   }
 }
-
-
-
-

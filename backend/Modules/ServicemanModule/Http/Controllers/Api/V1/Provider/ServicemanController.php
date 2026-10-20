@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Modules\BookingModule\Entities\Booking;
 use Modules\CategoryManagement\Entities\Category;
 use Modules\ServicemanModule\Entities\ServicemanCategory;
+use Modules\ProviderManagement\Entities\SubscribedService;
 use Modules\UserManagement\Entities\Serviceman;
 use Modules\UserManagement\Entities\User;
 
@@ -94,8 +95,7 @@ class ServicemanController extends Controller
             'identity_number' => 'required',
             'identity_images' => 'required|array',
             'identity_images.*' => 'image|max:'. uploadMaxFileSizeInKB('image') .'|mimes:' . implode(',', array_column(IMAGEEXTENSION, 'key')),
-            // Provider serviceman ko sub-category assign karta hai (optional)
-            'sub_category_ids' => 'nullable|array',
+            'sub_category_ids' => 'required|array|min:1',
             // Validate against actual category records. Some existing category
             // IDs are non-UUID strings, so a UUID-format check rejects valid IDs.
             'sub_category_ids.*' => 'exists:categories,id',
@@ -103,6 +103,10 @@ class ServicemanController extends Controller
 
         if ($validator->fails()) {
             return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
+        }
+
+        if (!$this->validProviderSubCategories($request, $request->input('sub_category_ids', []))) {
+            return response()->json(response_formatter(DEFAULT_400, null, [['error_code' => 'sub_category_ids', 'message' => translate('Select categories assigned to your provider')]]), 400);
         }
 
         if (User::where('email', $request['email'])->exists()) {
@@ -236,13 +240,16 @@ class ServicemanController extends Controller
             'identity_number' => 'required',
             'identity_images' => 'array',
             'identity_images.*' => 'image|max:'. uploadMaxFileSizeInKB('image') .'|mimes:' . implode(',', array_column(IMAGEEXTENSION, 'key')),
-            // Provider serviceman ki sub-categories update karta hai (optional)
-            'sub_category_ids' => 'nullable|array',
+            'sub_category_ids' => 'required|array|min:1',
             'sub_category_ids.*' => 'exists:categories,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
+        }
+
+        if (!$this->validProviderSubCategories($request, $request->input('sub_category_ids', []))) {
+            return response()->json(response_formatter(DEFAULT_400, null, [['error_code' => 'sub_category_ids', 'message' => translate('Select categories assigned to your provider')]]), 400);
         }
 
         if (User::where('email', $request['email'])->where('id', '!=', $employee->id)->exists()) {
@@ -362,8 +369,7 @@ class ServicemanController extends Controller
     /**
      * Serviceman ki category assignments clean replace karo.
      * sub_category_id se parent category_id auto-resolve hoti hai.
-     * Agar koi category_ids nahi bheje to saari entries hata do
-     * (means: koi restriction nahi — sabhi bookings eligible).
+     * Category selection required hai; empty assignment allowed nahi hai.
      */
     private function syncServicemanCategories(string $servicemanId, array $subCategoryIds): void
     {
@@ -395,5 +401,27 @@ class ServicemanController extends Controller
         if (!empty($rows)) {
             ServicemanCategory::insert($rows);
         }
+    }
+
+    private function validProviderSubCategories(Request $request, array $subCategoryIds): bool
+    {
+        $subCategoryIds = array_values(array_unique(array_filter($subCategoryIds)));
+        if (empty($subCategoryIds)) {
+            return false;
+        }
+
+        $provider = $request->user()->provider;
+        $assignedIds = SubscribedService::query()
+            ->where('provider_id', $provider->id)
+            ->where('zone_id', $provider->zone_id)
+            ->where('is_subscribed', 1)
+            ->whereIn('sub_category_id', $subCategoryIds)
+            ->pluck('sub_category_id')
+            ->map(fn($id) => (string) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        return count($assignedIds) === count($subCategoryIds);
     }
 }

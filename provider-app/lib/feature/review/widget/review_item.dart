@@ -134,6 +134,15 @@ class ReviewItem extends StatelessWidget {
                           style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).hintColor,
                           ), maxLines: 1, overflow: TextOverflow.ellipsis,
                         ),
+                        if((review.servicemanName ?? "").isNotEmpty)
+                          Row(children: [
+                            Icon(Icons.person_outline_rounded, size: 13, color: Theme.of(context).hintColor),
+                            const SizedBox(width: 3),
+                            Expanded(child: Text("${'serviceman'.tr}: ${review.servicemanName}",
+                              style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).hintColor),
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                            )),
+                          ]),
                       ],
                     ),
                   ),

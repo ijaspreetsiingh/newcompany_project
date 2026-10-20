@@ -38,10 +38,12 @@ Route::group(['prefix' => 'client', 'as' => 'customer.', 'namespace' => 'Api\V1\
         Route::get('pages', [ConfigController::class, 'pages']);
         Route::get('page-facts/{key}', [ConfigController::class, 'pageDetails']);
         Route::get('fetch-region-id', [ConfigController::class, 'getZone']);
-        Route::get('geo-suggest', [ConfigController::class, 'placeApiAutocomplete']);
-        Route::get('distance-api', [ConfigController::class, 'distanceApi']);
-        Route::get('geo-spot-facts', [ConfigController::class, 'placeApiDetails']);
-        Route::get('geo-coder', [ConfigController::class, 'geocodeApi']);
+        Route::middleware('throttle:geo')->group(function () {
+            Route::get('geo-suggest', [ConfigController::class, 'placeApiAutocomplete']);
+            Route::get('distance-api', [ConfigController::class, 'distanceApi']);
+            Route::get('geo-spot-facts', [ConfigController::class, 'placeApiDetails']);
+            Route::get('geo-coder', [ConfigController::class, 'geocodeApi']);
+        });
     });
 
     Route::resource('place', 'AddressController', ['only' => ['index', 'store', 'edit', 'update', 'destroy']])->withoutMiddleware(['api:auth']);

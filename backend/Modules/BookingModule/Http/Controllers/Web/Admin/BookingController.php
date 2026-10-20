@@ -2098,6 +2098,8 @@ class BookingController extends Controller
 
         // Update booking payment status
         $isApproved = $request->payment_status == 'approved';
+        // Idempotency: pehle se paid tha (dobara approve kiya gaya) to credit mat karo
+        $wasPaid = (int) $booking->is_paid === 1;
         $booking->is_paid = $isApproved ? 1 : 0;
         $booking->save();
 
@@ -2118,7 +2120,12 @@ class BookingController extends Controller
                 device_notification($user?->fcm_token, $title, null, null, $booking->id, 'booking', null, $user->id);
             }
 
-            placeBookingTransactionForDigitalPayment($booking);
+            // Ledger credit: sirf FIRST approval par (dobara credit nahi hoga).
+            // Wallet portion booking create par already debit ho chuka hai —
+            // yahan sirf offline DUE credit hota hai.
+            if (!$wasPaid) {
+                placeBookingTransactionForOfflinePaymentApproval($booking);
+            }
 
             return response()->json(response_formatter(DEFAULT_UPDATE_200, null), 200);
         }

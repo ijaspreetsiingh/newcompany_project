@@ -34,6 +34,29 @@ class PaymentController extends Controller
      */
     public function index(Request $request): JsonResponse|Redirector|RedirectResponse|Application
     {
+        // Open-redirect guard: sirf apne hi hosts par wapas bhejo.
+        $safeCallback = paymentRedirectUrl($request['callback'] ?? null);
+
+        //customer user
+        // SECURITY: access_token pehle sirf base64(user_id) hota tha, jise koi
+        // bhi forge karke doosre user ke wallet se partial payment kar sakta
+        // tha. Ab mobile apps apna opaque Passport token bhejte hain; usse
+        // user server par resolve hota hai. Legacy base64 UUID sirf guest
+        // checkout ke liye allowed hai (jo users table me nahi hota).
+        $resolvedUser = resolveUserFromApiToken($request['access_token'] ?? null);
+        $decodedToken = base64_decode((string) $request['access_token'], true);
+        $legacyPayerId = ($decodedToken && \Illuminate\Support\Str::isUuid($decodedToken)) ? $decodedToken : '';
+        $customer_user_id = $resolvedUser?->id ?? $legacyPayerId;
+        $is_guest = empty($customer_user_id) || !User::where('id', $customer_user_id)->exists();
+
+        if (!$resolvedUser && !$is_guest && !$request->has('is_pay_to_admin')) {
+            \Log::warning('Rejected forged legacy payment token', ['ip' => $request->ip()]);
+            if ($safeCallback) {
+                return redirect($safeCallback . '?flag=fail');
+            }
+            return response()->json(response_formatter(DEFAULT_401), 401);
+        }
+
         if(!is_null($request['is_add_fund']) && !$request->has('is_pay_to_admin')) {
             $validator = Validator::make($request->all(), [
                 'access_token' => '',
@@ -95,6 +118,13 @@ class PaymentController extends Controller
             $provider = Provider::where('id', $request['provider_id'])->first();
 
             if ($provider){
+                // Sirf wahi provider apna due pay kar sakta hai (app token ya
+                // logged-in provider web session).
+                $authenticatedUserId = $resolvedUser?->id ?? auth()->id();
+                if (!$authenticatedUserId || (string) $provider->user_id !== (string) $authenticatedUserId) {
+                    return redirect()->back()->withErrors(translate('Unauthorized payment request'));
+                }
+
                 $amount = $provider->owner->account->account_payable - $provider->owner->account->account_receivable;
                 $minPayableAmount = business_config('min_payable_amount', 'provider_config')->live_values ?? 0;
                 if ($minPayableAmount > 0 && $amount < $minPayableAmount){
@@ -104,18 +134,26 @@ class PaymentController extends Controller
 
         }else{
             if ($validator->fails()) {
-                if ($request->has('callback')) return redirect($request['callback'] . '?flag=fail');
+                $safeCallback = paymentRedirectUrl($request['callback'] ?? null);
+                if ($safeCallback) return redirect($safeCallback . '?flag=fail');
                 else return response()->json(response_formatter(DEFAULT_400), 400);
             }
         }
 
-        //customer user
-        $customer_user_id = base64_decode($request['access_token']) ?? '';
-        $is_guest = !User::where('id', $customer_user_id)->exists();
+        // ===== validation ke baad =====
+
         $is_add_fund = $request['is_add_fund'] == 1 ? 1 : 0;
         $is_pay_to_admin = $request['is_pay_to_admin'] == true ? 1 : 0;
         $is_repeat_single_booking = $request['is_repeat_single_booking'] == true ? 1 : 0;
         $switch_offline_to_digital = $request['switch_offline_to_digital'] ? 1 : 0;
+
+        // Ye teen flows hamesha logged-in customer ke hote hain.
+        if (($is_add_fund || $is_repeat_single_booking || $switch_offline_to_digital) && !$resolvedUser) {
+            if ($safeCallback = paymentRedirectUrl($request['callback'] ?? null)) {
+                return redirect($safeCallback . '?flag=fail');
+            }
+            return response()->json(response_formatter(DEFAULT_401), 401);
+        }
 
         //==========>>>>>> IF ADD FUND <<<<<<<==============
 
@@ -131,9 +169,11 @@ class PaymentController extends Controller
                 payment_platform: $request['payment_platform'],
                 payer_id: $customer_user_id,
                 receiver_id: null,
-                additional_data: $validator->validated(),
+                additional_data: array_merge($validator->validated(), [
+                    'access_token' => base64_encode((string) $customer_user_id),
+                ]),
                 payment_amount: $request['amount'],
-                external_redirect_link: $request['callback'] ?? null,
+                external_redirect_link: $safeCallback,
                 attribute: 'booking_id',
                 attribute_id: time()
             );
@@ -166,7 +206,10 @@ class PaymentController extends Controller
                         receiver_id: null,
                         additional_data: $additional_data,
                         payment_amount: $amount,
-                        external_redirect_link: route('provider.account_info'),
+                        // App (webview) ko wapas bhejne ke liye safe callback use karo;
+                        // warna provider web page par redirect ho jata tha aur app
+                        // ka payment screen close nahi hota tha.
+                        external_redirect_link: $safeCallback ?: route('provider.account_info'),
                         attribute: 'booking_id',
                         attribute_id: time()
                     );
@@ -189,6 +232,9 @@ class PaymentController extends Controller
             $repeatBooking = BookingRepeat::where('id', $request['booking_repeat_id'])->first();
 
             if ($repeatBooking) {
+                if ((string) $repeatBooking->customer_id !== (string) $customer_user_id) {
+                    return response()->json(response_formatter(DEFAULT_403), 403);
+                }
                 if (providerRejectsPaymentMethod($repeatBooking->provider_id, $request['payment_method'])) {
                     return redirect()->back()->withErrors(translate('payment_method_not_allowed_for_provider'));
                 }
@@ -196,6 +242,7 @@ class PaymentController extends Controller
                 $amount = $repeatBooking->total_booking_amount;
                 $payer = new Payer($customer['first_name'] . ' ' . $customer['last_name'], $customer['email'], $customer['phone'], '');
                 $additional_data = $request->all();
+                $additional_data['access_token'] = base64_encode((string) $customer_user_id);
 
                 $payment_info = new Payment(
                     success_hook: 'repeat_booking_payment_success',
@@ -207,7 +254,7 @@ class PaymentController extends Controller
                     receiver_id: null,
                     additional_data: $additional_data,
                     payment_amount: $amount,
-                    external_redirect_link: $request['callback'] ?? null,
+                    external_redirect_link: $safeCallback,
                     attribute: 'booking_id',
                     attribute_id: time()
                 );
@@ -230,12 +277,17 @@ class PaymentController extends Controller
                 return redirect()->back()->withErrors(translate('Booking Not Found'));
             }
 
+            if ((string) $booking->customer_id !== (string) $customer_user_id) {
+                return response()->json(response_formatter(DEFAULT_403), 403);
+            }
+
             if (providerRejectsPaymentMethod($booking->provider_id, $request['payment_method'])) {
                 return redirect()->back()->withErrors(translate('payment_method_not_allowed_for_provider'));
             }
 
             $payer = new Payer('first name' . ' ' . 'last name', 'first@last.com', '1234567890', '');
             $additional_data = $request->all();
+            $additional_data['access_token'] = base64_encode((string) $customer_user_id);
 
             $total_booking_amount = $booking->total_booking_amount;
             $amount_to_pay = $total_booking_amount;
@@ -268,7 +320,7 @@ class PaymentController extends Controller
                 receiver_id: null,
                 additional_data: $additional_data,
                 payment_amount: $amount_to_pay,
-                external_redirect_link: $request['callback'] ?? null,
+                external_redirect_link: $safeCallback,
                 attribute: 'booking',
                 attribute_id: time()
             );
@@ -285,28 +337,33 @@ class PaymentController extends Controller
         $checkoutProviderId = $request['provider_id']
             ?: \Modules\CartModule\Entities\Cart::where('customer_id', $customer_user_id)->value('provider_id');
         if (providerRejectsPaymentMethod($checkoutProviderId, $request['payment_method'])) {
-            if ($request->has('callback')) return redirect($request['callback'] . '?flag=fail');
+            if ($safeCallback = paymentRedirectUrl($request['callback'] ?? null)) return redirect($safeCallback . '?flag=fail');
             return response()->json(response_formatter(DEFAULT_400, null, [
                 'payment_method' => [translate('payment_method_not_allowed_for_provider')],
             ]), 400);
         }
 
         //service address create (if no saved address)
-        $service_address = json_decode(base64_decode($request['service_address']));
-        if (!collect($service_address)->has(['lat', 'lon', 'address', 'contact_person_name', 'contact_person_number', 'address_label'])) {
-            if ($request->has('callback')) return redirect($request['callback'] . '?flag=fail');
+        $service_address = $request->filled('service_address')
+            ? json_decode(base64_decode((string) $request['service_address'], true))
+            : null;
+        if (is_null($request['service_address_id'])
+            && !collect($service_address)->has(['lat', 'lon', 'address', 'contact_person_name', 'contact_person_number', 'address_label'])) {
+            if ($safeCallback = paymentRedirectUrl($request['callback'] ?? null)) return redirect($safeCallback . '?flag=fail');
             else return response()->json(response_formatter(DEFAULT_400), 400);
         }
         if (is_null($request['service_address_id'])) {
             $request['service_address_id'] = $this->add_address($service_address, null, $is_guest);
         }
         if (is_null($request['service_address_id'])) {
-            if ($request->has('callback')) return redirect($request['callback'] . '?flag=fail');
+            if ($safeCallback = paymentRedirectUrl($request['callback'] ?? null)) return redirect($safeCallback . '?flag=fail');
             else return response()->json(response_formatter(DEFAULT_400), 400);
         }
 
         // Register new user from guest info
-        $newUserInfo = json_decode(base64_decode($request['new_user_info']), true);
+        $newUserInfo = $request->filled('new_user_info')
+            ? json_decode(base64_decode((string) $request['new_user_info'], true), true)
+            : null;
 
         if($newUserInfo != null){
             $new_data = [
@@ -337,6 +394,9 @@ class PaymentController extends Controller
             ]);
         }
         $query_params['customer'] = base64_encode($customer);
+        // Downstream hooks legacy base64(user_id) expect karte hain; opaque
+        // API token ko yahin normalize kar do.
+        $query_params['access_token'] = base64_encode((string) $customer_user_id);
 
         $total_booking_amount = $this->find_total_Booking_amount($customer_user_id, $request['post_id'], $request['provider_id']);
         $customer_wallet_balance = User::find($customer_user_id)?->wallet_balance;
@@ -359,7 +419,7 @@ class PaymentController extends Controller
             receiver_id: null,
             additional_data: $query_params,
             payment_amount: $amount_to_pay,
-            external_redirect_link: $request['callback'] ?? null,
+            external_redirect_link: $safeCallback,
             attribute: 'booking_id',
             attribute_id: time()
         );
@@ -375,7 +435,7 @@ class PaymentController extends Controller
      */
     public function success(Request $request): JsonResponse|Redirector|RedirectResponse|Application
     {
-        if (isset($request['callback'])) return redirect($request['callback'] . '?flag=success');
+        if ($safeCallback = paymentRedirectUrl($request['callback'] ?? null)) return redirect($safeCallback . '?flag=success');
         else return response()->json(response_formatter(DEFAULT_200), 200);
     }
 
@@ -385,7 +445,7 @@ class PaymentController extends Controller
      */
     public function fail(Request $request): JsonResponse|Redirector|RedirectResponse|Application
     {
-        if ($request->has('callback')) return redirect($request['callback'] . '?flag=fail');
+        if ($safeCallback = paymentRedirectUrl($request['callback'] ?? null)) return redirect($safeCallback . '?flag=fail');
         else return response()->json(response_formatter(DEFAULT_400), 400);
     }
 }

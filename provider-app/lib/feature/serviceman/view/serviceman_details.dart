@@ -312,6 +312,40 @@ class _ServicemanDetailsState extends State<ServicemanDetails> {
                                   child: _documentsCard(documents),
                                 ),
                               ],
+
+                              // ── Assigned categories ────────────────────
+                              if(serviceman.assignedCategories.isNotEmpty) ...[
+                                const SizedBox(height: 24),
+                                InkSection(
+                                  title: 'assigned_categories'.tr,
+                                  child: InkCard(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: serviceman.assignedCategories.map((cat) {
+                                        final String label = cat.subCategoryName ?? cat.subCategoryId ?? '';
+                                        return Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 6),
+                                          decoration: BoxDecoration(
+                                            color: InkColors.foreground,
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          child: Text(
+                                            label,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: InkColors.background,
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),

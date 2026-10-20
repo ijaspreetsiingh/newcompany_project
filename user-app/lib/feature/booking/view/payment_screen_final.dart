@@ -217,7 +217,7 @@ class _PaymentScreenFinalState extends State<PaymentScreenFinal> {
     int isPartial = Get.find<CartController>().walletPaymentStatus && isPartialPayment ? 1 : 0;
     String platform = ResponsiveHelper.isWeb() ? "web" : "app";
 
-    url = '${AppConstants.baseUrl}/payment?payment_method=${paymentMethod?.gateway}&access_token=${base64Url.encode(utf8.encode(userId))}&zone_id=$zoneId'
+    url = '${AppConstants.baseUrl}/payment?payment_method=${paymentMethod?.gateway}&access_token=${AuthRepo.tokenCache ?? base64Url.encode(utf8.encode(userId))}&zone_id=$zoneId'
         '&service_schedule=$schedule&service_address_id=$addressId&callback=$callbackUrl'
         '&service_address=$encodedAddress&new_user_info=$encodedNewUserInfo&is_partial=$isPartial'
         '&payment_platform=$platform&service_location=$serviceLocation';

@@ -4,13 +4,12 @@ import 'package:jdds/feature/checkout/model/payment_response_model.dart';
 import 'package:jdds/util/core_export.dart';
 import 'package:get/get.dart';
 
+enum PageState { orderDetails, payment, complete }
 
-enum PageState {orderDetails, payment, complete}
+enum PaymentMethodName { digitalPayment, cos, walletMoney, offline, none }
 
-enum PaymentMethodName  {digitalPayment, cos , walletMoney, offline ,none}
-
-class CheckOutController extends GetxController implements GetxService{
- final CheckoutRepo checkoutRepo;
+class CheckOutController extends GetxController implements GetxService {
+  final CheckoutRepo checkoutRepo;
   CheckOutController({required this.checkoutRepo});
 
   PageState currentPageState = PageState.orderDetails;
@@ -18,34 +17,37 @@ class CheckOutController extends GetxController implements GetxService{
   bool showCoupon = false;
   bool cancelPayment = false;
 
-
   PostDetailsContent? postDetails;
   double totalAmount = 0.0;
   double referralDiscountAmount = 0.0;
   double totalVat = 0.0;
 
- DigitalPaymentMethod? _selectedDigitalPaymentMethod;
- DigitalPaymentMethod ? get selectedDigitalPaymentMethod => _selectedDigitalPaymentMethod;
+  DigitalPaymentMethod? _selectedDigitalPaymentMethod;
+  DigitalPaymentMethod? get selectedDigitalPaymentMethod =>
+      _selectedDigitalPaymentMethod;
 
- OfflinePaymentModel? _selectedOfflineMethod;
- OfflinePaymentModel? get selectedOfflineMethod => _selectedOfflineMethod;
+  OfflinePaymentModel? _selectedOfflineMethod;
+  OfflinePaymentModel? get selectedOfflineMethod => _selectedOfflineMethod;
 
- final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
- List<TextEditingController> _offlinePaymentInputField  = [];
- List<TextEditingController> get offlinePaymentInputField  => _offlinePaymentInputField;
+  List<TextEditingController> _offlinePaymentInputField = [];
+  List<TextEditingController> get offlinePaymentInputField =>
+      _offlinePaymentInputField;
 
- List<Map<String,String>> _offlinePaymentInputFieldValues = [];
- List<Map<String,String>> get offlinePaymentInputFieldValues => _offlinePaymentInputFieldValues;
+  List<Map<String, String>> _offlinePaymentInputFieldValues = [];
+  List<Map<String, String>> get offlinePaymentInputFieldValues =>
+      _offlinePaymentInputFieldValues;
 
- List<DigitalPaymentMethod> _digitalPaymentList = [];
- List<DigitalPaymentMethod> get digitalPaymentList => _digitalPaymentList;
+  List<DigitalPaymentMethod> _digitalPaymentList = [];
+  List<DigitalPaymentMethod> get digitalPaymentList => _digitalPaymentList;
 
- List<PaymentMethodButton> _othersPaymentList = [];
- List<PaymentMethodButton> get othersPaymentList => _othersPaymentList;
+  List<PaymentMethodButton> _othersPaymentList = [];
+  List<PaymentMethodButton> get othersPaymentList => _othersPaymentList;
 
-  List<OfflinePaymentModel>  _offlinePaymentModelList = [];
-  List<OfflinePaymentModel>  get offlinePaymentModelList => _offlinePaymentModelList;
+  List<OfflinePaymentModel> _offlinePaymentModelList = [];
+  List<OfflinePaymentModel> get offlinePaymentModelList =>
+      _offlinePaymentModelList;
 
   Map<String, dynamic>? _providerPaymentConfig;
   Map<String, dynamic>? get providerPaymentConfig => _providerPaymentConfig;
@@ -66,8 +68,9 @@ class CheckOutController extends GetxController implements GetxService{
   String? preferredServicemanImage;
 
   void setPreferredServiceman({String? id, String? name, String? image}) {
-    preferredServicemanId =
-        (id == null || id.isEmpty || id == 'null') ? null : id;
+    preferredServicemanId = (id == null || id.isEmpty || id == 'null')
+        ? null
+        : id;
     preferredServicemanName = preferredServicemanId == null ? null : name;
     preferredServicemanImage = preferredServicemanId == null ? null : image;
     update();
@@ -80,17 +83,107 @@ class CheckOutController extends GetxController implements GetxService{
     update();
   }
 
+  // ── Manual serviceman selection ──────────────────────────────────────────
 
+  /// 'auto' = nearest serviceman (default flow)
+  /// 'manual' = user picks from list
+  String servicemanSelectionMode = 'auto';
 
+  /// List of available servicemen fetched from backend
+  List<Map<String, dynamic>> availableServicemenList = [];
+  bool isLoadingServicemen = false;
 
- bool _acceptTerms = false;
- bool get acceptTerms => _acceptTerms;
+  /// Currently selected serviceman (manual mode)
+  Map<String, dynamic>? selectedServiceman;
 
+  void setServicemanSelectionMode(String mode, {bool shouldUpdate = true}) {
+    servicemanSelectionMode = mode;
+    if (mode == 'auto') {
+      selectedServiceman = null;
+      clearPreferredServiceman();
+    }
+    if (shouldUpdate) update();
+  }
 
+  /// Fetch available servicemen for the current cart sub_category + zone
+  Future<void> fetchAvailableServicemen() async {
+    final String zoneId =
+        Get.find<LocationController>().getUserAddress()?.zoneId ?? '';
+    final CartController cartController = Get.find<CartController>();
 
- bool _isPlacedOrderSuccessfully = true;
- bool get isPlacedOrderSuccessfully => _isPlacedOrderSuccessfully;
+    // Checkout refreshes basket asynchronously on screen entry. A quick tap on
+    // "Select serviceman" can otherwise read the old empty cart and show a
+    // false no-servicemen state. Resolve the current server basket first.
+    await cartController.getCartListFromServer(shouldUpdate: false);
 
+    final String subCategoryId = cartController.cartList.isNotEmpty
+        ? (cartController.cartList.first.subCategoryId ?? '')
+        : '';
+    final cartItem = cartController.cartList.isNotEmpty
+        ? cartController.cartList.first
+        : null;
+    final String providerId = cartItem?.provider?.id ?? '';
+    final String categoryId = cartItem?.categoryId ?? '';
+
+    if (zoneId.isEmpty || subCategoryId.isEmpty || categoryId.isEmpty) {
+      availableServicemenList = [];
+      update();
+      return;
+    }
+
+    isLoadingServicemen = true;
+    update();
+
+    try {
+      final Response response = await checkoutRepo.getAvailableServicemen(
+        zoneId: zoneId,
+        providerId: providerId.isEmpty ? null : providerId,
+        categoryId: categoryId,
+        subCategoryId: subCategoryId,
+      );
+      if (response.statusCode == 200 &&
+          response.body['response_code'] == 'default_200') {
+        final List<dynamic> list = response.body['content'] ?? [];
+        availableServicemenList = list.cast<Map<String, dynamic>>();
+      } else {
+        availableServicemenList = [];
+      }
+    } catch (_) {
+      availableServicemenList = [];
+    }
+
+    isLoadingServicemen = false;
+    update();
+  }
+
+  /// Open bottom sheet to pick a serviceman manually
+  Future<void> openServicemanSelectionSheet() async {
+    // Always refresh against the current basket/category; an empty cached list
+    // can be stale after changing the service or address.
+    await fetchAvailableServicemen();
+    Get.bottomSheet(
+      _ServicemanPickerSheet(controller: this),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+    );
+  }
+
+  void selectServicemanFromSheet(Map<String, dynamic> sm) {
+    selectedServiceman = sm;
+    setPreferredServiceman(
+      id: sm['id']?.toString(),
+      name: sm['name']?.toString(),
+      image: sm['profile_image']?.toString(),
+    );
+    Get.back();
+    update();
+  }
+
+  bool _acceptTerms = false;
+  bool get acceptTerms => _acceptTerms;
+
+  bool _isPlacedOrderSuccessfully = true;
+  bool get isPlacedOrderSuccessfully => _isPlacedOrderSuccessfully;
 
   String _bookingReadableId = "";
   String get bookingReadableId => _bookingReadableId;
@@ -104,131 +197,165 @@ class CheckOutController extends GetxController implements GetxService{
   double placedBookingAmount = 0;
   String placedServiceName = "";
 
-  bool _isLoading= false;
+  bool _isLoading = false;
   bool get isLoading => _isLoading;
 
- bool _loading= false;
- bool get loading => _loading;
+  bool _loading = false;
+  bool get loading => _loading;
 
   bool _isCheckedCreateAccount = false;
   bool get isCheckedCreateAccount => _isCheckedCreateAccount;
 
- var passwordController = TextEditingController();
- var confirmPasswordController = TextEditingController();
+  var passwordController = TextEditingController();
+  var confirmPasswordController = TextEditingController();
 
-
-  void updateState(PageState currentPage,{bool shouldUpdate = true}){
+  void updateState(PageState currentPage, {bool shouldUpdate = true}) {
     currentPageState = currentPage;
-    if(shouldUpdate){
+    if (shouldUpdate) {
       update();
     }
   }
 
- void changePaymentMethod({DigitalPaymentMethod ? digitalMethod, OfflinePaymentModel? offlinePaymentModel, bool walletPayment = false, bool cashAfterService = false,bool shouldUpdate = true }){
-
-    if( offlinePaymentModel != null){
-
-     _selectedOfflineMethod = offlinePaymentModel;
-     selectedPaymentMethod = PaymentMethodName.offline;
-
-   } else if(digitalMethod != null){
-     _selectedDigitalPaymentMethod = digitalMethod;
-     _selectedOfflineMethod = null;
-     selectedPaymentMethod = PaymentMethodName.digitalPayment;
-   }else if(walletPayment){
+  void changePaymentMethod({
+    DigitalPaymentMethod? digitalMethod,
+    OfflinePaymentModel? offlinePaymentModel,
+    bool walletPayment = false,
+    bool cashAfterService = false,
+    bool shouldUpdate = true,
+  }) {
+    if (offlinePaymentModel != null) {
+      _selectedOfflineMethod = offlinePaymentModel;
+      selectedPaymentMethod = PaymentMethodName.offline;
+    } else if (digitalMethod != null) {
+      _selectedDigitalPaymentMethod = digitalMethod;
+      _selectedOfflineMethod = null;
+      selectedPaymentMethod = PaymentMethodName.digitalPayment;
+    } else if (walletPayment) {
       _selectedDigitalPaymentMethod = null;
       _selectedOfflineMethod = null;
       selectedPaymentMethod = PaymentMethodName.walletMoney;
-   } else if(cashAfterService){
+    } else if (cashAfterService) {
       _selectedDigitalPaymentMethod = null;
       _selectedOfflineMethod = null;
       selectedPaymentMethod = PaymentMethodName.cos;
-   }else{
+    } else {
       _autoSelectPaymentMethod();
-   }
+    }
 
+    if (shouldUpdate) {
+      update();
+    }
+  }
 
-   if(shouldUpdate){
-     update();
-   }
- }
-
- void _autoSelectPaymentMethod(){
-
-    if(_othersPaymentList.isNotEmpty && _othersPaymentList.length == 1 && _digitalPaymentList.isEmpty){
-      selectedPaymentMethod = _othersPaymentList[0].paymentMethodName == PaymentMethodName.cos ? PaymentMethodName.cos : PaymentMethodName.walletMoney;
-    }else if(_othersPaymentList.isEmpty && _digitalPaymentList.isNotEmpty && _digitalPaymentList.length == 1){
-      if(_digitalPaymentList[0].gateway != "offline"){
+  void _autoSelectPaymentMethod() {
+    if (_othersPaymentList.isNotEmpty &&
+        _othersPaymentList.length == 1 &&
+        _digitalPaymentList.isEmpty) {
+      selectedPaymentMethod =
+          _othersPaymentList[0].paymentMethodName == PaymentMethodName.cos
+          ? PaymentMethodName.cos
+          : PaymentMethodName.walletMoney;
+    } else if (_othersPaymentList.isEmpty &&
+        _digitalPaymentList.isNotEmpty &&
+        _digitalPaymentList.length == 1) {
+      if (_digitalPaymentList[0].gateway != "offline") {
         selectedPaymentMethod = PaymentMethodName.digitalPayment;
         _selectedDigitalPaymentMethod = _digitalPaymentList[0];
-      }else{
+      } else {
         selectedPaymentMethod = PaymentMethodName.offline;
         _selectedDigitalPaymentMethod = _digitalPaymentList[0];
-
       }
-    }else{
+    } else {
       selectedPaymentMethod = PaymentMethodName.none;
       _selectedDigitalPaymentMethod = null;
       _selectedOfflineMethod = null;
     }
- }
+  }
 
-
-
-
-
- void initializedOfflinePaymentTextField({bool shouldUpdate = false, List<BookingOfflinePayment>? existingData, String? existingOfflineId}){
-   _offlinePaymentInputField = [];
-   _offlinePaymentInputFieldValues = [];
-   for(int i = 0; i < selectedOfflineMethod!.customerInformation!.length; i++ ){
-    if(selectedOfflineMethod?.id == existingOfflineId && existingData !=null){
-      int? index = existingData.indexWhere((element) => element.key ==  selectedOfflineMethod!.customerInformation?[i].fieldName);
-      Get.find<CheckOutController>().offlinePaymentInputField.add(TextEditingController(text:  index != -1 ? existingData[index].value : ""));
-    }else{
-      Get.find<CheckOutController>().offlinePaymentInputField.add(TextEditingController());
+  void initializedOfflinePaymentTextField({
+    bool shouldUpdate = false,
+    List<BookingOfflinePayment>? existingData,
+    String? existingOfflineId,
+  }) {
+    _offlinePaymentInputField = [];
+    _offlinePaymentInputFieldValues = [];
+    for (
+      int i = 0;
+      i < selectedOfflineMethod!.customerInformation!.length;
+      i++
+    ) {
+      if (selectedOfflineMethod?.id == existingOfflineId &&
+          existingData != null) {
+        int? index = existingData.indexWhere(
+          (element) =>
+              element.key ==
+              selectedOfflineMethod!.customerInformation?[i].fieldName,
+        );
+        Get.find<CheckOutController>().offlinePaymentInputField.add(
+          TextEditingController(
+            text: index != -1 ? existingData[index].value : "",
+          ),
+        );
+      } else {
+        Get.find<CheckOutController>().offlinePaymentInputField.add(
+          TextEditingController(),
+        );
+      }
     }
-   }
-   if(shouldUpdate){
-     update();
-   }
- }
+    if (shouldUpdate) {
+      update();
+    }
+  }
 
-
- Future<void> placeBookingRequest({
-   required String paymentMethod,String? schedule, int isPartial = 0, required AddressModel address,
-   String? offlinePaymentId, String? customerInformation, double? bookingAmount, int? selectedOfflinePaymentIndex,
-   bool fromNewFlow = false
- })async{
-
+  Future<void> placeBookingRequest({
+    required String paymentMethod,
+    String? schedule,
+    int isPartial = 0,
+    required AddressModel address,
+    String? offlinePaymentId,
+    String? customerInformation,
+    double? bookingAmount,
+    int? selectedOfflinePaymentIndex,
+    bool fromNewFlow = false,
+  }) async {
     // Zone: booking address (friend/dusra location) ka zone — backend usi
     // zone ke hisaab se service/price resolve kare.
-    final String addressZone = (address.zoneId?.isNotEmpty ?? false) &&
-            address.zoneId != 'null'
+    final String addressZone =
+        (address.zoneId?.isNotEmpty ?? false) && address.zoneId != 'null'
         ? address.zoneId.toString()
         : '';
     String zoneId = addressZone.isNotEmpty
         ? addressZone
-        : (Get.find<LocationController>().getUserAddress()?.zoneId ?? '').toString();
+        : (Get.find<LocationController>().getUserAddress()?.zoneId ?? '')
+              .toString();
     var scheduleController = Get.find<ScheduleController>();
 
-   ServiceType serviceType = scheduleController.selectedServiceType;
-   RepeatBookingType repeatBookingType = scheduleController.selectedRepeatBookingType;
+    ServiceType serviceType = scheduleController.selectedServiceType;
+    RepeatBookingType repeatBookingType =
+        scheduleController.selectedRepeatBookingType;
 
-   SignUpBody? newUserInfo = CheckoutHelper.getNewUserInfo(address: address, password: passwordController.text, isCheckedCreateAccount: isCheckedCreateAccount);
+    SignUpBody? newUserInfo = CheckoutHelper.getNewUserInfo(
+      address: address,
+      password: passwordController.text,
+      isCheckedCreateAccount: isCheckedCreateAccount,
+    );
 
-   String? repeatBookingDates = CheckoutHelper.getRepeatBookingScheduleList(
-     repeatBookingType: repeatBookingType,
-     dateRange: repeatBookingType == RepeatBookingType.daily ? scheduleController.pickedDailyRepeatBookingDateRange
-         : scheduleController.pickedWeeklyRepeatBookingDateRange,
-     time: repeatBookingType == RepeatBookingType.daily ? scheduleController.pickedDailyRepeatTime : scheduleController.pickedWeeklyRepeatTime ,
-     dateTimeList: scheduleController.pickedCustomRepeatBookingDateTimeList,
-     selectedDays: scheduleController.getWeeklyPickedDays(),
-   );
+    String? repeatBookingDates = CheckoutHelper.getRepeatBookingScheduleList(
+      repeatBookingType: repeatBookingType,
+      dateRange: repeatBookingType == RepeatBookingType.daily
+          ? scheduleController.pickedDailyRepeatBookingDateRange
+          : scheduleController.pickedWeeklyRepeatBookingDateRange,
+      time: repeatBookingType == RepeatBookingType.daily
+          ? scheduleController.pickedDailyRepeatTime
+          : scheduleController.pickedWeeklyRepeatTime,
+      dateTimeList: scheduleController.pickedCustomRepeatBookingDateTimeList,
+      selectedDays: scheduleController.getWeeklyPickedDays(),
+    );
 
-   _isLoading = true;
-   update();
+    _isLoading = true;
+    update();
 
-    if(Get.find<CartController>().cartList.isNotEmpty){
+    if (Get.find<CartController>().cartList.isNotEmpty) {
       // Confirmation screen ke liye amount + service name capture (cart clear
       // hone se pehle) — sirf cart-based regular checkout par.
       // RepeatBookingType me 'regular' constant hai hi nahi (enum: daily/weekly/
@@ -241,109 +368,164 @@ class CheckOutController extends GetxController implements GetxService{
             .where((name) => name.isNotEmpty)
             .join(', ');
       }
-      try{
-      Response response = await checkoutRepo.placeBookingRequest(
-        paymentMethod : paymentMethod,
-        zoneId : zoneId,
-        schedule : schedule,
-        serviceAddressID : address.id == "null" ? null : address.id,
-        serviceAddress: address,
-        isPartial: isPartial,
-        serviceType: serviceType.name,
-        bookingType: repeatBookingType.name,
-        dates: repeatBookingDates,
-        newUserInfo: newUserInfo,
-        preferredServicemanId: preferredServicemanId,
-        serviceLocation: Get.find<FriendLocationController>().isBookingForOther
-            ? ServiceLocationType.customer.name
-            : Get.find<LocationController>().selectedServiceLocationType.name
-      );
-      if(response.statusCode == 200 && response.body["response_code"] == "booking_place_success_200"){
-        _isPlacedOrderSuccessfully = true;
-        // Preferred serviceman sirf ek checkout attempt ke liye — order placed.
-        clearPreferredServiceman();
-        _bookingReadableId = response.body['content']['readable_id'].toString();
-        try { _bookingId = response.body['content']['booking_id'][0].toString(); } catch (_) {}
-        String? token = response.body['content']['token'];
-        Get.find<CartController>().getCartListFromServer();
-
-       if(paymentMethod != "offline_payment"){
-        updateState(PageState.complete);
-        if(ResponsiveHelper.isWeb()) {
-          String token = base64Encode(utf8.encode("&&attribute_id=$_bookingReadableId"));
-          Get.toNamed(RouteHelper.getCheckoutRoute('cart',Get.find<CheckOutController>().currentPageState.name,"null", token: token));
-        }else{
-          // AUTO-ASSIGN: success screen par provider-finding card dikhao
-          String? placedBookingId;
-          try {
-            placedBookingId = response.body['content']['booking_id'][0].toString();
-          } catch (_) {}
-          if(fromNewFlow){
-            // New design flow: confirmation final screen (real booking id ke sath)
-            Get.offNamed(RouteHelper.getConfirmationFinalRoute());
-          }else{
-            Get.offNamed(RouteHelper.getOrderSuccessRoute('success', bookingId: placedBookingId));
-          }
-        }
-
-        customSnackBar('${response.body['message']}'.tr,type : ToasterMessageType.success,margin: 55);
-
-       }else{
-        String? bookingId = response.body['content']['booking_id'][0];
-        _bookingId = bookingId ?? '';
-        customSnackBar('now_pay_you_bill_using_the_payment_method'.tr,toasterTitle: 'your_booking_has_been_placed_successfully'.tr, type: ToasterMessageType.success, duration: 4);
-        Get.offAllNamed(RouteHelper.getOfflinePaymentRoute(
-          totalAmount: bookingAmount ?? 0, index: selectedOfflinePaymentIndex ?? 0, bookingId: bookingId,
-          fromPage: "checkout",
+      try {
+        Response response = await checkoutRepo.placeBookingRequest(
+          paymentMethod: paymentMethod,
+          zoneId: zoneId,
+          schedule: schedule,
+          serviceAddressID: address.id == "null" ? null : address.id,
+          serviceAddress: address,
+          isPartial: isPartial,
+          serviceType: serviceType.name,
+          bookingType: repeatBookingType.name,
+          dates: repeatBookingDates,
           newUserInfo: newUserInfo,
-          readableId: _bookingReadableId
-        ));
-       }
+          preferredServicemanId: preferredServicemanId,
+          serviceLocation:
+              Get.find<FriendLocationController>().isBookingForOther
+              ? ServiceLocationType.customer.name
+              : Get.find<LocationController>().selectedServiceLocationType.name,
+        );
+        if (response.statusCode == 200 &&
+            response.body["response_code"] == "booking_place_success_200") {
+          _isPlacedOrderSuccessfully = true;
+          // Preferred serviceman sirf ek checkout attempt ke liye — order placed.
+          clearPreferredServiceman();
+          _bookingReadableId = response.body['content']['readable_id']
+              .toString();
+          try {
+            _bookingId = response.body['content']['booking_id'][0].toString();
+          } catch (_) {}
+          String? token = response.body['content']['token'];
+          Get.find<CartController>().getCartListFromServer();
 
-        if(token !=null){
-        _saveTokenAndHandelPhoneVerification(token: token, userInfo: newUserInfo, paymentMethod: paymentMethod);
+          if (paymentMethod != "offline_payment") {
+            updateState(PageState.complete);
+            if (ResponsiveHelper.isWeb()) {
+              String token = base64Encode(
+                utf8.encode("&&attribute_id=$_bookingReadableId"),
+              );
+              Get.toNamed(
+                RouteHelper.getCheckoutRoute(
+                  'cart',
+                  Get.find<CheckOutController>().currentPageState.name,
+                  "null",
+                  token: token,
+                ),
+              );
+            } else {
+              // AUTO-ASSIGN: success screen par provider-finding card dikhao
+              String? placedBookingId;
+              try {
+                placedBookingId = response.body['content']['booking_id'][0]
+                    .toString();
+              } catch (_) {}
+              if (fromNewFlow) {
+                // New design flow: confirmation final screen (real booking id ke sath)
+                Get.offNamed(RouteHelper.getConfirmationFinalRoute());
+              } else {
+                Get.offNamed(
+                  RouteHelper.getOrderSuccessRoute(
+                    'success',
+                    bookingId: placedBookingId,
+                  ),
+                );
+              }
+            }
+
+            customSnackBar(
+              '${response.body['message']}'.tr,
+              type: ToasterMessageType.success,
+              margin: 55,
+            );
+          } else {
+            String? bookingId = response.body['content']['booking_id'][0];
+            _bookingId = bookingId ?? '';
+            customSnackBar(
+              'now_pay_you_bill_using_the_payment_method'.tr,
+              toasterTitle: 'your_booking_has_been_placed_successfully'.tr,
+              type: ToasterMessageType.success,
+              duration: 4,
+            );
+            Get.offAllNamed(
+              RouteHelper.getOfflinePaymentRoute(
+                totalAmount: bookingAmount ?? 0,
+                index: selectedOfflinePaymentIndex ?? 0,
+                bookingId: bookingId,
+                fromPage: "checkout",
+                newUserInfo: newUserInfo,
+                readableId: _bookingReadableId,
+              ),
+            );
+          }
+
+          if (token != null) {
+            _saveTokenAndHandelPhoneVerification(
+              token: token,
+              userInfo: newUserInfo,
+              paymentMethod: paymentMethod,
+            );
+          }
+        } else {
+          ApiChecker.checkApi(response);
         }
-
-      } else {
-        ApiChecker.checkApi(response);
+      } catch (e) {
+        customSnackBar(
+          'Booking request failed. Please try again.',
+          type: ToasterMessageType.error,
+        );
       }
-      }catch(e){
-        customSnackBar('Booking request failed. Please try again.', type: ToasterMessageType.error);
+    } else {
+      Get.offNamed(RouteHelper.getOrderSuccessRoute('fail'));
+    }
+
+    _isLoading = false;
+    update();
+  }
+
+  void _saveTokenAndHandelPhoneVerification({
+    String? token,
+    SignUpBody? userInfo,
+    String? paymentMethod,
+  }) {
+    bool isActivePhoneVerification =
+        Get.find<SplashController>().configModel.content?.phoneVerification == 1
+        ? true
+        : false;
+
+    if (isActivePhoneVerification) {
+      if (paymentMethod != "offline_payment") {
+        Future.delayed(const Duration(seconds: 1), () {
+          if (ResponsiveHelper.isDesktop(Get.context!)) {
+            Get.dialog(
+              Center(
+                child: _guestCreateAccountPhoneVerificationTitle(
+                  userInfo: userInfo,
+                ),
+              ),
+            );
+          } else {
+            showModalBottomSheet(
+              backgroundColor: Colors.transparent,
+              context: Get.context!,
+              builder: (_) {
+                return _guestCreateAccountPhoneVerificationTitle(
+                  userInfo: userInfo,
+                );
+              },
+            );
+          }
+        });
+      }
+    } else {
+      if (token != null) {
+        Get.find<AuthController>().saveUserToken(token: token);
+        Get.find<UserController>().getUserInfo();
       }
     }
-   else{
-     Get.offNamed(RouteHelper.getOrderSuccessRoute('fail'));
-   }
+  }
 
-   _isLoading  = false;
-   update();
- }
-
- void _saveTokenAndHandelPhoneVerification({String? token, SignUpBody? userInfo, String? paymentMethod}){
-   bool isActivePhoneVerification = Get.find<SplashController>().configModel.content?.phoneVerification == 1 ? true : false;
-
-   if(isActivePhoneVerification){
-    if(paymentMethod != "offline_payment"){
-      Future.delayed(const Duration(seconds: 1), (){
-        if(ResponsiveHelper.isDesktop(Get.context!)){
-          Get.dialog( Center(child: _guestCreateAccountPhoneVerificationTitle(userInfo: userInfo)));
-        }else{
-          showModalBottomSheet(backgroundColor: Colors.transparent, context: Get.context!, builder: (_){
-            return _guestCreateAccountPhoneVerificationTitle(userInfo: userInfo);
-          });
-        }
-      });
-    }
-   }else{
-    if(token !=null){
-      Get.find<AuthController>().saveUserToken(token: token);
-      Get.find<UserController>().getUserInfo();
-    }
-   }
-
- }
-
- Widget _guestCreateAccountPhoneVerificationTitle({SignUpBody? userInfo}){
+  Widget _guestCreateAccountPhoneVerificationTitle({SignUpBody? userInfo}) {
     return ConfirmationWidget(
       icon: Images.otp,
       iconSize: 100,
@@ -353,17 +535,32 @@ class CheckOutController extends GetxController implements GetxService{
         text: TextSpan(
           style: DefaultTextStyle.of(Get.context!).style,
           children: [
-            TextSpan(text: 'account_created_successfully_verify_your_phone'.tr, style: robotoRegular.copyWith(
-                color: Theme.of(Get.context!).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
-                height: 1.5
-            )),
-            TextSpan(text: StringParser.obfuscateMiddle("${userInfo?.phone}"), style: robotoMedium.copyWith(
-                color: Theme.of(Get.context!).textTheme.bodyLarge!.color,height: 1.5),
+            TextSpan(
+              text: 'account_created_successfully_verify_your_phone'.tr,
+              style: robotoRegular.copyWith(
+                color: Theme.of(
+                  Get.context!,
+                ).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+                height: 1.5,
+              ),
+            ),
+            TextSpan(
+              text: StringParser.obfuscateMiddle("${userInfo?.phone}"),
+              style: robotoMedium.copyWith(
+                color: Theme.of(Get.context!).textTheme.bodyLarge!.color,
+                height: 1.5,
+              ),
             ),
 
-            TextSpan(text: 'you_can_skip_now_but_later'.tr, style: robotoRegular.copyWith(
-                color: Theme.of(Get.context!).textTheme.bodySmall?.color?.withValues(alpha: 0.5), height: 1.5
-            )),
+            TextSpan(
+              text: 'you_can_skip_now_but_later'.tr,
+              style: robotoRegular.copyWith(
+                color: Theme.of(
+                  Get.context!,
+                ).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+                height: 1.5,
+              ),
+            ),
           ],
         ),
       ),
@@ -373,133 +570,202 @@ class CheckOutController extends GetxController implements GetxService{
       onYesPressed: () async {
         var config = Get.find<SplashController>().configModel.content;
         String identity = userInfo?.phone ?? "";
-        String identityType = "phone" ;
-        SendOtpType type =  config?.firebaseOtpVerification == 1 ? SendOtpType.firebase : SendOtpType.verification;
+        String identityType = "phone";
+        SendOtpType type = config?.firebaseOtpVerification == 1
+            ? SendOtpType.firebase
+            : SendOtpType.verification;
 
-        await Get.find<AuthController>().sendVerificationCode(identity:  identity , identityType: identityType, type: type).then((status){
-          if(status !=null){
-            if(status.isSuccess!){
-              Get.toNamed(RouteHelper.getVerificationRoute(
-                identity: identity,identityType: identityType,
-                fromPage: config?.phoneVerification == 1 && config?.firebaseOtpVerification == 1 ? "firebase-otp" : "verification",
-                firebaseSession: type == SendOtpType.firebase ? status.message : null,
-              ));
-            }else{
-              customSnackBar(status.message.toString().capitalizeFirst);
-            }
-          }
-        });
+        await Get.find<AuthController>()
+            .sendVerificationCode(
+              identity: identity,
+              identityType: identityType,
+              type: type,
+            )
+            .then((status) {
+              if (status != null) {
+                if (status.isSuccess!) {
+                  Get.toNamed(
+                    RouteHelper.getVerificationRoute(
+                      identity: identity,
+                      identityType: identityType,
+                      fromPage:
+                          config?.phoneVerification == 1 &&
+                              config?.firebaseOtpVerification == 1
+                          ? "firebase-otp"
+                          : "verification",
+                      firebaseSession: type == SendOtpType.firebase
+                          ? status.message
+                          : null,
+                    ),
+                  );
+                } else {
+                  customSnackBar(status.message.toString().capitalizeFirst);
+                }
+              }
+            });
       },
     );
- }
-
+  }
 
   Future<void> getPostDetails(String postID, String bidId) async {
     totalAmount = 0.0;
     postDetails = null;
     Response response = await checkoutRepo.getPostDetails(postID, bidId);
-    if (response.body['response_code'] == 'default_200' ) {
-      postDetails = PostDetailsContent.fromJson(response.body['content']['post_details']);
+    if (response.body['response_code'] == 'default_200') {
+      postDetails = PostDetailsContent.fromJson(
+        response.body['content']['post_details'],
+      );
       totalAmount = postDetails?.service?.tax ?? 0;
-      if(postDetails?.serviceAddress != null){
-        Get.find<LocationController>().updateSelectedAddress(postDetails?.serviceAddress, shouldUpdate: false);
+      if (postDetails?.serviceAddress != null) {
+        Get.find<LocationController>().updateSelectedAddress(
+          postDetails?.serviceAddress,
+          shouldUpdate: false,
+        );
       }
-      if(postDetails?.bookingSchedule != null){
-        Get.find<ScheduleController>().buildSchedule(scheduleType: ScheduleType.schedule, schedule: postDetails?.bookingSchedule);
+      if (postDetails?.bookingSchedule != null) {
+        Get.find<ScheduleController>().buildSchedule(
+          scheduleType: ScheduleType.schedule,
+          schedule: postDetails?.bookingSchedule,
+        );
       }
-      if(response.body['content']['referral_amount'] !=null){
-        referralDiscountAmount = double.tryParse(response.body['content']['referral_amount'].toString()) ?? 0;
+      if (response.body['content']['referral_amount'] != null) {
+        referralDiscountAmount =
+            double.tryParse(
+              response.body['content']['referral_amount'].toString(),
+            ) ??
+            0;
       }
-
     } else {
       postDetails = PostDetailsContent();
-      if(response.statusCode != 200){
+      if (response.statusCode != 200) {
         ApiChecker.checkApi(response);
       }
     }
     update();
   }
 
- Future<bool> checkExistingUser({required String phone}) async {
-   _isLoading = true;
-   update();
-   Response? response = await checkoutRepo.checkExistingUser(phone: phone);
+  Future<bool> checkExistingUser({required String phone}) async {
+    _isLoading = true;
+    update();
+    Response? response = await checkoutRepo.checkExistingUser(phone: phone);
 
-   if (response!.statusCode == 400 && response.body['response_code'] == "user_exist_400") {
-     _isLoading = false;
-     update();
-     return false;
-   } else {
-     _isLoading = false;
-     update();
-     return true;
-   }
- }
-
-
- Future<void> submitOfflinePaymentData({required String bookingId, required String offlinePaymentId, required offlinePaymentInfo, required int isPartialPayment , required String fromPage, SignUpBody? newUserInfo, String? readableId}) async {
-   _isLoading = true;
-   update();
-   Response? response = await checkoutRepo.submitOfflinePaymentData(bookingId: bookingId, offlinePaymentId: offlinePaymentId, offlinePaymentInfo: offlinePaymentInfo, isPartialPayment: isPartialPayment);
-
-   if (response!.statusCode == 200) {
-     customSnackBar('now_wait_for_your_payment_to_be_verified'.tr,toasterTitle: "your_payment_confirm_successfully".tr, type: ToasterMessageType.success);
-
-     if(fromPage == "checkout"){
-
-       String? token;
-       if(readableId !=null){
-        token = base64Encode(utf8.encode("&&attribute_id=$readableId"));
-       }
-       Get.toNamed(RouteHelper.getCheckoutRoute('cart',"complete","null", token: token ));
-
-     } else if(fromPage == "custom-post"){
-       Get.offNamed(RouteHelper.getOrderSuccessRoute('success', bookingId: bookingId));
-     } else{
-       await Get.find<BookingDetailsController>().getBookingDetails(bookingId: bookingId);
-      if(Navigator.canPop(Get.context!)){
-        Get.back();
-      }else{
-        Get.offAllNamed(RouteHelper.getMainRoute('home'));
-      }
-     }
-
-    if(fromPage == "checkout" && Get.find<SplashController>().configModel.content?.phoneVerification == 1 && !Get.find<AuthController>().isLoggedIn()){
-      Future.delayed(const Duration(seconds: 1), (){
-        _saveTokenAndHandelPhoneVerification(userInfo: newUserInfo);
-      });
+    if (response!.statusCode == 400 &&
+        response.body['response_code'] == "user_exist_400") {
+      _isLoading = false;
+      update();
+      return false;
+    } else {
+      _isLoading = false;
+      update();
+      return true;
     }
-   } else {
-     ApiChecker.checkApi(response);
-   }
+  }
 
-   _isLoading = false;
-   update();
- }
+  Future<void> submitOfflinePaymentData({
+    required String bookingId,
+    required String offlinePaymentId,
+    required offlinePaymentInfo,
+    required int isPartialPayment,
+    required String fromPage,
+    SignUpBody? newUserInfo,
+    String? readableId,
+  }) async {
+    _isLoading = true;
+    update();
+    Response? response = await checkoutRepo.submitOfflinePaymentData(
+      bookingId: bookingId,
+      offlinePaymentId: offlinePaymentId,
+      offlinePaymentInfo: offlinePaymentInfo,
+      isPartialPayment: isPartialPayment,
+    );
 
- Future<void> switchPaymentMethod({required String bookingId,  required String paymentMethod,  int isPartial = 0,  String? offlinePaymentId, String? offlinePaymentInfo, }) async {
-   _isLoading = true;
-   update();
-   Response? response = await checkoutRepo.switchPaymentMethod(bookingId: bookingId, paymentMethod: paymentMethod, offlinePaymentId: offlinePaymentId, offlinePaymentInfo: offlinePaymentInfo, isPartial: isPartial);
+    if (response!.statusCode == 200) {
+      customSnackBar(
+        'now_wait_for_your_payment_to_be_verified'.tr,
+        toasterTitle: "your_payment_confirm_successfully".tr,
+        type: ToasterMessageType.success,
+      );
 
-   if (response!.statusCode == 200) {
-     await Get.find<BookingDetailsController>().getBookingDetails(bookingId: bookingId );
-     Get.back();
-     customSnackBar("your_payment_confirm_successfully".tr, type: ToasterMessageType.success, showDefaultSnackBar: false);
-   } else {
-     ApiChecker.checkApi(response, showDefaultToaster: false);
-   }
+      if (fromPage == "checkout") {
+        String? token;
+        if (readableId != null) {
+          token = base64Encode(utf8.encode("&&attribute_id=$readableId"));
+        }
+        Get.toNamed(
+          RouteHelper.getCheckoutRoute(
+            'cart',
+            "complete",
+            "null",
+            token: token,
+          ),
+        );
+      } else if (fromPage == "custom-post") {
+        Get.offNamed(
+          RouteHelper.getOrderSuccessRoute('success', bookingId: bookingId),
+        );
+      } else {
+        await Get.find<BookingDetailsController>().getBookingDetails(
+          bookingId: bookingId,
+        );
+        if (Navigator.canPop(Get.context!)) {
+          Get.back();
+        } else {
+          Get.offAllNamed(RouteHelper.getMainRoute('home'));
+        }
+      }
 
-   _isLoading = false;
-   update();
- }
+      if (fromPage == "checkout" &&
+          Get.find<SplashController>().configModel.content?.phoneVerification ==
+              1 &&
+          !Get.find<AuthController>().isLoggedIn()) {
+        Future.delayed(const Duration(seconds: 1), () {
+          _saveTokenAndHandelPhoneVerification(userInfo: newUserInfo);
+        });
+      }
+    } else {
+      ApiChecker.checkApi(response);
+    }
 
+    _isLoading = false;
+    update();
+  }
 
+  Future<void> switchPaymentMethod({
+    required String bookingId,
+    required String paymentMethod,
+    int isPartial = 0,
+    String? offlinePaymentId,
+    String? offlinePaymentInfo,
+  }) async {
+    _isLoading = true;
+    update();
+    Response? response = await checkoutRepo.switchPaymentMethod(
+      bookingId: bookingId,
+      paymentMethod: paymentMethod,
+      offlinePaymentId: offlinePaymentId,
+      offlinePaymentInfo: offlinePaymentInfo,
+      isPartial: isPartial,
+    );
 
+    if (response!.statusCode == 200) {
+      await Get.find<BookingDetailsController>().getBookingDetails(
+        bookingId: bookingId,
+      );
+      Get.back();
+      customSnackBar(
+        "your_payment_confirm_successfully".tr,
+        type: ToasterMessageType.success,
+        showDefaultSnackBar: false,
+      );
+    } else {
+      ApiChecker.checkApi(response, showDefaultToaster: false);
+    }
 
+    _isLoading = false;
+    update();
+  }
 
-  void calculateTotalAmount(double amount){
-
+  void calculateTotalAmount(double amount) {
     totalAmount = 0.00;
     totalVat = 0.00;
     final dynamic providerTax = _providerPaymentConfig?['provider_tax_percent'];
@@ -507,137 +773,188 @@ class CheckOutController extends GetxController implements GetxService{
         ? providerTax.toDouble()
         : (postDetails?.service?.tax ?? 1);
     double extraFee = CheckoutHelper.getAdditionalCharge();
-    totalAmount = amount + ((amount*serviceTax)/100) + extraFee - referralDiscountAmount;
-    totalVat = (amount*serviceTax)/100;
+    totalAmount =
+        amount +
+        ((amount * serviceTax) / 100) +
+        extraFee -
+        referralDiscountAmount;
+    totalVat = (amount * serviceTax) / 100;
   }
 
- Future<void> getOfflinePaymentMethod(bool isReload, {bool shouldUpdate = true, int? selectedIndex, AutoScrollController? scrollController} ) async {
+  Future<void> getOfflinePaymentMethod(
+    bool isReload, {
+    bool shouldUpdate = true,
+    int? selectedIndex,
+    AutoScrollController? scrollController,
+  }) async {
+    if (_offlinePaymentModelList.isEmpty || isReload) {
+      _offlinePaymentModelList = [];
+    }
 
-   if(_offlinePaymentModelList.isEmpty || isReload){
-     _offlinePaymentModelList = [];
-   }
+    if (_offlinePaymentModelList.isEmpty) {
+      _loading = true;
+      Response response = await checkoutRepo.getOfflinePaymentMethod();
+      if (response.statusCode == 200) {
+        _offlinePaymentModelList = [];
+        List<dynamic> list = response.body['content']['data'];
+        for (var element in list) {
+          _offlinePaymentModelList.add(OfflinePaymentModel.fromJson(element));
+        }
 
+        if (_offlinePaymentModelList.isNotEmpty) {
+          if (selectedIndex == null ||
+              _offlinePaymentModelList.length < selectedIndex) {
+            _selectedOfflineMethod = _offlinePaymentModelList.first;
+          } else {
+            _selectedOfflineMethod = _offlinePaymentModelList[selectedIndex];
 
-   if(_offlinePaymentModelList.isEmpty) {
-     _loading = true;
-     Response response = await checkoutRepo.getOfflinePaymentMethod();
-     if (response.statusCode == 200) {
-       _offlinePaymentModelList = [];
-       List<dynamic> list = response.body['content']['data'];
-       for (var element in list) {
-         _offlinePaymentModelList.add(OfflinePaymentModel.fromJson(element));
-       }
-
-      if( _offlinePaymentModelList.isNotEmpty){
-        if(selectedIndex == null || _offlinePaymentModelList.length < selectedIndex){
-          _selectedOfflineMethod = _offlinePaymentModelList.first;
-        } else{
-          _selectedOfflineMethod = _offlinePaymentModelList[selectedIndex];
-
-          if(selectedIndex != -1){
-            await scrollController!.scrollToIndex(selectedIndex, preferPosition: AutoScrollPosition.middle);
-            await scrollController.highlight(selectedIndex);
+            if (selectedIndex != -1) {
+              await scrollController!.scrollToIndex(
+                selectedIndex,
+                preferPosition: AutoScrollPosition.middle,
+              );
+              await scrollController.highlight(selectedIndex);
+            }
           }
         }
       }
-     }
-     _loading = false;
-     update();
-   }
+      _loading = false;
+      update();
+    }
+  }
 
- }
+  Future<PaymentResponseModel?> getDigitalPaymentResponse({
+    String? transactionId,
+  }) async {
+    Response response = await checkoutRepo.getDigitalPaymentResponse(
+      transactionId: transactionId,
+    );
 
- Future<PaymentResponseModel?> getDigitalPaymentResponse({String? transactionId}) async {
-   Response response = await checkoutRepo.getDigitalPaymentResponse(transactionId: transactionId);
+    PaymentResponseModel? paymentResponseModel;
+    if (response.statusCode == 200) {
+      paymentResponseModel = PaymentResponseModel.fromJson(response.body);
+    }
 
-   PaymentResponseModel? paymentResponseModel;
-   if(response.statusCode == 200){
-     paymentResponseModel = PaymentResponseModel.fromJson(response.body);
-   }
+    return paymentResponseModel;
+  }
 
-   return paymentResponseModel;
- }
-
-  void getPaymentMethodList({bool shouldUpdate = false , bool isPartialPayment = false, bool avoidPartialPayment = false}){
-
-
+  void getPaymentMethodList({
+    bool shouldUpdate = false,
+    bool isPartialPayment = false,
+    bool avoidPartialPayment = false,
+  }) {
     final ConfigModel configModel = Get.find<SplashController>().configModel;
 
     // GLOBAL admin gate: payment screen par wallet tabhi tab dikhega jab
     // customer_wallet feature (wallet_status) DONO ON hon + service_setup ka
     // wallet_payment toggle ON ho. (wallet_payment missing = purana backend —
     // allowed maan lo.)
-    final bool walletGloballyAllowed = configModel.content?.walletStatus == 1 &&
+    final bool walletGloballyAllowed =
+        configModel.content?.walletStatus == 1 &&
         (configModel.content?.walletPayment ?? 1) == 1;
 
     _digitalPaymentList = [];
     _othersPaymentList = [];
     _isLoading = false;
 
-    if(isPartialPayment && configModel.content?.partialPaymentCombinator != "all" && configModel.content?.partialPayment == 1){
-
-      if(configModel.content?.partialPaymentCombinator == "digital_payment"){
+    if (isPartialPayment &&
+        configModel.content?.partialPaymentCombinator != "all" &&
+        configModel.content?.partialPayment == 1) {
+      if (configModel.content?.partialPaymentCombinator == "digital_payment") {
         _othersPaymentList = [
-          if(walletGloballyAllowed && Get.find<AuthController>().isLoggedIn() && Get.find<CartController>().walletBalance > 0 && !avoidPartialPayment)
-            PaymentMethodButton(title: "pay_via_wallet".tr,paymentMethodName: PaymentMethodName.walletMoney,assetName: Images.walletMenu,),
+          if (walletGloballyAllowed &&
+              Get.find<AuthController>().isLoggedIn() &&
+              Get.find<CartController>().walletBalance > 0 &&
+              !avoidPartialPayment)
+            PaymentMethodButton(
+              title: "pay_via_wallet".tr,
+              paymentMethodName: PaymentMethodName.walletMoney,
+              assetName: Images.walletMenu,
+            ),
         ];
-        if(configModel.content?.digitalPayment == 1){
-          digitalPaymentList.addAll( configModel.content?.paymentMethodList ?? []);
+        if (configModel.content?.digitalPayment == 1) {
+          digitalPaymentList.addAll(
+            configModel.content?.paymentMethodList ?? [],
+          );
         }
-      }
-
-      else if(configModel.content?.partialPaymentCombinator == "cash_after_service"){
+      } else if (configModel.content?.partialPaymentCombinator ==
+          "cash_after_service") {
         _digitalPaymentList = [];
         _othersPaymentList = [
-          if(walletGloballyAllowed && Get.find<AuthController>().isLoggedIn() && Get.find<CartController>().walletBalance > 0 && !avoidPartialPayment)
-            PaymentMethodButton(title: "pay_via_wallet".tr,paymentMethodName: PaymentMethodName.walletMoney,assetName: Images.walletMenu,),
-          if(configModel.content?.cashAfterService == 1)
-            PaymentMethodButton(title: "pay_after_service".tr,paymentMethodName: PaymentMethodName.cos,assetName: Images.cod,),
+          if (walletGloballyAllowed &&
+              Get.find<AuthController>().isLoggedIn() &&
+              Get.find<CartController>().walletBalance > 0 &&
+              !avoidPartialPayment)
+            PaymentMethodButton(
+              title: "pay_via_wallet".tr,
+              paymentMethodName: PaymentMethodName.walletMoney,
+              assetName: Images.walletMenu,
+            ),
+          if (configModel.content?.cashAfterService == 1)
+            PaymentMethodButton(
+              title: "pay_after_service".tr,
+              paymentMethodName: PaymentMethodName.cos,
+              assetName: Images.cod,
+            ),
         ];
-      }
-
-      else if(configModel.content?.partialPaymentCombinator == "offline_payment"){
+      } else if (configModel.content?.partialPaymentCombinator ==
+          "offline_payment") {
         _othersPaymentList = [
-          if(walletGloballyAllowed && Get.find<AuthController>().isLoggedIn() && Get.find<CartController>().walletBalance > 0 && !avoidPartialPayment)
-            PaymentMethodButton(title: "pay_via_wallet".tr,paymentMethodName: PaymentMethodName.walletMoney,assetName: Images.walletMenu,),
+          if (walletGloballyAllowed &&
+              Get.find<AuthController>().isLoggedIn() &&
+              Get.find<CartController>().walletBalance > 0 &&
+              !avoidPartialPayment)
+            PaymentMethodButton(
+              title: "pay_via_wallet".tr,
+              paymentMethodName: PaymentMethodName.walletMoney,
+              assetName: Images.walletMenu,
+            ),
         ];
-        if(configModel.content?.offlinePayment == 1){
-          digitalPaymentList.add(DigitalPaymentMethod(
-            gateway: "offline",
-            gatewayImage: "",
-          ));
+        if (configModel.content?.offlinePayment == 1) {
+          digitalPaymentList.add(
+            DigitalPaymentMethod(gateway: "offline", gatewayImage: ""),
+          );
         }
       }
-
-    }else{
-
+    } else {
       _othersPaymentList = [
-        if(walletGloballyAllowed && Get.find<AuthController>().isLoggedIn() && Get.find<CartController>().walletBalance > 0 && !avoidPartialPayment)
-          PaymentMethodButton(title: "pay_via_wallet".tr,paymentMethodName: PaymentMethodName.walletMoney,assetName: Images.walletMenu,),
+        if (walletGloballyAllowed &&
+            Get.find<AuthController>().isLoggedIn() &&
+            Get.find<CartController>().walletBalance > 0 &&
+            !avoidPartialPayment)
+          PaymentMethodButton(
+            title: "pay_via_wallet".tr,
+            paymentMethodName: PaymentMethodName.walletMoney,
+            assetName: Images.walletMenu,
+          ),
 
-        if(configModel.content?.cashAfterService == 1)
-          PaymentMethodButton(title: "pay_after_service".tr,paymentMethodName: PaymentMethodName.cos,assetName: Images.cod,),
+        if (configModel.content?.cashAfterService == 1)
+          PaymentMethodButton(
+            title: "pay_after_service".tr,
+            paymentMethodName: PaymentMethodName.cos,
+            assetName: Images.cod,
+          ),
       ];
 
-      if(configModel.content?.digitalPayment == 1){
-        digitalPaymentList.addAll( configModel.content?.paymentMethodList ?? []);
+      if (configModel.content?.digitalPayment == 1) {
+        digitalPaymentList.addAll(configModel.content?.paymentMethodList ?? []);
       }
-      if(configModel.content?.offlinePayment == 1){
-        digitalPaymentList.add(DigitalPaymentMethod(
-          gateway: "offline",
-          gatewayImage: "",
-        ));
+      if (configModel.content?.offlinePayment == 1) {
+        digitalPaymentList.add(
+          DigitalPaymentMethod(gateway: "offline", gatewayImage: ""),
+        );
       }
     }
 
     _applyProviderPaymentRestrictions();
 
     final String? cartProviderId = _currentCartProviderId();
-    if (_providerPaymentConfig == null || _providerPaymentConfigFor != cartProviderId) {
+    if (_providerPaymentConfig == null ||
+        _providerPaymentConfigFor != cartProviderId) {
       fetchProviderPaymentConfig(cartProviderId);
     }
 
-    if(shouldUpdate){
+    if (shouldUpdate) {
       update();
     }
   }
@@ -658,7 +975,10 @@ class CheckOutController extends GetxController implements GetxService{
   /// Per-provider payment config (allowed gateways + cash/wallet/offline +
   /// booking fee). Fetch hone par list/selection dobara restrict hoti hai;
   /// fail hone par global behaviour (config == null) rehta hai.
-  Future<void> fetchProviderPaymentConfig(String? providerId, {bool force = false}) async {
+  Future<void> fetchProviderPaymentConfig(
+    String? providerId, {
+    bool force = false,
+  }) async {
     if (!force &&
         _providerPaymentConfig != null &&
         _providerPaymentConfigFor == providerId) {
@@ -666,10 +986,15 @@ class CheckOutController extends GetxController implements GetxService{
     }
 
     try {
-      final Response response = await checkoutRepo.getProviderPaymentConfig(providerId);
-      if (response.statusCode == 200 && response.body['response_code'] == 'default_200') {
+      final Response response = await checkoutRepo.getProviderPaymentConfig(
+        providerId,
+      );
+      if (response.statusCode == 200 &&
+          response.body['response_code'] == 'default_200') {
         final dynamic content = response.body['content'];
-        _providerPaymentConfig = content is Map ? Map<String, dynamic>.from(content) : null;
+        _providerPaymentConfig = content is Map
+            ? Map<String, dynamic>.from(content)
+            : null;
       } else {
         _providerPaymentConfig = null;
       }
@@ -697,9 +1022,12 @@ class CheckOutController extends GetxController implements GetxService{
         if (gateway is Map) '${gateway['gateway']}',
     };
 
-    _othersPaymentList.removeWhere((PaymentMethodButton button) =>
-        (button.paymentMethodName == PaymentMethodName.cos && !cashOk) ||
-        (button.paymentMethodName == PaymentMethodName.walletMoney && !walletOk));
+    _othersPaymentList.removeWhere(
+      (PaymentMethodButton button) =>
+          (button.paymentMethodName == PaymentMethodName.cos && !cashOk) ||
+          (button.paymentMethodName == PaymentMethodName.walletMoney &&
+              !walletOk),
+    );
 
     if (!digitalOk) {
       _digitalPaymentList = [];
@@ -736,83 +1064,234 @@ class CheckOutController extends GetxController implements GetxService{
     }
   }
 
-
   void parseToken(String token) async {
-    try{
-      _bookingReadableId = StringParser.parseString(utf8.decode(base64Url.decode(token)), "attribute_id");
-    }catch(e){
+    try {
+      _bookingReadableId = StringParser.parseString(
+        utf8.decode(base64Url.decode(token)),
+        "attribute_id",
+      );
+    } catch (e) {
       if (kDebugMode) {
         print(e);
       }
     }
 
     String? transactionId;
-    try{
-      transactionId = StringParser.parseString(utf8.decode(base64Url.decode(token)), "transaction_reference");
+    try {
+      transactionId = StringParser.parseString(
+        utf8.decode(base64Url.decode(token)),
+        "transaction_reference",
+      );
 
-      if(transactionId.isNotEmpty){
-        PaymentResponseModel? paymentResponse = await getDigitalPaymentResponse(transactionId: transactionId);
+      if (transactionId.isNotEmpty) {
+        PaymentResponseModel? paymentResponse = await getDigitalPaymentResponse(
+          transactionId: transactionId,
+        );
 
-        if(paymentResponse !=null){
-
+        if (paymentResponse != null) {
           String? loginToken = paymentResponse.content?.loginToken;
           String? phone = paymentResponse.content?.newUserPhone;
 
-          SignUpBody? newUserInfo= SignUpBody(
-            phone: phone,
-          );
-          if(phone != null){
-            _saveTokenAndHandelPhoneVerification(token: loginToken , userInfo: newUserInfo, paymentMethod: "");
+          SignUpBody? newUserInfo = SignUpBody(phone: phone);
+          if (phone != null) {
+            _saveTokenAndHandelPhoneVerification(
+              token: loginToken,
+              userInfo: newUserInfo,
+              paymentMethod: "",
+            );
           }
         }
       }
-    }catch(e){
+    } catch (e) {
       if (kDebugMode) {
         print(e);
       }
     }
-
   }
 
-  void updateBookingPlaceStatus({bool status = true, bool shouldUpdate = false}){
+  void updateBookingPlaceStatus({
+    bool status = true,
+    bool shouldUpdate = false,
+  }) {
     _isPlacedOrderSuccessfully = status;
-    if(shouldUpdate){
+    if (shouldUpdate) {
       update();
     }
-
   }
 
- void toggleTerms({bool? value , bool shouldUpdate = true}) {
-
-    if(value != null){
+  void toggleTerms({bool? value, bool shouldUpdate = true}) {
+    if (value != null) {
       _acceptTerms = value;
-    }else{
+    } else {
       _acceptTerms = !_acceptTerms;
     }
-    if(shouldUpdate){
+    if (shouldUpdate) {
       update();
     }
- }
+  }
 
- void toggleIsCheckedCreateAccount({bool? value , bool shouldUpdate = true}){
-   if(value != null){
-     _isCheckedCreateAccount = value;
-   }else{
-     _isCheckedCreateAccount = !_isCheckedCreateAccount;
-   }
-   if(shouldUpdate){
-     update();
-   }
- }
+  void toggleIsCheckedCreateAccount({bool? value, bool shouldUpdate = true}) {
+    if (value != null) {
+      _isCheckedCreateAccount = value;
+    } else {
+      _isCheckedCreateAccount = !_isCheckedCreateAccount;
+    }
+    if (shouldUpdate) {
+      update();
+    }
+  }
 
- void resetCreateAccountWithExistingInfo(){
+  void resetCreateAccountWithExistingInfo() {
     _isCheckedCreateAccount = false;
     passwordController.clear();
     confirmPasswordController.clear();
- }
-
-
-
+  }
 }
 
+// ─── Serviceman picker bottom sheet ─────────────────────────────────────────
 
+class _ServicemanPickerSheet extends StatelessWidget {
+  final CheckOutController controller;
+  const _ServicemanPickerSheet({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF1A1A1A) : Colors.white;
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle bar
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).hintColor.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          Text(
+            'select_serviceman'.tr,
+            style: robotoBold.copyWith(fontSize: 16),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'available_in_your_area'.tr,
+            style: robotoRegular.copyWith(
+              fontSize: 12,
+              color: Theme.of(context).hintColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          GetBuilder<CheckOutController>(
+            builder: (ctrl) {
+              if (ctrl.isLoadingServicemen) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+
+              if (ctrl.availableServicemenList.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Text(
+                      'no_serviceman_available'.tr,
+                      style: robotoRegular.copyWith(
+                        color: Theme.of(context).hintColor,
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.5,
+                ),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: ctrl.availableServicemenList.length,
+                  separatorBuilder: (_, __) => Divider(
+                    height: 1,
+                    color: Theme.of(context).hintColor.withValues(alpha: 0.15),
+                  ),
+                  itemBuilder: (_, i) {
+                    final sm = ctrl.availableServicemenList[i];
+                    final bool isSelected =
+                        ctrl.selectedServiceman?['id'] == sm['id'];
+                    final double rating =
+                        double.tryParse('${sm['avg_rating'] ?? 0}') ?? 0;
+                    final int reviews =
+                        int.tryParse('${sm['total_reviews'] ?? 0}') ?? 0;
+
+                    return Material(
+                      color: bg,
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: ClipOval(
+                          child: CustomImage(
+                            image: sm['profile_image'] ?? '',
+                            width: 44,
+                            height: 44,
+                            placeholder: Images.userPlaceHolder,
+                          ),
+                        ),
+                        title: Text(
+                          sm['name'] ?? '',
+                          style: robotoMedium.copyWith(fontSize: 13),
+                        ),
+                        subtitle: Row(
+                          children: [
+                            Icon(Icons.star_rounded, size: 14, color: primary),
+                            const SizedBox(width: 3),
+                            Text(
+                              '${rating.toStringAsFixed(1)} ($reviews)',
+                              style: robotoRegular.copyWith(
+                                fontSize: 11,
+                                color: Theme.of(context).hintColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                        trailing: isSelected
+                            ? Icon(
+                                Icons.check_circle_rounded,
+                                color: primary,
+                                size: 22,
+                              )
+                            : Icon(
+                                Icons.radio_button_unchecked_rounded,
+                                color: Theme.of(context).hintColor,
+                                size: 22,
+                              ),
+                        onTap: () => ctrl.selectServicemanFromSheet(sm),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}

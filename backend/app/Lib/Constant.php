@@ -80,27 +80,25 @@ const COUPON_TYPES_REACT_FORMAT = [
     ['value' => 'first_order', 'name' => 'First Order']
 ];
 
+/**
+ * Launch configuration: only these payment options are exposed to customers,
+ * providers and the admin panel.
+ *
+ * cash_after_service / wallet_payment / offline_payment are settlement modes
+ * handled by the booking + ledger pipeline, not external gateways.
+ * razor_pay and cashfree are the only two live online gateways.
+ */
 const PAYMENT_METHODS = [
     ['key' => 'cash_after_service', 'value' => 'Cash After Service'],
-    ['key' => 'ssl_commerz', 'value' => 'SSLCOMMERZ'],
-    ['key' => 'stripe', 'value' => 'Stripe'],
-    ['key' => 'paytm', 'value' => 'Paytm'],
-    ['key' => 'razor_pay', 'value' => 'Razor Pay'],
-    ['key' => 'paystack', 'value' => 'Paystack'],
-    ['key' => 'senang_pay', 'value' => 'Senang Pay'],
-    ['key' => 'flutterwave', 'value' => 'Flutter Wave'],
-    ['key' => 'wallet_payment', 'value' => 'wallet payment'],
-    ['key' => 'offline_payment', 'value' => 'offline payment'],
+    ['key' => 'wallet_payment', 'value' => 'Wallet Payment'],
+    ['key' => 'offline_payment', 'value' => 'Offline Payment'],
+    ['key' => 'razor_pay', 'value' => 'Razorpay'],
+    ['key' => 'cashfree', 'value' => 'Cashfree'],
 ];
 
 const DIGITAL_PAYMENT_METHODS = [
-    ['key' => 'ssl_commerz', 'value' => 'SSLCOMMERZ'],
-    ['key' => 'stripe', 'value' => 'Stripe'],
-    ['key' => 'paytm', 'value' => 'Paytm'],
-    ['key' => 'razor_pay', 'value' => 'Razor Pay'],
-    ['key' => 'paystack', 'value' => 'Paystack'],
-    ['key' => 'senang_pay', 'value' => 'Senang Pay'],
-    ['key' => 'flutterwave', 'value' => 'Flutter Wave'],
+    ['key' => 'razor_pay', 'value' => 'Razorpay'],
+    ['key' => 'cashfree', 'value' => 'Cashfree'],
 ];
 
 const SMS_GATEWAY = [

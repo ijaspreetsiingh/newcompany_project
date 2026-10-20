@@ -210,7 +210,10 @@ class ConfigController extends Controller
             return [];
         }
 
-        $methods = DB::table('addon_settings')->where('settings_type', 'payment_config')->get();
+        $methods = DB::table('addon_settings')
+            ->where('settings_type', 'payment_config')
+            ->whereIn('key_name', array_column(DIGITAL_PAYMENT_METHODS, 'key'))
+            ->get();
         $env = env('APP_ENV') == 'live' ? 'live' : 'test';
         $credentials = $env . '_values';
 

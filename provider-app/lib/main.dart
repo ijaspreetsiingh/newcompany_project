@@ -43,7 +43,7 @@ Future<void> main() async {
     }
   }
 
-  await FlutterDownloader.initialize(debug: true, ignoreSsl: true);
+  await FlutterDownloader.initialize(debug: false, ignoreSsl: false);
 
   // Android 13+ notification permission (wrna tray me kuch nahi dikhega)
   if (GetPlatform.isMobile) {

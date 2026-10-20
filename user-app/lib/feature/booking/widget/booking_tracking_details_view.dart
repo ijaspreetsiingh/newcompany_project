@@ -4,6 +4,7 @@ import 'package:jdds/feature/booking/widget/regular/booking_summery_widget.dart'
 import 'package:jdds/feature/booking/widget/booking_screen_shimmer.dart';
 import 'package:jdds/feature/booking/widget/booking_otp_widget.dart';
 import 'package:jdds/feature/booking/widget/booking_start_otp_widget.dart';
+import 'package:jdds/feature/booking/widget/booking_reviews_section.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Mobile booking detail layout based on the customer tracking reference.
@@ -46,6 +47,10 @@ class BookingTrackingDetailsView extends StatelessWidget {
         final cancelable =
             status == 'pending' || status == 'accepted' || status == 'ongoing';
         final repeatable = status == 'completed' && !isSubBooking;
+        final reviewable =
+            status == 'completed' &&
+            !isSubBooking &&
+            Get.find<AuthController>().isLoggedIn();
 
         return Column(
           children: [
@@ -180,6 +185,14 @@ class BookingTrackingDetailsView extends StatelessWidget {
                     ],
                     BookingSummeryWidget(bookingDetails: booking),
                     if (status == 'completed' && !isSubBooking) ...[
+                      const SizedBox(height: 16),
+                      BookingReviewsSection(
+                        bookingId: booking.id ?? '',
+                        fallbackProviderName: provider?.companyName ?? provider?.contactPersonName ?? '',
+                        fallbackServicemanName: '${serviceman?.firstName ?? ''} ${serviceman?.lastName ?? ''}'.trim(),
+                      ),
+                    ],
+                    if (status == 'completed' && !isSubBooking) ...[
                       const SizedBox(height: 8),
                       const UnsatisfiedSectionWidget(),
                     ],
@@ -188,7 +201,7 @@ class BookingTrackingDetailsView extends StatelessWidget {
                 ),
               ),
             ),
-            if (cancelable || repeatable)
+            if (cancelable || repeatable || reviewable)
               SafeArea(
                 top: false,
                 child: Container(
@@ -222,7 +235,30 @@ class BookingTrackingDetailsView extends StatelessWidget {
                             ),
                           ),
                         ),
-                      if (cancelable && repeatable) const SizedBox(width: 10),
+                      if (cancelable && (repeatable || reviewable))
+                        const SizedBox(width: 10),
+                      if (reviewable)
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => _openReviewSheet(
+                              context,
+                              booking.id ?? '',
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(54),
+                              foregroundColor: ink,
+                              side: BorderSide(color: border),
+                              shape: const StadiumBorder(),
+                            ),
+                            child: Text(
+                              'give_review'.tr,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (reviewable && repeatable) const SizedBox(width: 10),
                       if (repeatable)
                         Expanded(
                           child: FilledButton(
@@ -262,6 +298,17 @@ class BookingTrackingDetailsView extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  void _openReviewSheet(BuildContext context, String bookingId) {
+    if (bookingId.isEmpty) return;
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ReviewRecommendationDialog(id: bookingId),
     );
   }
 

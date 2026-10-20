@@ -71,38 +71,59 @@ class BookingDetailsController extends GetxController implements GetxService{
   }
 
   Future<void> getBookingDetails(String bookingID,{bool reload = true, bool initEditBooking = true}) async {
+    try {
+      final Response response = await bookingDetailsRepo.getBookingDetails(bookingID);
 
-    Response response = await bookingDetailsRepo.getBookingDetails(bookingID);
+      if (response.statusCode == 200) {
+        _bookingDetails = BookingDetailsModel.fromJson(response.body);
 
-    if(response.statusCode == 200 ){
-      _bookingDetails = BookingDetailsModel.fromJson(response.body);
-
-      if(initEditBooking){
-        Get.find<BookingEditController>().getServiceListBasedOnSubcategory(subCategoryId : bookingDetails?.content?.subcategoryId ?? "");
-        Get.find<BookingEditController>().initializedControllerValue(_bookingDetails?.content);
+        if (initEditBooking && _bookingDetails?.content != null) {
+          Get.find<BookingEditController>().getServiceListBasedOnSubcategory(
+            subCategoryId: _bookingDetails?.content?.subcategoryId ?? '',
+          );
+          Get.find<BookingEditController>().initializedControllerValue(_bookingDetails?.content);
+        }
+        dropDownValue = _bookingDetails?.content?.bookingStatus ?? '';
+        if (response.body["response_code"] == "default_204") {
+          Get.find<BookingRequestController>().removeBookingItemFromList(
+            bookingID,
+            bookingStatus: "",
+            shouldUpdate: true,
+          );
+        }
+      } else {
+        _bookingDetails = BookingDetailsModel(responseCode: 'default_204');
+        ApiChecker.checkApi(response);
       }
-     dropDownValue = bookingDetails?.content?.bookingStatus ?? "";
-      if(response.body["response_code"] == "default_204"){
-        Get.find<BookingRequestController>().removeBookingItemFromList(bookingID, bookingStatus: "", shouldUpdate: true);
-      }
-    }  else{
-     ApiChecker.checkApi(response);
+    } catch (error, stackTrace) {
+      debugPrint('Provider booking details load failed ($bookingID): $error\n$stackTrace');
+      _bookingDetails ??= BookingDetailsModel(responseCode: 'booking_details_load_failed');
+      showCustomSnackBar('error_loading'.tr, type: ToasterMessageType.error);
+    } finally {
+      update();
     }
-    update();
   }
 
   Future<void> getBookingSubDetails(String bookingID,{bool reload = true}) async {
-
-    Response response = await bookingDetailsRepo.getSubBookingDetails(bookingID);
-
-    if(response.statusCode == 200 ){
-      _subBookingDetails = BookingDetailsModel.fromJson(response.body);
-      Get.find<BookingEditController>().initializedControllerValue(_subBookingDetails?.content);
-      subBookingDropDownValue = _subBookingDetails?.content?.bookingStatus ?? "";
-    } else{
-      ApiChecker.checkApi(response);
+    try {
+      final Response response = await bookingDetailsRepo.getSubBookingDetails(bookingID);
+      if (response.statusCode == 200) {
+        _subBookingDetails = BookingDetailsModel.fromJson(response.body);
+        if (_subBookingDetails?.content != null) {
+          Get.find<BookingEditController>().initializedControllerValue(_subBookingDetails?.content);
+        }
+        subBookingDropDownValue = _subBookingDetails?.content?.bookingStatus ?? '';
+      } else {
+        _subBookingDetails = BookingDetailsModel(responseCode: 'default_204');
+        ApiChecker.checkApi(response);
+      }
+    } catch (error, stackTrace) {
+      debugPrint('Provider repeat booking details load failed ($bookingID): $error\n$stackTrace');
+      _subBookingDetails ??= BookingDetailsModel(responseCode: 'booking_details_load_failed');
+      showCustomSnackBar('error_loading'.tr, type: ToasterMessageType.error);
+    } finally {
+      update();
     }
-    update();
   }
 
   Future<void> acceptBookingRequest(String bookingId) async {

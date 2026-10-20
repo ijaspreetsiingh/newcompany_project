@@ -95,6 +95,7 @@ class _NearByProviderMapViewState extends State<NearByProviderMapView> {
                     children: [
                       TileLayer(
                         urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        fallbackUrl: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
                         userAgentPackageName: 'com.jassdbx.jassods',
                       ),
                       MarkerLayer(markers: nearbyProviderController.markers),

@@ -191,7 +191,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
     int isPartial = Get.find<CartController>().walletPaymentStatus && isPartialPayment ? 1 : 0;
     String platform = ResponsiveHelper.isWeb() ? "web" : "app" ;
 
-    url = '${AppConstants.baseUrl}/payment?payment_method=${paymentMethod?.gateway}&access_token=${base64Url.encode(utf8.encode(userId))}'
+    url = '${AppConstants.baseUrl}/payment?payment_method=${paymentMethod?.gateway}&access_token=${AuthRepo.tokenCache ?? base64Url.encode(utf8.encode(userId))}'
         '&booking_id=$bookingId&switch_offline_to_digital=1&callback=$callbackUrl&is_partial=$isPartial&payment_platform=$platform';
 
     if (GetPlatform.isWeb) {

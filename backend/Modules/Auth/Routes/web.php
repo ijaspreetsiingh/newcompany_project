@@ -9,7 +9,7 @@ use Modules\Auth\Http\Controllers\Web\VerificationController;
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => ['actch:admin_panel']], function () {
     Route::group(['prefix' => 'auth', 'as' => 'auth.'], function () {
         Route::get('login', [LoginController::class, 'loginForm'])->name('login');
-        Route::post('login', [LoginController::class, 'adminLogin']);
+        Route::post('login', [LoginController::class, 'adminLogin'])->middleware('throttle:login');
         Route::get('logout', [LoginController::class, 'logout'])->name('logout');
     });
 });
@@ -19,7 +19,7 @@ Route::group(['prefix' => 'provider', 'as' => 'provider.'], function () {
         Route::get('sign-up', [RegisterController::class, 'providerSelfRegisterForm'])->name('sign-up');
         Route::post('sign-up', [RegisterController::class, 'providerSelfRegister'])->name('sign-up-submit');
         Route::get('login', [LoginController::class, 'providerLoginForm'])->name('login');
-        Route::post('login', [LoginController::class, 'providerLogin']);
+        Route::post('login', [LoginController::class, 'providerLogin'])->middleware('throttle:login');
         Route::get('logout', [LoginController::class, 'logout'])->name('logout');
 
         Route::group(['prefix' => 'reset-password', 'as' => 'reset-password.'], function () {
@@ -41,7 +41,7 @@ Route::group(['prefix' => 'provider', 'as' => 'provider.'], function () {
 Route::group(['prefix' => 'serviceman', 'as' => 'serviceman.'], function () {
     Route::group(['prefix' => 'auth', 'as' => 'auth.'], function () {
         Route::get('login', [LoginController::class, 'servicemanLoginForm'])->name('login');
-        Route::post('login', [LoginController::class, 'servicemanPanelLogin']);
+        Route::post('login', [LoginController::class, 'servicemanPanelLogin'])->middleware('throttle:login');
         Route::get('logout', [LoginController::class, 'logout'])->name('logout');
     });
 });

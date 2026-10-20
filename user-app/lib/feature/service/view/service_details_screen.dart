@@ -142,7 +142,9 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                             /// 7. Ratings & Reviews (API data)
                             NestDetailReviews(
                                 serviceId: service.id ?? '',
-                                scrollController: _scrollController),
+                                scrollController: _scrollController,
+                                categoryName: service.category?.name,
+                                providerName: null),
 
                             /// Bottom padding for CTA
                             const SizedBox(height: 100),
@@ -772,73 +774,163 @@ class NestDetailGallery extends StatelessWidget {
 class NestDetailReviews extends StatefulWidget {
   final String serviceId;
   final ScrollController scrollController;
-  const NestDetailReviews(
-      {super.key, required this.serviceId, required this.scrollController});
+
+  /// Category name shown in the heading above reviews.
+  final String? categoryName;
+
+  /// Provider name shown in the heading above reviews.
+  final String? providerName;
+
+  const NestDetailReviews({
+    super.key,
+    required this.serviceId,
+    required this.scrollController,
+    this.categoryName,
+    this.providerName,
+  });
 
   @override
   State<NestDetailReviews> createState() => _NestDetailReviewsState();
 }
 
 class _NestDetailReviewsState extends State<NestDetailReviews> {
+  /// User's current zone id — used to scope reviews to this zone only.
+  String get _zoneId =>
+      Get.find<LocationController>().getUserAddress()?.zoneId ?? '';
+
   @override
   void initState() {
     super.initState();
-    Get.find<ServiceTabController>().getServiceReview(widget.serviceId, 1);
+    Get.find<ServiceTabController>().getServiceReview(
+      widget.serviceId,
+      1,
+      zoneId: _zoneId,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<ServiceTabController>(
-        builder: (serviceTabController) {
+    final bodyColor = Theme.of(context).textTheme.bodyLarge!.color!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GetBuilder<ServiceTabController>(builder: (serviceTabController) {
+      // Provider name: zone-filtered reviews mein se pehla provider naam uthao.
+      // Agar reviews empty hain ya kisi mein provider nahi hai to null raho.
+      final String? resolvedProviderName = widget.providerName?.isNotEmpty == true
+          ? widget.providerName
+          : serviceTabController.reviewList
+              ?.cast<Review?>()
+              .firstWhere(
+                (r) => r?.provider?.companyName?.isNotEmpty == true,
+                orElse: () => null,
+              )
+              ?.provider
+              ?.companyName;
+
+      final String? categoryName = widget.categoryName?.isNotEmpty == true
+          ? widget.categoryName
+          : null;
+
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+
+        // ── Section heading ─────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.symmetric(
               horizontal: Dimensions.paddingSizeDefault),
-          child:
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Expanded(
-              child: Row(children: [
-                Icon(Icons.star_rounded,
-                    color: Theme.of(context).textTheme.bodyLarge!.color, size: 18),
-                const SizedBox(width: Dimensions.paddingSizeMint),
-                Flexible(
-                  child: Text(
-                    '${serviceTabController.rating.averageRating?.toStringAsFixed(1) ?? '0.0'} (${serviceTabController.rating.ratingCount ?? 0} ${'reviews'.tr})',
-                    style: robotoBold.copyWith(
-                      fontSize: Dimensions.fontSizeLarge,
-                      color:
-                          Theme.of(context).textTheme.bodyLarge!.color,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // "Ratings & Reviews" label
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(children: [
+                      Icon(Icons.star_rounded, color: bodyColor, size: 18),
+                      const SizedBox(width: Dimensions.paddingSizeMint),
+                      Flexible(
+                        child: Text(
+                          '${serviceTabController.rating.averageRating?.toStringAsFixed(1) ?? '0.0'}'
+                          ' (${serviceTabController.rating.ratingCount ?? 0} ${'reviews'.tr})',
+                          style: robotoBold.copyWith(
+                            fontSize: Dimensions.fontSizeLarge,
+                            color: bodyColor,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ]),
+                  ),
+                  InkWell(
+                    onTap: () {
+                      Get.to(() => Scaffold(
+                            appBar: CustomAppBar(
+                                centerTitle: false, title: 'reviews'.tr),
+                            body: SafeArea(
+                                child: ServiceDetailsReview(
+                                    serviceID: widget.serviceId)),
+                          ));
+                    },
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Text(
+                        'see_all'.tr,
+                        style: robotoBold.copyWith(
+                          fontSize: Dimensions.fontSizeDefault,
+                          color: bodyColor,
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_rounded,
+                          size: 15, color: bodyColor),
+                    ]),
+                  ),
+                ],
+              ),
+
+              // Zone-scoped sub-heading: "Provider · Category" pill
+              // Provider naam zone-filtered reviews se automatically resolve hota hai.
+              if ((resolvedProviderName?.isNotEmpty ?? false) ||
+                  (categoryName?.isNotEmpty ?? false)) ...[
+                const SizedBox(height: 6),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF1E1E1E)
+                        : const Color(0xFFF6F6F6),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(Icons.storefront_outlined,
+                        size: 13,
+                        color: Theme.of(context).hintColor),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        [
+                          if (resolvedProviderName?.isNotEmpty ?? false)
+                            resolvedProviderName!,
+                          if (categoryName?.isNotEmpty ?? false)
+                            categoryName!,
+                        ].join(' · '),
+                        style: robotoRegular.copyWith(
+                          fontSize: Dimensions.fontSizeSmall,
+                          color: Theme.of(context).hintColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  ]),
                 ),
-              ]),
-            ),
-            InkWell(
-              onTap: () {
-                Get.to(() => Scaffold(
-                      appBar: CustomAppBar(
-                          centerTitle: false, title: 'reviews'.tr),
-                      body: SafeArea(
-                          child: ServiceDetailsReview(
-                              serviceID: widget.serviceId)),
-                    ));
-              },
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Text('see_all'.tr,
-                  style: robotoBold.copyWith(
-                    fontSize: Dimensions.fontSizeDefault,
-                    color: Theme.of(context).textTheme.bodyLarge!.color,
-                  ),
-                ),
-                Icon(Icons.arrow_forward_rounded, size: 15,
-                  color: Theme.of(context).textTheme.bodyLarge!.color),
-              ]),
-            ),
-          ]),
+              ],
+            ],
+          ),
         ),
+
         const SizedBox(height: Dimensions.paddingSizeDefault),
+
+        // ── Review list ─────────────────────────────────────────────────
         serviceTabController.reviewList != null &&
                 serviceTabController.reviewList!.isNotEmpty
             ? Padding(
@@ -858,9 +950,16 @@ class _NestDetailReviewsState extends State<NestDetailReviews> {
                   },
                 ),
               )
-            : const Padding(
-                padding: EdgeInsets.all(Dimensions.paddingSizeDefault),
-                child: Center(child: Text('no_review_yet')),
+            : Padding(
+                padding:
+                    const EdgeInsets.all(Dimensions.paddingSizeDefault),
+                child: Center(
+                  child: Text(
+                    'no_review_yet'.tr,
+                    style: robotoRegular.copyWith(
+                        color: Theme.of(context).hintColor),
+                  ),
+                ),
               ),
       ]);
     });

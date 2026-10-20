@@ -130,6 +130,21 @@ class _MoreScreenState extends State<MoreScreen> {
       _MenuEntry(
         group: 'Operations',
         menu: MenuModel(
+          iconData: Icons.groups_outlined,
+          title: 'serviceman_reviews'.tr,
+          route: '',
+        ),
+        action: () {
+          Get.find<BusinessSubscriptionController>().openTrialEndBottomSheet().then((isTrial) {
+            if (isTrial && Get.find<UserProfileController>().checkAvailableFeatureInSubscriptionPlan(featureType: 'review')) {
+              Get.to(() => const ServicemanReviewScreen());
+            }
+          });
+        },
+      ),
+      _MenuEntry(
+        group: 'Operations',
+        menu: MenuModel(
           iconData: Icons.lightbulb_rounded,
           title: 'suggest_service'.tr,
           route: '',

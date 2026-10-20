@@ -7,7 +7,7 @@ class AppConstants {
   static const String shortAppName = 'JS Admin';
   static const String appUser = 'Provider';
   static const String appVersion = '3.8'; /// Flutter SDK: 3.41.5
-  static const String baseUrl = 'http://10.0.2.2:8000';
+  static const String baseUrl = 'https://newcompanyproject-production.up.railway.app';
   static const bool avoidMaintenanceMode = false;
   static const String configUri = '/api/v1/partner/setup';
   static const String registerUri = '/api/v1/partner/access/signup';
@@ -37,6 +37,11 @@ class AppConstants {
   static const String autoAssignStatusUrl = '/api/v1/partner/order/auto-assign-state';
   static const String assignSuggestionsUrl = '/api/v1/partner/order/assign-suggestions';
   static const String assignServicemenUrl = '/api/v1/partner/order/assign-servicemen';
+
+  // ----- AUTO-REASSIGN ON CANCEL -----
+  static const String autoReassignOnCancelToggleUrl = '/api/v1/partner/order/auto-reassign-cancel-switch';
+  static const String cancelledByServicemanBookingsUrl = '/api/v1/partner/order/cancelled-by-serviceman';
+  static const String manualAssignAfterCancelUrl = '/api/v1/partner/order/manual-assign-after-cancel';
   static const String checkAuthCredentials = '/api/v1/partner/access/credential-probe';
 
   static const String ignoreBookingRequestUrl = '/api/v1/partner/order/submission-dismiss';
@@ -77,6 +82,8 @@ class AppConstants {
   static const String getServiceReviewList = '/api/v1/partner/task/feedback';
   static const String getProviderReviewList = '/api/v1/partner/feedback';
   static const String reviewReply = '/api/v1/partner/feedback-response';
+  static const String bookingFeedbackList = '/api/v1/partner/feedback/booking';
+  static const String servicemanRatingsList = '/api/v1/partner/feedback/serviceman-ratings';
   static const String pagesDetailsApi = '/api/v1/client/setup/page-facts';
   static const String getTransactionReportList = '/api/v1/partner/statement/ledger-entry';
   static const String getBookingReportList = '/api/v1/partner/statement/order';

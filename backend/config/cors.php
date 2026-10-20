@@ -17,9 +17,21 @@ return [
 
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
-    'allowed_methods' => ['*'],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
-    'allowed_origins' => ['*'],
+    /*
+     * Mobile apps do not use CORS (no Origin header). Only the first-party web
+     * panels need to call api/* cross-origin. Never set this to ['*'] in
+     * production: it lets any website drive authenticated API calls.
+     */
+    'allowed_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env(
+        'CORS_ALLOWED_ORIGINS',
+        implode(',', array_filter([
+            (string) env('APP_URL', ''),
+            'http://localhost:8000',
+            'http://127.0.0.1:8000',
+        ]))
+    ))))),
 
     'allowed_origins_patterns' => [],
 

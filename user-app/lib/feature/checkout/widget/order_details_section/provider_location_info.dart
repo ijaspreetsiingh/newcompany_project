@@ -237,6 +237,7 @@ class _ProviderMapwidgetstate extends State<_ProviderMapWidget> {
                           children: [
                             TileLayer(
                               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                              fallbackUrl: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
                               userAgentPackageName: 'com.jassdbx.jassods',
                             ),
                             MarkerLayer(markers: [marker]),

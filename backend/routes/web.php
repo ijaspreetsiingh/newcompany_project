@@ -29,13 +29,9 @@ Route::get('page/become-a-provider', [BecomeAProviderController::class, 'index']
 Route::post('page/become-a-provider', [BecomeAProviderController::class, 'submit'])->name('page.become-a-provider.submit');
 Route::post('subscribe-newsletter',[LandingController::class, 'subscribeNewsletter'])->name('subscribe-newsletter');
 
-Route::fallback(function () {
-    return redirect('admin/auth/login');
-});
-
-Route::get('test', function () {
-    //
-});
+// Fallback: controller use karo (closure route:cache FAIL karta hai).
+// Isiliye har request pe route resolve nahi hona padta -> faster.
+Route::fallback(\App\Http\Controllers\FallbackController::class);
 
 
 

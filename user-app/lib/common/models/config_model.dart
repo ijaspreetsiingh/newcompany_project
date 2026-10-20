@@ -100,6 +100,7 @@ class ConfigContent {
   List<BusinessPage>? businessPages;
   int? maxImageUploadSize;
   String? currencyCode;
+  String? invoiceTemplate;
 
 
 
@@ -174,7 +175,8 @@ class ConfigContent {
         this.maxImageUploadSize,
         this.currencyCode,
         this.adminDetails,
-        this.termsAndConditions
+        this.termsAndConditions,
+        this.invoiceTemplate,
 
       });
 
@@ -285,6 +287,8 @@ class ConfigContent {
     businessPages = json["business_pages"] == null ? [] : List<BusinessPage>.from(json["business_pages"]!.map((x) => BusinessPage.fromJson(x)));
     maxImageUploadSize = int.tryParse(json['max_image_upload_size'].toString());
     currencyCode = json['currency_code'];
+    /// invoice_template: "template_1" | "template_2" | "template_3"
+    invoiceTemplate = json['invoice_template'] ?? 'template_1';
 
   }
 

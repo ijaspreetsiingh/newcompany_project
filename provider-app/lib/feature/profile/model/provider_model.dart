@@ -103,6 +103,7 @@ class ProviderInfo {
   int? serviceAvailability;
   int? autoAssignMode;
   int? autoAssignWaitTime;
+  int? autoReassignOnCancel;
   Map<String, String>? tutorialData;
 
   ProviderInfo(
@@ -135,6 +136,7 @@ class ProviderInfo {
         this.serviceAvailability,
         this.autoAssignMode,
         this.autoAssignWaitTime,
+        this.autoReassignOnCancel,
         this.tutorialData,
       });
 
@@ -169,6 +171,7 @@ class ProviderInfo {
     serviceAvailability =  int.tryParse(json['service_availability'].toString());
     autoAssignMode = int.tryParse(json['auto_assign_mode']?.toString() ?? '0');
     autoAssignWaitTime = int.tryParse(json['auto_assign_wait_time']?.toString() ?? '120');
+    autoReassignOnCancel = int.tryParse(json['auto_reassign_on_cancel']?.toString() ?? '0');
     tutorialData = json['tutorial_options'] != null
         ? Map<String, String>.fromEntries((json['tutorial_options'] as Map).entries.map(
           (e) => MapEntry(e.key.toString(), e.value.toString()),

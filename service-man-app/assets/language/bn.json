@@ -374,6 +374,8 @@
   "account_blocked_notice": "অ্যাকাউন্ট ব্লক বিজ্ঞপ্তি",
   "provider_location": "প্রদানকারীর অবস্থান",
   "customer_location": "গ্রাহকের অবস্থান",
+  "assigned_by_provider": "Assigned by Provider",
+  "auto_assigned_booking": "Auto Assigned",
   "service_location": "পরিষেবার অবস্থান",
   "you_need_to_go_to_the": "আপনাকে যেতে হবে",
   "to_provide_the_service": "পরিষেবা প্রদান করতে",

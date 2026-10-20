@@ -286,7 +286,7 @@ String? schedule = Get.find<ScheduleController>().scheduleTime;
       commissionPercentage = Get.find<CartController>().cartList[0].provider!.commissionPercentage;
     }
 
-    url = '${AppConstants.baseUrl}/payment?payment_method=${paymentMethod?.gateway}&access_token=${base64Url.encode(utf8.encode(userId))}&zone_id=$zoneId'
+    url = '${AppConstants.baseUrl}/payment?payment_method=${paymentMethod?.gateway}&access_token=${AuthRepo.tokenCache ?? base64Url.encode(utf8.encode(userId))}&zone_id=$zoneId'
         '&service_schedule=$schedule&service_address_id=$addressId&callback=$callbackUrl'
         '&service_address=$encodedAddress&new_user_info=$encodedNewUserInfo&is_partial=$isPartial'
         '&payment_platform=$platform&service_location=$serviceLocation'

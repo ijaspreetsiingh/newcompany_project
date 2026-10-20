@@ -155,6 +155,36 @@
                     </div>
                 </div>
 
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h4 class="c1 mb-10">{{translate('Service_Categories')}} <span class="text-danger">*</span></h4>
+                        <p class="fs-12 text-muted mb-20">{{translate('serviceman_category_hint')}}</p>
+
+                        @if (count($categories) > 0)
+                            <div class="row gx-3 gy-2">
+                                @foreach ($categories as $category)
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="sub_category_ids[]"
+                                                   value="{{ $category['id'] }}"
+                                                   id="sub_cat_{{ $loop->index }}"
+                                                   @checked(in_array((string) $category['id'], array_map('strval', (array) old('sub_category_ids', $selectedCategoryIds ?? [])), true))>
+                                            <label class="form-check-label" for="sub_cat_{{ $loop->index }}">
+                                                {{ $category['label'] }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="alert alert-warning mb-0">
+                                {{translate('no_provider_category_assigned')}}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
                 <div class="d-flex gap-4 flex-wrap justify-content-end mt-4">
                     <button type="reset" class="btn btn--secondary">{{translate('Reset')}}</button>
                     <button type="submit" class="btn btn--primary">{{translate('update')}}</button>

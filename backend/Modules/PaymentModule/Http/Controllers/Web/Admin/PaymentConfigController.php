@@ -37,7 +37,9 @@ class PaymentConfigController extends Controller
             'mode' => 'required|in:live,test'
         ];
         $additionalData = [];
-        collect(['status'])->each(fn($item, $key) => $request[$item] = $request->has($item) ? 1 : 0);
+        // Radio ka actual value respect karo; pehle hamesha 1 ho jata tha,
+        // isliye gateway ko inactive karke save karna possible nahi tha.
+        $request['status'] = $request->has('status') ? (string) $request['status'] : '0';
         if ($request['gateway'] == 'ssl_commerz') {
             $additionalData = [
                 'status' => 'required|in:1,0',
@@ -54,7 +56,16 @@ class PaymentConfigController extends Controller
             $additionalData = [
                 'status' => 'required|in:1,0',
                 'api_key' => 'required_if:status,1',
-                'api_secret' => 'required_if:status,1'
+                'api_secret' => 'required_if:status,1',
+                // Optional: Razorpay dashboard → Settings → Webhooks → Secret
+                // (payment.captured event ke liye signature verify)
+                'webhook_secret' => 'nullable|string|max:191',
+            ];
+        } elseif ($request['gateway'] == 'cashfree') {
+            $additionalData = [
+                'status' => 'required|in:1,0',
+                'app_id' => 'required_if:status,1',
+                'secret_key' => 'required_if:status,1',
             ];
         } elseif ($request['gateway'] == 'senang_pay') {
             $additionalData = [
@@ -108,7 +119,7 @@ class PaymentConfigController extends Controller
         }
 
         $addonSettings = $this->addonSettings->where('key_name', $request['gateway'])->where('settings_type', 'payment_config')->first();
-        $additionalDataImage = $addonSettings['additional_data'] != null ? json_decode($addonSettings['additional_data']) : null;
+        $additionalDataImage = $addonSettings?->additional_data != null ? json_decode($addonSettings->additional_data) : null;
 
         if ($request->has('gateway_image')) {
             $gatewayImage = file_uploader('payment_modules/gateway_image/', APPLICATION_IMAGE_FORMAT, $request['gateway_image'], $additionalDataImage != null ? $additionalDataImage->gateway_image : '');
@@ -145,7 +156,15 @@ class PaymentConfigController extends Controller
 
     public function UpdateStatus($gateway, $status): JsonResponse
     {
+        if (!in_array($gateway, array_column(DIGITAL_PAYMENT_METHODS, 'key'), true)) {
+            return response()->json(response_formatter(DEFAULT_400), 400);
+        }
+
         $gatewayToBeUpdated = $this->addonSettings->where(['key_name' => $gateway, 'settings_type' => 'payment_config'])->first();
+        if (!$gatewayToBeUpdated) {
+            return response()->json(response_formatter(DEFAULT_400), 400);
+        }
+
         $gatewayToBeUpdatedData = $gatewayToBeUpdated->live_values;
         $gatewayToBeUpdatedData['status'] = (int)$status;
         $this->addonSettings->where(['key_name' => $gateway, 'settings_type' => 'payment_config'])->update([

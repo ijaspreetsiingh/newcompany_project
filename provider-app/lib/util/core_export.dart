@@ -282,7 +282,8 @@ export 'package:jassdbx_provider/common/widgets/welcome_bottom_sheet.dart';
 export 'package:jassdbx_provider/feature/booking_details/widget/booking_edit/quantity_button.dart';
 export 'package:flutter_switch/flutter_switch.dart';
 export 'package:jassdbx_provider/feature/location/widget/location_search_dialog.dart';
-export 'package:google_maps_flutter/google_maps_flutter.dart';
+export 'package:flutter_map/flutter_map.dart';
+export 'package:latlong2/latlong.dart' hide pi, Path;
 export 'package:jassdbx_provider/feature/location/model/prediction_model.dart';
 export 'package:jassdbx_provider/feature/settings/business/model/business_settings_model.dart';
 export 'package:jassdbx_provider/feature/settings/business/model/booking_settings_response_model.dart';
@@ -407,6 +408,8 @@ export 'package:jassdbx_provider/feature/settings/notification/widgets/notificat
 export 'package:jassdbx_provider/feature/settings/notification/widgets/notification_setup_shimmer.dart';
 export 'package:jassdbx_provider/feature/language/view/language_screen.dart';
 export 'package:jassdbx_provider/feature/review/view/review_reply_screen.dart';
+export 'package:jassdbx_provider/feature/review/view/serviceman_review_screen.dart';
+export 'package:jassdbx_provider/feature/review/view/booking_review_tab.dart';
 export 'package:jassdbx_provider/theme/custom_theme_colors.dart';
 export 'package:jassdbx_provider/helper/file_validation_helper.dart';
 export 'package:jassdbx_provider/common/widgets/image_validation_text_widget.dart';

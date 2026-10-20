@@ -8,6 +8,9 @@ class DashboardServicemanModel {
   BookingsCount? bookingsCount;
   User? user;
 
+  /// Assigned sub-categories (serviceman_categories pivot se)
+  List<ServicemanCategoryAssignment> assignedCategories;
+
   DashboardServicemanModel({
     this.id,
     this.providerId,
@@ -17,37 +20,75 @@ class DashboardServicemanModel {
     this.deletedAt,
     this.bookingsCount,
     this.user,
-  });
+    List<ServicemanCategoryAssignment>? assignedCategories,
+  }) : assignedCategories = assignedCategories ?? [];
 
-  DashboardServicemanModel.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
+  DashboardServicemanModel.fromJson(Map<String, dynamic> json)
+      : assignedCategories = [] {
+    id         = json['id'];
     providerId = json['provider_id'];
-    userId = json['user_id'];
-    createdAt = json['created_at'];
-    updatedAt = json['updated_at'];
-    deletedAt = json['deleted_at'];
+    userId     = json['user_id'];
+    createdAt  = json['created_at'];
+    updatedAt  = json['updated_at'];
+    deletedAt  = json['deleted_at'];
     user = json['user'] != null ? User.fromJson(json['user']) : null;
     bookingsCount = json['bookings_count'] != null
         ? BookingsCount.fromJson(json['bookings_count'])
         : null;
+
+    final raw = json['serviceman_categories'];
+    if (raw is List) {
+      assignedCategories = raw
+          .map((e) => ServicemanCategoryAssignment.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
   }
+
+  /// Convenience: flat list of assigned sub_category_ids
+  List<String> get subCategoryIds =>
+      assignedCategories.map((e) => e.subCategoryId).whereType<String>().toList();
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['id'] = id;
+    data['id']         = id;
     data['provider_id'] = providerId;
-    data['user_id'] = userId;
+    data['user_id']    = userId;
     data['created_at'] = createdAt;
     data['updated_at'] = updatedAt;
     data['deleted_at'] = deletedAt;
-    if (user != null) {
-      data['user'] = user!.toJson();
-    }
-    if (bookingsCount != null) {
-      data['bookings_count'] = bookingsCount!.toJson();
-    }
+    if (user != null)          data['user']           = user!.toJson();
+    if (bookingsCount != null) data['bookings_count'] = bookingsCount!.toJson();
+    data['serviceman_categories'] =
+        assignedCategories.map((e) => e.toJson()).toList();
     return data;
   }
+}
+
+/// One assigned category row
+class ServicemanCategoryAssignment {
+  String? subCategoryId;
+  String? categoryId;
+  String? subCategoryName;
+  String? categoryName;
+
+  ServicemanCategoryAssignment({
+    this.subCategoryId,
+    this.categoryId,
+    this.subCategoryName,
+    this.categoryName,
+  });
+
+  ServicemanCategoryAssignment.fromJson(Map<String, dynamic> json) {
+    subCategoryId   = json['sub_category_id'];
+    categoryId      = json['category_id'];
+    subCategoryName = json['sub_category']?['name'];
+    categoryName    = json['main_category']?['name'];
+  }
+
+  Map<String, dynamic> toJson() => {
+        'sub_category_id': subCategoryId,
+        'category_id':     categoryId,
+      };
 }
 
 class User {

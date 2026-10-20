@@ -163,10 +163,11 @@ class AuthController extends GetxController implements GetxService {
     String? emailPhone,
     String? password
   }) async {
-    authRepo.saveUserToken(token);
+    await authRepo.saveUserToken(token);
 
     Get.find<SplashController>().updateLanguage(true);
-    Get.find<LocationController>().getAddressList();
+    final LocationController locationController = Get.find<LocationController>();
+    locationController.getAddressList();
 
     if (_isActiveRememberMe) {
       saveUserNumberAndPassword(number: emailPhone ?? "", password: password ?? "");

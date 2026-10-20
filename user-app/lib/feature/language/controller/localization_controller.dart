@@ -39,7 +39,7 @@ class LocalizationController extends GetxController implements GetxService {
     }
     ///pick zone id to update header
     apiClient.updateHeader(
-      sharedPreferences.getString(AppConstants.token), addressModel?.zoneId,
+      AuthRepo.tokenCache ?? sharedPreferences.getString(AppConstants.token), addressModel?.zoneId,
       locale.languageCode, Get.find<SplashController>().getGuestId(),
     );
     saveLanguage(_locale);

@@ -86,7 +86,7 @@ class _RepeatBookingDetailsScreenState extends State<RepeatBookingDetailsScreen>
                     onTap: () async {
                       if(option.title == "download_invoice"){
                         String languageCode = Get.find<LocalizationController>().locale.languageCode;
-                        String uri = "${AppConstants.baseUrl}${AppConstants.repeatBookingInvoiceUrl}${bookingDetailsController.bookingDetailsContent?.id}/$languageCode";
+                        String uri = "${AppConstants.baseUrl}${AppConstants.repeatBookingInvoiceUrl}${bookingDetailsController.bookingDetailsContent?.id}/$languageCode?token=${Uri.encodeQueryComponent(AuthRepo.tokenCache ?? '')}";
                         if (kDebugMode) {
                           print("Uri : $uri");
                         }
@@ -136,7 +136,7 @@ class _RepeatBookingDetailsScreenState extends State<RepeatBookingDetailsScreen>
             ) : IconButton(
                 onPressed: () async {
                   String languageCode = Get.find<LocalizationController>().locale.languageCode;
-                  String uri = "${AppConstants.baseUrl}${AppConstants.repeatBookingInvoiceUrl}${bookingDetailsController.bookingDetailsContent?.id}/$languageCode";
+                  String uri = "${AppConstants.baseUrl}${AppConstants.repeatBookingInvoiceUrl}${bookingDetailsController.bookingDetailsContent?.id}/$languageCode?token=${Uri.encodeQueryComponent(AuthRepo.tokenCache ?? '')}";
                   if (kDebugMode) {
                     print("Uri : $uri");
                   }
@@ -217,7 +217,7 @@ class RepeatBookingTabBar extends StatelessWidget {
                         Get.dialog(const CustomLoader());
                         String languageCode = Get.find<LocalizationController>().locale.languageCode;
                         String uri = "${AppConstants.baseUrl}${
-                            AppConstants.repeatBookingInvoiceUrl}${bookingDetails.id}/$languageCode";
+                            AppConstants.repeatBookingInvoiceUrl}${bookingDetails.id}/$languageCode?token=${Uri.encodeQueryComponent(AuthRepo.tokenCache ?? '')}";
                         if (kDebugMode) {
                           print("Uri : $uri");
                         }

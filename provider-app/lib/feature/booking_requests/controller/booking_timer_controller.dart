@@ -7,14 +7,14 @@ import 'package:jassdbx_provider/feature/booking_details/model/assign_suggestion
 /// AUTO-ASSIGN: incoming booking popup ka controller.
 /// - booking details fetch karta hai
 /// - countdown chalata hai (backend auto-assign-state se remaining seconds)
-/// - serviceman suggestions (distance ke saath) load + team multi-select (1-5)
+/// - eligible serviceman suggestions load; provider exactly one select karta hai
 /// - assign / reject API call karta hai
 /// - expire hone par popup close karke list refresh karta hai
 class BookingTimerController extends GetxController implements GetxService {
   final BookingDetailsRepo bookingDetailsRepo;
   BookingTimerController({required this.bookingDetailsRepo});
 
-  static const int maxTeamSize = 5;
+  static const int maxTeamSize = 1;
 
   Timer? _timer;
   int _remainingSeconds = 0;
@@ -23,6 +23,7 @@ class BookingTimerController extends GetxController implements GetxService {
   bool _accepted = false;
   bool _rejected = false;
   bool _assigned = false;
+  bool _providerManualMode = false;
   String? _bookingId;
   BookingDetailsContent? _bookingDetails;
 
@@ -38,6 +39,7 @@ class BookingTimerController extends GetxController implements GetxService {
   bool get accepted => _accepted;
   bool get rejected => _rejected;
   bool get assigned => _assigned;
+  bool get providerManualMode => _providerManualMode;
   String? get bookingId => _bookingId;
   BookingDetailsContent? get bookingDetails => _bookingDetails;
 
@@ -70,14 +72,15 @@ class BookingTimerController extends GetxController implements GetxService {
 
         final String bookingStatus = content['booking_status']?.toString() ?? '';
         final String timerStatus = content['timer_status']?.toString() ?? '';
-        windowActive = bookingStatus == 'pending' && timerStatus == 'pending';
+        _providerManualMode = content['assignment_mode']?.toString() == 'provider_manual' ||
+            content['assignment_mode']?.toString() == 'manual_required';
+        windowActive = bookingStatus == 'pending' && _providerManualMode;
 
-        // booking already accepted/canceled/assign ho chuki hai toh popup band karo
-        if (bookingStatus != 'pending' || (timerStatus != 'pending' && timerStatus != '')) {
-          if (timerStatus == 'accepted' || bookingStatus != 'pending') {
-            Get.back();
-            return;
-          }
+        // Provider manual decision timer khatam hone ke baad bhi dashboard se
+        // assign kar sakta hai. Accepted/canceled bookings close kar do.
+        if (bookingStatus != 'pending' || (!_providerManualMode && timerStatus == 'accepted')) {
+          Get.back();
+          return;
         }
       }
     } else {
@@ -90,7 +93,7 @@ class BookingTimerController extends GetxController implements GetxService {
     }
 
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    if (!_providerManualMode) _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
         _remainingSeconds--;
         update();
@@ -126,14 +129,14 @@ class BookingTimerController extends GetxController implements GetxService {
     update();
   }
 
-  /// Checkbox toggle — max team size 5
+  /// Exactly one category-eligible serviceman can be selected.
   void toggleSuggestion(String servicemanId) {
+    if (!_suggestions.any((item) => item.id == servicemanId && item.isCategoryMatch)) return;
     if (_selectedIds.contains(servicemanId)) {
       _selectedIds.remove(servicemanId);
-    } else if (_selectedIds.length < maxTeamSize) {
-      _selectedIds.add(servicemanId);
     } else {
-      showCustomSnackBar('max_team_size_is_5'.tr);
+      _selectedIds.clear();
+      _selectedIds.add(servicemanId);
     }
     update();
   }

@@ -34,6 +34,7 @@ use Illuminate\Routing\Middleware\ValidateSignature;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Modules\BidModule\Http\Middleware\EnsureBiddingIsActive;
+use Modules\BookingModule\Http\Middleware\AuthorizeInvoiceAccess;
 use Modules\ProviderManagement\Http\Middleware\ProviderMiddleware;
 use Modules\ServicemanModule\Http\Middleware\ServicemanMiddleware;
 use Modules\UserManagement\Http\Middleware\AdminModulePermission;
@@ -65,7 +66,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->group('api', [
 //           EnsureFrontendRequestsAreStateful::class,
-            'throttle:180,1',
+            'throttle:api',
             SubstituteBindings::class,
             LocalizationMiddleware::class
         ]);
@@ -91,6 +92,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
             'provider' => ProviderMiddleware::class,
             'serviceman' => ServicemanMiddleware::class,
             'ensureBiddingIsActive' => EnsureBiddingIsActive::class,
+            'invoice.access' => AuthorizeInvoiceAccess::class,
             'subscription' => Subscription::class,
             'actch' => ActivationCheckMiddleware::class,
         ]);

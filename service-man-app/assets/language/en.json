@@ -420,6 +420,8 @@
   "account_blocked_notice": "Account Blocked Notice",
   "provider_location": "Provider Location",
   "customer_location": "Customer Location",
+  "assigned_by_provider": "Assigned by Provider",
+  "auto_assigned_booking": "Auto Assigned",
   "service_location": "Service Location",
   "you_need_to_go_to_the": "You need to go to the",
   "to_provide_the_service": "to provide the service",

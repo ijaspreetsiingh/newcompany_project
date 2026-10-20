@@ -522,7 +522,17 @@ class SubscriptionPackageController extends Controller
     }
     public function invoice($id)
     {
+        $userId = auth()->id();
+        $providerId = $this->provider->where('user_id', $userId)->value('id');
+
         $transaction = $this->transactions->with('packageLog.payment', 'packageLog.provider')->find($id);
+        abort_if(!$transaction, 404);
+
+        $allowed = (string) $transaction->from_user_id === (string) $userId
+            || (string) $transaction->to_user_id === (string) $userId
+            || ($providerId && (string) ($transaction->packageLog?->provider_id) === (string) $providerId);
+
+        abort_if(!$allowed, 403);
 
         return view('businesssettingsmodule::provider.subscription-package.invoice', compact('transaction'));
     }

@@ -10,188 +10,283 @@ import 'package:http/http.dart' as http;
 import 'package:jdds/util/core_export.dart';
 
 class NotificationHelper {
-
-  static Future<void> initialize(FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin) async {
-    var androidinitialize = const AndroidInitializationSettings('notification_icon');
+  static Future<void> initialize(
+    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin,
+  ) async {
+    var androidinitialize = const AndroidInitializationSettings(
+      'notification_icon',
+    );
     var iOSinitialize = const DarwinInitializationSettings();
-    var inttializationsSettings = InitializationSettings(android: androidinitialize, iOS: iOSinitialize);
+    var inttializationsSettings = InitializationSettings(
+      android: androidinitialize,
+      iOS: iOSinitialize,
+    );
 
     if (!GetPlatform.isIOS) {
       try {
         final androidPlugin = flutterLocalNotificationsPlugin
-            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
-        await androidPlugin?.createNotificationChannel(const AndroidNotificationChannel(
-          'incoming_call',
-          'Incoming Calls',
-          description: 'In-app voice and video call alerts',
-          importance: Importance.max,
-          playSound: true,
-          enableVibration: true,
-        ));
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
+        await androidPlugin?.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'incoming_call',
+            'Incoming Calls',
+            description: 'In-app voice and video call alerts',
+            importance: Importance.max,
+            playSound: true,
+            enableVibration: true,
+          ),
+        );
         // FCM background messages 'jassbooking' channel me aate hain —
         // channel exist na ho to Android 8+ notification silently drop hoti hai
-        await androidPlugin?.createNotificationChannel(const AndroidNotificationChannel(
-          'jassbooking',
-          'Booking Notifications',
-          description: 'Booking and order updates',
-          importance: Importance.max,
-          playSound: true,
-          enableVibration: true,
-        ));
+        await androidPlugin?.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'jassbooking',
+            'Booking Notifications',
+            description: 'Booking and order updates',
+            importance: Importance.max,
+            playSound: true,
+            enableVibration: true,
+          ),
+        );
       } catch (_) {}
     }
 
-    flutterLocalNotificationsPlugin.initialize(inttializationsSettings, onDidReceiveNotificationResponse: (payload) async {
-      if (kDebugMode) {
-        print("Payload: $payload");
-      }
-
-      try{
-        if(payload.payload!=null && payload.payload!=''){
-          try {
-            final Map<String, dynamic> pushData = jsonDecode(payload.payload!) as Map<String, dynamic>;
-            if ((pushData['type'] ?? '').toString().startsWith('call')) {
-              handleCallNotificationTap(pushData);
-              return;
-            }
-          } catch (_) {}
-
-          NotificationBody notificationBody = NotificationBody.fromJson(jsonDecode(payload.payload!));
-          if (kDebugMode) {
-            print("Type: ${notificationBody.notificationType}");
-          }
-          if(notificationBody.notificationType == "chatting"){
-
-            if(!GetPlatform.isWeb){
-              if(Get.currentRoute.contains(RouteHelper.chatScreen)){
-                Get.back();
-                Get.back();
-              } else if(Get.currentRoute.contains(RouteHelper.chatInbox)){
-                Get.back();
-              }
-            }
-            Get.toNamed(RouteHelper.getChatScreenRoute(
-                notificationBody.channelId??"",
-                notificationBody.userType == 'super-admin' ? "admin" : notificationBody.userName??"",
-                notificationBody.userProfileImage??"",
-                notificationBody.userPhone??"",
-                notificationBody.userType??"",
-                fromNotification: "fromNotification"
-            ));
-          }
-          else if(notificationBody.notificationType == 'bidding' || notificationBody.notificationType == 'bid-withdraw'){
-            Get.toNamed(RouteHelper.getMyPostScreen(fromNotification: "fromNotification"));
-          }
-
-          else if(notificationBody.notificationType == 'logout'){
-            Get.find<AuthController>().clearSharedData();
-            Get.offNamed(RouteHelper.getSignInRoute());
-          }
-          else if(notificationBody.notificationType == 'wallet'){
-            Get.find<WalletController>().getWalletTransactionData(1, reload: true);
-            if(!Get.currentRoute.contains(RouteHelper.myWallet)){
-              Get.toNamed(RouteHelper.getMyWalletScreen(fromNotification: "fromNotification"));
-            }
-          }
-          else if(notificationBody.notificationType == 'loyalty_point'){
-            if(!Get.currentRoute.contains(RouteHelper.loyaltyPoint)){
-              Get.toNamed(RouteHelper.getLoyaltyPointScreen(fromNotification: "fromNotification"));
-            }
-          }
-          else if(notificationBody.notificationType == 'booking' && notificationBody.bookingId !=null && notificationBody.bookingId!=''){
-            if(notificationBody.bookingType == "repeat" && notificationBody.repeatBookingType == "single"){
-              Get.toNamed(RouteHelper.getBookingDetailsScreen( subBookingId : notificationBody.bookingId!,fromPage: 'fromNotification'));
-            }else if(notificationBody.bookingType == "repeat" && notificationBody.repeatBookingType != "single"){
-              Get.toNamed(RouteHelper.getRepeatBookingDetailsScreen( bookingId : notificationBody.bookingId, fromPage : "fromNotification"));
-            }else{
-              Get.toNamed(RouteHelper.getBookingDetailsScreen( bookingID:notificationBody.bookingId!,fromPage: 'fromNotification'));
-            }
-          } else if(notificationBody.notificationType=='privacy_policy' && notificationBody.title!=null && notificationBody.title!=''){
-            Get.toNamed(RouteHelper.getPrivacyPolicyRoute());
-          }else if(notificationBody.notificationType=='terms_and_conditions' && notificationBody.title!=null && notificationBody.title!=''){
-              Get.toNamed(RouteHelper.getTermsAndConditionsRoute());
-          }else{
-              Get.toNamed(RouteHelper.getNotificationRoute());
-          }
-        }
-      }catch (e) {
+    flutterLocalNotificationsPlugin.initialize(
+      inttializationsSettings,
+      onDidReceiveNotificationResponse: (payload) async {
         if (kDebugMode) {
-          print("");
+          print("Payload: $payload");
         }
-      }
-      return;
-    });
+
+        try {
+          if (payload.payload != null && payload.payload != '') {
+            try {
+              final Map<String, dynamic> pushData =
+                  jsonDecode(payload.payload!) as Map<String, dynamic>;
+              if ((pushData['type'] ?? '').toString().startsWith('call')) {
+                handleCallNotificationTap(pushData);
+                return;
+              }
+            } catch (_) {}
+
+            NotificationBody notificationBody = NotificationBody.fromJson(
+              jsonDecode(payload.payload!),
+            );
+            if (kDebugMode) {
+              print("Type: ${notificationBody.notificationType}");
+            }
+            if (notificationBody.notificationType == "chatting") {
+              if (!GetPlatform.isWeb) {
+                if (Get.currentRoute.contains(RouteHelper.chatScreen)) {
+                  Get.back();
+                  Get.back();
+                } else if (Get.currentRoute.contains(RouteHelper.chatInbox)) {
+                  Get.back();
+                }
+              }
+              Get.toNamed(
+                RouteHelper.getChatScreenRoute(
+                  notificationBody.channelId ?? "",
+                  notificationBody.userType == 'super-admin'
+                      ? "admin"
+                      : notificationBody.userName ?? "",
+                  notificationBody.userProfileImage ?? "",
+                  notificationBody.userPhone ?? "",
+                  notificationBody.userType ?? "",
+                  fromNotification: "fromNotification",
+                ),
+              );
+            } else if (notificationBody.notificationType == 'bidding' ||
+                notificationBody.notificationType == 'bid-withdraw') {
+              Get.toNamed(
+                RouteHelper.getMyPostScreen(
+                  fromNotification: "fromNotification",
+                ),
+              );
+            } else if (notificationBody.notificationType == 'logout') {
+              Get.find<AuthController>().clearSharedData();
+              Get.offNamed(RouteHelper.getSignInRoute());
+            } else if (notificationBody.notificationType == 'wallet') {
+              Get.find<WalletController>().getWalletTransactionData(
+                1,
+                reload: true,
+              );
+              if (!Get.currentRoute.contains(RouteHelper.myWallet)) {
+                Get.toNamed(
+                  RouteHelper.getMyWalletScreen(
+                    fromNotification: "fromNotification",
+                  ),
+                );
+              }
+            } else if (notificationBody.notificationType == 'loyalty_point') {
+              if (!Get.currentRoute.contains(RouteHelper.loyaltyPoint)) {
+                Get.toNamed(
+                  RouteHelper.getLoyaltyPointScreen(
+                    fromNotification: "fromNotification",
+                  ),
+                );
+              }
+            } else if (notificationBody.notificationType == 'booking' &&
+                notificationBody.bookingId != null &&
+                notificationBody.bookingId != '') {
+              if (notificationBody.bookingType == "repeat" &&
+                  notificationBody.repeatBookingType == "single") {
+                Get.toNamed(
+                  RouteHelper.getBookingDetailsScreen(
+                    subBookingId: notificationBody.bookingId!,
+                    fromPage: 'fromNotification',
+                  ),
+                );
+              } else if (notificationBody.bookingType == "repeat" &&
+                  notificationBody.repeatBookingType != "single") {
+                Get.toNamed(
+                  RouteHelper.getRepeatBookingDetailsScreen(
+                    bookingId: notificationBody.bookingId,
+                    fromPage: "fromNotification",
+                  ),
+                );
+              } else {
+                Get.toNamed(
+                  RouteHelper.getBookingDetailsScreen(
+                    bookingID: notificationBody.bookingId!,
+                    fromPage: 'fromNotification',
+                  ),
+                );
+              }
+            } else if (notificationBody.notificationType == 'privacy_policy' &&
+                notificationBody.title != null &&
+                notificationBody.title != '') {
+              Get.toNamed(RouteHelper.getPrivacyPolicyRoute());
+            } else if (notificationBody.notificationType ==
+                    'terms_and_conditions' &&
+                notificationBody.title != null &&
+                notificationBody.title != '') {
+              Get.toNamed(RouteHelper.getTermsAndConditionsRoute());
+            } else {
+              Get.toNamed(RouteHelper.getNotificationRoute());
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print("");
+          }
+        }
+        return;
+      },
+    );
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       if (kDebugMode) {
-        print("onMessage: Notification Type => ${message.data["type"]}/ Title => ${message.data['title']} ${message.notification?.title}/${message.notification?.body}/${message.notification?.titleLocKey}");
+        print(
+          "onMessage: Notification Type => ${message.data["type"]}/ Title => ${message.data['title']} ${message.notification?.title}/${message.notification?.body}/${message.notification?.titleLocKey}",
+        );
         print("onMessage: Notification Body => ${message.data.toString()}");
       }
-      if(!ResponsiveHelper.isWeb()){
+      if (!ResponsiveHelper.isWeb()) {
         if ((message.data['type'] ?? '').toString().startsWith('call')) {
           if (message.data['type'] == 'call_invite') {
             try {
-              Get.find<CallController>().handleCallPush(Map<String, dynamic>.from(message.data));
+              Get.find<CallController>().handleCallPush(
+                Map<String, dynamic>.from(message.data),
+              );
             } catch (_) {}
           } else {
-            NotificationHelper.showNotification(message, flutterLocalNotificationsPlugin, false);
+            NotificationHelper.showNotification(
+              message,
+              flutterLocalNotificationsPlugin,
+              false,
+            );
           }
-        }
-
-        else if(message.data['type']=='bidding'){
-
-          if((message.data['post_id']!="" && message.data['post_id']!=null) && (message.data['provider_id']!="" && message.data['provider_id']!=null)){
-            Get.find<CreatePostController>().providerBidDetailsForNotification(message.data['post_id'],message.data['provider_id']);
-          }else{
-            NotificationHelper.showNotification(message, flutterLocalNotificationsPlugin, false);
+        } else if (message.data['type'] == 'bidding') {
+          if ((message.data['post_id'] != "" &&
+                  message.data['post_id'] != null) &&
+              (message.data['provider_id'] != "" &&
+                  message.data['provider_id'] != null)) {
+            Get.find<CreatePostController>().providerBidDetailsForNotification(
+              message.data['post_id'],
+              message.data['provider_id'],
+            );
+          } else {
+            NotificationHelper.showNotification(
+              message,
+              flutterLocalNotificationsPlugin,
+              false,
+            );
           }
 
-          if(Get.currentRoute==RouteHelper.myPost){
+          if (Get.currentRoute == RouteHelper.myPost) {
             Get.find<CreatePostController>().getMyPostList(1);
           }
-        }
-
-        else if(message.data['type']=='bid-withdraw'){
-          if(Get.currentRoute.contains(RouteHelper.customPostCheckout)){
+        } else if (message.data['type'] == 'bid-withdraw') {
+          if (Get.currentRoute.contains(RouteHelper.customPostCheckout)) {
             Future.delayed(const Duration(microseconds: 300), () {
               Get.dialog(
                 const ProviderWithdrawBidDialog(),
                 barrierDismissible: false,
               );
             });
-
-          }else{
-            NotificationHelper.showNotification(message, flutterLocalNotificationsPlugin, false);
+          } else {
+            NotificationHelper.showNotification(
+              message,
+              flutterLocalNotificationsPlugin,
+              false,
+            );
           }
-        }
-
-        else if(message.data['type'] == 'chatting'){
-          if((message.data['channel_id']!="" && message.data['channel_id']!=null)){
-
-            if(Get.currentRoute.contains(RouteHelper.chatScreen) && message.data['channel_id'] == Get.find<ConversationController>().channelId){
+        } else if (message.data['type'] == 'chatting') {
+          if ((message.data['channel_id'] != "" &&
+              message.data['channel_id'] != null)) {
+            if (Get.currentRoute.contains(RouteHelper.chatScreen) &&
+                message.data['channel_id'] ==
+                    Get.find<ConversationController>().channelId) {
               Get.find<ConversationController>().cleanOldData();
-              Get.find<ConversationController>().setChannelId(message.data['channel_id']);
-              Get.find<ConversationController>().getConversation(message.data['channel_id'], 1,isinttial:true);
-            }else if(Get.currentRoute.contains(RouteHelper.chatInbox) || Get.currentRoute.contains(RouteHelper.chatScreen)){
+              Get.find<ConversationController>().setChannelId(
+                message.data['channel_id'],
+              );
+              Get.find<ConversationController>().getConversation(
+                message.data['channel_id'],
+                1,
+                isinttial: true,
+              );
+            } else if (Get.currentRoute.contains(RouteHelper.chatInbox) ||
+                Get.currentRoute.contains(RouteHelper.chatScreen)) {
               if (kDebugMode) {
                 print("${message.data['user_type']}");
               }
-              NotificationHelper.showNotification(message, flutterLocalNotificationsPlugin, false);
-              if(message.data['user_type'] == 'provider-admin'){
+              NotificationHelper.showNotification(
+                message,
+                flutterLocalNotificationsPlugin,
+                false,
+              );
+              if (message.data['user_type'] == 'provider-admin') {
                 Get.find<ConversationController>().getChannelList(1);
-              }else{
-                Get.find<ConversationController>().getChannelList(1, type: "serviceman");
+              } else {
+                Get.find<ConversationController>().getChannelList(
+                  1,
+                  type: "serviceman",
+                );
               }
-            }else{
-              NotificationHelper.showNotification(message, flutterLocalNotificationsPlugin, false);
+            } else {
+              NotificationHelper.showNotification(
+                message,
+                flutterLocalNotificationsPlugin,
+                false,
+              );
             }
-
-          } else{
-            NotificationHelper.showNotification(message, flutterLocalNotificationsPlugin, false);
+          } else {
+            NotificationHelper.showNotification(
+              message,
+              flutterLocalNotificationsPlugin,
+              false,
+            );
           }
-        }
-        else if(message.data['type'] == 'logout'){
-          NotificationHelper.showNotification(message, flutterLocalNotificationsPlugin,false);
+        } else if (message.data['type'] == 'logout') {
+          NotificationHelper.showNotification(
+            message,
+            flutterLocalNotificationsPlugin,
+            false,
+          );
 
           Get.find<AuthController>().logOut();
           Get.find<AuthController>().clearSharedData();
@@ -200,143 +295,211 @@ class NotificationHelper {
           Get.find<LocationController>().updateSelectedAddress(null);
           Get.offNamed(RouteHelper.getSignInRoute());
           customSnackBar(message.data['title'], duration: 4);
-        }
-        else if(message.data['type'] == 'maintenance'){
+        } else if (message.data['type'] == 'maintenance') {
           Get.find<SplashController>().getConfigData();
-        }
-        else if(message.data['type'] == 'demo_reset') {
-          if(Get.find<SplashController>().configModel.content?.appEnvtronment == "demo"){
-            Get.dialog(const DemoResetDialogWidget(), barrierDismissible: false);
+        } else if (message.data['type'] == 'demo_reset') {
+          if (Get.find<SplashController>()
+                  .configModel
+                  .content
+                  ?.appEnvtronment ==
+              "demo") {
+            Get.dialog(
+              const DemoResetDialogWidget(),
+              barrierDismissible: false,
+            );
           }
-        }
-        else if(message.data['type'] == 'booking_ignored') {
+        } else if (message.data['type'] == 'booking_ignored') {
           showModalBottomSheet(
             isDismissible: false,
             backgroundColor: Colors.transparent,
             context: Get.context!,
-              builder: (context) =>  NotificationIgnoredBottomSheet(bookingId: message.data['booking_id']),
+            builder: (context) => NotificationIgnoredBottomSheet(
+              bookingId: message.data['booking_id'],
+            ),
+          );
+        } else {
+          NotificationHelper.showNotification(
+            message,
+            flutterLocalNotificationsPlugin,
+            false,
           );
         }
-        else{
-          NotificationHelper.showNotification(message, flutterLocalNotificationsPlugin, false);
-        }
-      }
-      else{
-        NotificationBody notificationBody = NotificationBody.fromJson(message.data);
+      } else {
+        NotificationBody notificationBody = NotificationBody.fromJson(
+          message.data,
+        );
 
-        if(message.data["type"]=="chatting" && (message.data['channel_id']!="" && message.data['channel_id']!=null) &&
-            message.data['channel_id'] == Get.find<ConversationController>().channelId && Get.currentRoute.contains(RouteHelper.chatScreen)){
+        if (message.data["type"] == "chatting" &&
+            (message.data['channel_id'] != "" &&
+                message.data['channel_id'] != null) &&
+            message.data['channel_id'] ==
+                Get.find<ConversationController>().channelId &&
+            Get.currentRoute.contains(RouteHelper.chatScreen)) {
           Get.find<ConversationController>().cleanOldData();
-          Get.find<ConversationController>().setChannelId(message.data['channel_id']);
-          Get.find<ConversationController>().getConversation(message.data['channel_id'], 1,isinttial:true);
-        } else if(notificationBody.notificationType =="booking_ignored" && notificationBody.bookingId != null){
-
-          if(Get.find<AuthController>().isNotificationActive()){
+          Get.find<ConversationController>().setChannelId(
+            message.data['channel_id'],
+          );
+          Get.find<ConversationController>().getConversation(
+            message.data['channel_id'],
+            1,
+            isinttial: true,
+          );
+        } else if (notificationBody.notificationType == "booking_ignored" &&
+            notificationBody.bookingId != null) {
+          if (Get.find<AuthController>().isNotificationActive()) {
             final player = AudioPlayer();
             player.play(AssetSource('notification.wav'));
           }
-          Get.dialog( Center(child: NotificationIgnoredBottomSheet(bookingId: message.data['booking_id'],)), barrierDismissible: false);
-        }
-        else if(message.data["type"]=="bid-withdraw" && Get.currentRoute.contains(RouteHelper.customPostCheckout)){
+          Get.dialog(
+            Center(
+              child: NotificationIgnoredBottomSheet(
+                bookingId: message.data['booking_id'],
+              ),
+            ),
+            barrierDismissible: false,
+          );
+        } else if (message.data["type"] == "bid-withdraw" &&
+            Get.currentRoute.contains(RouteHelper.customPostCheckout)) {
           Future.delayed(const Duration(microseconds: 500), () {
             Get.dialog(
               const ProviderWithdrawBidDialog(),
               barrierDismissible: false,
             );
           });
-        }
-        else{
-
-          Future.delayed(const Duration(milliseconds: 1700), (){
-            Get.dialog(PushNotificationDialog(
-                title: message.notification?.title ?? message.data['title'] ?? '',
-                notificationBody: notificationBody
-            ));
+        } else {
+          Future.delayed(const Duration(milliseconds: 1700), () {
+            Get.dialog(
+              PushNotificationDialog(
+                title:
+                    message.notification?.title ?? message.data['title'] ?? '',
+                notificationBody: notificationBody,
+              ),
+            );
           });
-
         }
 
-        if(message.data["type"]=="bidding" &&Get.currentRoute==RouteHelper.myPost && (message.data['post_id']!="" && message.data['post_id']!=null)){
-          Get.find<CreatePostController>().getMyPostList(1,reload: true);
+        if (message.data["type"] == "bidding" &&
+            Get.currentRoute == RouteHelper.myPost &&
+            (message.data['post_id'] != "" &&
+                message.data['post_id'] != null)) {
+          Get.find<CreatePostController>().getMyPostList(1, reload: true);
         }
       }
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage? message) {
-      printLog("onMessageOpenApp: ${message?.notification?.title}/${message?.notification?.body}/${message?.notification?.titleLocKey} || ${message?.data}");
+      printLog(
+        "onMessageOpenApp: ${message?.notification?.title}/${message?.notification?.body}/${message?.notification?.titleLocKey} || ${message?.data}",
+      );
 
-     try{
-       if(message !=null && message.data.isNotEmpty) {
-         if ((message.data['type'] ?? '').toString().startsWith('call')) {
-           handleCallNotificationTap(Map<String, dynamic>.from(message.data));
-           return;
-         }
-         NotificationBody notificationBody = convertNotification(message.data);
-         if(notificationBody.notificationType == "chatting"){
-
-           if(!GetPlatform.isWeb){
-             if(Get.currentRoute.contains(RouteHelper.chatScreen)){
-               Get.back();
-               Get.back();
-             } else if(Get.currentRoute.contains(RouteHelper.chatInbox)){
-               Get.back();
-             }
-           }
-           Get.toNamed(RouteHelper.getChatScreenRoute(
-               notificationBody.channelId??"",
-               notificationBody.userType == 'super-admin' ? "admin" : notificationBody.userName??"",
-               notificationBody.userProfileImage??"",
-               notificationBody.userPhone??"",
-               notificationBody.userType??"",
-               fromNotification: "fromNotification"
-           ));
-         }
-         else if(notificationBody.notificationType == 'bidding' || notificationBody.notificationType == 'bid-withdraw'){
-          if(!Get.currentRoute.contains(RouteHelper.myWallet)){
-            Get.toNamed(RouteHelper.getMyPostScreen(fromNotification: "fromNotification"));
+      try {
+        if (message != null && message.data.isNotEmpty) {
+          if ((message.data['type'] ?? '').toString().startsWith('call')) {
+            handleCallNotificationTap(Map<String, dynamic>.from(message.data));
+            return;
           }
-         }
-         else if(notificationBody.notificationType == 'booking' && notificationBody.bookingId != null && notificationBody.bookingId !=''){
-           if(notificationBody.bookingType == "repeat" && notificationBody.repeatBookingType == "single"){
-             Get.toNamed(RouteHelper.getBookingDetailsScreen( subBookingId : notificationBody.bookingId!,fromPage: 'fromNotification'));
-           }else if(notificationBody.bookingType == "repeat" && notificationBody.repeatBookingType != "single"){
-             Get.toNamed(RouteHelper.getRepeatBookingDetailsScreen( bookingId : notificationBody.bookingId, fromPage : "fromNotification"));
-           }else{
-             Get.toNamed(RouteHelper.getBookingDetailsScreen( bookingID:notificationBody.bookingId!,fromPage: 'fromNotification'));
-           }
-         }
-         else if(notificationBody.notificationType == 'privacy_policy' && notificationBody.title != null && notificationBody.title !=''){
-           Get.toNamed(RouteHelper.getPrivacyPolicyRoute());
-         }
-         else if(notificationBody.notificationType == 'terms_and_conditions' && notificationBody.title != null && notificationBody.title !=''){
-           Get.toNamed(RouteHelper.getTermsAndConditionsRoute());
-         }
-         else if(notificationBody.notificationType == "wallet"){
-          Get.toNamed(RouteHelper.getMyWalletScreen(fromNotification: "fromNotification"));
-         }
-         else if(notificationBody.notificationType == 'loyalty_point'){
-           if(!Get.currentRoute.contains(RouteHelper.loyaltyPoint)){
-             Get.toNamed(RouteHelper.getLoyaltyPointScreen(fromNotification: "fromNotification"));
-           }
-         }
-         else if(notificationBody.notificationType == 'logout'){
-           Get.find<AuthController>().clearSharedData();
-           Get.offNamed(RouteHelper.getSignInRoute());
-         }
-         else{
-           Get.toNamed(RouteHelper.getNotificationRoute());
-         }
-       }
-     }catch (e) {
-       if (kDebugMode) {
-         print("");
-       }
-     }
+          NotificationBody notificationBody = convertNotification(message.data);
+          if (notificationBody.notificationType == "chatting") {
+            if (!GetPlatform.isWeb) {
+              if (Get.currentRoute.contains(RouteHelper.chatScreen)) {
+                Get.back();
+                Get.back();
+              } else if (Get.currentRoute.contains(RouteHelper.chatInbox)) {
+                Get.back();
+              }
+            }
+            Get.toNamed(
+              RouteHelper.getChatScreenRoute(
+                notificationBody.channelId ?? "",
+                notificationBody.userType == 'super-admin'
+                    ? "admin"
+                    : notificationBody.userName ?? "",
+                notificationBody.userProfileImage ?? "",
+                notificationBody.userPhone ?? "",
+                notificationBody.userType ?? "",
+                fromNotification: "fromNotification",
+              ),
+            );
+          } else if (notificationBody.notificationType == 'bidding' ||
+              notificationBody.notificationType == 'bid-withdraw') {
+            if (!Get.currentRoute.contains(RouteHelper.myWallet)) {
+              Get.toNamed(
+                RouteHelper.getMyPostScreen(
+                  fromNotification: "fromNotification",
+                ),
+              );
+            }
+          } else if (notificationBody.notificationType == 'booking' &&
+              notificationBody.bookingId != null &&
+              notificationBody.bookingId != '') {
+            if (notificationBody.bookingType == "repeat" &&
+                notificationBody.repeatBookingType == "single") {
+              Get.toNamed(
+                RouteHelper.getBookingDetailsScreen(
+                  subBookingId: notificationBody.bookingId!,
+                  fromPage: 'fromNotification',
+                ),
+              );
+            } else if (notificationBody.bookingType == "repeat" &&
+                notificationBody.repeatBookingType != "single") {
+              Get.toNamed(
+                RouteHelper.getRepeatBookingDetailsScreen(
+                  bookingId: notificationBody.bookingId,
+                  fromPage: "fromNotification",
+                ),
+              );
+            } else {
+              Get.toNamed(
+                RouteHelper.getBookingDetailsScreen(
+                  bookingID: notificationBody.bookingId!,
+                  fromPage: 'fromNotification',
+                ),
+              );
+            }
+          } else if (notificationBody.notificationType == 'privacy_policy' &&
+              notificationBody.title != null &&
+              notificationBody.title != '') {
+            Get.toNamed(RouteHelper.getPrivacyPolicyRoute());
+          } else if (notificationBody.notificationType ==
+                  'terms_and_conditions' &&
+              notificationBody.title != null &&
+              notificationBody.title != '') {
+            Get.toNamed(RouteHelper.getTermsAndConditionsRoute());
+          } else if (notificationBody.notificationType == "wallet") {
+            Get.toNamed(
+              RouteHelper.getMyWalletScreen(
+                fromNotification: "fromNotification",
+              ),
+            );
+          } else if (notificationBody.notificationType == 'loyalty_point') {
+            if (!Get.currentRoute.contains(RouteHelper.loyaltyPoint)) {
+              Get.toNamed(
+                RouteHelper.getLoyaltyPointScreen(
+                  fromNotification: "fromNotification",
+                ),
+              );
+            }
+          } else if (notificationBody.notificationType == 'logout') {
+            Get.find<AuthController>().clearSharedData();
+            Get.offNamed(RouteHelper.getSignInRoute());
+          } else {
+            Get.toNamed(RouteHelper.getNotificationRoute());
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print("");
+        }
+      }
     });
   }
 
-  static Future<void> showNotification(RemoteMessage message, FlutterLocalNotificationsPlugin fln, bool data) async {
-    if(!GetPlatform.isIOS) {
+  static Future<void> showNotification(
+    RemoteMessage message,
+    FlutterLocalNotificationsPlugin fln,
+    bool data,
+  ) async {
+    if (!GetPlatform.isIOS) {
       String title;
       String body;
       String? orderID;
@@ -345,103 +508,203 @@ class NotificationHelper {
 
       // W3.19: data-only FCM messages me notification null hoti hai —
       // title/body kabhi null crash na kare, data se fallback lo
-      title = message.data['title'] ?? message.notification?.title ?? 'notification';
+      title =
+          message.data['title'] ??
+          message.notification?.title ??
+          'notification';
       body = message.data['body'] ?? message.notification?.body ?? "";
       orderID = message.data['booking_id']?.toString() ?? "";
-      image = (message.data['image'] != null && message.data['image'].isNotEmpty)
-          ? message.data['image'].startsWith('http') ? message.data['image']
-          : '${AppConstants.baseUrl}/storage/app/public/notification/${message.data['image']}' : null;
+      image =
+          (message.data['image'] != null && message.data['image'].isNotEmpty)
+          ? message.data['image'].startsWith('http')
+                ? message.data['image']
+                : '${AppConstants.baseUrl}/storage/app/public/notification/${message.data['image']}'
+          : null;
 
-      if(image != null && image.isNotEmpty) {
-        try{
-          await showBigPictureNotificationHiddenLargeIcon(title, body, playLoad, image, fln);
-        }catch(e) {
-          await showBigTextNotification(title, '',playLoad, orderID,fln);
+      if (image != null && image.isNotEmpty) {
+        try {
+          await showBigPictureNotificationHiddenLargeIcon(
+            title,
+            body,
+            playLoad,
+            image,
+            fln,
+          );
+        } catch (e) {
+          await showBigTextNotification(title, '', playLoad, orderID, fln);
         }
-
-      }else {
+      } else {
         await showBigTextNotification(title, body, playLoad, orderID, fln);
       }
     }
   }
 
-  static Future<void> showTextNotification(String title, String? body, String orderID, FlutterLocalNotificationsPlugin fln) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'jdds', 'jdds', playSound: true,
-      importance: Importance.max, priority: Priority.max, sound: RawResourceAndroidNotificationSound('notification'),
-    );
+  static Future<void> showTextNotification(
+    String title,
+    String? body,
+    String orderID,
+    FlutterLocalNotificationsPlugin fln,
+  ) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+          'jdds',
+          'jdds',
+          playSound: true,
+          importance: Importance.max,
+          priority: Priority.max,
+          sound: RawResourceAndroidNotificationSound('notification'),
+        );
     int randomNumber = Random().nextInt(100);
-    const NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
-    await fln.show(randomNumber, title, body, platformChannelSpecifics, payload: orderID);
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+    await fln.show(
+      randomNumber,
+      title,
+      body,
+      platformChannelSpecifics,
+      payload: orderID,
+    );
   }
 
-  static Future<void> showBigTextNotification(String title, String? body, String payload, String image, FlutterLocalNotificationsPlugin fln) async {
+  static Future<void> showBigTextNotification(
+    String title,
+    String? body,
+    String payload,
+    String image,
+    FlutterLocalNotificationsPlugin fln,
+  ) async {
     BigTextStyleInformation bigTextStyleInformation = BigTextStyleInformation(
-      body ?? "", htmlFormatBigText: true,
-      contentTitle: title, htmlFormatContentTitle: true,
+      body ?? "",
+      htmlFormatBigText: true,
+      contentTitle: title,
+      htmlFormatContentTitle: true,
     );
-    if(!Get.find<AuthController>().isNotificationActive()){
-      AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        "jddsWithoutsound","jdds without sound", channelDescription:"description",
-        playSound: false,
-        importance: Importance.max,
-        styleInformation: bigTextStyleInformation, priority: Priority.max,
-
-      );
+    if (!Get.find<AuthController>().isNotificationActive()) {
+      AndroidNotificationDetails androidPlatformChannelSpecifics =
+          AndroidNotificationDetails(
+            "jddsWithoutsound",
+            "jdds without sound",
+            channelDescription: "description",
+            playSound: false,
+            importance: Importance.max,
+            styleInformation: bigTextStyleInformation,
+            priority: Priority.max,
+          );
 
       int randomNumber = Random().nextInt(100);
 
-      NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
-      await fln.show(randomNumber, title, body, platformChannelSpecifics, payload: payload);
-    }
-    else {
-      AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        "jassbooking", 'jassbooking with sound', channelDescription:"description",
-        playSound: true,
-        sound: const RawResourceAndroidNotificationSound('notification'),
-        importance: Importance.max,
-        styleInformation: bigTextStyleInformation, priority: Priority.max,
+      NotificationDetails platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
       );
+      await fln.show(
+        randomNumber,
+        title,
+        body,
+        platformChannelSpecifics,
+        payload: payload,
+      );
+    } else {
+      AndroidNotificationDetails androidPlatformChannelSpecifics =
+          AndroidNotificationDetails(
+            "jassbooking",
+            'jassbooking with sound',
+            channelDescription: "description",
+            playSound: true,
+            sound: const RawResourceAndroidNotificationSound('notification'),
+            importance: Importance.max,
+            styleInformation: bigTextStyleInformation,
+            priority: Priority.max,
+          );
       int randomNumber = Random().nextInt(100);
-      NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
-      await fln.show(randomNumber, title, body, platformChannelSpecifics, payload: payload);
+      NotificationDetails platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+      );
+      await fln.show(
+        randomNumber,
+        title,
+        body,
+        platformChannelSpecifics,
+        payload: payload,
+      );
     }
   }
 
-  static Future<void> showBigPictureNotificationHiddenLargeIcon(String title, String body, String payload, String image, FlutterLocalNotificationsPlugin fln) async {
+  static Future<void> showBigPictureNotificationHiddenLargeIcon(
+    String title,
+    String body,
+    String payload,
+    String image,
+    FlutterLocalNotificationsPlugin fln,
+  ) async {
     final String largeIconPath = await _downloadAndSaveFile(image, 'largeIcon');
-    final String bigPicturePath = await _downloadAndSaveFile(image, 'bigPicture');
-    final BigPictureStyleInformation bigPictureStyleInformation = BigPictureStyleInformation(
-      FilePathAndroidBitmap(bigPicturePath), hideExpandedLargeIcon: true,
-      contentTitle: title, htmlFormatContentTitle: true,
-      summaryText: body, htmlFormatSummaryText: true,
+    final String bigPicturePath = await _downloadAndSaveFile(
+      image,
+      'bigPicture',
     );
-    if(!Get.find<AuthController>().isNotificationActive()){
-      AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        "jddsWithoutsound","jdds without sound", channelDescription:"description",
-        playSound: false,
-        largeIcon: FilePathAndroidBitmap(largeIconPath), priority: Priority.max,
-        styleInformation: bigPictureStyleInformation, importance: Importance.max,
-      );
+    final BigPictureStyleInformation bigPictureStyleInformation =
+        BigPictureStyleInformation(
+          FilePathAndroidBitmap(bigPicturePath),
+          hideExpandedLargeIcon: true,
+          contentTitle: title,
+          htmlFormatContentTitle: true,
+          summaryText: body,
+          htmlFormatSummaryText: true,
+        );
+    if (!Get.find<AuthController>().isNotificationActive()) {
+      AndroidNotificationDetails androidPlatformChannelSpecifics =
+          AndroidNotificationDetails(
+            "jddsWithoutsound",
+            "jdds without sound",
+            channelDescription: "description",
+            playSound: false,
+            largeIcon: FilePathAndroidBitmap(largeIconPath),
+            priority: Priority.max,
+            styleInformation: bigPictureStyleInformation,
+            importance: Importance.max,
+          );
       int randomNumber = Random().nextInt(100);
-      NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
-      await fln.show(randomNumber, title, body, platformChannelSpecifics, payload: payload);
-
-    }else{
-      AndroidNotificationDetails androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        "jassbooking", 'jassbooking with sound', channelDescription:"description",
-        playSound: true,
-        sound: const RawResourceAndroidNotificationSound('notification'),
-        largeIcon: FilePathAndroidBitmap(largeIconPath), priority: Priority.max,
-        styleInformation: bigPictureStyleInformation, importance: Importance.max,
+      NotificationDetails platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
       );
+      await fln.show(
+        randomNumber,
+        title,
+        body,
+        platformChannelSpecifics,
+        payload: payload,
+      );
+    } else {
+      AndroidNotificationDetails androidPlatformChannelSpecifics =
+          AndroidNotificationDetails(
+            "jassbooking",
+            'jassbooking with sound',
+            channelDescription: "description",
+            playSound: true,
+            sound: const RawResourceAndroidNotificationSound('notification'),
+            largeIcon: FilePathAndroidBitmap(largeIconPath),
+            priority: Priority.max,
+            styleInformation: bigPictureStyleInformation,
+            importance: Importance.max,
+          );
       int randomNumber = Random().nextInt(100);
-      NotificationDetails platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
-      await fln.show(randomNumber, title, body, platformChannelSpecifics, payload: payload);
+      NotificationDetails platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+      );
+      await fln.show(
+        randomNumber,
+        title,
+        body,
+        platformChannelSpecifics,
+        payload: payload,
+      );
     }
   }
 
-  static Future<String> _downloadAndSaveFile(String url, String fileName) async {
+  static Future<String> _downloadAndSaveFile(
+    String url,
+    String fileName,
+  ) async {
     final Directory dtrectory = await getApplicationDocumentsDirectory();
     final String filePath = '${dtrectory.path}/$fileName';
     final http.Response response = await http.get(Uri.parse(url));
@@ -450,23 +713,27 @@ class NotificationHelper {
     return filePath;
   }
 
-  static NotificationBody convertNotification(Map<String, dynamic> data){
-   return NotificationBody.fromJson(data);
+  static NotificationBody convertNotification(Map<String, dynamic> data) {
+    return NotificationBody.fromJson(data);
   }
 
   static void handleCallNotificationTap(Map<String, dynamic> data) {
     try {
       final String callId = (data['call_id'] ?? '').toString();
       if (callId.isEmpty) return;
-      if (Get.currentRoute.contains('incoming-call') || Get.currentRoute.contains('voice-call')) return;
-      Get.to(() => IncomingCallScreen(
-            callId: callId,
-            callType: (data['call_type'] ?? 'voice').toString(),
-            userName: (data['user_name'] ?? '').toString(),
-            userImage: (data['user_image'] ?? '').toString(),
-            bookingId: (data['booking_id'] ?? '').toString(),
-            verify: true,
-          ));
+      if (Get.currentRoute.contains('incoming-call') ||
+          Get.currentRoute.contains('voice-call'))
+        return;
+      Get.to(
+        () => IncomingCallScreen(
+          callId: callId,
+          callType: (data['call_type'] ?? 'voice').toString(),
+          userName: (data['user_name'] ?? '').toString(),
+          userImage: (data['user_image'] ?? '').toString(),
+          bookingId: (data['booking_id'] ?? '').toString(),
+          verify: true,
+        ),
+      );
     } catch (_) {}
   }
 }
@@ -474,7 +741,8 @@ class NotificationHelper {
 @pragma('vm:entry-point')
 Future<dynamic> myBackgroundMessageHandler(RemoteMessage message) async {
   if (kDebugMode) {
-    print("onBackground: ${message.notification?.title}/${message.notification?.body}/${message.notification?.titleLocKey}");
+    print(
+      "onBackground: ${message.notification?.title}/${message.notification?.body}/${message.notification?.titleLocKey}",
+    );
   }
 }
-

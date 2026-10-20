@@ -150,7 +150,7 @@ class _ServiceLogItem extends StatelessWidget {
                                     else if(option.title == "download_invoice"){
                                       String uri = "";
                                       String languageCode = Get.find<LocalizationController>().locale.languageCode;
-                                      uri = "${AppConstants.baseUrl}${AppConstants.singleRepeatBookingInvoiceUrl}${serviceList[index]!.id!}/$languageCode";
+                                      uri = "${AppConstants.baseUrl}${AppConstants.singleRepeatBookingInvoiceUrl}${serviceList[index]!.id!}/$languageCode?token=${Uri.encodeQueryComponent(AuthRepo.tokenCache ?? '')}";
 
                                       if (kDebugMode) {
                                         print("Uri : $uri");

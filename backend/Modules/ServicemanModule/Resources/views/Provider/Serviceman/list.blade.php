@@ -80,6 +80,7 @@
                                             <tr>
                                                 <th>{{translate('SL')}}</th>
                                                 <th>{{translate('Name')}}</th>
+                                                <th>{{translate('Service_Categories')}}</th>
                                                 <th>{{translate('Contact_Info')}}</th>
                                                 <th>{{translate('Status')}}</th>
                                                 <th>{{translate('Action')}}</th>
@@ -93,6 +94,19 @@
                                                         <a href="{{route('provider.serviceman.show', [$serviceman->serviceman->id])}}">
                                                             {{Str::limit($serviceman->first_name, 25)}} {{Str::limit($serviceman->last_name, 15)}}
                                                         </a>
+                                                    </td>
+                                                    <td>
+                                                        @php($assignedCategories = $serviceman->serviceman?->servicemanCategories ?? collect())
+                                                        @if($assignedCategories->isEmpty())
+                                                            <span class="badge bg-danger">{{translate('No_Category_Assigned')}}</span>
+                                                        @else
+                                                            @foreach($assignedCategories->take(3) as $assignedCategory)
+                                                                <span class="badge bg-primary">{{$assignedCategory->subCategory?->name ?? '-'}}</span>
+                                                            @endforeach
+                                                            @if($assignedCategories->count() > 3)
+                                                                <span class="badge bg-secondary">+{{$assignedCategories->count() - 3}}</span>
+                                                            @endif
+                                                        @endif
                                                     </td>
                                                     <td>
                                                         {{$serviceman->email}} <br/>

@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 
 
 class LocationSearchDialog extends StatelessWidget {
-  final GoogleMapController? mapController;
+  final MapController? mapController;
   const LocationSearchDialog({super.key, required this.mapController});
 
   @override
@@ -59,7 +59,7 @@ class LocationSearchDialog extends StatelessWidget {
           },
 
           onSelected: (suggestion) {
-            Get.find<LocationController>().setLocation(suggestion.placePrediction!.placeId!, suggestion.placePrediction?.text?.text ?? "", mapController!);
+            Get.find<LocationController>().setLocation(suggestion.placePrediction!.placeId!, suggestion.placePrediction?.text?.text ?? "", mapController);
             Get.back();
           },
            errorBuilder : (_,value) {

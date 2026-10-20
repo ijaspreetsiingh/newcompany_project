@@ -172,7 +172,7 @@ class _ProductBottomSheetState extends State<RepeatBookingPaymentDialog> {
     String repeatBookingId = bookingDetails.id ?? "";
     String bookingId = bookingDetails.bookingId ?? "";
 
-    url = '${AppConstants.baseUrl}/payment?payment_method=$paymentGateway&access_token=${base64Url.encode(utf8.encode(userId))}'
+    url = '${AppConstants.baseUrl}/payment?payment_method=$paymentGateway&access_token=${AuthRepo.tokenCache ?? base64Url.encode(utf8.encode(userId))}'
         '&callback=$callbackUrl&payment_platform=$platform&is_repeat_single_booking=1&booking_repeat_id=$repeatBookingId&booking_id=$bookingId';
 
     if (GetPlatform.isWeb) {

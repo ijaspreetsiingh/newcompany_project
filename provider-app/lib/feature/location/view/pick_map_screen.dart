@@ -6,30 +6,35 @@ import 'package:get/get.dart';
 class PickMapScreen extends StatefulWidget {
   final LatLng ? initialPosition;
   final String ? initialAddress;
-  final Completer<GoogleMapController>? googleMapController;
-  const PickMapScreen({super.key,  this.initialPosition, this.initialAddress, this.googleMapController});
+  const PickMapScreen({super.key,  this.initialPosition, this.initialAddress});
 
   @override
   State<PickMapScreen> createState() => _PickMapScreenState();
 }
 
 class _PickMapScreenState extends State<PickMapScreen> {
-  GoogleMapController? _mapController;
-  CameraPosition? _cameraPosition;
-  LatLng? _initialPosition;
+  final MapController _mapController = MapController();
+  LatLng? _center;
+  Timer? _idleTimer;
 
   @override
   void initState() {
     super.initState();
-    _initialPosition = widget.initialPosition ??  LatLng(
-        Get.find<SplashController>().configModel.content!.defaultLocation!.defaultLocation!.lat ?? 23.777176,
-        Get.find<SplashController>().configModel.content!.defaultLocation!.defaultLocation!.lat ?? -90.399452,
+    final defaultLocation = Get.find<SplashController>().configModel.content?.defaultLocation?.defaultLocation;
+    _center = widget.initialPosition ?? LatLng(
+      defaultLocation?.lat ?? 23.777176,
+      defaultLocation?.lon ?? 90.399452,
     );
 
     if (kDebugMode) {
-      print(_initialPosition);
+      print(_center);
     }
+  }
 
+  @override
+  void dispose() {
+    _idleTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -38,37 +43,41 @@ class _PickMapScreenState extends State<PickMapScreen> {
       body: SafeArea(child: Center(
         child: GetBuilder<LocationController>(builder: (locationController) {
           return Stack(children: [
-            GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: _initialPosition!,
-                zoom: 16,
+            FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: _center!,
+                initialZoom: 16,
+                minZoom: 3,
+                maxZoom: 18,
+                onMapReady: () {
+                  if (widget.initialPosition == null) {
+                    Get.find<LocationController>().getCurrentLocation(false, mapController: _mapController);
+                  }
+                },
+                onPositionChanged: (MapCamera camera, bool hasGesture) {
+                  _center = camera.center;
+                  if (!hasGesture) {
+                    return;
+                  }
+                  locationController.disableButton();
+                  // Google Maps ke onCameraIdle jaisa behaviour: drag rukne
+                  // ke 500ms baad hi reverse-geocode call karo.
+                  _idleTimer?.cancel();
+                  _idleTimer = Timer(const Duration(milliseconds: 500), () {
+                    Get.find<LocationController>().updatePosition(camera.center);
+                  });
+                },
               ),
-              minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
-              onMapCreated: (GoogleMapController mapController) {
-                Future.delayed(const Duration(milliseconds: 600)).then((value) {
-                  _mapController = mapController;
-                  if(_initialPosition==null){
-                    Get.find<LocationController>().getCurrentLocation(false, mapController: mapController);
-                  }
-                });
-              },
-              zoomControlsEnabled: false,
-              myLocationButtonEnabled: false,
-              onCameraMove: (CameraPosition cameraPosition) {
-                _cameraPosition = cameraPosition;
-              },
-              onCameraMoveStarted: () {
-                locationController.disableButton();
-              },
-              onCameraIdle: () {
-                try{
-                  Get.find<LocationController>().updatePosition(_cameraPosition!);
-                }catch(e){
-                  if (kDebugMode) {
-                    print('');
-                  }
-                }
-              },
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  // Primary tile host rate-limit kare to map grey na ho.
+                  fallbackUrl: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.jassdbx.jassods.provider',
+                  maxZoom: 19,
+                ),
+              ],
             ),
 
             Center(child: !locationController.loading ? Image.asset(Images.marker, height: 50, width: 50)
@@ -77,7 +86,7 @@ class _PickMapScreenState extends State<PickMapScreen> {
             Positioned(
               top: Dimensions.paddingSizeLarge, left: Dimensions.paddingSizeSmall, right: Dimensions.paddingSizeSmall,
               child: InkWell(
-                onTap: () => showCustomDialog(child: LocationSearchDialog(mapController: _mapController!), barrierDismissible: true),
+                onTap: () => showCustomDialog(child: LocationSearchDialog(mapController: _mapController), barrierDismissible: true),
                 child: Container(
                   height: 50,
                   padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeSmall),
@@ -122,12 +131,6 @@ class _PickMapScreenState extends State<PickMapScreen> {
                 btnTxt:  'pick_address'.tr,
                 onPressed: ( locationController.loading) ? null : () {
                   if(locationController.pickPosition.latitude != 0 && locationController.pickAddress.address!.isNotEmpty) {
-                    // if(widget.googleMapController != null) {
-                    //   widget.googleMapController!.moveCamera(CameraUpdate.newCameraPosition(CameraPosition(target: LatLng(
-                    //     locationController.pickPosition.latitude, locationController.pickPosition.longitude,
-                    //   ), zoom: 16)));
-                    //   locationController.setAddAddressData();
-                    // }
                     Get.back();
                   }else {
                     showCustomSnackBar('pick_an_address'.tr,type : ToasterMessageType.info);

@@ -83,14 +83,22 @@ trait  Processor
 
     public function payment_response($payment_info, $payment_flag): Application|JsonResponse|Redirector|RedirectResponse|\Illuminate\Contracts\Foundation\Application
     {
+        if (!$payment_info) {
+            return redirect()->route('payment-fail');
+        }
+
         $payment_info = PaymentRequest::find($payment_info->id);
+        if (!$payment_info) {
+            return redirect()->route('payment-fail');
+        }
 
         $token_string = 'payment_method=' . $payment_info->payment_method .
             '&&attribute_id=' . $payment_info->attribute_id .
             '&&transaction_reference=' . $payment_info->transaction_id;
 
         if (in_array($payment_info->payment_platform, ['web', 'app']) && $payment_info['external_redirect_link'] != null) {
-            return redirect($payment_info['external_redirect_link'] . '?flag=' . $payment_flag . '&&token=' . base64_encode($token_string));
+            $separator = str_contains((string) $payment_info['external_redirect_link'], '?') ? '&' : '?';
+            return redirect($payment_info['external_redirect_link'] . $separator . 'flag=' . $payment_flag . '&&token=' . base64_encode($token_string));
         }
         return redirect()->route('payment-' . $payment_flag, ['token' => base64_encode($token_string)]);
     }

@@ -496,6 +496,14 @@
   'minutes' => 'min',
   'invalid_settings_provided' => 'Invalid settings provided',
   'business_setup' => 'Business setup',
+
+  /* SERVICEMAN CATEGORY ASSIGNMENT (provider panel) */
+  'Service_Categories' => 'Service Categories',
+  'serviceman_category_hint' => 'Select the categories this serviceman will work on. Only categories assigned to your provider can be selected.',
+  'no_provider_category_assigned' => 'No categories are assigned to your provider yet. Assign categories to your provider first.',
+  'No_Category_Assigned' => 'No category assigned - bookings will not be assigned to this staff',
+  'Select categories assigned to your provider' => 'Select categories assigned to your provider',
+  'digital_payment_requires_checkout' => 'Digital payment must be completed through the secure checkout.',
   'end_date' => 'End date',
   'discount_title' => 'Discount title',
   'phone_number' => 'Phone number',

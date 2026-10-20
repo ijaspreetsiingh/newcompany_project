@@ -141,7 +141,13 @@ trait BookingScopes
                             });
                         })
                         ->where(function($query) use ($provider) {
-                            $query->whereNull('provider_id');
+                            // Zone pool (provider_id null) + is provider ke apne
+                            // AI/manual bookings (provider ko staff choose karna hai)
+                            $query->whereNull('provider_id')
+                                ->orWhere(function ($q) use ($provider) {
+                                    $q->where('provider_id', $provider->id)
+                                        ->whereIn('assignment_mode', ['provider_manual', 'manual_required']);
+                                });
                         });
                 } else {
                     return $query->whereNull('id');
@@ -169,7 +175,13 @@ trait BookingScopes
                         });
                     })
                     ->where(function($query) use ($provider) {
-                        $query->whereNull('provider_id');
+                        // Zone pool (provider_id null) + is provider ke apne
+                        // AI/manual bookings (provider ko staff choose karna hai)
+                        $query->whereNull('provider_id')
+                            ->orWhere(function ($q) use ($provider) {
+                                $q->where('provider_id', $provider->id)
+                                    ->whereIn('assignment_mode', ['provider_manual', 'manual_required']);
+                            });
                     });
             } else {
                 return $query->whereNull('id');

@@ -94,6 +94,7 @@ class ConfigContent {
   bool? _canServiceManEditBooking;
   int? _maxImageUploadSize;
   int? _maxVideoUploadSize;
+  String? _invoiceTemplate;
 
 
 
@@ -167,6 +168,7 @@ class ConfigContent {
     bool? canServiceManEditBooking,
     int? maxImageUploadSize,
     int? maxVideoUploadSize,
+    String? invoiceTemplate,
 
   }) {
     if (commissionBasePlan != null) {
@@ -392,6 +394,9 @@ class ConfigContent {
     if(maxVideoUploadSize != null) {
       _maxVideoUploadSize = maxVideoUploadSize;
     }
+    if(invoiceTemplate != null) {
+      _invoiceTemplate = invoiceTemplate;
+    }
 
 
   }
@@ -464,6 +469,8 @@ class ConfigContent {
   bool get canServiceManEditBooking => _canServiceManEditBooking ?? false;
   int? get maxImageUploadSize => _maxImageUploadSize;
   int? get maxVideoUploadSize => _maxVideoUploadSize;
+  /// invoice_template value from admin config: "template_1" | "template_2" | "template_3"
+  String get invoiceTemplate => _invoiceTemplate ?? 'template_1';
 
 
 
@@ -556,6 +563,7 @@ class ConfigContent {
     }
     _maxImageUploadSize = int.tryParse(json['max_image_upload_size'].toString());
     _maxVideoUploadSize = int.tryParse(json['max_video_upload_size'].toString());
+    _invoiceTemplate = json['invoice_template'] ?? 'template_1';
 
 
 

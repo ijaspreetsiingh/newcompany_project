@@ -16,6 +16,10 @@ class SubmitReviewController extends GetxController {
   List<Service>? _serviceReviewList;
   List<Service>? get serviceReviewList => _serviceReviewList;
 
+  // Kis booking ka review list load hua hai (taaki har baar dobara na fetch ho)
+  String? _loadedBookingId;
+  String? get loadedBookingId => _loadedBookingId;
+
   Map<String,Map<String, dynamic>> listOfReview = {};
 
   TextEditingController reviewController = TextEditingController();
@@ -52,36 +56,42 @@ class SubmitReviewController extends GetxController {
 
 
   Future<void> getReviewList(String bookingId)async{
-
-    Response response =await submitReviewRepo.getReviewList(bookingId: bookingId);
-    if(response.statusCode == 200){
-
-      if( response.body['content'] !=null && response.body['content'].isNotEmpty){
-        List<dynamic> list = response.body['content'];
-        _serviceReviewList = [];
-        for (var element in list) {
-          _serviceReviewList!.add(Service.fromJson(element));
-        }
-        _serviceReviewList?.forEach((element){
-
-          textControllers[element.id!] = TextEditingController();
-
-          if(element.review != null && element.review!.isNotEmpty){
-            selectedRating[element.id!] = element.review!.first.reviewRating ?? 5;
-            isEditable[element.id!] = element.review!.isEmpty;
-            reviewComments[element.id!] = element.review!.first.reviewComment ?? "";
-            textControllers[element.id]!.text = element.review!.first.reviewComment ?? "";
-          }else{
-            selectedRating[element.id!] = 5;
-            isEditable[element.id!] = true;
-            reviewComments[element.id!] =  "";
-            textControllers[element.id]!.text = "";
-          }
-        });
-      }
-    }
-    _loading = false;
+    _loading = true;
     update();
+    try{
+      Response response =await submitReviewRepo.getReviewList(bookingId: bookingId);
+      if(response.statusCode == 200){
+        _loadedBookingId = bookingId;
+        _serviceReviewList = [];
+
+        if( response.body['content'] !=null && response.body['content'].isNotEmpty){
+          List<dynamic> list = response.body['content'];
+          _serviceReviewList = [];
+          for (var element in list) {
+            _serviceReviewList!.add(Service.fromJson(element));
+          }
+          _serviceReviewList?.forEach((element){
+
+            textControllers[element.id!] = TextEditingController();
+
+            if(element.review != null && element.review!.isNotEmpty){
+              selectedRating[element.id!] = element.review!.first.reviewRating ?? 5;
+              isEditable[element.id!] = element.review!.isEmpty;
+              reviewComments[element.id!] = element.review!.first.reviewComment ?? "";
+              textControllers[element.id]!.text = element.review!.first.reviewComment ?? "";
+            }else{
+              selectedRating[element.id!] = 5;
+              isEditable[element.id!] = true;
+              reviewComments[element.id!] =  "";
+              textControllers[element.id]!.text = "";
+            }
+          });
+        }
+      }
+    } finally {
+      _loading = false;
+      update();
+    }
   }
 
   void updateEditableValue(String serviceId,bool value,{bool isUpdate= false}){

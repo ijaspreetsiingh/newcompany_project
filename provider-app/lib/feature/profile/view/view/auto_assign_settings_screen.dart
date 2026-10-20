@@ -1,4 +1,5 @@
 import 'package:jassdbx_provider/util/core_export.dart';
+import 'package:jassdbx_provider/feature/booking_requests/view/cancelled_by_serviceman_screen.dart';
 import 'package:get/get.dart';
 
 /// Dedicated Auto-Assign settings screen (opened directly from Profile screen).
@@ -126,7 +127,66 @@ class AutoAssignSettingsScreen extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              /// Info box — how it works
+              /// Auto-reassign on serviceman cancel toggle
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: InkCard(
+                  padding: EdgeInsets.zero,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(19),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                          Expanded(
+                            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text('auto_reassign_on_cancel'.tr,
+                                style: robotoSemiBold.copyWith(fontSize: 14, height: 1.3, color: InkColors.foreground)),
+                              const SizedBox(height: 4),
+                              Text('auto_reassign_on_cancel_hint'.tr,
+                                style: robotoRegular.copyWith(fontSize: 12, height: 1.5, color: InkColors.mutedForeground)),
+                            ]),
+                          ),
+                          const SizedBox(width: 12),
+                          userProfileController.autoReassignOnCancelLoading
+                              ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: InkColors.foreground))
+                              : Switch.adaptive(
+                                  value: userProfileController.autoReassignOnCancel,
+                                  activeTrackColor: InkColors.foreground,
+                                  inactiveTrackColor: InkColors.accent,
+                                  thumbColor: const WidgetStatePropertyAll<Color>(Colors.white),
+                                  onChanged: (_) => userProfileController.toggleAutoReassignOnCancel(),
+                                ),
+                        ]),
+                      ),
+
+                      // When toggle OFF — show "View cancelled bookings" button
+                      if (!userProfileController.autoReassignOnCancel)
+                        InkWell(
+                          onTap: () => Get.to(() => const CancelledByServicemanScreen()),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: InkColors.secondary,
+                              border: Border(top: BorderSide(color: InkColors.border)),
+                            ),
+                            child: Row(children: [
+                              Icon(Icons.list_alt_rounded, size: 17, color: InkColors.foreground),
+                              const SizedBox(width: 8),
+                              Text('view_cancelled_bookings'.tr,
+                                style: robotoMedium.copyWith(fontSize: 13, color: InkColors.foreground)),
+                              const Spacer(),
+                              Icon(Icons.arrow_forward_ios_rounded, size: 14, color: InkColors.mutedForeground),
+                            ]),
+                          ),
+                        ),
+                    ]),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 12),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Container(

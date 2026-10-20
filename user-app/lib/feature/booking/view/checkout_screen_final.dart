@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:jdds/util/core_export.dart';
@@ -17,7 +17,7 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
   int selectedDay = 0;
   String selectedTime = '10:00 AM';
 
-  /// ASAP mode — jaldi possible service (config.instantBooking on hone par).
+  /// ASAP mode â€” jaldi possible service (config.instantBooking on hone par).
   bool _asapMode = false;
 
   /// Continue button loader (cart refresh + payment config fetch ke dauran).
@@ -49,9 +49,12 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
     // Friend/relative (book for other location) history
     Get.find<FriendLocationController>().loadHistory();
 
-    // Cart must be loaded for price summary — hamesha server se force refresh.
+    // Cart must be loaded for price summary â€” hamesha server se force refresh.
     // Stale/local cart par payment filter aur place-order dono galat chalte hain.
-    cartController.getCartListFromServer().then((_) {
+    // The checkout route is still being mounted here. Suppress CartController's
+    // GetBuilder notifications until the async load finishes; this screen's
+    // setState below will render the fresh cart safely.
+    cartController.getCartListFromServer(shouldUpdate: false).then((_) {
       if (!mounted) return;
       setState(() {});
       // Provider payment config bhi fresh cart ke provider id se.
@@ -92,8 +95,8 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
     return house.isEmpty || house == 'null';
   }
 
-  /// House details popup (tab jab missing ho). Confirm → in-memory selected
-  /// address update + saved address server par persist. Cancel → null.
+  /// House details popup (tab jab missing ho). Confirm â†’ in-memory selected
+  /// address update + saved address server par persist. Cancel â†’ null.
   Future<AddressModel?> _runHouseDetailsFlow(AddressModel addressModel) async {
     if (Get.find<LocationController>().selectedServiceLocationType !=
         ServiceLocationType.customer) {
@@ -101,6 +104,16 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
     }
     if (!_houseDetailsMissing(addressModel)) return addressModel;
     if (!mounted) return addressModel;
+
+    // Profile loading may still be in flight after login. Load it before the
+    // popup snapshots the contact fields so signed-in customers get their
+    // name and phone prefilled instead of blank inputs.
+    final AuthController authController = Get.find<AuthController>();
+    final UserController userController = Get.find<UserController>();
+    if (authController.isLoggedIn() && userController.userInfoModel == null) {
+      await userController.getUserInfo(reload: true);
+      if (!mounted) return null;
+    }
 
     final AddressModel? confirmedAddress = await HomeDetailsPopup.show(
       context,
@@ -114,7 +127,7 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
         Get.find<FriendLocationController>();
 
     if (friendController.isBookingForOther) {
-      // Friend address = user ka apna saved address nahi — sirf history update.
+      // Friend address = user ka apna saved address nahi â€” sirf history update.
       friendController.updateHistoryEntry(confirmedAddress);
       return confirmedAddress;
     }
@@ -178,17 +191,17 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
     return DateFormat('HH:mm:ss').format(parsed);
   }
 
-  /// Summary card ka text — "Mon, 13 Oct 2026 · 10:00 AM"
+  /// Summary card ka text â€” "Mon, 13 Oct 2026 Â· 10:00 AM"
   String _selectedScheduleSummary() {
     final DateTime date = DateTime.now().add(Duration(days: selectedDay));
-    return '${DateFormat('EEE, d MMM yyyy').format(date)}  ·  $selectedTime';
+    return '${DateFormat('EEE, d MMM yyyy').format(date)}  Â·  $selectedTime';
   }
 
   void _applySchedule() {
     final scheduleController = Get.find<ScheduleController>();
 
     if (_asapMode) {
-      // As soon as possible — earliest slot (now + 2 min) backend ko bheja jata hai.
+      // As soon as possible â€” earliest slot (now + 2 min) backend ko bheja jata hai.
       scheduleController.updateScheduleType(
         shouldUpdate: false,
         scheduleType: ScheduleType.asap,
@@ -219,7 +232,7 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
 
     setState(() => _isContinuing = true);
     try {
-      // Server cart se fresh state — stale local cart par aage badhne par
+      // Server cart se fresh state â€” stale local cart par aage badhne par
       // payment step/place-order wahi par fail hote hain.
       await cartController.getCartListFromServer();
 
@@ -539,7 +552,7 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
                   ),
                   const SizedBox(height: Dimensions.paddingSizeDefault),
 
-                  // SELECTED SCHEDULE SUMMARY — pick hua date/time turant dikhe
+                  // SELECTED SCHEDULE SUMMARY â€” pick hua date/time turant dikhe
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
@@ -662,6 +675,10 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: Dimensions.paddingSizeExtraLarge),
+
+                  // SERVICEMAN SELECTION â€” auto vs manual
+                  const ServicemanSelectionWidget(),
                   const SizedBox(height: Dimensions.paddingSizeExtraLarge),
 
                   // CONTINUE BUTTON
@@ -1016,7 +1033,7 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
       );
     }
 
-    // Saved friend/relative locations (history) — one tap par reuse.
+    // Saved friend/relative locations (history) â€” one tap par reuse.
     final List<AddressModel> friendHistory = friendController.history;
     if (friendHistory.isNotEmpty && !friendController.isBookingForOther) {
       widgets.add(const SizedBox(height: Dimensions.paddingSizeSmall));
@@ -1124,5 +1141,7 @@ class _CheckoutScreenFinalState extends State<CheckoutScreenFinal> {
     return widgets;
   }
 }
+
+
 
 

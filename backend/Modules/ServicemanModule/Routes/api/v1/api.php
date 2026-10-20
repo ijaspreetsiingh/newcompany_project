@@ -38,11 +38,13 @@ Route::group(['prefix' => 'technician', 'as' => 'serviceman.', 'namespace' => 'A
             Route::get('page-facts/{key}', [ServicemanConfigController::class, 'pageDetails'])->withoutMiddleware('auth:api');
 
             Route::get('fetch-region-id', [ServicemanConfigController::class, 'getZone']);
-            Route::get('geo-suggest', [ServicemanConfigController::class, 'placeApiAutocomplete']);
-            Route::get('range-api', [ServicemanConfigController::class, 'distanceApi']);
-            Route::get('geo-spot-facts', [ServicemanConfigController::class, 'placeApiDetails']);
-            Route::get('geo-coder', [ServicemanConfigController::class, 'geocodeApi']);
-            Route::get('fetch-paths', [ServicemanConfigController::class, 'getRoutes']);
+            Route::middleware('throttle:geo')->group(function () {
+                Route::get('geo-suggest', [ServicemanConfigController::class, 'placeApiAutocomplete']);
+                Route::get('range-api', [ServicemanConfigController::class, 'distanceApi']);
+                Route::get('geo-spot-facts', [ServicemanConfigController::class, 'placeApiDetails']);
+                Route::get('geo-coder', [ServicemanConfigController::class, 'geocodeApi']);
+                Route::get('fetch-paths', [ServicemanConfigController::class, 'getRoutes']);
+            });
         });
 
         Route::get('dossier', [ServicemanController::class, 'index']);

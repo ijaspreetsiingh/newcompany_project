@@ -18,6 +18,9 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Modules\BookingModule\Entities\Booking;
 use Modules\BookingModule\Entities\BookingDetailsAmount;
+use Modules\CategoryManagement\Entities\Category;
+use Modules\ProviderManagement\Entities\SubscribedService;
+use Modules\ServicemanModule\Entities\ServicemanCategory;
 use Modules\UserManagement\Entities\Serviceman;
 use Modules\UserManagement\Entities\User;
 use Rap2hpoutre\FastExcel\FastExcel;
@@ -56,7 +59,7 @@ class ServicemanController extends Controller
         $status = $request->has('status') ? $request['status'] : 'all';
         $query_param = ['status' => $status, 'search' => $search];
 
-        $servicemen = $this->servicemanUser->with(['serviceman'])
+        $servicemen = $this->servicemanUser->with(['serviceman.servicemanCategories.subCategory'])
             ->when($request->has('search'), function ($query) use ($request) {
                 $query->where(function ($query) use ($request) {
                     $keys = explode(' ', $request['search']);
@@ -89,7 +92,9 @@ class ServicemanController extends Controller
      */
     public function create(Request $request): Renderable
     {
-        return view('servicemanmodule::Provider.Serviceman.create');
+        $categories = $this->providerAssignableCategories($request->user()->provider->id);
+
+        return view('servicemanmodule::Provider.Serviceman.create', compact('categories'));
     }
 
     /**
@@ -116,7 +121,18 @@ class ServicemanController extends Controller
             'identity_number' => 'required',
             'identity_image' => 'required|array',
             'identity_image.*' => 'image|max:'. uploadMaxFileSizeInKB('image') .'|mimes:' . implode(',', array_column(IMAGEEXTENSION, 'key')),
+            // Category assignment REQUIRED — servcieman ka kaunsa kaam hai
+            // bina category ke booking assign hi nahi ho sakti.
+            'sub_category_ids' => 'required|array|min:1',
+            'sub_category_ids.*' => 'exists:categories,id',
         ]);
+
+        $subCategoryIds = array_values(array_unique(array_filter((array) $request->input('sub_category_ids', []))));
+
+        if (!$this->validProviderSubCategories($request, $subCategoryIds)) {
+            Toastr::error(translate('Select categories assigned to your provider'));
+            return back()->withInput();
+        }
 
         if (!$request->has('identity_image') || count($request->identity_image) < 1) {
             Toastr::error(translate('Identification_image_is_required'));
@@ -138,7 +154,7 @@ class ServicemanController extends Controller
             $identityImages[] = ['image'=>$imageName, 'storage'=> getDisk()];
         }
 
-        DB::transaction(function () use ($request, $identityImages) {
+        DB::transaction(function () use ($request, $identityImages, $subCategoryIds) {
             $employee = $this->employee;
             $employee->first_name = $request->first_name;
             $employee->last_name = $request->last_name;
@@ -157,6 +173,8 @@ class ServicemanController extends Controller
             $serviceman->provider_id = $request->user()->provider->id;
             $serviceman->user_id = $employee->id;
             $serviceman->save();
+
+            $this->syncServicemanCategories($serviceman->id, $subCategoryIds);
         });
 
         Toastr::success(translate(SERVICE_STORE_200['message']));
@@ -364,10 +382,15 @@ class ServicemanController extends Controller
      * @param string $id
      * @return Application|Factory|View
      */
-    public function edit(string $id): Application|Factory|View
+    public function edit(Request $request, string $id): Application|Factory|View
     {
         $serviceman = $this->serviceman::with(['user'])->find($id);
-        return view('servicemanmodule::Provider.Serviceman.edit', compact('serviceman'));
+        $categories = $this->providerAssignableCategories($request->user()->provider->id);
+        $selectedCategoryIds = $serviceman
+            ? ServicemanCategory::where('serviceman_id', $serviceman->id)->pluck('sub_category_id')->map(fn($cid) => (string) $cid)->all()
+            : [];
+
+        return view('servicemanmodule::Provider.Serviceman.edit', compact('serviceman', 'categories', 'selectedCategoryIds'));
     }
 
     /**
@@ -404,7 +427,17 @@ class ServicemanController extends Controller
             'identity_number' => 'required',
             'identity_image' => 'array',
             'identity_image.*' => 'image|max:'. uploadMaxFileSizeInKB('image') .'|mimes:' . implode(',', array_column(IMAGEEXTENSION, 'key')),
+            // Category assignment REQUIRED (create ke same rule)
+            'sub_category_ids' => 'required|array|min:1',
+            'sub_category_ids.*' => 'exists:categories,id',
         ]);
+
+        $subCategoryIds = array_values(array_unique(array_filter((array) $request->input('sub_category_ids', []))));
+
+        if (!$this->validProviderSubCategories($request, $subCategoryIds)) {
+            Toastr::error(translate('Select categories assigned to your provider'));
+            return back()->withInput();
+        }
 
         if (User::where('email', $request['email'])->where('id', '!=', $employee->id)->exists()) {
             Toastr::error(translate('Email already taken'));
@@ -423,7 +456,7 @@ class ServicemanController extends Controller
             }
         }
 
-        DB::transaction(function () use ($request, $identityImages, $employee) {
+        DB::transaction(function () use ($request, $identityImages, $employee, $subCategoryIds) {
             $employee->first_name = $request->first_name;
             $employee->last_name = $request->last_name;
             $employee->email = $request->email;
@@ -441,6 +474,10 @@ class ServicemanController extends Controller
             }
             $employee->user_type = 'provider-serviceman';
             $employee->save();
+
+            if ($employee->serviceman) {
+                $this->syncServicemanCategories($employee->serviceman->id, $subCategoryIds);
+            }
         });
 
         Toastr::success(translate(DEFAULT_UPDATE_200['message']));
@@ -474,6 +511,97 @@ class ServicemanController extends Controller
         $this->employee->where('id', $id)->update(['is_active' => !$serviceman->is_active]);
 
         return response()->json(response_formatter(DEFAULT_STATUS_UPDATE_200), 200);
+    }
+
+    /**
+     * Provider ke apne assigned sub-categories (is_subscribed = 1).
+     * Serviceman ko sirf inhi categories me hi assign kiya ja sakta hai.
+     */
+    private function providerAssignableCategories($providerId): array
+    {
+        $subCategoryIds = SubscribedService::where('provider_id', $providerId)
+            ->where('is_subscribed', 1)
+            ->pluck('sub_category_id')
+            ->unique()
+            ->values();
+
+        if ($subCategoryIds->isEmpty()) {
+            return [];
+        }
+
+        return Category::whereIn('id', $subCategoryIds)
+            ->get(['id', 'name', 'parent_id'])
+            ->map(function ($category) {
+                $parentName = $category->parent_id
+                    ? Category::where('id', $category->parent_id)->value('name')
+                    : null;
+
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'parent_id' => $category->parent_id,
+                    'parent_name' => $parentName,
+                    'label' => $parentName ? $parentName . ' → ' . $category->name : $category->name,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Selected categories provider ke assigned categories me honi chahiye.
+     */
+    private function validProviderSubCategories(Request $request, array $subCategoryIds): bool
+    {
+        $subCategoryIds = array_values(array_unique(array_filter($subCategoryIds, fn($id) => is_string($id) && $id !== '')));
+
+        if (empty($subCategoryIds)) {
+            return false;
+        }
+
+        $allowed = collect($this->providerAssignableCategories($request->user()->provider->id))
+            ->pluck('id')
+            ->map(fn($id) => (string) $id)
+            ->all();
+
+        foreach ($subCategoryIds as $id) {
+            if (!in_array((string) $id, $allowed, true)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Serviceman ki category assignments clean replace karo.
+     */
+    private function syncServicemanCategories(string $servicemanId, array $subCategoryIds): void
+    {
+        ServicemanCategory::where('serviceman_id', $servicemanId)->delete();
+
+        $subCategoryIds = array_values(array_unique(array_filter($subCategoryIds)));
+        if (empty($subCategoryIds)) {
+            return;
+        }
+
+        $categories = Category::whereIn('id', $subCategoryIds)->get(['id', 'parent_id']);
+        $rows = [];
+        $now = now();
+
+        foreach ($categories as $category) {
+            $rows[] = [
+                'serviceman_id' => $servicemanId,
+                'category_id' => $category->parent_id ?? $category->id,
+                'sub_category_id' => $category->id,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        if (!empty($rows)) {
+            ServicemanCategory::insert($rows);
+        }
     }
 
     /**

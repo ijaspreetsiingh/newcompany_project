@@ -1545,7 +1545,7 @@ if (!function_exists('checkCurrency')) {
                    $credentials = $env . '_values';
 
                } else {
-                   $methods = DB::table('addon_settings')->where('is_active', 1)->whereIn('settings_type', ['payment_config'])->whereIn('key_name', ['ssl_commerz', 'paypal', 'stripe', 'razor_pay', 'senang_pay', 'paytabs', 'paystack', 'paymob_accept', 'paytm', 'flutterwave', 'liqpay', 'bkash', 'mercadopago'])->get();
+                    $methods = DB::table('addon_settings')->where('is_active', 1)->whereIn('settings_type', ['payment_config'])->whereIn('key_name', array_column(DIGITAL_PAYMENT_METHODS, 'key'))->get();
                    $env = env('APP_ENV') == 'live' ? 'live' : 'test';
                    $credentials = $env . '_values';
 
@@ -2513,6 +2513,27 @@ if (!function_exists('findNearestProviders')) {
             ->first();
 
         if ($assignedProvider) {
+            // Exact zone/category match hi use karo. Is fast path ko provider
+            // plan/capacity/location checks bypass nahi karne chahiye.
+            try {
+                if (!nextBookingEligibility($assignedProvider->id, $assignedProvider)) {
+                    return collect();
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Provider eligibility check failed for exact zone/category match', [
+                    'provider_id' => $assignedProvider->id,
+                    'zone_id' => $zoneId,
+                ]);
+                return collect();
+            }
+
+            [$providerLat, $providerLng] = getProviderCoordinates($assignedProvider);
+            if ($providerLat === null || $providerLng === null) {
+                return collect();
+            }
+            $assignedProvider->distance_km = ($bookingLat !== null && $bookingLng !== null)
+                ? calculateDistance($bookingLat, $bookingLng, $providerLat, $providerLng)
+                : null;
             return collect([$assignedProvider]);
         }
 
@@ -2540,8 +2561,11 @@ if (!function_exists('findNearestProviders')) {
             if ($crossZoneEnabled && $bookingLat !== null && $bookingLng !== null) {
                 $distanceLimit = (int) (business_config('cross_zone_distance_limit', 'booking_setup')?->live_values ?? 50) ?: 50;
                 
-                // Sabhi zones ke providers dhundo (zone restriction remove)
+                // Cross-zone fallback booking ke origin zone ka exact provider
+                // assignment violate na kare. Legacy switch on ho tab bhi isi
+                // zone tak limit rakho.
                 $crossZoneProviders = Provider::query()
+                    ->where('zone_id', $zoneId)
                     ->where('is_active', 1)
                     ->where('is_approved', 1)
                     ->where('is_suspended', 0)
@@ -2709,14 +2733,19 @@ if (!function_exists('startWithinProviderAssignment')) {
                 return;
             }
 
-            // SPEC: provider kabhi accept/decline nahi karega — booking seedha
-            // nearest serviceman request par jaati hai. Serviceman hi
-            // accept/decline karega.
+            if ((int) $provider->auto_assign_mode === 1) {
+                // Toggle ON: provider ko booking mile; provider ek category-
+                // eligible serviceman choose karega. Iske baad sirf wahi staff
+                // booking request dekhega.
+                startProviderDecisionWindow($booking, $provider);
+                return;
+            }
+
+            // Toggle OFF: existing nearest-first auto-dispatch flow.
             $booking->assignment_mode = 'auto';
             $booking->auto_assigned = 0;
             $booking->auto_assign_expires_at = null;
             $booking->save();
-
             dispatchNearestServicemanRequest($booking);
         } catch (\Throwable $e) {
             Log::error('startWithinProviderAssignment failed: ' . $e->getMessage());
@@ -2726,9 +2755,9 @@ if (!function_exists('startWithinProviderAssignment')) {
 
 if (!function_exists('startProviderDecisionWindow')) {
     /**
-     * Toggle ON: provider ko push + countdown (wait time) — wo decide karega
-     * kaunsa serviceman / team assign karna hai. Window expire hone par system
-     * khud nearest serviceman ko auto-assign kar dega.
+     * Toggle ON: provider ko push + decision timer. Expiry ke baad booking
+     * dashboard ke AI-assigned section me pending rahegi; system auto-dispatch
+     * nahi karega, kyunki provider ko staff choose karna hai.
      */
     function startProviderDecisionWindow($booking, $provider): void
     {
@@ -2837,17 +2866,10 @@ if (!function_exists('dispatchNearestServicemanRequest')) {
                     ->whereHas('user', function ($query) {
                         $query->where('is_active', 1);
                     })
-                    // Category filter (same as findNearestServicemen):
-                    // preferred serviceman ki category assignment check karo
-                    ->where(function ($q) use ($bookingSubCategoryId) {
-                        $q->whereDoesntHave('servicemanCategories')
-                          ->orWhere(function ($q2) use ($bookingSubCategoryId) {
-                              if ($bookingSubCategoryId) {
-                                  $q2->whereHas('servicemanCategories', function ($q3) use ($bookingSubCategoryId) {
-                                      $q3->where('sub_category_id', $bookingSubCategoryId);
-                                  });
-                              }
-                          });
+                    // Category filter (STRICT — same as findNearestServicemen):
+                    // preferred serviceman ki booking category assign honi chahiye.
+                    ->whereHas('servicemanCategories', function ($query) use ($bookingSubCategoryId) {
+                        $query->where('sub_category_id', $bookingSubCategoryId);
                     })
                     ->first();
                 if ($preferred) {
@@ -3158,13 +3180,11 @@ if (!function_exists('processExpiredAutoAssign')) {
                     ->update(['status' => 'expired']);
 
                 if ($booking->assignment_mode === 'provider_manual' && $booking->provider_id) {
-                    // Provider ne time par decide nahi kiya -> system auto-assign kare
+                    // Timer sirf nayi booking par provider ko alert karne ke liye
+                    // hai. Decision na aaye to manual queue me booking rakho.
                     $booking->auto_assigned = 0;
                     $booking->auto_assign_expires_at = null;
-                    $booking->assignment_mode = 'auto';
                     $booking->save();
-
-                    dispatchNearestServicemanRequest($booking);
                     return;
                 }
 
@@ -3198,18 +3218,9 @@ if (!function_exists('findNearestServicemen')) {
                 ->whereHas('user', function ($query) {
                     $query->where('is_active', 1);
                 })
-                // Category filter:
-                // - Agar serviceman ki koi category assigned nahi (empty) → wo sabhi bookings ke liye eligible hai (backward compat)
-                // - Agar assigned hai → sirf tab eligible jab booking ka sub_category match kare
-                ->where(function ($q) use ($bookingSubCategoryId) {
-                    $q->whereDoesntHave('servicemanCategories')
-                      ->orWhere(function ($q2) use ($bookingSubCategoryId) {
-                          if ($bookingSubCategoryId) {
-                              $q2->whereHas('servicemanCategories', function ($q3) use ($bookingSubCategoryId) {
-                                  $q3->where('sub_category_id', $bookingSubCategoryId);
-                              });
-                          }
-                      });
+                // Only explicitly assigned category staff can receive a request.
+                ->whereHas('servicemanCategories', function ($query) use ($bookingSubCategoryId) {
+                    $query->where('sub_category_id', $bookingSubCategoryId);
                 })
                 ->with('user:id,fcm_token,current_language_key,first_name,last_name,profile_image,current_lat,current_lng,last_location_updated_at');
         };
@@ -3383,3 +3394,80 @@ if (!function_exists('findNextServiceman')) {
 
 
 
+
+if (!function_exists('resolveUserFromApiToken')) {
+    /**
+     * Resolve a Passport access token supplied as a query/body value.
+     *
+     * Mobile payment screens open /payment in a webview without an
+     * Authorization header, so the opaque API token is forwarded as
+     * access_token instead of a forgeable base64(user id).
+     */
+    function resolveUserFromApiToken(?string $rawToken): ?\Modules\UserManagement\Entities\User
+    {
+        $rawToken = trim((string) $rawToken);
+        if ($rawToken === '') {
+            return null;
+        }
+
+        $tokenId = str_contains($rawToken, '|') ? explode('|', $rawToken, 2)[0] : $rawToken;
+        if ($tokenId === '') {
+            return null;
+        }
+
+        try {
+            $token = \Laravel\Passport\Token::find($tokenId);
+        } catch (\Throwable $exception) {
+            return null;
+        }
+
+        if (!$token || $token->revoked) {
+            return null;
+        }
+
+        if ($token->expires_at && $token->expires_at->isPast()) {
+            return null;
+        }
+
+        return \Modules\UserManagement\Entities\User::find($token->user_id);
+    }
+}
+
+if (!function_exists('paymentRedirectUrl')) {
+    /**
+     * Allowlist redirect targets for payment callback URLs.
+     *
+     * Prevents /payment?callback=https://evil.example from turning the payment
+     * success/failure screens into an open redirect.
+     */
+    function paymentRedirectUrl(?string $url): ?string
+    {
+        $url = trim((string) $url);
+        if ($url === '') {
+            return null;
+        }
+
+        $parts = parse_url($url);
+        if ($parts === false || empty($parts['scheme']) || empty($parts['host'])) {
+            return null;
+        }
+
+        if (!in_array(strtolower($parts['scheme']), ['http', 'https'], true)) {
+            return null;
+        }
+
+        $allowedHosts = array_filter(array_map(
+            fn ($host) => strtolower(trim($host)),
+            array_merge(
+                [(string) parse_url(config('app.url'), PHP_URL_HOST)],
+                explode(',', (string) env('PAYMENT_CALLBACK_HOSTS', ''))
+            )
+        ));
+
+        if (!in_array(strtolower($parts['host']), $allowedHosts, true)) {
+            return null;
+        }
+
+        return $url;
+    }
+}

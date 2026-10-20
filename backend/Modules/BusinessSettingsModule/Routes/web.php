@@ -153,7 +153,9 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Web\Admin',
             Route::any('transactions', [SubscriptionPackageController::class, 'transactions'])->name('transactions');
             Route::get('transactions/download', [SubscriptionPackageController::class, 'transactionsDownload'])->name('transactions.download');
             Route::get('transactions/invoice/{id}', [SubscriptionPackageController::class, 'invoice'])->name('transactions.invoice');
-            Route::get('invoice/{id}/{lang}', [SubscriptionPackageController::class, 'subscriptionInvoice'])->withoutMiddleware('admin');
+            Route::get('invoice/{id}/{lang}', [SubscriptionPackageController::class, 'subscriptionInvoice'])
+                ->middleware(['throttle:60,1', 'invoice.access:subscription'])
+                ->withoutMiddleware('admin');
         });
 
         Route::get('settings', [SubscriptionSettingsController::class, 'settings'])->name('settings');

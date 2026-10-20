@@ -95,6 +95,89 @@ class ReviewController extends GetxController implements GetxService{
     }
   }
 
+  // ==================== Serviceman-wise ratings ====================
+  List<ServicemanRatingItem>? _servicemenRatingList;
+  List<ServicemanRatingItem>? get servicemenRatingList => _servicemenRatingList;
+
+  ServicemanRatingItem? _topServiceman;
+  ServicemanRatingItem? get topServiceman => _topServiceman;
+
+  ServicemanRatingItem? _lowestServiceman;
+  ServicemanRatingItem? get lowestServiceman => _lowestServiceman;
+
+  List<Review>? _servicemanReviewsList;
+  List<Review>? get servicemanReviewsList => _servicemanReviewsList;
+
+  Rating? _servicemanOverallRating;
+  Rating? get servicemanOverallRating => _servicemanOverallRating;
+
+  /// Naya screen: top/lowest serviceman + saare reviews + rating summary
+  Future<void> getServicemanRatings() async {
+    _servicemenRatingList = null;
+    update();
+
+    Response response = await reviewRepo.getServicemanRatings();
+
+    if (response.statusCode == 200 && response.body['response_code'] == 'default_200') {
+      try {
+        final dynamic content = response.body['content'];
+
+        _servicemenRatingList = [];
+        (content['servicemen'] ?? []).forEach((serviceman) {
+          _servicemenRatingList!.add(ServicemanRatingItem.fromJson(serviceman));
+        });
+
+        _topServiceman = content['top_serviceman'] != null
+            ? ServicemanRatingItem.fromJson(content['top_serviceman'])
+            : null;
+        _lowestServiceman = content['lowest_serviceman'] != null
+            ? ServicemanRatingItem.fromJson(content['lowest_serviceman'])
+            : null;
+
+        _servicemanReviewsList = [];
+        (content['reviews'] ?? []).forEach((review) {
+          _servicemanReviewsList!.add(Review.fromJson(review));
+        });
+
+        _servicemanOverallRating = Rating.fromJson(content['rating']);
+      } catch (error) {
+        if (kDebugMode) {
+          print('serviceman ratings parse error: $error');
+        }
+      }
+    } else {
+      _servicemenRatingList = [];
+      _servicemanReviewsList = [];
+      _topServiceman = null;
+      _lowestServiceman = null;
+      _servicemanOverallRating = null;
+    }
+
+    update();
+  }
+
+  /// Booking details -> reviews tab ke liye ek booking ke saare reviews
+  Future<List<Review>> getBookingReviews(String bookingId) async {
+    List<Review> reviews = [];
+    Response response = await reviewRepo.getBookingReviewList(bookingId);
+
+    if (response.statusCode == 200 && response.body['response_code'] == 'default_200') {
+      try {
+        final dynamic content = response.body['content'];
+        if (content is Map && content['reviews'] is List) {
+          content['reviews'].forEach((review) {
+            reviews.add(Review.fromJson(review));
+          });
+        }
+      } catch (error) {
+        if (kDebugMode) {
+          print('booking reviews parse error: $error');
+        }
+      }
+    }
+    return reviews;
+  }
+
   Future<ResponseModel> replyReview ({required String reviewId, required String reviewContent, String? fromPage, String? serviceId}) async {
     _isLoading = true;
     update();

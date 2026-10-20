@@ -7,19 +7,22 @@ class ServiceDetailsRepo {
   ServiceDetailsRepo({required this.apiClient});
 
   Future<Response> getServiceDetails(String slug, String fromPage) async {
-
-    if(fromPage=="search_page"){
+    if (fromPage == "search_page") {
       return await apiClient.getData('${AppConstants.serviceDetailsUri}/$slug?attribute=service');
-    }else{
+    } else {
       return await apiClient.getData('${AppConstants.serviceDetailsUri}/$slug');
     }
-
   }
 
-  Future<Response> getServiceReviewList(String slug, int offset) async {
-    return await apiClient.getData('${AppConstants.getServiceReviewList}$slug?offset=$offset&limit=10');
+  /// Fetch paginated reviews for [slug] (service id/slug).
+  /// [zoneId] — user's current zone; when non-empty the backend filters reviews
+  /// to only those whose booking was placed in that zone, and the rating
+  /// summary (avg + star bars) is also zone-scoped.
+  Future<Response> getServiceReviewList(String slug, int offset, {String? zoneId}) async {
+    String url = '${AppConstants.getServiceReviewList}$slug?offset=$offset&limit=10';
+    if (zoneId != null && zoneId.isNotEmpty) {
+      url += '&zone_id=$zoneId';
+    }
+    return await apiClient.getData(url);
   }
-
 }
-
-

@@ -88,4 +88,17 @@ class UserRepo {
     return await apiClient.postData(AppConstants.bookingListUrl,
         {"limit" : Get.find<SplashController>().configModel.content?.paginationLimit, "offset" : offset, "booking_status" : requestType, "service_type" : "all"});
   }
+
+  // ----- AUTO-REASSIGN ON CANCEL -----
+  Future<Response> toggleAutoReassignOnCancel() async {
+    return await apiClient.putData(AppConstants.autoReassignOnCancelToggleUrl, {'_method': 'put'});
+  }
+
+  Future<Response> getCancelledByServicemanBookings(int offset) async {
+    return await apiClient.getData('${AppConstants.cancelledByServicemanBookingsUrl}?limit=20&offset=$offset');
+  }
+
+  Future<Response> manualAssignAfterCancel({required String bookingId, required String servicemanId}) async {
+    return await apiClient.putData('${AppConstants.manualAssignAfterCancelUrl}/$bookingId', {'serviceman_id': servicemanId});
+  }
 }

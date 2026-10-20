@@ -139,6 +139,24 @@ class SubscriptionModelData {
     subCategory = json['sub_category'] != null
         ? ServiceSubCategoryModel.fromJson(json['sub_category'])
         : null;
+
+    // Parent category name — try multiple locations in API response:
+    // 1. top-level 'category' object  2. sub_category.parent  3. sub_category.category
+    final String? topCatName = json['category']?['name'];
+    if (topCatName != null && subCategory != null && subCategory!.parentName == null) {
+      subCategory!.parentName = topCatName;
+    }
+  }
+
+  /// Display label: "Home Cleaning → Deep Cleaning"
+  /// Falls back to just sub-category name if parent not available
+  String get displayLabel {
+    final String subName = subCategory?.name ?? subCategoryId ?? '';
+    final String? parentName = subCategory?.parentName;
+    if (parentName != null && parentName.isNotEmpty) {
+      return '$parentName → $subName';
+    }
+    return subName;
   }
 
   Map<String, dynamic> toJson() {

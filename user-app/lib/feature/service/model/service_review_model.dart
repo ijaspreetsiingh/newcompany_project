@@ -105,6 +105,10 @@ class Review {
   ReviewReply? reviewReply;
   int? isExpended;
 
+  // Jo serviceman is service pe kaam kar gaya (backend: reviews.serviceman.user)
+  String? servicemanName;
+  String? servicemanImage;
+
   Review(
       {this.id,
         this.bookingId,
@@ -120,6 +124,8 @@ class Review {
         this.reviewReply,
         this.provider,
         this.isExpended,
+        this.servicemanName,
+        this.servicemanImage,
       });
 
   Review.fromJson(Map<String, dynamic> json) {
@@ -142,6 +148,15 @@ class Review {
     provider = json['provider'] != null
         ? ProviderData.fromJson(json['provider'])
         : null;
+
+    final dynamic servicemanJson = json['serviceman'];
+    if (servicemanJson is Map) {
+      final dynamic servicemanUser = servicemanJson['user'];
+      if (servicemanUser is Map) {
+        servicemanName = '${servicemanUser['first_name'] ?? ''} ${servicemanUser['last_name'] ?? ''}'.trim();
+        servicemanImage = (servicemanUser['profile_image_full_path'] ?? servicemanUser['profile_image'] ?? '')?.toString();
+      }
+    }
     isExpended = 0;
   }
 

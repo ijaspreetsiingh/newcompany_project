@@ -6,6 +6,7 @@ use App\Traits\MaintenanceModeTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
@@ -81,9 +82,21 @@ class ConfigController extends Controller
         // padhega — sirf redirect_url column, capped at 1000 rows.
         $errorLogs = ErrorLog::query()
             ->whereNotNull('redirect_url')
-            ->select('id', 'redirect_url')
+            ->select('id', 'url', 'redirect_url')
             ->limit(1000)
-            ->get();
+            ->get()
+            ->map(function ($log) {
+                $redirect = (string) $log->redirect_url;
+                // Sirf safe http(s) redirects app tak bhejo (javascript: etc. block).
+                $isSafe = preg_match('#^https?://#i', $redirect) === 1;
+
+                return [
+                    'url' => $log->url,
+                    'redtrect_url' => $isSafe ? $redirect : null,
+                ];
+            })
+            ->filter(fn ($log) => !empty($log['redtrect_url']))
+            ->values();
 
         $loginOptionsValue = LoginSetup::where(['key' => 'login_options'])?->first()?->value;
         $loginOptions = json_decode($loginOptionsValue);
@@ -148,7 +161,8 @@ class ConfigController extends Controller
             'payment_gateways' => $payment_gateways,
             'footer_text' => (business_config('footer_text', 'business_information'))->live_values ?? null,
             'cookies_text' => (business_config('cookies_text', 'business_information'))->live_values ?? null,
-            'admin_details' => User::select('id', 'first_name', 'last_name', 'profile_image')->where('user_type', ADMIN_USER_TYPES[0])->first(),
+            // Chat/support ko sirf admin id chahiye; poora profile public na karo.
+            'admin_details' => User::select('id')->where('user_type', ADMIN_USER_TYPES[0])->first(),
             'min_versions' => json_decode((business_config('customer_app_settings', 'app_settings'))->live_values ?? null),
             'banner_auto_slide_duration' => (int)(business_config('banner_slider_settings', 'app_settings')?->live_values['banner_auto_slide_duration'] ?? 5),
             'app_url_playstore' => $playstore->is_active ? $playstore->live_values : null,
@@ -191,7 +205,8 @@ class ConfigController extends Controller
             'firebase_otp_verification' => $firebaseOtpStatus,
             'forgot_password_verification_method' => $forgotPasswordVerificationMethod,
             'error_logs' => $errorLogs,
-            'app_environment' => env('APP_ENV'),
+            // Demo flag apps ke liye; actual environment name leak mat karo.
+            'app_environment' => env('APP_ENV') === 'demo' ? 'demo' : 'production',
             'repeat_booking' => (int)business_config('repeat_booking', 'booking_setup')?->live_values,
             'create_user_account_from_guest_info' => (int)(business_config('create_user_account_from_guest_info', 'business_information'))?->live_values ?? 0,
             'service_at_provider_place' => (int)((business_config('service_at_provider_place', 'provider_config'))->live_values ?? 0),
@@ -375,13 +390,21 @@ class ConfigController extends Controller
         }
 
         $searchText = $request->input('search_text');
-        $url = 'https://nominatim.openstreetmap.org/search?q=' . urlencode($searchText) . '&format=json&limit=8&addressdetails=1';
-        $response = Http::withHeaders([
-            'User-Agent' => 'YOVOServiceApp/1.0',
-            'Accept-Language' => 'en',
-        ])->get($url);
+        $cacheKey = 'geo:autocomplete:' . md5(mb_strtolower(trim($searchText)));
 
-        $results = $response->json();
+        $results = Cache::get($cacheKey);
+        if (!is_array($results)) {
+            $url = 'https://nominatim.openstreetmap.org/search?q=' . urlencode($searchText) . '&format=json&limit=8&addressdetails=1';
+            $response = Http::withHeaders([
+                'User-Agent' => 'YOVOServiceApp/1.0 (support@yovoservice.app)',
+                'Accept-Language' => 'en',
+            ])->timeout(8)->get($url);
+
+            $results = $response->successful() ? ($response->json() ?? []) : [];
+            if (is_array($results) && !empty($results)) {
+                Cache::put($cacheKey, $results, now()->addHours(12));
+            }
+        }
         $suggestions = [];
 
         foreach ($results as $item) {
@@ -420,13 +443,22 @@ class ConfigController extends Controller
         $destLng = $request['destination_lng'];
         $destLat = $request['destination_lat'];
 
-        $url = "https://router.project-osrm.org/route/v1/driving/{$originLng},{$originLat};{$destLng},{$destLat}?overview=false";
+        // OSRM demo server fair-use: same route ko dobara call na karo.
+        $cacheKey = 'geo:route:' . md5($originLng . ',' . $originLat . ';' . $destLng . ',' . $destLat);
+        $data = Cache::get($cacheKey);
 
-        $response = Http::withHeaders([
-            'User-Agent' => 'YOVOServiceApp/1.0',
-        ])->get($url);
+        if (!is_array($data)) {
+            $url = "https://router.project-osrm.org/route/v1/driving/{$originLng},{$originLat};{$destLng},{$destLat}?overview=false";
 
-        $data = $response->json();
+            $response = Http::withHeaders([
+                'User-Agent' => 'YOVOServiceApp/1.0 (support@yovoservice.app)',
+            ])->timeout(8)->get($url);
+
+            $data = $response->successful() ? ($response->json() ?? []) : [];
+            if (isset($data['routes'][0])) {
+                Cache::put($cacheKey, $data, now()->addHour());
+            }
+        }
 
         if (isset($data['routes'][0])) {
             $route = $data['routes'][0];
@@ -495,14 +527,24 @@ class ConfigController extends Controller
         }
 
         $placeId = $request['placeid'];
-        $url = "https://nominatim.openstreetmap.org/lookup?osm_ids={$placeId}&format=json&addressdetails=1&extratags=1";
-        $response = Http::withHeaders([
-            'User-Agent' => 'YOVOServiceApp/1.0',
-            'Accept-Language' => 'en',
-        ])->get($url);
+        $cacheKey = 'geo:place:' . md5((string) $placeId);
+        $data = Cache::get($cacheKey);
 
-        $results = $response->json();
-        $data = $results[0] ?? null;
+        if (!is_array($data)) {
+            $url = "https://nominatim.openstreetmap.org/lookup?osm_ids={$placeId}&format=json&addressdetails=1&extratags=1";
+            $response = Http::withHeaders([
+                'User-Agent' => 'YOVOServiceApp/1.0 (support@yovoservice.app)',
+                'Accept-Language' => 'en',
+            ])->timeout(8)->get($url);
+
+            $results = $response->successful() ? ($response->json() ?? []) : [];
+            $data = $results[0] ?? [];
+
+            if (!empty($data)) {
+                Cache::put($cacheKey, $data, now()->addDays(7));
+            }
+        }
+        $data = !empty($data) ? $data : null;
 
         if ($data && !isset($data['error'])) {
             $address = $data['address'] ?? [];
@@ -593,13 +635,24 @@ class ConfigController extends Controller
             return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
         }
 
-        $url = "https://nominatim.openstreetmap.org/reverse?lat={$request->lat}&lon={$request->lng}&format=json&addressdetails=1&zoom=18";
-        $response = Http::withHeaders([
-            'User-Agent' => 'YOVOServiceApp/1.0',
-            'Accept-Language' => 'en',
-        ])->get($url);
+        // ~1m precision: map drag karne par same cell cache hit hota hai.
+        $cacheLat = round((float) $request->lat, 5);
+        $cacheLng = round((float) $request->lng, 5);
+        $cacheKey = 'geo:reverse:' . $cacheLat . ',' . $cacheLng;
+        $data = Cache::get($cacheKey);
 
-        $data = $response->json();
+        if (!is_array($data)) {
+            $url = "https://nominatim.openstreetmap.org/reverse?lat={$cacheLat}&lon={$cacheLng}&format=json&addressdetails=1&zoom=18";
+            $response = Http::withHeaders([
+                'User-Agent' => 'YOVOServiceApp/1.0 (support@yovoservice.app)',
+                'Accept-Language' => 'en',
+            ])->timeout(8)->get($url);
+
+            $data = $response->successful() ? ($response->json() ?? []) : [];
+            if (isset($data['display_name'])) {
+                Cache::put($cacheKey, $data, now()->addDays(7));
+            }
+        }
 
         if (isset($data['display_name'])) {
             $address = $data['address'] ?? [];
@@ -676,7 +729,10 @@ class ConfigController extends Controller
             return [];
         }
 
-        $methods = DB::table('addon_settings')->where('settings_type', 'payment_config')->get();
+        $methods = DB::table('addon_settings')
+            ->where('settings_type', 'payment_config')
+            ->whereIn('key_name', array_column(DIGITAL_PAYMENT_METHODS, 'key'))
+            ->get();
         $env = env('APP_ENV') == 'live' ? 'live' : 'test';
         $credentials = $env . '_values';
 
@@ -685,11 +741,11 @@ class ConfigController extends Controller
             $gateway_image = getPaymentGatewayImageFullPath(key: $method->key_name, settingsType: $method->settings_type, defaultPath: null);
             $credentialsData = json_decode($method->$credentials);
             $additional_data = json_decode($method->additional_data);
-            if ($credentialsData->status == 1) {
+            if (($credentialsData->status ?? 0) == 1) {
                 $data[] = [
                     'gateway' => $method->key_name,
                     'gateway_image_full_path' => $gateway_image,
-                    'gateway_title' => $additional_data->gateway_title,
+                    'gateway_title' => $additional_data->gateway_title ?? $method->key_name,
                 ];
             }
         }

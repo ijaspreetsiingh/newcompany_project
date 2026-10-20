@@ -20,4 +20,14 @@ class ReviewRepo{
     });
   }
 
+  /// Ek booking ke saare reviews (booking details -> reviews tab)
+  Future<Response> getBookingReviewList(String bookingId) async {
+    return await apiClient.getData('${AppConstants.bookingFeedbackList}/$bookingId');
+  }
+
+  /// Serviceman-wise rating breakdown + top/lowest + saare reviews
+  Future<Response> getServicemanRatings() async {
+    return await apiClient.getData(AppConstants.servicemanRatingsList);
+  }
+
 }

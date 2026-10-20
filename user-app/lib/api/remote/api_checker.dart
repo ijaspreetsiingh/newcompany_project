@@ -5,13 +5,34 @@ import 'package:get/get.dart';
 class ApiChecker {
   static void checkApi(Response response, {bool showDefaultToaster = true}) {
 
+    final dynamic body = response.body;
+    final String? responseCode = body is Map ? body['response_code']?.toString() : null;
+
+    // zone_404 is a location/business validation response in this backend,
+    // not an expired customer session. Do not erase a valid login for it.
+    if (response.statusCode == 401 && responseCode == 'zone_404') {
+      final address = Get.find<LocationController>().getUserAddress();
+      if (address != null) {
+        address.zoneId = '';
+        Get.find<LocationController>().saveUserAddress(address);
+      }
+      customSnackBar(
+        body is Map && body['message'] != null
+            ? body['message'].toString()
+            : 'zone_not_available'.tr,
+        showDefaultSnackBar: showDefaultToaster,
+      );
+      return;
+    }
+
     if(response.statusCode == 401) {
       Get.find<AuthController>().clearSharedData(response: response);
       if(Get.currentRoute != RouteHelper.getinitialRoute()){
         Get.offAllNamed(RouteHelper.getinitialRoute());
         customSnackBar("${response.statusCode!}".tr);
       }
-    }if(response.statusCode == 204) {
+      return;
+    } else if(response.statusCode == 204) {
       customSnackBar('information_not_found'.tr, showDefaultSnackBar: showDefaultToaster);
       Get.offAllNamed(RouteHelper.getinitialRoute());
 

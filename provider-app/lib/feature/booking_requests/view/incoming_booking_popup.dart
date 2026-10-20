@@ -56,7 +56,7 @@ class _IncomingBookingPopupState extends State<IncomingBookingPopup> {
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                     Icon(Icons.notifications_active, color: Theme.of(context).primaryColor),
                     const SizedBox(width: Dimensions.paddingSizeExtraSmall),
-                    Text('new_booking_request'.tr, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge)),
+                    Text(controller.providerManualMode ? 'ai_assigned_bookings'.tr : 'new_booking_request'.tr, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeLarge)),
                   ]),
                   const SizedBox(height: Dimensions.paddingSizeDefault),
 
@@ -74,7 +74,7 @@ class _IncomingBookingPopupState extends State<IncomingBookingPopup> {
                   ),
 
                   // countdown timer
-                  if (!controller.expired && !controller.assigned && !controller.rejected) ...[
+                  if (!controller.providerManualMode && !controller.expired && !controller.assigned && !controller.rejected) ...[
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeSmall),
                       decoration: BoxDecoration(
@@ -96,8 +96,27 @@ class _IncomingBookingPopupState extends State<IncomingBookingPopup> {
                     const SizedBox(height: Dimensions.paddingSizeDefault),
                   ],
 
-                  // action buttons: Reject (auto-assign chalu) | Assign team
-                  if (!controller.expired && !controller.assigned && !controller.rejected)
+                  if (controller.providerManualMode && !controller.expired && !controller.assigned && !controller.rejected)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
+                          backgroundColor: Theme.of(context).primaryColor,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Dimensions.radiusDefault)),
+                        ),
+                        icon: controller.assigning
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                            : const Icon(Icons.person_add_alt_1, color: Colors.white),
+                        label: Text('assign'.tr, style: robotoMedium.copyWith(color: Colors.white)),
+                        onPressed: (controller.assigning || controller.selectedIds.isEmpty)
+                            ? null
+                            : () => controller.assignSelected(),
+                      ),
+                    ),
+
+                  // Legacy flow controls remain for existing decision-window bookings.
+                  if (!controller.providerManualMode && !controller.expired && !controller.assigned && !controller.rejected)
                     Row(children: [
                       Expanded(
                         child: OutlinedButton.icon(
@@ -178,14 +197,11 @@ class _TeamAssignSection extends StatelessWidget {
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Icon(Icons.group_outlined, size: 18, color: Theme.of(context).primaryColor),
+          Icon(Icons.person_outline, size: 18, color: Theme.of(context).primaryColor),
           const SizedBox(width: Dimensions.paddingSizeExtraSmall),
-          Text('${'select_serviceman'.tr} (${controller.selectedIds.length}/5)',
+          Text('assign_one_serviceman'.tr,
               style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeDefault)),
         ]),
-        const SizedBox(height: Dimensions.paddingSizeExtraSmall),
-        Text('select_team_hint'.tr,
-            style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeExtraSmall, color: Theme.of(context).hintColor)),
         const SizedBox(height: Dimensions.paddingSizeSmall),
 
         if (controller.suggestionsLoading)
@@ -196,8 +212,17 @@ class _TeamAssignSection extends StatelessWidget {
         else if (controller.suggestions.isEmpty)
           Text('no_serviceman_available'.tr,
               style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).hintColor))
-        else
-          ...controller.suggestions.map((s) => _ServicemanTile(suggestion: s, controller: controller)),
+        else ...[
+          Text('service_category_match'.tr, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall)),
+          const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+          ...controller.suggestions.where((s) => s.isCategoryMatch).map((s) => _ServicemanTile(suggestion: s, controller: controller)),
+          if (controller.suggestions.any((s) => !s.isCategoryMatch)) ...[
+            const SizedBox(height: Dimensions.paddingSizeSmall),
+            Text('other_categories'.tr, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall, color: Theme.of(context).hintColor)),
+            const SizedBox(height: Dimensions.paddingSizeExtraSmall),
+            ...controller.suggestions.where((s) => !s.isCategoryMatch).map((s) => _ServicemanTile(suggestion: s, controller: controller)),
+          ],
+        ],
       ]),
     );
   }
@@ -213,7 +238,7 @@ class _ServicemanTile extends StatelessWidget {
     final bool selected = controller.selectedIds.contains(suggestion.id);
 
     return InkWell(
-      onTap: () => controller.toggleSuggestion(suggestion.id),
+      onTap: suggestion.isCategoryMatch ? () => controller.toggleSuggestion(suggestion.id) : null,
       borderRadius: BorderRadius.circular(Dimensions.radiusSmall),
       child: Container(
         margin: const EdgeInsets.only(bottom: Dimensions.paddingSizeExtraSmall),
@@ -227,7 +252,7 @@ class _ServicemanTile extends StatelessWidget {
           Checkbox(
             value: selected,
             activeColor: Theme.of(context).primaryColor,
-            onChanged: (_) => controller.toggleSuggestion(suggestion.id),
+            onChanged: suggestion.isCategoryMatch ? (_) => controller.toggleSuggestion(suggestion.id) : null,
           ),
           ClipRRect(
             borderRadius: BorderRadius.circular(50),
@@ -241,6 +266,8 @@ class _ServicemanTile extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(suggestion.name, style: robotoMedium.copyWith(fontSize: Dimensions.fontSizeSmall), maxLines: 1, overflow: TextOverflow.ellipsis),
+              if (!suggestion.isCategoryMatch)
+                Text('category_mismatch_hint'.tr, style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeExtraSmall, color: Theme.of(context).hintColor)),
               if (suggestion.slotStatus != null && suggestion.slotStatus!.isNotEmpty)
                 Text(suggestion.slotStatus!.tr,
                     style: robotoRegular.copyWith(fontSize: Dimensions.fontSizeExtraSmall, color: _slotStatusColor(context, suggestion.slotStatus!))),

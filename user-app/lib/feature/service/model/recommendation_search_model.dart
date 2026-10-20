@@ -1,10 +1,10 @@
-class RecommendedSearch {
+class RecommendedSearchModel {
   String? id;
   String? name;
 
-  RecommendedSearch({this.id, this.name});
+  RecommendedSearchModel({this.id, this.name});
 
-  RecommendedSearch.fromJson(Map<String, dynamic> json) {
+  RecommendedSearchModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     name = json['name'];
   }

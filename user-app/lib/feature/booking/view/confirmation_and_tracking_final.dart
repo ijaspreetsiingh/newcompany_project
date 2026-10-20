@@ -43,15 +43,15 @@ class _AnimatedSuccessBadgeState extends State<_AnimatedSuccessBadge>
     return ScaleTransition(
       scale: _scale,
       child: Container(
-        width: 46,
-        height: 46,
+        width: 56,
+        height: 56,
         decoration: const BoxDecoration(
           shape: BoxShape.circle,
           color: Color(0xFF16A34A),
         ),
         child: FadeTransition(
           opacity: _tickOpacity,
-          child: const Icon(Icons.check_rounded, size: 26, color: Colors.white),
+          child: const Icon(Icons.check_rounded, size: 32, color: Colors.white),
         ),
       ),
     );
@@ -154,117 +154,70 @@ class ConfirmationScreenFinal extends StatelessWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(
-            horizontal: Dimensions.paddingSizeDefault,
-            vertical: Dimensions.paddingSizeSmall,
+            horizontal: 20,
+            vertical: 16,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // BRAND HEADER — home wala Jass logo + support chip
-              Row(
-                children: [
-                  const NestBrand(fontSize: 20),
-                  const Spacer(),
-                  InkWell(
-                    onTap: () => Get.toNamed(RouteHelper.getSupportRoute()),
-                    borderRadius: BorderRadius.circular(100),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: isDark ? Colors.white24 : Colors.grey[300]!),
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.support_agent_outlined, size: 16, color: ink),
-                          const SizedBox(width: 5),
-                          Text(
-                            'support'.tr,
-                            style: robotoMedium.copyWith(fontSize: 12, color: ink),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 8),
 
               // STEP 3/3 — subtitle ke saath custom progress
               _buildProgress(context, bookingId, ink, muted),
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
 
-              // HERO — green tick + heading + note (left), book.png (right)
-              Stack(
-                clipBehavior: Clip.none,
+              // HERO — green tick + heading + note (centered)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Padding(
-                    // image ko overlap se bachane ke liye right side reserve
-                    padding: const EdgeInsets.only(right: 130),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const _AnimatedSuccessBadge(),
-                        const SizedBox(height: 14),
-                        Text(
-                          'booking_confirmed'.tr,
-                          style: GoogleFonts.manrope(
-                            fontSize: 25,
-                            fontWeight: FontWeight.w800,
-                            color: ink,
-                            height: 1.15,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'your_home_is_in_good_hands'.tr,
-                          style: GoogleFonts.manrope(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w600,
-                            color: muted,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'professional_will_be_assigned_shortly'.tr,
-                          style: robotoRegular.copyWith(fontSize: 12.5, color: muted, height: 1.45),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'confirmation_updates_note'.tr,
-                          style: robotoRegular.copyWith(fontSize: 12.5, color: muted, height: 1.45),
-                        ),
-                      ],
+                  const _AnimatedSuccessBadge(),
+                  const SizedBox(height: 20),
+                  Text(
+                    'booking_confirmed'.tr,
+                    style: GoogleFonts.manrope(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: ink,
+                      height: 1.2,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  // Decorative house illustration (transparent bg — light+dark dono)
-                  Positioned(
-                    top: 8,
-                    right: -6,
-                    child: IgnorePointer(
-                      child: Image.asset(
-                        'assets/images/book.png',
-                        width: 158,
-                        fit: BoxFit.contain,
-                        excludeFromSemantics: true,
-                      ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'your_home_is_in_good_hands'.tr,
+                    style: GoogleFonts.manrope(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: muted,
                     ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'professional_will_be_assigned_shortly'.tr,
+                    style: robotoRegular.copyWith(fontSize: 13, color: muted, height: 1.5),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'confirmation_updates_note'.tr,
+                    style: robotoRegular.copyWith(fontSize: 13, color: muted, height: 1.5),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 28),
 
               // BOOKING TICKET — id + confirmed pill + dashed divider + rows
               Container(
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(Dimensions.radiusLarge),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: isDark ? Colors.white12 : Colors.grey[200]!),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-                      blurRadius: 12,
+                      color: Colors.black.withValues(alpha: isDark ? 0.15 : 0.06),
+                      blurRadius: 16,
                       offset: const Offset(0, 4),
                     ),
                   ],
@@ -272,7 +225,7 @@ class ConfirmationScreenFinal extends StatelessWidget {
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(Dimensions.paddingSizeDefault),
+                      padding: const EdgeInsets.all(20),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -282,16 +235,16 @@ class ConfirmationScreenFinal extends StatelessWidget {
                               Text(
                                 'booking_id'.tr.toUpperCase(),
                                 style: robotoSmall.copyWith(
-                                  fontSize: 10,
-                                  letterSpacing: 0.8,
+                                  fontSize: 11,
+                                  letterSpacing: 1,
                                   color: muted,
                                 ),
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: 4),
                               Text(
                                 '#$bookingId',
                                 style: GoogleFonts.manrope(
-                                  fontSize: 20,
+                                  fontSize: 22,
                                   fontWeight: FontWeight.w800,
                                   color: ink,
                                 ),
@@ -299,7 +252,7 @@ class ConfirmationScreenFinal extends StatelessWidget {
                             ],
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                             decoration: BoxDecoration(
                               color: const Color(0xFF16A34A).withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(100),
@@ -307,11 +260,11 @@ class ConfirmationScreenFinal extends StatelessWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.verified_rounded, size: 14, color: Color(0xFF16A34A)),
-                                const SizedBox(width: 4),
+                                const Icon(Icons.verified_rounded, size: 16, color: Color(0xFF16A34A)),
+                                const SizedBox(width: 6),
                                 Text(
                                   'confirmed'.tr,
-                                  style: robotoBold.copyWith(fontSize: 11, color: const Color(0xFF15803D)),
+                                  style: robotoBold.copyWith(fontSize: 12, color: const Color(0xFF15803D)),
                                 ),
                               ],
                             ),
@@ -322,25 +275,25 @@ class ConfirmationScreenFinal extends StatelessWidget {
 
                     // Dashed divider
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: _dashedLine(isDark),
                     ),
 
                     // Details
                     Padding(
                       padding: const EdgeInsets.fromLTRB(
-                        Dimensions.paddingSizeDefault,
-                        Dimensions.paddingSizeDefault,
-                        Dimensions.paddingSizeDefault,
-                        Dimensions.paddingSizeSmall,
+                        20,
+                        20,
+                        20,
+                        16,
                       ),
                       child: Column(
                         children: [
                           _ticketRow(context, Icons.event_available_outlined, 'schedule'.tr, _scheduleText(), chipBg, ink, muted),
-                          const SizedBox(height: Dimensions.paddingSizeDefault),
+                          const SizedBox(height: 16),
                           _ticketRow(context, Icons.home_repair_service_outlined, 'service'.tr, _serviceName(), chipBg, ink, muted),
                           if (_addressText().isNotEmpty) ...[
-                            const SizedBox(height: Dimensions.paddingSizeDefault),
+                            const SizedBox(height: 16),
                             _ticketRow(context, Icons.location_on_outlined, 'address'.tr, _addressText(), chipBg, ink, muted),
                           ],
                         ],
@@ -349,12 +302,12 @@ class ConfirmationScreenFinal extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
 
               // Track Booking — black button + chevron (reference style)
               SizedBox(
                 width: double.infinity,
-                height: 54,
+                height: 56,
                 child: ElevatedButton(
                   onPressed: () {
                     final String id = _internalBookingId();
@@ -367,37 +320,37 @@ class ConfirmationScreenFinal extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ink,
                     elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: Dimensions.paddingSizeDefault),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(Dimensions.radiusDefault)),
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.my_location, size: 18, color: isDark ? const Color(0xFF0D0D0D) : Colors.white),
-                      const SizedBox(width: 10),
+                      Icon(Icons.my_location, size: 20, color: isDark ? const Color(0xFF0D0D0D) : Colors.white),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           'track_booking'.tr,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.manrope(
-                            fontSize: 15,
+                            fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: isDark ? const Color(0xFF0D0D0D) : Colors.white,
                           ),
                         ),
                       ),
                       Icon(Icons.chevron_right_rounded,
-                          size: 22, color: isDark ? const Color(0xFF0D0D0D) : Colors.white),
+                          size: 24, color: isDark ? const Color(0xFF0D0D0D) : Colors.white),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
               // Back to Home — outlined + home icon
               SizedBox(
                 width: double.infinity,
-                height: 54,
+                height: 56,
                 child: ElevatedButton(
                   onPressed: () => Get.offAllNamed(RouteHelper.getMainRoute('home')),
                   style: ElevatedButton.styleFrom(
@@ -405,28 +358,28 @@ class ConfirmationScreenFinal extends StatelessWidget {
                     elevation: 0,
                     shadowColor: Colors.transparent,
                     surfaceTintColor: Colors.transparent,
-                    side: BorderSide(color: isDark ? Colors.white24 : Colors.grey[350]!),
+                    side: BorderSide(color: isDark ? Colors.white24 : Colors.grey[300]!),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(Dimensions.radiusDefault)),
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.home_outlined, size: 19, color: ink),
-                      const SizedBox(width: 8),
+                      Icon(Icons.home_outlined, size: 20, color: ink),
+                      const SizedBox(width: 10),
                       Text(
                         'back_to_home'.tr,
-                        style: GoogleFonts.manrope(fontSize: 15, fontWeight: FontWeight.w700, color: ink),
+                        style: GoogleFonts.manrope(fontSize: 16, fontWeight: FontWeight.w700, color: ink),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 28),
 
               // TRUST STRIP — Verified / Secure / 24x7
               Container(
-                padding: const EdgeInsets.symmetric(vertical: Dimensions.paddingSizeDefault),
+                padding: const EdgeInsets.symmetric(vertical: 20),
                 decoration: BoxDecoration(
                   border: Border(top: BorderSide(color: isDark ? Colors.white12 : Colors.grey[200]!)),
                 ),
@@ -441,19 +394,19 @@ class ConfirmationScreenFinal extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
 
               // FOOTER tagline
               Text(
                 'better_homes_better_living'.tr.toUpperCase(),
                 textAlign: TextAlign.center,
                 style: robotoMedium.copyWith(
-                  fontSize: 9.5,
-                  letterSpacing: 2,
-                  color: muted.withValues(alpha: 0.8),
+                  fontSize: 10,
+                  letterSpacing: 2.5,
+                  color: muted.withValues(alpha: 0.7),
                 ),
               ),
-              const SizedBox(height: Dimensions.paddingSizeDefault),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -471,12 +424,15 @@ class ConfirmationScreenFinal extends StatelessWidget {
 
     Widget stepCircle(int index) {
       return Container(
-        width: 30,
-        height: 30,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: ink),
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: ink,
+        ),
         child: Icon(
           index == 2 ? Icons.check_circle : Icons.check,
-          size: index == 2 ? 20 : 16,
+          size: index == 2 ? 22 : 18,
           color: index == 2 ? ink : (Theme.of(context).scaffoldBackgroundColor),
         ),
       );
@@ -484,15 +440,15 @@ class ConfirmationScreenFinal extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: Dimensions.paddingSizeDefault, vertical: Dimensions.paddingSizeDefault),
+          horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
-        border: Border.all(color: muted.withValues(alpha: 0.12)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: muted.withValues(alpha: 0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
@@ -504,10 +460,13 @@ class ConfirmationScreenFinal extends StatelessWidget {
             if (i > 0)
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 14, left: 6, right: 6),
+                  padding: const EdgeInsets.only(top: 15, left: 8, right: 8),
                   child: Container(
-                    height: 2.5,
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(2), color: ink),
+                    height: 3,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(2),
+                      color: ink,
+                    ),
                   ),
                 ),
               ),
@@ -515,18 +474,18 @@ class ConfirmationScreenFinal extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 stepCircle(i),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
                   steps[i]['label']!,
-                  style: robotoMedium.copyWith(fontSize: 10.5, color: ink),
+                  style: robotoMedium.copyWith(fontSize: 11, color: ink),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   steps[i]['sub']!,
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: robotoRegular.copyWith(fontSize: 8.5, color: muted),
+                  style: robotoRegular.copyWith(fontSize: 9, color: muted),
                 ),
               ],
             ),
@@ -542,22 +501,22 @@ class ConfirmationScreenFinal extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          Icon(icon, size: 20, color: ink),
-          const SizedBox(height: 6),
+          Icon(icon, size: 22, color: ink),
+          const SizedBox(height: 8),
           Text(
             title,
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: robotoBold.copyWith(fontSize: 10, color: ink),
+            style: robotoBold.copyWith(fontSize: 11, color: ink),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Text(
             subtitle,
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: robotoRegular.copyWith(fontSize: 8.5, color: muted, height: 1.25),
+            style: robotoRegular.copyWith(fontSize: 9, color: muted, height: 1.3),
           ),
         ],
       ),
@@ -571,26 +530,37 @@ class ConfirmationScreenFinal extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(color: chipBg, borderRadius: BorderRadius.circular(10)),
-          child: Icon(icon, color: ink, size: 19),
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: chipBg,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: ink, size: 20),
         ),
-        const SizedBox(width: Dimensions.paddingSizeDefault),
+        const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label.toUpperCase(),
-                style: robotoSmall.copyWith(fontSize: 10, letterSpacing: 0.6, color: muted),
+                style: robotoSmall.copyWith(
+                  fontSize: 11,
+                  letterSpacing: 0.8,
+                  color: muted,
+                ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
                 value,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.manrope(fontSize: 14, fontWeight: FontWeight.w700, color: ink),
+                style: GoogleFonts.manrope(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: ink,
+                ),
               ),
             ],
           ),

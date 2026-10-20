@@ -84,7 +84,9 @@ class ConversationController extends GetxController
   String? otherUserIdForChannel(String channelId) {
     final all = [...?_providerChannelList, ...?_servicemanChannelList];
     for (final ch in all) {
-      if (ch.id == channelId && ch.channelUsers != null && ch.channelUsers!.isNotEmpty) {
+      if (ch.id == channelId &&
+          ch.channelUsers != null &&
+          ch.channelUsers!.isNotEmpty) {
         for (final u in ch.channelUsers!) {
           final String userType = u.user?.userType ?? '';
           if (userType != 'customer') {
@@ -399,9 +401,9 @@ class ConversationController extends GetxController
         );
       }
 
-      _prefetchBookingServiceNames(isProvider
-          ? _providerChannelList
-          : _servicemanChannelList);
+      _prefetchBookingServiceNames(
+        isProvider ? _providerChannelList : _servicemanChannelList,
+      );
     } else {
       if (isProvider) {
         _providerChannelList ??= <ChannelData>[];

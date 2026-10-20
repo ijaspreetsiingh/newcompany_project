@@ -374,6 +374,8 @@
   "account_blocked_notice": "खाता ब्लॉक सूचना",
   "provider_location": "प्रदाता का स्थान",
   "customer_location": "ग्राहक का स्थान",
+  "assigned_by_provider": "Assigned by Provider",
+  "auto_assigned_booking": "Auto Assigned",
   "service_location": "सेवा स्थान",
   "you_need_to_go_to_the": "आपको जाना होगा",
   "to_provide_the_service": "सेवा प्रदान करने के लिए",

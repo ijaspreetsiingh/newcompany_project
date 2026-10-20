@@ -36,14 +36,21 @@ class _UpdateCustomerAddressState extends State<UpdateCustomerAddress> {
 
   LatLng? _initialPosition;
   final GlobalKey<FormState> addressFormKey = GlobalKey<FormState>();
-  final Completer<GoogleMapController> _controller = Completer();
-  CameraPosition? _cameraPosition;
+  final MapController _mapController = MapController();
+  LatLng? _mapCenter;
+  Timer? _idleTimer;
 
 
   @override
   void initState() {
     super.initState();
     _initializeData();
+  }
+
+  @override
+  void dispose() {
+    _idleTimer?.cancel();
+    super.dispose();
   }
   
   @override
@@ -109,30 +116,36 @@ class _UpdateCustomerAddressState extends State<UpdateCustomerAddress> {
                           borderRadius: BorderRadius.circular(Dimensions.radiusDefault),
                           child: Stack(clipBehavior: Clip.none, children: [
                             if(_initialPosition != null)
-                              GoogleMap(
-                                minMaxZoomPreference: const MinMaxZoomPreference(0, 16),
-
-                                initialCameraPosition: CameraPosition(
-                                  target: _initialPosition!,
-                                  zoom: 14.4746,
-                                ),
-                                zoomControlsEnabled: false,
-                                onCameraIdle: () {
-                                  try{
-                                    locationController.updatePosition(_cameraPosition!);
-                                  }catch(error){
-                                    if (kDebugMode) {
-                                      print('error : $error');
+                              FlutterMap(
+                                mapController: _mapController,
+                                options: MapOptions(
+                                  initialCenter: _initialPosition!,
+                                  initialZoom: 14.4746,
+                                  minZoom: 3,
+                                  maxZoom: 18,
+                                  onMapReady: () {
+                                    _mapCenter = _initialPosition;
+                                    locationController.setMapController(_mapController);
+                                  },
+                                  onPositionChanged: (MapCamera camera, bool hasGesture) {
+                                    _mapCenter = camera.center;
+                                    if (!hasGesture) {
+                                      return;
                                     }
-                                  }
-                                },
-                                onCameraMove: ((position) => _cameraPosition = position),
-                                onMapCreated: (GoogleMapController controller) {
-                                  locationController.setMapController(controller);
-                                  _controller.complete(controller);
-                                },
-                                myLocationButtonEnabled: false,
-
+                                    _idleTimer?.cancel();
+                                    _idleTimer = Timer(const Duration(milliseconds: 500), () {
+                                      locationController.updatePosition(camera.center);
+                                    });
+                                  },
+                                ),
+                                children: [
+                                  TileLayer(
+                                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                    fallbackUrl: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
+                                    userAgentPackageName: 'com.jassdbx.jassods.provider',
+                                    maxZoom: 19,
+                                  ),
+                                ],
                               ),
                             locationController.loading ? const Center(child: CircularProgressIndicator()) : const SizedBox(),
                             Center(child: !locationController.loading ? Image.asset(Images.marker, height: 40, width: 40,)
@@ -143,7 +156,7 @@ class _UpdateCustomerAddressState extends State<UpdateCustomerAddress> {
                               right:Get.find<LocalizationController>().isLtr ?  0:null,
                               child: InkWell(
                                 onTap: () => _checkPermission(() {
-                                  locationController.getCurrentLocation(true, mapController: locationController.mapController);
+                                  locationController.getCurrentLocation(true, mapController: _mapController);
                                 }),
                                 child: Container(
                                   width: 30, height: 30,
@@ -160,8 +173,7 @@ class _UpdateCustomerAddressState extends State<UpdateCustomerAddress> {
                               child: InkWell(
                                 onTap: () {
                                   Get.to(()=> PickMapScreen(
-                                    googleMapController: _controller,
-                                    initialPosition: _cameraPosition?.target,
+                                    initialPosition: _mapCenter ?? _initialPosition,
                                   ));
                                 },
                                 child: Container(

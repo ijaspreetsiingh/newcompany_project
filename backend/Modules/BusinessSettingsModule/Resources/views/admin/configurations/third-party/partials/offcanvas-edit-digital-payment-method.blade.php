@@ -115,14 +115,15 @@
                 @else
                     @php($skip=['gateway','mode','status', 'supported_country'])
                 @endif
+                @php($optionalFields = ['webhook_secret'])
                 @foreach($gateway->live_values as $gatewayKey => $value)
                     @if(!in_array($gatewayKey , $skip))
                         <div>
                             <div class="mb-2 text-dark">
                                 {{ucwords(str_replace('_',' ',$gatewayKey))}}
-                                <span class="text-danger">*</span>
+                                @if(!in_array($gatewayKey, $optionalFields))<span class="text-danger">*</span>@endif
                             </div>
-                            <input type="text" class="form-control" name="{{ $gatewayKey }}" placeholder="{{ ucwords(str_replace('_',' ',$gatewayKey)) }} *"  value="{{ env('APP_ENV') == 'demo' ? '' : $value }}" required>
+                            <input type="text" class="form-control" name="{{ $gatewayKey }}" placeholder="{{ ucwords(str_replace('_',' ',$gatewayKey)) }} *"  value="{{ env('APP_ENV') == 'demo' ? '' : $value }}" @if(!in_array($gatewayKey, $optionalFields)) required @endif>
                         </div>
                     @endif
                 @endforeach

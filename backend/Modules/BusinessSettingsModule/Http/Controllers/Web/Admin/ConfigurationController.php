@@ -345,8 +345,51 @@ class ConfigurationController extends Controller
 
             $dataValues = $this->addonSetting
                 ->whereIn('settings_type', ['payment_config'])
-                ->whereIn('key_name', array_merge(array_column(PAYMENT_METHODS, 'key'), ['ssl_commerz']))
+                ->whereIn('key_name', array_column(DIGITAL_PAYMENT_METHODS, 'key'))
                 ->get();
+
+            // Naye gateway (Cashfree) ki DB row naye installs par nahi hoti —
+            // admin ko setup form dikhane ke liye missing rows in-memory add karo
+            // (save karte hi updateOrCreate asli row bana dega).
+            $existingGatewayKeys = $dataValues->pluck('key_name')->all();
+            foreach (DIGITAL_PAYMENT_METHODS as $method) {
+                if (in_array($method['key'], $existingGatewayKeys, true)) {
+                    continue;
+                }
+
+                $defaults = [
+                    'gateway' => $method['key'],
+                    'mode' => 'live',
+                    'status' => '0',
+                    // Field names gateway ke hisab se (admin form inhi keys se banta hai)
+                    'api_key' => '',
+                    'api_secret' => '',
+                    'app_id' => '',
+                    'secret_key' => '',
+                ];
+
+                if ($method['key'] === 'razor_pay') {
+                    unset($defaults['app_id'], $defaults['secret_key']);
+                } else {
+                    unset($defaults['api_key'], $defaults['api_secret']);
+                }
+
+                $dataValues->push($this->addonSetting->newInstance([
+                    'key_name' => $method['key'],
+                    'live_values' => $defaults,
+                    'test_values' => $defaults,
+                    'settings_type' => 'payment_config',
+                    'mode' => 'live',
+                    'is_active' => 0,
+                    'additional_data' => json_encode([
+                        'gateway_title' => $method['value'],
+                        'gateway_image' => null,
+                    ]),
+                ]));
+            }
+
+            // Razorpay webhook secret field hamesha dikhna chahiye (optional field)
+            $this->ensureRazorWebhookSecretField($dataValues);
 
             $type = $request->type;
         } else if ($webPage == 'app_settings') {
@@ -1006,6 +1049,51 @@ class ConfigurationController extends Controller
                     });
                 })
                 ->get();
+
+            // Naye gateway (jaise Cashfree) ke liye DB row pehle se nahi hoti.
+            // Purane installs par bhi admin ko setup form dikhane ke liye
+            // missing gateways ko in-memory add karo; save karne par
+            // updateOrCreate asli row bana dega.
+            if ($webPage === 'payment_config' && empty($request['search'])) {
+                $existingGatewayKeys = $gatewayList->pluck('key_name')->all();
+                foreach (DIGITAL_PAYMENT_METHODS as $method) {
+                    if (in_array($method['key'], $existingGatewayKeys, true)) {
+                        continue;
+                    }
+
+                    $defaults = [
+                        'gateway' => $method['key'],
+                        'mode' => 'live',
+                        'status' => '0',
+                        // Field names gateway ke hisab se (admin form inhi keys se banta hai)
+                        'api_key' => '',
+                        'api_secret' => '',
+                        'app_id' => '',
+                        'secret_key' => '',
+                    ];
+
+                    if ($method['key'] === 'razor_pay') {
+                        unset($defaults['app_id'], $defaults['secret_key']);
+                    } else {
+                        unset($defaults['api_key'], $defaults['api_secret']);
+                    }
+
+                    $gatewayList->push($this->addonSetting->newInstance([
+                        'key_name' => $method['key'],
+                        'live_values' => $defaults,
+                        'test_values' => $defaults,
+                        'settings_type' => 'payment_config',
+                        'mode' => 'live',
+                        'is_active' => 0,
+                        'additional_data' => json_encode([
+                            'gateway_title' => $method['value'],
+                            'gateway_image' => null,
+                        ]),
+                    ]));
+                }
+            }
+            // Razorpay webhook secret field hamesha dikhna chahiye (optional field)
+            $this->ensureRazorWebhookSecretField($gatewayList);
             $gateways = $gatewayList
                 ->sortBy(function ($item) {
                 return count($item['live_values']);
@@ -1255,6 +1343,28 @@ class ConfigurationController extends Controller
         ]);
 
         return response()->json(response_formatter(constant: DEFAULT_UPDATE_200), 200);
+    }
+
+    /**
+     * Razorpay ke config me 'webhook_secret' key ensure karo (admin form me
+     * dikhne ke liye). Purani DB rows me ye key nahi hoti.
+     */
+    private function ensureRazorWebhookSecretField($collection): void
+    {
+        foreach ($collection as $gateway) {
+            if (($gateway->key_name ?? null) !== 'razor_pay') {
+                continue;
+            }
+
+            $live = $gateway->live_values;
+            if (!is_array($live)) {
+                $live = [];
+            }
+            if (!array_key_exists('webhook_secret', $live)) {
+                $live['webhook_secret'] = '';
+                $gateway->live_values = $live;
+            }
+        }
     }
 
     private function getFirebaseConfigurationData()

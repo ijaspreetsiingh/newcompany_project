@@ -22,7 +22,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
   void initState() {
     Get.find<BookingDetailsController>().showHideExpandView(0, shouldUpdate: false);
     super.initState();
-    controller = TabController(vsync: this, length: 2);
+    controller = TabController(vsync: this, length: 3);
     var bookingDetailsController = Get.find<BookingDetailsController>();
     bool isRegularBooking = widget.bookingId != null && widget.bookingId != "null";
     bookingDetailsController.resetBookingDetailsValue(resetBookingDetails: isRegularBooking);
@@ -113,11 +113,17 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                               bookingDetailsController
                                   .showHideExpandView(0);
                               break;
+                            case 2:
+                              bookingDetailsController.updateServicePageCurrentState(BookingDetailsTabControllerState.reviews);
+                              bookingDetailsController
+                                  .showHideExpandView(0);
+                              break;
                           }
                         },
                         tabs: [
-                          SizedBox(width: MediaQuery.of(context).size.width * 0.5,child: Tab(text: 'booking_details'.tr)),
-                          SizedBox(width: MediaQuery.of(context).size.width * 0.5, child: Tab(text: 'status'.tr)),
+                          SizedBox(width: MediaQuery.of(context).size.width * 0.34,child: Tab(text: 'booking_details'.tr)),
+                          SizedBox(width: MediaQuery.of(context).size.width * 0.33, child: Tab(text: 'status'.tr)),
+                          SizedBox(width: MediaQuery.of(context).size.width * 0.33, child: Tab(text: 'reviews'.tr)),
                         ],
                       ),
                     ),
@@ -126,6 +132,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                       child: TabBarView(controller: controller ,children: [
                         BookingDetailsWidget(bookingId: widget.bookingId , subBookingId : widget.subBookingId, isSubBooking: isSubBooking, tabController: controller,) ,
                         BookingStatus(bookingId: widget.bookingId, isSubBooking: isSubBooking,),
+                        BookingReviewTab(bookingId: widget.bookingId),
                       ]),
                     ),
 

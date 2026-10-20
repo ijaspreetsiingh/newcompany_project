@@ -17,6 +17,11 @@ class Review {
   Provider? provider;
   BookingDetailsService? service;
   ReviewReply? reviewReply;
+
+  // Jo serviceman is service pe kaam kar gaya (backend: reviews.serviceman.user)
+  String? servicemanName;
+  String? servicemanImage;
+
   Review(
       {this.id,
         this.readableId,
@@ -33,7 +38,9 @@ class Review {
         this.booking,
         this.provider,
         this.service,
-        this.reviewReply
+        this.reviewReply,
+        this.servicemanName,
+        this.servicemanImage,
       });
 
   Review.fromJson(Map<String, dynamic> json) {
@@ -63,6 +70,15 @@ class Review {
     reviewReply = json['review_reply'] != null
         ? ReviewReply.fromJson(json['review_reply'])
         : null;
+
+    final dynamic servicemanJson = json['serviceman'];
+    if (servicemanJson is Map) {
+      final dynamic servicemanUser = servicemanJson['user'];
+      if (servicemanUser is Map) {
+        servicemanName = '${servicemanUser['first_name'] ?? ''} ${servicemanUser['last_name'] ?? ''}'.trim();
+        servicemanImage = (servicemanUser['profile_image_full_path'] ?? servicemanUser['profile_image'] ?? '')?.toString();
+      }
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -126,6 +142,37 @@ class Rating {
           ratingGroupCount!.map((v) => v.toJson()).toList();
     }
     return data;
+  }
+}
+
+/// Serviceman-wise rating summary (partner/feedback/serviceman-ratings)
+class ServicemanRatingItem {
+  String? id;
+  String? name;
+  String? profileImage;
+  int? isActive;
+  int? ratingCount;
+  int? reviewCount;
+  double? averageRating;
+
+  ServicemanRatingItem({
+    this.id,
+    this.name,
+    this.profileImage,
+    this.isActive,
+    this.ratingCount,
+    this.reviewCount,
+    this.averageRating,
+  });
+
+  ServicemanRatingItem.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    name = json['name'];
+    profileImage = json['profile_image'];
+    isActive = int.tryParse(json['is_active'].toString());
+    ratingCount = int.tryParse(json['rating_count'].toString()) ?? 0;
+    reviewCount = int.tryParse(json['review_count'].toString()) ?? 0;
+    averageRating = double.tryParse(json['average_rating'].toString()) ?? 0;
   }
 }
 

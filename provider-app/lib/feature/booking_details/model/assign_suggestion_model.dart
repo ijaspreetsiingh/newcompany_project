@@ -5,6 +5,8 @@ class AssignSuggestion {
   final String image;
   final double? distanceKm;
   final String? slotStatus;
+  final bool isCategoryMatch;
+  final List<String> assignedCategories;
 
   AssignSuggestion({
     required this.id,
@@ -12,6 +14,8 @@ class AssignSuggestion {
     this.image = '',
     this.distanceKm,
     this.slotStatus,
+    this.isCategoryMatch = false,
+    this.assignedCategories = const [],
   });
 
   factory AssignSuggestion.fromJson(Map<String, dynamic> json) {
@@ -21,6 +25,10 @@ class AssignSuggestion {
       image: json['image']?.toString() ?? '',
       distanceKm: json['distance_km'] != null ? double.tryParse(json['distance_km'].toString()) : null,
       slotStatus: json['slot_status']?.toString(),
+      isCategoryMatch: json['is_category_match'] == true || json['is_category_match']?.toString() == '1',
+      assignedCategories: (json['assigned_categories'] as List<dynamic>? ?? [])
+          .map((item) => item.toString())
+          .toList(),
     );
   }
 }

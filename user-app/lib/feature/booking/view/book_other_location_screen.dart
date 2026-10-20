@@ -451,6 +451,7 @@ class _BookOtherLocationScreenState extends State<BookOtherLocationScreen>
               children: [
                 TileLayer(
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  fallbackUrl: 'https://tile.openstreetmap.de/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.jassdbx.jassods',
                 ),
               ],

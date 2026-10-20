@@ -21,6 +21,9 @@ class BookingRequestModel {
   List<RepeatBooking>? repeatBookingList;
   SubCategory? subCategory;
   String ? serviceLocation;
+  /// 'provider_manual' = booking provider ne manually assign ki (Assigned by Provider)
+  /// 'auto' / 'zone_pending' = system ne auto-assign kiya
+  String? assignmentMode;
 
 
   BookingRequestModel({
@@ -43,7 +46,8 @@ class BookingRequestModel {
     this.repeatBookingList,
     this.subCategory,
     this.serviceSchedule,
-    this.serviceLocation
+    this.serviceLocation,
+    this.assignmentMode
   });
 
   BookingRequestModel.fromJson(Map<String, dynamic> json) {
@@ -74,6 +78,7 @@ class BookingRequestModel {
         ? SubCategory.fromJson(json['sub_category'])
         : null;
     serviceLocation = json['service_location'];
+    assignmentMode = json['assignment_mode']?.toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -101,6 +106,7 @@ class BookingRequestModel {
       data['sub_category'] = subCategory!.toJson();
     }
     data['service_location'] = serviceLocation;
+    data['assignment_mode'] = assignmentMode;
 
     return data;
   }

@@ -248,9 +248,15 @@ trait BookingTrait
                 if ($booking->booking_partial_payments->isNotEmpty()) {
                     if ($booking['payment_method'] == 'cash_after_service') {
                         placeBookingTransactionForPartialCas($booking);  // waller + CAS payment
+                    } elseif ($booking['payment_method'] == 'offline_payment') {
+                        // Sirf wallet portion abhi real hai — offline due admin approval par credit hoga
+                        placeBookingTransactionForPartialWalletOnly($booking);
                     } elseif ($booking['payment_method'] != 'wallet_payment') {
                         placeBookingTransactionForPartialDigital($booking);  //wallet + digital payment
                     }
+                } elseif ($booking['payment_method'] == 'offline_payment') {
+                    // OFFLINE: paisa abhi aaya nahi hai (admin verify karega) — isliye
+                    // koi ledger entry nahi. Credit admin approval par hoga.
                 } elseif ($booking['payment_method'] != 'cash_after_service' && $booking['payment_method'] != 'wallet_payment') {
                     placeBookingTransactionForDigitalPayment($booking);  //digital payment
                 } elseif ($booking['payment_method'] != 'cash_after_service') {
@@ -784,9 +790,14 @@ trait BookingTrait
             if ($booking->booking_partial_payments->isNotEmpty()) {
                 if ($booking['payment_method'] == 'cash_after_service') {
                     placeBookingTransactionForPartialCas($booking);  // waller + CAS payment
+                } elseif ($booking['payment_method'] == 'offline_payment') {
+                    // Sirf wallet portion abhi real hai — offline due admin approval par credit hoga
+                    placeBookingTransactionForPartialWalletOnly($booking);
                 } elseif ($booking['payment_method'] != 'wallet_payment') {
                     placeBookingTransactionForPartialDigital($booking);  //wallet + digital payment
                 }
+            } elseif ($booking['payment_method'] == 'offline_payment') {
+                // OFFLINE: paisa abhi aaya nahi hai (admin verify karega) — koi ledger entry nahi.
             } elseif ($booking['payment_method'] != 'cash_after_service' && $booking['payment_method'] != 'wallet_payment') {
                 placeBookingTransactionForDigitalPayment($booking);  //digital payment
             } elseif ($booking['payment_method'] != 'cash_after_service') {

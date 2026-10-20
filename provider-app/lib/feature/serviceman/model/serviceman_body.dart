@@ -1,5 +1,4 @@
 class ServicemanBody {
-
   String? firstName;
   String? lastName;
   String? email;
@@ -11,6 +10,9 @@ class ServicemanBody {
   String? identityImage;
   String? profileImage;
 
+  /// Provider serviceman ko jin sub-categories mein assign karta hai.
+  /// Backend: sub_category_ids[] (uuid array)
+  List<String> subCategoryIds;
 
   ServicemanBody({
     this.firstName,
@@ -22,31 +24,22 @@ class ServicemanBody {
     this.identityType,
     this.identityNumber,
     this.identityImage,
-    this.profileImage
+    this.profileImage,
+    this.subCategoryIds = const [],
   });
-
-  // SignUpBody.fromJson(Map<String, dynamic> json) {
-  //   fName = json['f_name'];
-  //   lName = json['l_name'];
-  //   phone = json['phone'];
-  //   email = json['email'];
-  //   password = json['password'];
-  // }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-
-    data['first_name'] = firstName;
-    data['last_name'] = lastName;
-    data['email'] = email;
-    data['phone'] = phone;
-    data['identity_type'] = identityType;
+    data['first_name']      = firstName;
+    data['last_name']       = lastName;
+    data['email']           = email;
+    data['phone']           = phone;
+    data['identity_type']   = identityType;
     data['identity_number'] = identityNumber;
-    data['password'] = password;
-    data['confirm_password'] = confirmedPassword;
-    data['identity_image'] = identityImage;
-    data['profile_image'] = profileImage;
-
+    data['password']        = password;
+    data['confirm_password']= confirmedPassword;
+    data['identity_image']  = identityImage;
+    data['profile_image']   = profileImage;
     return data;
   }
 }

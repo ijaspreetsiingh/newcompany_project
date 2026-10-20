@@ -1250,6 +1250,9 @@ class BookingController extends Controller
             $query->withTrashed();
         }, 'customer', 'provider', 'serviceman', 'status_histories.user'])->find($id);
 
+        abort_unless($booking, 404);
+        abort_unless((string) $booking->provider_id === (string) auth()->user()?->provider?->id, 403);
+
         $booking->service_address = $booking->service_address_location != null ? json_decode($booking->service_address_location) : $booking->service_address;
 
         return view('bookingmodule::provider.booking.invoice', compact('booking'));
@@ -1268,6 +1271,9 @@ class BookingController extends Controller
             $query->withTrashed();
         }, 'customer', 'provider', 'serviceman', 'status_histories.user','repeat'])->find($id);
 
+        abort_unless($booking, 404);
+        abort_unless((string) $booking->provider_id === (string) auth()->user()?->provider?->id, 403);
+
         $booking->service_address = $booking->service_address_location != null ? json_decode($booking->service_address_location) : $booking->service_address;
 
         return view('bookingmodule::provider.booking.fullbooking-invoice', compact('booking'));
@@ -1284,6 +1290,9 @@ class BookingController extends Controller
         $booking = $this->bookingRepeat->with(['detail.service' => function ($query) {
             $query->withTrashed();
         }, 'booking', 'provider', 'serviceman'])->find($id);
+
+        abort_unless($booking, 404);
+        abort_unless((string) $booking->provider_id === (string) auth()->user()?->provider?->id, 403);
 
         $booking->booking->service_address = $booking->booking->service_address_location != null ? json_decode($booking->booking->service_address_location) : $booking->booking->service_address;
 

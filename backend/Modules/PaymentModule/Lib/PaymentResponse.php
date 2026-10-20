@@ -184,9 +184,13 @@ class PaymentResponse
             $booking->transaction_id = $tran_id;
             $booking->save();
 
-            placeBookingTransactionForDigitalPayment($booking);  //digital payment
+            // Wallet pehle se debit ho chuka hai (booking create par) — sirf
+            // digital DUE credit hoga, warna double credit + double debit.
+            $walletPaid = (float) BookingPartialPayment::where('booking_id', $booking->id)
+                ->where('paid_with', 'wallet')
+                ->sum('paid_amount');
 
-            if ($booking->booking_partial_payments->isNotEmpty()) {
+            if (!is_null($request['booking_id'])) {
                 // Update rows where `paid_with to digital` is not 'wallet'
                 $booking->booking_partial_payments()
                     ->where('paid_with', '!=', 'wallet')
@@ -194,23 +198,55 @@ class PaymentResponse
             }
 
             if ($request['is_partial']){
-                // Save wallet payment
-                BookingPartialPayment::create([
-                    'booking_id' => $booking->id,
-                    'paid_with' => 'wallet',
-                    'paid_amount' => $request['wallet_paid_amount'],
-                    'due_amount' => $request['digitally_paid_amount'],
-                ]);
+                $existingWalletRow = BookingPartialPayment::where('booking_id', $booking->id)
+                    ->where('paid_with', 'wallet')
+                    ->first();
 
-                // Save remaining payment
-                BookingPartialPayment::create([
-                    'booking_id' => $booking->id,
-                    'paid_with' => 'digital',
-                    'paid_amount' => $request['digitally_paid_amount'],
-                    'due_amount' => 0,
-                ]);
+                if (!$existingWalletRow) {
+                    // Save wallet payment
+                    BookingPartialPayment::create([
+                        'booking_id' => $booking->id,
+                        'paid_with' => 'wallet',
+                        'paid_amount' => $request['wallet_paid_amount'],
+                        'due_amount' => $request['digitally_paid_amount'],
+                    ]);
 
-                placeBookingTransactionForPartialDigital($booking);  //wallet + digital payment
+                    // Save remaining payment
+                    BookingPartialPayment::create([
+                        'booking_id' => $booking->id,
+                        'paid_with' => 'digital',
+                        'paid_amount' => $request['digitally_paid_amount'],
+                        'due_amount' => 0,
+                    ]);
+
+                    placeBookingTransactionForPartialDigital($booking);  //wallet + digital payment
+                } else {
+                    // Wallet pehle se debit ho chuka hai (offline booking create par)
+                    // → duplicate row nahi, sirf digital DUE credit hoga.
+                    $existingWalletRow->due_amount = $request['digitally_paid_amount'];
+                    $existingWalletRow->save();
+
+                    $existingDigitalRow = BookingPartialPayment::where('booking_id', $booking->id)
+                        ->where('paid_with', 'digital')
+                        ->first();
+                    if ($existingDigitalRow) {
+                        $existingDigitalRow->paid_amount = $request['digitally_paid_amount'];
+                        $existingDigitalRow->due_amount = 0;
+                        $existingDigitalRow->save();
+                    } else {
+                        BookingPartialPayment::create([
+                            'booking_id' => $booking->id,
+                            'paid_with' => 'digital',
+                            'paid_amount' => $request['digitally_paid_amount'],
+                            'due_amount' => 0,
+                        ]);
+                    }
+
+                    $dueAmount = round((float) $booking->total_booking_amount - $walletPaid, 3);
+                    placeBookingTransactionForDigitalAmount($booking, max(0, $dueAmount));
+                }
+            } else {
+                placeBookingTransactionForDigitalPayment($booking);  //digital payment
             }
 
             $response = [
@@ -251,7 +287,7 @@ class PaymentResponse
                 'package_id' => $additional_data['package_id'] ?? null,
                 'amount' => $additional_data['amount'] ?? null,
                 'payment_id' => $payment_request_id ?? null,
-                'payment_method' => $additional_data[$payment_method] ?? null,
+                'payment_method' => $additional_data[$payment_method] ?? $payment_method,
                 'free_trial_or_payment' => $additional_data['free_trial_or_payment'] ?? null,
                 'payment_platform' => $additional_data['payment_platform'] ?? null,
                 'name' => $additional_data['name'] ?? null,
@@ -313,7 +349,7 @@ class PaymentResponse
                 'package_id' => $additional_data['package_id'] ?? null,
                 'amount' => $additional_data['amount'] ?? null,
                 'payment_id' => $payment_request_id ?? null,
-                'payment_method' => $additional_data[$payment_method] ?? null,
+                'payment_method' => $additional_data[$payment_method] ?? $payment_method,
                 'free_trial_or_payment' => $additional_data['free_trial_or_payment'] ?? null,
                 'payment_platform' => $additional_data['payment_platform'] ?? null,
                 'name' => $additional_data['name'] ?? null,
@@ -378,7 +414,7 @@ class PaymentResponse
                 'package_id' => $additional_data['package_id'] ?? null,
                 'amount' => $additional_data['amount'] ?? null,
                 'payment_id' => $payment_request_id ?? null,
-                'payment_method' => $additional_data[$payment_method] ?? null,
+                'payment_method' => $additional_data[$payment_method] ?? $payment_method,
                 'free_trial_or_payment' => $additional_data['free_trial_or_payment'] ?? null,
                 'payment_platform' => $additional_data['payment_platform'] ?? null,
                 'name' => $additional_data['name'] ?? null,
@@ -438,7 +474,7 @@ class PaymentResponse
                 'package_id' => $additional_data['package_id'] ?? null,
                 'amount' => $additional_data['amount'] ?? null,
                 'payment_id' => $payment_request_id ?? null,
-                'payment_method' => $additional_data[$payment_method] ?? null,
+                'payment_method' => $additional_data[$payment_method] ?? $payment_method,
                 'free_trial_or_payment' => $additional_data['free_trial_or_payment'] ?? null,
                 'payment_platform' => $additional_data['payment_platform'] ?? null,
                 'name' => $additional_data['name'] ?? null,
@@ -498,7 +534,7 @@ class PaymentResponse
                 'package_id' => $additional_data['package_id'] ?? null,
                 'amount' => $additional_data['amount'] ?? null,
                 'payment_id' => $payment_request_id ?? null,
-                'payment_method' => $additional_data[$payment_method] ?? null,
+                'payment_method' => $additional_data[$payment_method] ?? $payment_method,
                 'free_trial_or_payment' => $additional_data['free_trial_or_payment'] ?? null,
                 'payment_platform' => $additional_data['payment_platform'] ?? null,
                 'name' => $additional_data['name'] ?? null,

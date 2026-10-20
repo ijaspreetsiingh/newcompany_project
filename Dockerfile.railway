@@ -10,9 +10,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_MEMORY_LIMIT=-1
 ENV COMPOSER_ALLOW_SUPERUSER=1
-ENV CACHE_DRIVER=file
-ENV SESSION_DRIVER=file
-ENV QUEUE_CONNECTION=sync
+# NOTE: CACHE_DRIVER / SESSION_DRIVER / QUEUE_CONNECTION yahan SET nahi karte —
+# entrypoint.sh boot pe Redis detect karke drivers choose karta hai
+# (redis available -> redis, warna file + database queue fallback).
+# Pehle yahan "file/file/sync" tha jo .env ko override kar raha tha aur
+# har queued job HTTP request ke andar chal raha tha (slow API).
 
 WORKDIR /var/www/html
 
@@ -27,6 +29,8 @@ COPY backend/docker/entrypoint.sh /entrypoint.sh
 COPY backend/docker/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 COPY backend/php-opcache.ini /usr/local/etc/php/conf.d/opcache-tuning.ini
 COPY backend/php.ini /usr/local/etc/php/conf.d/app-php.ini
+# PHP-FPM pool: default 5 children bahut kam hai -> 100 (high traffic)
+COPY backend/php-fpm-pool.conf /usr/local/etc/php-fpm.d/www.conf
 RUN chmod +x /entrypoint.sh
 
 EXPOSE 9000

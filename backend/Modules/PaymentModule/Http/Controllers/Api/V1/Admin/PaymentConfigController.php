@@ -8,15 +8,17 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use Modules\BusinessSettingsModule\Entities\BusinessSettings;
+use Modules\PaymentModule\Entities\Setting;
 
 class PaymentConfigController extends Controller
 {
-    private BusinessSettings $business_setting;
+    private Setting $addonSetting;
 
-    public function __construct(BusinessSettings $business_setting)
+    public function __construct(Setting $addonSetting)
     {
-        $this->business_setting = $business_setting;
+        // Gateway controllers (RazorPay/Cashfree) addon_settings padhte hain;
+        // isliye admin API bhi wahi table use kare.
+        $this->addonSetting = $addonSetting;
     }
 
     /**
@@ -25,7 +27,13 @@ class PaymentConfigController extends Controller
      */
     public function payment_config_get(): JsonResponse
     {
-        $data_values = $this->business_setting->whereIn('settings_type', ['payment_config'])->get();
+        // Sirf live gateways ki config return karo; purane disable kiye gaye
+        // gateways ke stored secrets API response me leak na hon.
+        $data_values = $this->addonSetting
+            ->whereIn('settings_type', ['payment_config'])
+            ->whereIn('key_name', array_column(DIGITAL_PAYMENT_METHODS, 'key'))
+            ->get();
+
         return response()->json(response_formatter(DEFAULT_200, $data_values), 200);
     }
 
@@ -38,7 +46,7 @@ class PaymentConfigController extends Controller
     public function payment_config_set(Request $request): JsonResponse
     {
         $validation = [
-            'gateway' => 'required|in:sslcommerz,paypal,stripe,razor_pay,senang_pay,paytabs,paystack,paymob,paytm,flutterwave,liqpay,bkash,mercadopago',
+            'gateway' => 'required|in:' . implode(',', array_column(DIGITAL_PAYMENT_METHODS, 'key')),
             'mode' => 'required|in:live,test'
         ];
         $additional_data = [];
@@ -66,6 +74,12 @@ class PaymentConfigController extends Controller
                 'status' => 'required|in:1,0',
                 'api_key' => 'required',
                 'api_secret' => 'required'
+            ];
+        } elseif ($request['gateway'] == 'cashfree') {
+            $additional_data = [
+                'status' => 'required|in:1,0',
+                'app_id' => 'required',
+                'secret_key' => 'required',
             ];
         } elseif ($request['gateway'] == 'senang_pay') {
             $additional_data = [
@@ -139,14 +153,30 @@ class PaymentConfigController extends Controller
             return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
         }
 
-        $this->business_setting->updateOrCreate(['key_name' => $request['gateway'], 'settings_type' => 'payment_config'], [
-            'key_name' => $request['gateway'],
-            'live_values' => $validator->validated(),
-            'test_values' => $validator->validated(),
-            'settings_type' => 'payment_config',
-            'mode' => $request['mode'],
-            'is_active' => $request['status'],
-        ]);
+        $validated = $validator->validated();
+
+        $existing = $this->addonSetting
+            ->where('key_name', $request['gateway'])
+            ->where('settings_type', 'payment_config')
+            ->first();
+        $additionalData = $existing?->additional_data
+            ? (is_string($existing->additional_data) ? json_decode($existing->additional_data, true) : $existing->additional_data)
+            : [];
+        $additionalData['gateway_title'] = $additionalData['gateway_title'] ?? $request['gateway'];
+        $additionalData['storage'] = $additionalData['storage'] ?? getDisk();
+
+        $this->addonSetting->updateOrCreate(
+            ['key_name' => $request['gateway'], 'settings_type' => 'payment_config'],
+            [
+                'key_name' => $request['gateway'],
+                'live_values' => $validated,
+                'test_values' => $validated,
+                'settings_type' => 'payment_config',
+                'mode' => $request['mode'],
+                'is_active' => $request['status'],
+                'additional_data' => json_encode($additionalData),
+            ]
+        );
 
         return response()->json(response_formatter(DEFAULT_UPDATE_200), 200);
     }

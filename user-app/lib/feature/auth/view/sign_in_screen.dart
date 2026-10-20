@@ -53,16 +53,8 @@ class _SignInScreenState extends State<SignInScreen> {
                           SizedBox(height: MediaQuery.of(context).padding.top + 10),
 
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              IconButton(
-                                onPressed: () => Navigator.pop(context),
-                                icon: Icon(
-                                  Icons.arrow_back_rounded,
-                                  color: NestInk.primary,
-                                  size: 24,
-                                ),
-                              ),
                               TextButton(
                                 onPressed: () =>
                                     Get.offAllNamed(RouteHelper.getMainRoute("home")),

@@ -57,7 +57,34 @@ class RouteServiceProvider extends ServiceProvider
     protected function configureRateLimiting()
     {
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
+            return Limit::perMinute(180)->by(optional($request->user())->id ?: $request->ip());
+        });
+
+        // Login endpoints: normal users ko block na kare, brute-force ko block kare.
+        RateLimiter::for('login', function (Request $request) {
+            $identifier = strtolower((string) ($request->input('email_or_phone')
+                ?? $request->input('email')
+                ?? $request->input('phone')
+                ?? $request->input('phone_number')
+                ?? ''));
+
+            return [
+                Limit::perMinute(5)->by('login-min:' . $request->ip() . ':' . $identifier),
+                Limit::perHour(25)->by('login-hour:' . $request->ip() . ':' . $identifier),
+            ];
+        });
+
+        // Public geocoding/routing proxies: Nominatim/OSRM fair-use protection.
+        RateLimiter::for('geo', function (Request $request) {
+            return [
+                Limit::perMinute(30)->by('geo-min:' . $request->ip()),
+                Limit::perDay(1000)->by('geo-day:' . $request->ip()),
+            ];
+        });
+
+        // Payment startup / verification endpoints.
+        RateLimiter::for('payment', function (Request $request) {
+            return Limit::perMinute(20)->by('pay:' . $request->ip());
         });
     }
 }

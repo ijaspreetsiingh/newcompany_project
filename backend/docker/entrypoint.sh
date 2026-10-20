@@ -60,6 +60,39 @@ if [ -z "$APP_URL" ] && [ -n "$RAILWAY_PUBLIC_DOMAIN" ]; then
     export APP_URL="https://$RAILWAY_PUBLIC_DOMAIN"
 fi
 
+# ---------------------------------------------------------------------------
+# REDIS DETECTION
+# Pehle Dockerfile me CACHE/SESSION/QUEUE = file/file/sync set tha jo .env ko
+# override kar raha tha -> queued jobs HTTP request ke andar chal rahe the
+# (slow API). Ab boot pe Redis check karte hain:
+#   Redis available -> cache/session/queue = redis (fast)
+#   Nahi            -> file + database queue (fallback, phir bhi async)
+# ---------------------------------------------------------------------------
+redis_status=$(php -r '
+$host = getenv("REDIS_HOST") ?: "redis";
+$port = (int) (getenv("REDIS_PORT") ?: 6379);
+$pass = getenv("REDIS_PASSWORD") ?: null;
+try {
+    $r = new Redis();
+    if (!@$r->connect($host, $port, 1.5)) { echo "FAIL"; exit; }
+    if ($pass !== null && $pass !== "") { @$r->auth($pass); }
+    $r->ping();
+    echo "OK";
+} catch (Throwable $e) { echo "FAIL"; }
+' 2>/dev/null)
+
+if [ "$redis_status" = "OK" ]; then
+    export CACHE_DRIVER=redis
+    export SESSION_DRIVER=redis
+    export QUEUE_CONNECTION=redis
+    echo "[entrypoint] redis: OK -> cache/session/queue = redis"
+else
+    export CACHE_DRIVER=file
+    export SESSION_DRIVER=file
+    export QUEUE_CONNECTION=database
+    echo "[entrypoint] redis: FAIL -> cache/session = file, queue = database"
+fi
+
 # Railway edge TLS terminate karta hai - APP_URL hamesha https rakho
 if [ -n "$RAILWAY_PUBLIC_DOMAIN" ]; then
     case "$APP_URL" in
@@ -99,7 +132,11 @@ php artisan db:seed --class=LoginSetupSeeder --force || true
 php artisan db:seed --class=AdminUserSeeder --force || true
 
 echo "[entrypoint] caching config..."
+# NOTE: config:cache env ko bake kar deta hai -> isliye driver detection
+# (redis/file) PEHLE ho chuka hona zaroori hai (upar ki Redis check).
+php artisan config:clear || true
 php artisan config:cache || true
+php artisan route:cache || true
 php artisan view:cache || true
 
 # artisan (root) ke baad storage wapas theek karo + final write test

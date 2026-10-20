@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:jassdbx_provider/helper/extension_helper.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:jassdbx_provider/util/core_export.dart';
@@ -127,8 +126,11 @@ class PaymentMethodDialog extends StatelessWidget {
 
                     String url = '';
 
+                    // access_token = logged-in provider ka Passport token; server
+                    // isi se provider ka ownership verify karta hai.
+                    final String paymentToken = Uri.encodeQueryComponent(AuthRepo.tokenCache ?? '');
                     url =
-                        '${AppConstants.baseUrl}/payment?payment_method=${paymentMethod.gateway}&provider_id=$providerID&access_token=${base64Url.encode(utf8.encode(providerID))}'
+                        '${AppConstants.baseUrl}/payment?payment_method=${paymentMethod.gateway}&provider_id=$providerID&access_token=$paymentToken'
                         '&callback=$callbackUrl&amount=$amount&payment_platform=$platform&is_pay_to_admin=true';
 
                     Get.back();

@@ -1,3 +1,20 @@
+import 'package:jassdbx_provider/feature/dashboard/model/dashboard_serviceman_model.dart';
+
+List<String> _stringListFromJson(dynamic value) {
+  if (value is! List) return <String>[];
+  return value
+      .map<String>((dynamic item) {
+        if (item is String) return item;
+        if (item is Map) {
+          final dynamic image = item['image'] ?? item['url'] ?? item['path'];
+          return image?.toString() ?? '';
+        }
+        return item?.toString() ?? '';
+      })
+      .where((String item) => item.isNotEmpty)
+      .toList();
+}
+
 class ServicemanModel {
   String? id;
   String? firstName;
@@ -19,26 +36,27 @@ class ServicemanModel {
   String? updatedAt;
   Serviceman? serviceman;
 
-  ServicemanModel(
-      {this.id,
-        this.firstName,
-        this.lastName,
-        this.email,
-        this.phone,
-        this.identificationNumber,
-        this.identificationType,
-        this.identificationImage,
-        this.identificationImageFullPath,
-        this.gender,
-        this.profileImage,
-        this.profileImageFullPath,
-        this.isPhoneVerified,
-        this.isEmailVerified,
-        this.isActive,
-        this.userType,
-        this.createdAt,
-        this.updatedAt,
-        this.serviceman});
+  ServicemanModel({
+    this.id,
+    this.firstName,
+    this.lastName,
+    this.email,
+    this.phone,
+    this.identificationNumber,
+    this.identificationType,
+    this.identificationImage,
+    this.identificationImageFullPath,
+    this.gender,
+    this.profileImage,
+    this.profileImageFullPath,
+    this.isPhoneVerified,
+    this.isEmailVerified,
+    this.isActive,
+    this.userType,
+    this.createdAt,
+    this.updatedAt,
+    this.serviceman,
+  });
 
   ServicemanModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -48,8 +66,10 @@ class ServicemanModel {
     phone = json['phone'];
     identificationNumber = json['identification_number'];
     identificationType = json['identification_type'];
-    identificationImage = json['identification_image'] !=null ? json['identification_image'].cast<String>() : [];
-    identificationImageFullPath = json['identification_image_full_path'] !=null ? json['identification_image_full_path'].cast<String>() : [];
+    identificationImage = _stringListFromJson(json['identification_image']);
+    identificationImageFullPath = _stringListFromJson(
+      json['identification_image_full_path'],
+    );
     gender = json['gender'];
     profileImage = json['profile_image'];
     profileImageFullPath = json['profile_image_full_path'];
@@ -65,7 +85,7 @@ class ServicemanModel {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
+    final Map<String, dynamic> data = {};
     data['id'] = id;
     data['first_name'] = firstName;
     data['last_name'] = lastName;
@@ -74,7 +94,6 @@ class ServicemanModel {
     data['identification_number'] = identificationNumber;
     data['identification_type'] = identificationType;
     data['identification_image'] = identificationImage;
-    data['gender'] = gender;
     data['profile_image'] = profileImage;
     data['profile_image_full_path'] = profileImageFullPath;
     data['is_phone_verified'] = isPhoneVerified;
@@ -83,9 +102,7 @@ class ServicemanModel {
     data['user_type'] = userType;
     data['created_at'] = createdAt;
     data['updated_at'] = updatedAt;
-    if (serviceman != null) {
-      data['serviceman'] = serviceman!.toJson();
-    }
+    if (serviceman != null) data['serviceman'] = serviceman!.toJson();
     return data;
   }
 }
@@ -94,20 +111,40 @@ class Serviceman {
   String? id;
   String? providerId;
 
-  Serviceman(
-      {this.id,
-        this.providerId,
-      });
+  /// Backend se aane wali sub-category assignments.
+  /// ServicemanCategoryAssignment is defined in dashboard_serviceman_model.dart
+  List<ServicemanCategoryAssignment> assignedCategories;
 
-  Serviceman.fromJson(Map<String, dynamic> json) {
+  Serviceman({
+    this.id,
+    this.providerId,
+    List<ServicemanCategoryAssignment>? assignedCategories,
+  }) : assignedCategories = assignedCategories ?? [];
+
+  Serviceman.fromJson(Map<String, dynamic> json) : assignedCategories = [] {
     id = json['id'];
     providerId = json['provider_id'];
+
+    final raw = json['serviceman_categories'];
+    if (raw is List) {
+      assignedCategories = raw
+          .map(
+            (e) => ServicemanCategoryAssignment.fromJson(
+              e as Map<String, dynamic>,
+            ),
+          )
+          .toList();
+    }
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['id'] = id;
-    data['provider_id'] = providerId;
-    return data;
-  }
+  List<String> get subCategoryIds => assignedCategories
+      .map((e) => e.subCategoryId)
+      .whereType<String>()
+      .toList();
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'provider_id': providerId,
+    'serviceman_categories': assignedCategories.map((e) => e.toJson()).toList(),
+  };
 }

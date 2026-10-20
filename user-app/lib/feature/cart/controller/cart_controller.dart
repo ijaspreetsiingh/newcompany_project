@@ -110,7 +110,7 @@ class CartController extends GetxController implements GetxService {
     }
 
     _isLoading = false;
-    update();
+    if (shouldUpdate) update();
   }
 
   Future<void> removeCartFromServer(CartModel cart)async{

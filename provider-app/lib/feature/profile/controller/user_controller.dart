@@ -484,10 +484,9 @@ class UserProfileController extends GetxController implements GetxService{
   bool _autoAssignMode = false;
   bool get autoAssignMode => _autoAssignMode;
 
-  int _autoAssignWaitTime = 120; // seconds
+  int _autoAssignWaitTime = 120;
   int get autoAssignWaitTime => _autoAssignWaitTime;
 
-  // slider drag ke waqt local update (API call nahi hoti)
   set autoAssignWaitTimeLocal(int seconds) {
     _autoAssignWaitTime = seconds;
     update();
@@ -496,9 +495,32 @@ class UserProfileController extends GetxController implements GetxService{
   bool _autoAssignLoading = false;
   bool get autoAssignLoading => _autoAssignLoading;
 
+  // ---- AUTO-REASSIGN ON CANCEL ----
+  bool _autoReassignOnCancel = false;
+  bool get autoReassignOnCancel => _autoReassignOnCancel;
+
+  bool _autoReassignOnCancelLoading = false;
+  bool get autoReassignOnCancelLoading => _autoReassignOnCancelLoading;
+
   void initAutoAssignSettings() {
     _autoAssignMode = (_providerModel?.content?.providerInfo?.autoAssignMode ?? 0) == 1;
     _autoAssignWaitTime = _providerModel?.content?.providerInfo?.autoAssignWaitTime ?? 120;
+    _autoReassignOnCancel = (_providerModel?.content?.providerInfo?.autoReassignOnCancel ?? 0) == 1;
+    update();
+  }
+
+  Future<void> toggleAutoReassignOnCancel() async {
+    _autoReassignOnCancelLoading = true;
+    update();
+    Response response = await userRepo.toggleAutoReassignOnCancel();
+    if (response.statusCode == 200) {
+      final val = response.body['content']?['auto_reassign_on_cancel'];
+      _autoReassignOnCancel = val == 1 || val == true;
+      showCustomSnackBar('setting_updated'.tr, type: ToasterMessageType.success);
+    } else {
+      showCustomSnackBar('something_went_wrong'.tr);
+    }
+    _autoReassignOnCancelLoading = false;
     update();
   }
 

@@ -47,7 +47,7 @@ class LocationRepo {
 
   Future<bool> saveUserAddress(String address, String? zoneIDs) async {
     apiClient.updateHeader(
-      sharedPreferences.getString(AppConstants.token),
+      AuthRepo.tokenCache ?? sharedPreferences.getString(AppConstants.token),
       zoneIDs,
       sharedPreferences.getString(AppConstants.languageCode),
       sharedPreferences.getString(AppConstants.guestId),

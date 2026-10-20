@@ -6,9 +6,9 @@ class BookingRequestRepo{
 
   BookingRequestRepo({required this.apiClient});
 
-  Future<Response> getBookingRequestData(String requestType, int offset, ServiceType serviceType) async {
+  Future<Response> getBookingRequestData(String requestType, int offset, ServiceType serviceType, {int limit = 10}) async {
     return await apiClient.postData(AppConstants.bookingListUrl,
-        {"limit" : 10, "offset" : offset, "booking_status" : requestType, "service_type" : serviceType.name});
+        {"limit" : limit, "offset" : offset, "booking_status" : requestType, "service_type" : serviceType.name});
   }
 
   Future<Response> getBookingCalendarData({

@@ -55,6 +55,7 @@ class RouteHelper {
   static const String paymentInformation = '/payment-information';
   static const String addPaymentInfo = '/add-payment-information';
   static const String calendarOrder = '/calendar-order';
+  static const String cancelledByServiceman = '/cancelled-by-serviceman';
 
 
 
