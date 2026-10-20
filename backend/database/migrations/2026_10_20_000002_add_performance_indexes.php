@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -101,6 +102,21 @@ class AddPerformanceIndexes extends Migration
                 continue;
             }
 
+            // Safety: badi table pe ALTER TABLE minutes le sakta hai (aur
+            // metadata lock doosre queries ko block karta hai) — deploy ko
+            // hang nahi karne dena. Badi tables ke indexes alag maintenance
+            // window me banaye jaate hain.
+            try {
+                $rowCount = (int) DB::table($table)->count();
+            } catch (\Throwable $e) {
+                $rowCount = 0;
+            }
+
+            if ($rowCount > 200000) {
+                $this->warn("SKIP {$table} ({$rowCount} rows) — index badi table pe alag se banayein");
+                continue;
+            }
+
             foreach ($indexes as $name => $columns) {
                 $exists = false;
                 try {
@@ -114,6 +130,8 @@ class AddPerformanceIndexes extends Migration
                 }
 
                 try {
+                    // Lock wait chhota rakho — hang nahi hoga
+                    DB::statement('SET SESSION lock_wait_timeout = 20');
                     Schema::table($table, function (Blueprint $table) use ($name, $columns) {
                         $table->index($columns, $name);
                     });

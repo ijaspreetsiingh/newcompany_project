@@ -66,6 +66,32 @@ return [
             ]) : [],
         ],
 
+        /**
+         * Railway ka apna MySQL (private network = ~1-5ms latency).
+         * Aiven (remote, ~1.3s/query) se shift karte waqt is connection par
+         * data copy hota hai: php artisan db:copy --from=mysql --to=mysql_railway
+         */
+        'mysql_railway' => [
+            'driver' => 'mysql',
+            'url' => env('RAILWAY_DB_URL'),
+            'host' => env('RAILWAY_DB_HOST', 'mysql.railway.internal'),
+            'port' => env('RAILWAY_DB_PORT', '3306'),
+            'database' => env('RAILWAY_DB_DATABASE', 'railway'),
+            'username' => env('RAILWAY_DB_USERNAME', 'root'),
+            'password' => env('RAILWAY_DB_PASSWORD', ''),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::ATTR_PERSISTENT => true,
+                PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+            ]) : [],
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DATABASE_URL'),
