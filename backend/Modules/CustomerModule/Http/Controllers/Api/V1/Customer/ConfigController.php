@@ -31,28 +31,10 @@ class ConfigController extends Controller
 
     /**
      * Display a listing of the resource.
-     *
-     * PERF: ye endpoint app ke START par call hota hai. Pehle yahan ~20 DB
-     * queries chalti thi (har query ~2s on remote MySQL = 28s response!).
-     * Ab poora payload 2 minute ke cache me hai → response ~0.1s.
-     * Maintenance mode hamesha live rahega (admin toggle instant).
-     *
      * @param Request $request
      * @return JsonResponse
      */
     public function configuration(Request $request): JsonResponse
-    {
-        $payload = Cache::remember('customer_setup_config_v1', 120, function () {
-            return $this->buildConfigurationPayload();
-        });
-
-        // Maintenance mode live (cache se nahi) — admin ka toggle instant kaam kare
-        $payload['maintenance'] = $this->checkMaintenanceMode();
-
-        return response()->json(response_formatter(DEFAULT_200, $payload), 200);
-    }
-
-    private function buildConfigurationPayload(): array
     {
         $playstore = business_config('app_url_playstore', 'landing_button_and_links');
         $appstore = business_config('app_url_appstore', 'landing_button_and_links');
@@ -151,7 +133,7 @@ class ConfigController extends Controller
         ];
 
 
-        return [
+        return response()->json(response_formatter(DEFAULT_200, [
             'default_location' => [
                 'latitude' => (business_config('address_latitude', 'business_information'))->live_values ?? 23.811842872190,
                 'longitude' => (business_config('address_longitude', 'business_information'))->live_values ?? 90.66504678008192
@@ -240,7 +222,7 @@ class ConfigController extends Controller
             }),
             'max_image_upload_size' => uploadMaxFileSize('image'),
             'max_video_upload_size' => uploadMaxFileSize('file'),
-        ];
+        ]), 200);
     }
 
     /**
@@ -340,20 +322,22 @@ class ConfigController extends Controller
     }
 
     public function pages(): JsonResponse
-    {
-        // PERF: 6 alag DataSetting queries → 1 cached query
-        $pages = Cache::remember('customer_pages_v1', 300, function () {
-            return [
-                'about_us' => DataSetting::where('type', 'pages_setup')->where('key', 'about_us')->first(),
-                'terms_and_conditions' => DataSetting::where('type', 'pages_setup')->where('key', 'terms_and_conditions')->first(),
-                'refund_policy' => DataSetting::where('type', 'pages_setup')->where('key', 'refund_policy')->first(),
-                'return_policy' => DataSetting::where('type', 'pages_setup')->where('key', 'return_policy')->first(),
-                'cancellation_policy' => DataSetting::where('type', 'pages_setup')->where('key', 'cancellation_policy')->first(),
-                'privacy_policy' => DataSetting::where('type', 'pages_setup')->where('key', 'privacy_policy')->first(),
-            ];
-        });
-
-        return response()->json(response_formatter(DEFAULT_200, $pages), 200);
+    {        return response()->json(response_formatter(DEFAULT_200, [
+            'about_us' => DataSetting::where('type', 'pages_setup')->where('key', 'about_us')->first(),
+            'terms_and_conditions' => DataSetting::where('type', 'pages_setup')->where('key', 'terms_and_conditions')->first(),
+            'refund_policy' => DataSetting::where('type', 'pages_setup')->where('key', 'refund_policy')->first(),
+            'return_policy' => DataSetting::where('type', 'pages_setup')->where('key', 'return_policy')->first(),
+            'cancellation_policy' => DataSetting::where('type', 'pages_setup')->where('key', 'cancellation_policy')->first(),
+            'privacy_policy' => DataSetting::where('type', 'pages_setup')->where('key', 'privacy_policy')->first(),
+//            'images' => collect([
+//                'about_us' => getDataSettingsImageFullPath(key: 'about_us_image', settingType: 'pages_setup_image', path: 'page-setup/', defaultPath: asset('public/assets/admin-module/img/page-default.png')),
+//                'terms_and_conditions' => getDataSettingsImageFullPath(key: 'terms_and_conditions_image', settingType: 'pages_setup_image', path: 'page-setup/', defaultPath: asset('public/assets/admin-module/img/page-default.png')),
+//                'refund_policy' => getDataSettingsImageFullPath(key: 'refund_policy_image', settingType: 'pages_setup_image', path: 'page-setup/', defaultPath: asset('public/assets/admin-module/img/page-default.png')),
+//                'return_policy' => getDataSettingsImageFullPath(key: 'return_policy_image', settingType: 'pages_setup_image', path: 'page-setup/', defaultPath: asset('public/assets/admin-module/img/page-default.png')),
+//                'cancellation_policy' => getDataSettingsImageFullPath(key: 'cancellation_policy_image', settingType: 'pages_setup_image', path: 'page-setup/', defaultPath: asset('public/assets/admin-module/img/page-default.png')),
+//                'privacy_policy' => getDataSettingsImageFullPath(key: 'privacy_policy_image', settingType: 'pages_setup_image', path: 'page-setup/', defaultPath: asset('public/assets/admin-module/img/page-default.png')),
+//            ]),
+        ]), 200);
     }
 
     public function pageDetails($key)
@@ -740,35 +724,32 @@ class ConfigController extends Controller
 
     private function getPaymentMethods(): array
     {
-        // PERF: har call pe Schema::hasTable() = information_schema query
-        // (remote MySQL par ~2s). Ab table existence + poora result cached hai.
-        return Cache::remember('customer_payment_methods_v1', 300, function () {
-            if (!Schema::hasTable('addon_settings')) {
-                return [];
-            }
+        // Check if the addon_settings table exists
+        if (!Schema::hasTable('addon_settings')) {
+            return [];
+        }
 
-            $methods = DB::table('addon_settings')
-                ->where('settings_type', 'payment_config')
-                ->whereIn('key_name', array_column(DIGITAL_PAYMENT_METHODS, 'key'))
-                ->get();
-            $env = env('APP_ENV') == 'live' ? 'live' : 'test';
-            $credentials = $env . '_values';
+        $methods = DB::table('addon_settings')
+            ->where('settings_type', 'payment_config')
+            ->whereIn('key_name', array_column(DIGITAL_PAYMENT_METHODS, 'key'))
+            ->get();
+        $env = env('APP_ENV') == 'live' ? 'live' : 'test';
+        $credentials = $env . '_values';
 
-            $data = [];
-            foreach ($methods as $method) {
-                $gateway_image = getPaymentGatewayImageFullPath(key: $method->key_name, settingsType: $method->settings_type, defaultPath: null);
-                $credentialsData = json_decode($method->$credentials);
-                $additional_data = json_decode($method->additional_data);
-                if (($credentialsData->status ?? 0) == 1) {
-                    $data[] = [
-                        'gateway' => $method->key_name,
-                        'gateway_image_full_path' => $gateway_image,
-                        'gateway_title' => $additional_data->gateway_title ?? $method->key_name,
-                    ];
-                }
+        $data = [];
+        foreach ($methods as $method) {
+            $gateway_image = getPaymentGatewayImageFullPath(key: $method->key_name, settingsType: $method->settings_type, defaultPath: null);
+            $credentialsData = json_decode($method->$credentials);
+            $additional_data = json_decode($method->additional_data);
+            if (($credentialsData->status ?? 0) == 1) {
+                $data[] = [
+                    'gateway' => $method->key_name,
+                    'gateway_image_full_path' => $gateway_image,
+                    'gateway_title' => $additional_data->gateway_title ?? $method->key_name,
+                ];
             }
-            return $data;
-        });
+        }
+        return $data;
     }
 
 }

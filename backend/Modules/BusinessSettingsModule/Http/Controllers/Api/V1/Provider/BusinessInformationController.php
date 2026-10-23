@@ -25,12 +25,42 @@ class BusinessInformationController extends Controller
      */
     public function businessSettingsGet(Request $request): JsonResponse
     {
-        $request['key'] = ['provider_serviceman_can_cancel_booking', 'provider_serviceman_can_edit_booking'];
+        $request['key'] = ['provider_serviceman_can_cancel_booking', 'provider_serviceman_can_edit_booking', 'provider_serviceman_category_filter'];
+
+        // Default rows bana do taaki provider app ka har switch hamesha render
+        // ho — row missing hogi to app me switch UI me aayega hi nahi.
+        // provider_serviceman_category_filter: 0 = zone pending me category
+        // filter ACTIVE (default), 1 = filter IGNORE (sab service men ko sab
+        // pending bookings — sirf zone pending screen ke liye).
+        foreach ($request['key'] as $key) {
+            $this->providerSetting->firstOrCreate(
+                ['key_name' => $key, 'provider_id' => $request->user()->provider->id],
+                ['key_name' => $key, 'live_values' => '0', 'test_values' => '0', 'settings_type' => 'serviceman_config', 'mode' => 'live', 'is_active' => 1]
+            );
+        }
 
         $dataValues = $this->providerSetting
-            ->select('key_name', 'live_values', 'test_values', 'mode')
+            ->select('id', 'key_name', 'live_values', 'test_values', 'mode', 'created_at')
             ->when(!is_null($request['key']), fn($query) => $query->whereIn('key_name', $request['key'])->where('provider_id', $request->user()->provider->id))
             ->get();
+
+        // firstOrCreate race se bani duplicate rows yahin self-heal karo:
+        // har key_name sirf EK hi row response me aaye (warna provider app
+        // me switch do baar render hota hai). Original (sabse pehli) row
+        // rakhi jati hai, extras response se hatate hain aur DB se delete
+        // kar dete hain — aage kabhi duplicate bana toh bhi UI single rahega.
+        $duplicateGroups = $dataValues->groupBy('key_name')->filter(fn($group) => $group->count() > 1);
+        foreach ($duplicateGroups as $group) {
+            $keepId = $group->sortBy('created_at')->pluck('id')->first();
+            $extraIds = $group->pluck('id')->reject(fn($id) => $id === $keepId)->values();
+            if ($extraIds->isNotEmpty()) {
+                $this->providerSetting->whereIn('id', $extraIds)->delete();
+                $dataValues = $dataValues->reject(fn($row) => $extraIds->contains($row->id))->values();
+            }
+        }
+
+        // Response shape pehle jaisa: sirf wahi 4 fields jo app parse karta hai
+        $dataValues = $dataValues->map(fn($row) => $row->only('key_name', 'live_values', 'test_values', 'mode'));
 
         $serviceLocation = $this->providerSetting->where(['key_name' => 'service_location', 'provider_id' => $request->user()->provider->id, 'settings_type' => 'provider_config'])->first();
         $serviceLocations = $serviceLocation ? json_decode($serviceLocation->live_values, true) : [];
@@ -82,7 +112,7 @@ class BusinessInformationController extends Controller
             $key = $item['key'];
             $value = $item['value'];
 
-            $settingType = in_array($item['key'], ['provider_serviceman_can_edit_booking', 'provider_serviceman_can_cancel_booking']) ? 'serviceman_config' : null;
+            $settingType = in_array($item['key'], ['provider_serviceman_can_edit_booking', 'provider_serviceman_can_cancel_booking', 'provider_serviceman_category_filter']) ? 'serviceman_config' : null;
 
             if (!is_null($settingType)) {
                 $this->providerSetting->updateOrCreate(['key_name' => $item['key'], 'provider_id' => $request->user()->provider->id], [

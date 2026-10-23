@@ -246,6 +246,65 @@ class ServicemanController extends Controller
     }
 
 
+    /**
+     * Custom date range earnings and booking count for serviceman dashboard.
+     * GET /api/v1/technician/overview/earnings-range?from_date=YYYY-MM-DD&to_date=YYYY-MM-DD
+     */
+    public function earningsRange(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'from_date' => 'required|date_format:Y-m-d',
+            'to_date' => 'required|date_format:Y-m-d|after_or_equal:from_date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
+        }
+
+        $servicemanId = $request->user()->serviceman->id;
+        $fromDate = $request->from_date . ' 00:00:00';
+        $toDate = $request->to_date . ' 23:59:59';
+
+        $totalEarning = 0.0;
+        $totalBookings = 0;
+
+        // Regular bookings
+        $regularEarnings = DB::table('booking_details_amounts as amounts')
+            ->join('bookings as booking', 'amounts.booking_id', '=', 'booking.id')
+            ->whereNull('amounts.booking_repeat_id')
+            ->where('booking.serviceman_id', $servicemanId)
+            ->where('booking.booking_status', 'completed')
+            ->whereBetween('booking.created_at', [$fromDate, $toDate])
+            ->get();
+
+        foreach ($regularEarnings as $row) {
+            $totalEarning += (float) ($row->serviceman_earning ?? 0);
+            $totalBookings++;
+        }
+
+        // Repeat bookings
+        $repeatEarnings = DB::table('booking_details_amounts as amounts')
+            ->join('booking_repeats as booking_repeat', 'amounts.booking_repeat_id', '=', 'booking_repeat.id')
+            ->where('booking_repeat.serviceman_id', $servicemanId)
+            ->where('booking_repeat.booking_status', 'completed')
+            ->whereBetween('booking_repeat.created_at', [$fromDate, $toDate])
+            ->get();
+
+        foreach ($repeatEarnings as $row) {
+            $totalEarning += (float) ($row->serviceman_earning ?? 0);
+            $totalBookings++;
+        }
+
+        $data = [
+            'from_date' => $request->from_date,
+            'to_date' => $request->to_date,
+            'total_earning' => round($totalEarning, 2),
+            'total_bookings' => $totalBookings,
+        ];
+
+        return response()->json(response_formatter(DEFAULT_200, $data), 200);
+    }
+
     public function changePassword(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -309,6 +368,13 @@ class ServicemanController extends Controller
                         'sub_category_name' => $c->subCategory?->name,
                         'category_name'     => $c->mainCategory?->name,
                     ])->values()->toArray();
+
+                // Zone-pending category filter flag (provider ka toggle, sirf
+                // zone pending screen ke liye):
+                //   1 = filter ACTIVE (default) — sirf assigned categories ki bookings
+                //   0 = provider ne "show all" ON kiya — filter hata do
+                $ignoreFilter = (int)(provider_config('provider_serviceman_category_filter', 'serviceman_config', $serviceman->provider_id)?->live_values ?? 0) === 1;
+                $serviceman->user->category_filter_active = $ignoreFilter ? 0 : 1;
             }
 
             return response()->json(response_formatter(DEFAULT_200, $serviceman), 200);

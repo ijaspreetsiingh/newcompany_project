@@ -32,6 +32,7 @@ Route::group(['prefix' => 'technician', 'as' => 'serviceman.', 'namespace' => 'A
     Route::group(['middleware' => ['auth:api', 'actch:serviceman_app']], function () {
         Route::get('overview', [ServicemanController::class, 'dashboard']);
         Route::get('overview/order-metrics', [ServicemanController::class, 'bookingStatistics']);
+        Route::get('overview/earnings-range', [ServicemanController::class, 'earningsRange']);
 
         Route::group(['prefix' => 'setup'], function () {
             Route::get('/', [ServicemanConfigController::class, 'configuration'])->withoutMiddleware(['auth:api', 'actch:serviceman_app']);

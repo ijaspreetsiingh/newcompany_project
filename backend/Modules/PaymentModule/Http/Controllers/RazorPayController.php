@@ -234,14 +234,6 @@ class RazorPayController extends Controller
      */
     public function webhook(Request $request): JsonResponse
     {
-        // Browser me open karne pe clean message (health-check) — login redirect nahi
-        if ($request->isMethod('GET')) {
-            return response()->json([
-                'status' => true,
-                'message' => 'Razorpay webhook endpoint active. Gateway POST payment.captured events here.',
-            ], 200);
-        }
-
         $rawBody = (string) $request->getContent();
         $signature = (string) $request->header('X-Razorpay-Signature', '');
 

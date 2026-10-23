@@ -6,7 +6,6 @@ use App\Traits\MaintenanceModeTrait;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
@@ -53,19 +52,6 @@ class ConfigController extends Controller
      * @return JsonResponse
      */
     public function config(Request $request): JsonResponse
-    {
-        // PERF: provider app ka startup config — pehle ~20 DB queries (28s!).
-        // Ab poora payload 2 minute cache me; maintenance mode live rehta hai.
-        $payload = Cache::remember('provider_setup_config_v1', 120, function () {
-            return $this->buildConfigPayload();
-        });
-
-        $payload['maintenance'] = $this->checkMaintenanceMode();
-
-        return response()->json(response_formatter(DEFAULT_200, $payload), 200);
-    }
-
-    private function buildConfigPayload(): array
     {
         $advancedBooking =  [
             'advanced_booking_restriction_value' => (int) business_config('advanced_booking_restriction_value', 'booking_setup')?->live_values,
@@ -127,7 +113,7 @@ class ConfigController extends Controller
         ];
 
 
-        return [
+        return response()->json(response_formatter(DEFAULT_200, [
             'maintenance' => $this->checkMaintenanceMode(),
             'free_trial_status' => (int)((business_config('free_trial_period', 'subscription_Setting'))->is_active ?? 0),
             'free_trial_period' => $freeTrialPeriod,
@@ -208,7 +194,7 @@ class ConfigController extends Controller
             'serviceman_can_edit_booking' => (int)((business_config('serviceman_can_edit_booking', 'serviceman_config'))->live_values ?? 0 ),
             'max_image_upload_size' => uploadMaxFileSize('image'),
             'max_video_upload_size' => uploadMaxFileSize('file'),
-        ];
+        ]), 200);
     }
 
     public function pageDetails($key)
@@ -219,34 +205,31 @@ class ConfigController extends Controller
 
     private function getPaymentMethods(): array
     {
-        // PERF: Schema::hasTable() = information_schema query (remote MySQL par
-        // ~2s) — ab cached.
-        return Cache::remember('provider_payment_methods_v1', 300, function () {
-            if (!Schema::hasTable('addon_settings')) {
-                return [];
-            }
+        // Check if the addon_settings table exists
+        if (!Schema::hasTable('addon_settings')) {
+            return [];
+        }
 
-            $methods = DB::table('addon_settings')
-                ->where('settings_type', 'payment_config')
-                ->whereIn('key_name', array_column(DIGITAL_PAYMENT_METHODS, 'key'))
-                ->get();
-            $env = env('APP_ENV') == 'live' ? 'live' : 'test';
-            $credentials = $env . '_values';
+        $methods = DB::table('addon_settings')
+            ->where('settings_type', 'payment_config')
+            ->whereIn('key_name', array_column(DIGITAL_PAYMENT_METHODS, 'key'))
+            ->get();
+        $env = env('APP_ENV') == 'live' ? 'live' : 'test';
+        $credentials = $env . '_values';
 
-            $data = [];
-            foreach ($methods as $method) {
-                $gateway_image = getPaymentGatewayImageFullPath(key: $method->key_name, settingsType: $method->settings_type, defaultPath: null);
-                $credentialsData = json_decode($method->$credentials);
-                $additionalData = json_decode($method->additional_data);
-                if (($credentialsData->status ?? 0) == 1) {
-                    $data[] = [
-                        'gateway' => $method->key_name,
-                        'gateway_image_full_path' => $gateway_image,
-                        'gateway_title' => $additionalData->gateway_title ?? $method->key_name,
-                    ];
-                }
+        $data = [];
+        foreach ($methods as $method) {
+            $gateway_image = getPaymentGatewayImageFullPath(key: $method->key_name, settingsType: $method->settings_type, defaultPath: null);
+            $credentialsData = json_decode($method->$credentials);
+            $additionalData = json_decode($method->additional_data);
+            if ($credentialsData->status == 1) {
+                $data[] = [
+                    'gateway' => $method->key_name,
+                    'gateway_image_full_path' => $gateway_image,
+                    'gateway_title' => $additionalData->gateway_title,
+                ];
             }
-            return $data;
-        });
+        }
+        return $data;
     }
 }

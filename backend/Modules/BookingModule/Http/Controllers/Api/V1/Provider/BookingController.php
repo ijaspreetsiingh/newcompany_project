@@ -2201,6 +2201,18 @@ class BookingController extends Controller
     }
 
     /**
+     * Auto-reassign on serviceman cancel toggle
+     */
+    public function toggleAutoReassignOnCancel(Request $request): JsonResponse
+    {
+        $provider = $request->user()->provider;
+        $provider->auto_reassign_on_cancel = $provider->auto_reassign_on_cancel ? 0 : 1;
+        $provider->save();
+
+        return response()->json(response_formatter(DEFAULT_200, ['auto_reassign_on_cancel' => (int)$provider->auto_reassign_on_cancel]), 200);
+    }
+
+    /**
      * Auto-assign wait time update (seconds)
      *
      * @param Request $request

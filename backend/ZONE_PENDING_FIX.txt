@@ -1,0 +1,22 @@
+// QUICK FIX - Remove this line from zonePendingBookings() method:
+->where('assignment_mode', 'zone_pending')
+
+// Keep everything else same. Just remove that ONE line.
+
+// The query will become:
+$bookings = $this->booking
+    ->with(['subCategory:id,name', 'detail.service'])
+    ->where('provider_id', $serviceman->provider_id)
+    ->where('booking_status', 'pending')
+    // <- REMOVE: ->where('assignment_mode', 'zone_pending')
+    ->whereHas('servicemenAssignments', function ($query) use ($serviceman, $now) {
+        $query->where('serviceman_id', $serviceman->id)
+            ->where('status', \Modules\BookingModule\Entities\BookingServiceman::STATUS_PENDING)
+            ->where('expires_at', '>', $now);
+    })
+    ->latest()
+    ->paginate($request->input('limit', 20), ['*'], 'offset', $request->input('offset', 1))
+    ->withPath('');
+
+// File: C:\Demandium\backend\Modules\BookingModule\Http\Controllers\Api\V1\Serviceman\BookingController.php
+// Line: 623 (delete this line)

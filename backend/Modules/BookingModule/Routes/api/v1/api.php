@@ -69,6 +69,7 @@ Route::group(['prefix' => 'partner', 'as' => 'provider.', 'namespace' => 'Api\V1
         Route::post('change-task-position', [ProviderBookingController::class, 'changeServiceLocation']);
         Route::get('scheduler/preview', [ProviderBookingController::class, 'bookingCalendar']);        // ----- AUTO-ASSIGN -----
         Route::put('auto-assign-switch', [ProviderBookingController::class, 'toggleAutoAssign']);
+        Route::put('auto-reassign-cancel-switch', [ProviderBookingController::class, 'toggleAutoReassignOnCancel']);
         Route::put('auto-assign-delay-window', [ProviderBookingController::class, 'updateAutoAssignWaitTime']);
         Route::get('auto-assign-state/{booking_id}', [ProviderBookingController::class, 'getAutoAssignStatus']);
     });

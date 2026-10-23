@@ -56,15 +56,13 @@ Route::group(['prefix' => 'payment', 'middleware' => 'throttle:payment'], functi
 
 // Webhook Cashfree ke servers se aata hai; IP throttle ke bahar rakha gaya
 // hai taaki high traffic par bhi gateway ke retries block na hon.
-// (GET allowed hai sirf health-check ke liye — browser me kholne pe clean
-//  JSON message, login page redirect nahi.)
-Route::match(['get', 'post'], 'payment/cashfree/webhook', [CashfreeController::class, 'webhook'])
+Route::post('payment/cashfree/webhook', [CashfreeController::class, 'webhook'])
     ->name('cashfree.webhook')
     ->withoutMiddleware([VerifyCsrfToken::class]);
 
 // Webhook Razorpay ke servers se aata hai (browser band hone par bhi booking
 // ban jaati hai). Throttle group ke bahar + CSRF exempt.
-Route::match(['get', 'post'], 'payment/razor-pay/webhook', [RazorPayController::class, 'webhook'])
+Route::post('payment/razor-pay/webhook', [RazorPayController::class, 'webhook'])
     ->name('razor-pay.webhook')
     ->withoutMiddleware([VerifyCsrfToken::class]);
 

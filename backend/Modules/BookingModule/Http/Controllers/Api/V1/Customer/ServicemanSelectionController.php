@@ -120,54 +120,38 @@ class ServicemanSelectionController extends Controller
 
             $result = [];
 
-            // PERF: pehle har serviceman ke liye 4 alag queries chalti thi
-            // (N+1) — 20 staff = 80 queries. Ab 3 aggregate queries me poora data.
-            $servicemanIds = $servicemen->pluck('id')->map(fn($id) => (string) $id)->all();
-
-            $reviewStats = [];
-            if (!empty($servicemanIds)) {
-                $reviewStats = DB::table('reviews')
-                    ->whereIn('serviceman_id', $servicemanIds)
+            foreach ($servicemen as $serviceman) {
+                // Get average rating from reviews
+                $rating = DB::table('reviews')
+                    ->where('serviceman_id', $serviceman->id)
                     ->whereNotNull('review_rating')
                     ->where('is_active', 1)
-                    ->select('serviceman_id', DB::raw('AVG(review_rating) as avg_rating'), DB::raw('COUNT(*) as review_count'))
-                    ->groupBy('serviceman_id')
-                    ->get()
-                    ->keyBy('serviceman_id');
-            }
+                    ->avg('review_rating');
+                $rating = $rating ? round($rating, 1) : 0;
 
-            $bookingStats = [];
-            if (!empty($servicemanIds)) {
-                $bookingStats = DB::table('bookings')
-                    ->whereIn('serviceman_id', $servicemanIds)
-                    ->select('serviceman_id', DB::raw("SUM(CASE WHEN booking_status = 'completed' THEN 1 ELSE 0 END) as completed_count"), DB::raw("SUM(CASE WHEN booking_status IN ('pending','accepted','ongoing') THEN 1 ELSE 0 END) as active_count"))
-                    ->groupBy('serviceman_id')
-                    ->get()
-                    ->keyBy('serviceman_id');
-            }
+                // Get review count
+                $reviewCount = DB::table('reviews')
+                    ->where('serviceman_id', $serviceman->id)
+                    ->whereNotNull('review_rating')
+                    ->where('is_active', 1)
+                    ->count();
 
-            $freshCutoff = now()->subMinutes(5);
+                // Get completed bookings count
+                $completedCount = DB::table('bookings')
+                    ->where('serviceman_id', $serviceman->id)
+                    ->where('booking_status', 'completed')
+                    ->count();
 
-            foreach ($servicemen as $serviceman) {
-                $review = $reviewStats[$serviceman->id] ?? null;
-                $booking = $bookingStats[$serviceman->id] ?? null;
-
-                $rating = $review ? round((float) $review->avg_rating, 1) : 0;
-                $reviewCount = $review ? (int) $review->review_count : 0;
-                $completedCount = $booking ? (int) $booking->completed_count : 0;
-                $activeCount = $booking ? (int) $booking->active_count : 0;
+                // Get active bookings count
+                $activeCount = DB::table('bookings')
+                    ->where('serviceman_id', $serviceman->id)
+                    ->whereIn('booking_status', ['pending', 'accepted', 'ongoing'])
+                    ->count();
 
                 // Calculate distance if coordinates provided
-                // (users table me current_lat/current_lng hota hai — live location,
-                //  5 min ke andar ka hi count hota hai)
                 $distance = null;
-                $user = $serviceman->user;
-                $freshLocation = $user?->last_location_updated_at
-                    && \Carbon\Carbon::parse($user->last_location_updated_at)->gt($freshCutoff);
-
-                if ($customerLat && $customerLon && $freshLocation
-                    && $user?->current_lat !== null && $user?->current_lng !== null) {
-                    $distance = calculateDistance($customerLat, $customerLon, (float) $user->current_lat, (float) $user->current_lng);
+                if ($customerLat && $customerLon && $serviceman->user && $serviceman->user->latitude && $serviceman->user->longitude) {
+                    $distance = calculateDistance($customerLat, $customerLon, $serviceman->user->latitude, $serviceman->user->longitude);
                 }
 
                 $result[] = [

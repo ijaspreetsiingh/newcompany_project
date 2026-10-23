@@ -57,10 +57,11 @@ services:
       - redis-data:/data
     networks:
       - jdds-network
-    # noeviction: paise/sessions kabhi silently delete nahi honge (memory full par
-    # writes error denge — loud failure > data loss). allkeys-lru tha jo wallet
-    # cache keys bhi udata tha.
-    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy noeviction --requirepass zCpalUqrsPNhXmo72QE9ie4gJADRGdwu
+    # volatile-lru: sirf TTL wali keys (cache/session) evict hoti hain, isliye
+    # memory full hone par checkout/login crash nahi karte. Redis queue jobs ke
+    # paas TTL nahi hota, wo safe rehte hain. noeviction par memory full = har
+    # cache/session write error -> logins aur payments band.
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy volatile-lru --requirepass zCpalUqrsPNhXmo72QE9ie4gJADRGdwu
 
   rabbitmq:
     image: rabbitmq:3.13-management-alpine
@@ -140,6 +141,10 @@ services:
       - REDIS_PASSWORD=zCpalUqrsPNhXmo72QE9ie4gJADRGdwu
       - QUEUE_CONNECTION=redis
     command: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3", "--timeout=60", "--max-time=3600"]
+    # Notifications/emails/assignment jobs ek worker par lag jaate the.
+    # `docker compose up -d --scale queue-worker=3` bhi chal sakta hai.
+    deploy:
+      replicas: 3
 
   scheduler:
     build:

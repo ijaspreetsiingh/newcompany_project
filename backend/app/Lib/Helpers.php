@@ -992,24 +992,6 @@ if (!function_exists('getPaymentGatewayImageFullPath')) {
 if (!function_exists('nextBookingEligibility')) {
     function nextBookingEligibility($providerId, $provider = null): bool
     {
-        // PERF: ye function ek request me 3-5 baar call hota hai (scope +
-        // findNearestProviders + auto-assign) aur har call 3-4 DB queries
-        // karta hai. Remote MySQL par query ~1.3s → ek request me 15s+.
-        // Isliye per-request static cache (stale data nahi, sirf duplicate
-        // queries hat gaye).
-        static $eligibilityCache = [];
-
-        if (array_key_exists($providerId, $eligibilityCache)) {
-            return $eligibilityCache[$providerId];
-        }
-
-        return $eligibilityCache[$providerId] = computeNextBookingEligibility($providerId, $provider);
-    }
-}
-
-if (!function_exists('computeNextBookingEligibility')) {
-    function computeNextBookingEligibility($providerId, $provider = null): bool
-    {
         // Provider Subscribe OFF -> koi payment/subscription check nahi
         // $provider (loaded model) pass karne par extra DB query skip hoti hai
         $subscriptionRequired = $provider instanceof \Modules\ProviderManagement\Entities\Provider

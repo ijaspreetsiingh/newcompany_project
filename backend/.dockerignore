@@ -1,40 +1,15 @@
-# --- Not needed in PHP-FPM runtime image (keeps build context tiny for fast builds) ---
-
-# Dependencies & env (provided by named volumes / bind-mount)
-vendor
-node_modules
-.env
-composer.phar
-
-# Archives / docs (65MB+ zip etc)
-*.zip
-*.md
-*.log
-
-# Volumes provide storage (app uploads, logs, cache, sessions, compiled views)
-storage/app
-storage/logs
-storage/framework
-
-# Static assets served by nginx (bind-mounted) — not needed by PHP-FPM
-public/assets
-public/json
-public/css
-public/js
-public/build
-public/fonts
-public/images
-public/vendor
-public/videos
-public/storage
-
-# Installer / dev-only dirs
-installation
-tests
-demo
-perf
-.github
 .git
-
-# Laravel bootstrap cache (rebuilt after deploy via artisan config:cache etc.)
-bootstrap/cache/*.php
+.github
+node_modules
+vendor
+*.zip
+*.log
+demo
+tests
+perf
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+backend/public/storage
+.env

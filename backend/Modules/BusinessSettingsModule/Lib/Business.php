@@ -8,19 +8,12 @@ use Modules\ProviderManagement\Entities\ProviderSetting;
 use Modules\UserManagement\Entities\User;
 
 if (!function_exists('business_config')) {
-    /**
-     * PERF: is function ko har API me 40-60 baar call kiya jaata hai.
-     * Pehle NULL value cache "miss" maana jata tha (null !== null) → har call
-     * par DB query. Ab null ke liye sentinel + 6 ghante ka TTL.
-     * (Remote MySQL par har query ~2s le rahi thi — isliye ye critical hai.)
-     */
     function business_config($key, $settings_type)
     {
         $cacheKey = "bc_{$settings_type}_{$key}";
         $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
-
         if ($cached !== null) {
-            return $cached === '__NULL__' ? null : $cached;
+            return $cached;
         }
 
         try {
@@ -30,25 +23,21 @@ if (!function_exists('business_config')) {
         }
 
         $result = (isset($config)) ? $config : null;
-        \Illuminate\Support\Facades\Cache::put($cacheKey, $result ?? '__NULL__', 21600);
+        \Illuminate\Support\Facades\Cache::put($cacheKey, $result, 3600);
         return $result;
     }
 }
 
 if (!function_exists('login_setup')) {
-    /**
-     * PERF: login setup bhi har config request me 4-5 baar padha jaata tha.
-     * Ab 1 ghante ke cache se.
-     */
     function login_setup($key)
     {
         try {
-            return \Illuminate\Support\Facades\Cache::remember("ls_{$key}", 3600, function () use ($key) {
-                return LoginSetup::where('key', $key)->first();
-            });
+            $config = LoginSetup::where('key', $key)->first();
         } catch (Exception $exception) {
             return null;
         }
+
+        return (isset($config)) ? $config : null;
     }
 }
 

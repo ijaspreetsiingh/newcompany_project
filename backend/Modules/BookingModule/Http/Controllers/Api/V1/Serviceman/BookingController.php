@@ -320,6 +320,17 @@ class BookingController extends Controller
             ->where('serviceman_id', $serviceman->id)
             ->first();
 
+        // ZONE-PENDING CLAIM: slot ke bina bhi accept agar booking usi
+        // assigned category ki ho ya provider ka ignore-filter toggle ON ho —
+        // zone pending list me jo dikh raha hai wahi accept ho sakna chahiye.
+        $assignedSubCategoryIds = \Modules\ServicemanModule\Entities\ServicemanCategory::where('serviceman_id', $serviceman->id)
+            ->pluck('sub_category_id')
+            ->filter()
+            ->toArray();
+        $ignoreCategoryFilter = (int)(provider_config('provider_serviceman_category_filter', 'serviceman_config', $serviceman->provider_id)?->live_values ?? 0) === 1;
+        $canClaimByCategory = $booking->booking_status === 'pending'
+            && ($ignoreCategoryFilter || in_array($booking->sub_category_id, $assignedSubCategoryIds));
+
         // ye serviceman ko is booking ki request gayi hi nahi
         // Pending request current assignee ya broadcast ke kisi pending slot
         // holder ko mil sakti hai. Purane rejected/expired slots valid nahi.
@@ -327,14 +338,16 @@ class BookingController extends Controller
         $isProviderAssignedSlot = $booking->booking_status === 'pending'
             && $slot
             && $slot->status === \Modules\BookingModule\Entities\BookingServiceman::STATUS_PENDING;
-        if ($booking->booking_status !== 'pending' || (!$isCurrentAssignment && !$isProviderAssignedSlot)) {
+        if ($booking->booking_status !== 'pending' || (!$isCurrentAssignment && !$isProviderAssignedSlot && !$canClaimByCategory)) {
             return response()->json(response_formatter(DEFAULT_204), 200);
         }
 
         // pending booking par timer expire ho chuka to accept nahi
         // GRACE: current assignee ko expiry ke baad bhi 180s tak accept ka
         // mauka — notification click → app open → navigate me time lagta hai
-        if ($booking->booking_status === 'pending') {
+        // NOTE: category-claim wale accept expiry se block nahi hote — booking
+        // abhi bhi pending hai (kisi ne accept nahi ki) aur list me dikh rahi hai.
+        if ($booking->booking_status === 'pending' && !$canClaimByCategory) {
             $graceSeconds = 180;
             $expired = ($slot && $slot->expires_at && $slot->expires_at->isPast())
                 || (!$slot && $booking->serviceman_assign_expires_at && $booking->serviceman_assign_expires_at->isPast());
@@ -355,7 +368,7 @@ class BookingController extends Controller
 
         $isFirstAccept = $booking->booking_status === 'pending';
 
-        $accepted = DB::transaction(function () use ($booking, $bookingId, $slot, $serviceman, $request, $isFirstAccept) {
+        $accepted = DB::transaction(function () use ($booking, $bookingId, $slot, $serviceman, $request, $isFirstAccept, $assignedSubCategoryIds, $ignoreCategoryFilter) {
             // SECURITY: booking row-lock + andar hi re-check — 2 parallel accepts me
             // sirf ek hi pehla accept (lead) banega, doosra "already accepted" ho jayega.
             $booking = \Modules\BookingModule\Entities\Booking::withoutGlobalScopes()
@@ -379,11 +392,15 @@ class BookingController extends Controller
             $isProviderAssignedSlot = $booking->booking_status === 'pending'
                 && $slot
                 && $slot->status === \Modules\BookingModule\Entities\BookingServiceman::STATUS_PENDING;
-            if ($booking->booking_status !== 'pending' || (!$isCurrentAssignment && !$isProviderAssignedSlot)) {
+            // LOCKED state par hi dobara category-claim check (stale bahar
+            // wali value par kabhi mat lo)
+            $canClaimByCategory = $booking->booking_status === 'pending'
+                && ($ignoreCategoryFilter || in_array($booking->sub_category_id, $assignedSubCategoryIds));
+            if ($booking->booking_status !== 'pending' || (!$isCurrentAssignment && !$isProviderAssignedSlot && !$canClaimByCategory)) {
                 return false;
             }
 
-            if ($slot && $slot->expires_at && $slot->expires_at->isPast()) {
+            if ($slot && $slot->expires_at && $slot->expires_at->isPast() && !$canClaimByCategory) {
                 // GRACE: current assignee expiry ke baad bhi 180s tak accept
                 // kar sakta hai (notification → app open → navigate me delay)
                 $withinGrace = $isCurrentAssignment
@@ -399,6 +416,15 @@ class BookingController extends Controller
             if ($slot) {
                 $slot->status = \Modules\BookingModule\Entities\BookingServiceman::STATUS_ACCEPTED;
                 $slot->save();
+            } elseif ($isFirstAccept && $canClaimByCategory) {
+                // Zone board se claim (koi slot nahi tha) — assignment history
+                // sahi rahi isliye accept slot record banao
+                $newSlot = new \Modules\BookingModule\Entities\BookingServiceman;
+                $newSlot->booking_id = $booking->id;
+                $newSlot->serviceman_id = $serviceman->id;
+                $newSlot->status = \Modules\BookingModule\Entities\BookingServiceman::STATUS_ACCEPTED;
+                $newSlot->expires_at = now();
+                $newSlot->save();
             }
 
             if ($isFirstAccept) {
@@ -463,7 +489,17 @@ class BookingController extends Controller
             ->where('serviceman_id', $serviceman->id)
             ->first();
 
-        if (!$slot && $booking->serviceman_id !== $serviceman->id) {
+        // ZONE-PENDING DECLINE: assigned category (ya ignore-filter toggle)
+        // hone par slot ke bina bhi decline — "You declined this" badge ban jaye.
+        $assignedSubCategoryIds = \Modules\ServicemanModule\Entities\ServicemanCategory::where('serviceman_id', $serviceman->id)
+            ->pluck('sub_category_id')
+            ->filter()
+            ->toArray();
+        $ignoreCategoryFilter = (int)(provider_config('provider_serviceman_category_filter', 'serviceman_config', $serviceman->provider_id)?->live_values ?? 0) === 1;
+        $canDeclineByCategory = $booking->booking_status === 'pending'
+            && ($ignoreCategoryFilter || in_array($booking->sub_category_id, $assignedSubCategoryIds));
+
+        if (!$slot && $booking->serviceman_id !== $serviceman->id && !$canDeclineByCategory) {
             return response()->json(response_formatter(DEFAULT_204), 200);
         }
 
@@ -472,6 +508,16 @@ class BookingController extends Controller
                 && $slot
                 && $slot->status === \Modules\BookingModule\Entities\BookingServiceman::STATUS_PENDING;
             if ($booking->serviceman_id !== $serviceman->id && !$isProviderAssignedSlot) {
+                // Zone board se decline (koi live slot nahi): sirf mera
+                // rejected slot record karo taaki badge dikhe. Dispatch cycle
+                // na chhoo — doosre service men ko baar baar dobara request nahi.
+                if ($canDeclineByCategory) {
+                    \Modules\BookingModule\Entities\BookingServiceman::firstOrCreate(
+                        ['booking_id' => $booking->id, 'serviceman_id' => $serviceman->id],
+                        ['status' => \Modules\BookingModule\Entities\BookingServiceman::STATUS_REJECTED, 'expires_at' => now()]
+                    );
+                    return response()->json(response_formatter(DEFAULT_200), 200);
+                }
                 return response()->json(response_formatter(DEFAULT_204), 200);
             }
 
@@ -619,8 +665,19 @@ class BookingController extends Controller
     }
 
     /**
-     * Final-cycle open requests for this serviceman only. The query is scoped
-     * to their provider and to their own unexpired pending assignment slot.
+     * Zone Pending board: provider ki saari UNACCEPTED (pending) bookings.
+     *
+     * Toggle (sirf is screen ke liye — provider app Business Settings):
+     *   - provider_serviceman_category_filter = 0 (default): category filter
+     *     ACTIVE — serviceman ko sirf usi category ki pending bookings dikhegi
+     *     jo provider ne usse assign ki hain (bina category → fail-closed,
+     *     list khali).
+     *   - = 1: filter IGNORE — provider ki saari categories ki sab pending
+     *     bookings har serviceman ko dikhegi, koi bhi accept kar sakta hai.
+     *
+     * "Kisi ne accept nahi ki" = booking_status pending. Na assignment_mode
+     * ki restriction, na personal slot ki restriction (warna bookings list me
+     * aati hi nahi thi).
      */
     public function zonePendingBookings(Request $request): JsonResponse
     {
@@ -634,27 +691,23 @@ class BookingController extends Controller
             return response()->json(response_formatter(DEFAULT_400, null, error_processor($validator)), 400);
         }
 
-        $now = now();
-        $graceCutoff = $now->copy()->subSeconds(180);
-
         // Serviceman ki assigned sub-categories
         $assignedSubCategoryIds = \Modules\ServicemanModule\Entities\ServicemanCategory::where('serviceman_id', $serviceman->id)
             ->pluck('sub_category_id')
             ->filter()
             ->toArray();
 
+        // Provider ka toggle (sirf zone pending screen ke liye)
+        $ignoreCategoryFilter = (int)(provider_config('provider_serviceman_category_filter', 'serviceman_config', $serviceman->provider_id)?->live_values ?? 0) === 1;
+
         $bookings = $this->booking
             ->with(['subCategory:id,name', 'detail.service'])
             ->where('provider_id', $serviceman->provider_id)
             ->where('booking_status', 'pending')
-            ->where('assignment_mode', 'zone_pending')
-            // Fail closed: an unconfigured serviceman must never see every
-            // category's zone-pending work.
-            ->whereIn('sub_category_id', $assignedSubCategoryIds)
-            ->whereHas('servicemenAssignments', function ($query) use ($serviceman, $graceCutoff) {
-                $query->where('serviceman_id', $serviceman->id)
-                    ->where('status', \Modules\BookingModule\Entities\BookingServiceman::STATUS_PENDING)
-                    ->where('expires_at', '>', $graceCutoff);
+            ->when(!$ignoreCategoryFilter, function ($query) use ($assignedSubCategoryIds) {
+                // Fail closed: filter ON hone par sirf assigned categories —
+                // bina assigned category ke serviceman ko kuch nahi dikhega.
+                $query->whereIn('sub_category_id', $assignedSubCategoryIds);
             })
             ->latest()
             ->paginate($request->input('limit', 20), ['*'], 'offset', $request->input('offset', 1))
@@ -674,6 +727,13 @@ class BookingController extends Controller
                 $remaining = max(0, $mySlot->expires_at->copy()->addSeconds(180)->getTimestamp() - now()->getTimestamp());
             }
             $booking->accept_remaining_seconds = $remaining;
+
+            // "You declined this" badge — mera rejected slot (zone board par
+            // decline karne par banta hai)
+            $booking->i_declined = \Modules\BookingModule\Entities\BookingServiceman::where('booking_id', $booking->id)
+                ->where('serviceman_id', $serviceman->id)
+                ->where('status', \Modules\BookingModule\Entities\BookingServiceman::STATUS_REJECTED)
+                ->exists();
         }
 
         return response()->json(response_formatter(DEFAULT_200, $bookings), 200);
