@@ -28,7 +28,9 @@ WORKDIR /var/www/html
 
 COPY . .
 
-RUN composer install --no-dev --no-interaction --optimize-autoloader --prefer-dist \
+# Build-time safe drivers: prevent connecting to external Redis/DB during package:discover
+RUN CACHE_DRIVER=array SESSION_DRIVER=array QUEUE_CONNECTION=sync \
+    composer install --no-dev --no-interaction --optimize-autoloader --prefer-dist \
     && chown -R www-data:www-data storage bootstrap/cache
 
 COPY docker/nginx.conf.template /etc/nginx/templates/default.conf.template
